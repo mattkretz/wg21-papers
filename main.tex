@@ -1,0 +1,38 @@
+\newcommand\wgTitle{Data-Parallel Vector Types \& Operations}
+\newcommand\wgName{Matthias Kretz <kretz@compeng.uni-frankfurt.de>}
+\newcommand\wgVersion{Version 1}
+\newcommand\wgDocumentNumber{D4XXX}
+\newcommand\wgPreviousDocumentNumber{N4184, N4185, N4395}
+\newcommand\wgAcknowledgements{
+  This work was supported by GSI Helmholtzzentrum für Schwerionenforschung
+  and the Hessian LOEWE initiative through the Helmholtz International Center
+  for FAIR (HIC for FAIR).
+}
+
+\usepackage{typenames}
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{vectorpictures}
+\usepackage{references}
+
+\addbibresource{extra.bib}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper describes class templates for portable data-parallel (e.g. SIMD) programming via vector types.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+\addtocounter{section}{-1}
+\section{Remarks}
+\begin{itemize}
+  \item This documents talks about “vector” types/objects and in general does not refer to the \std\type{vector} class template in such cases.
+    References to the container type will explicitly call out the \code{std} prefix to avoid confusion.
+  \item In the following \VSize{T} denotes the number of scalar values (width) in a vector of type \type T (sometimes also called the number of SIMD lanes)
+\end{itemize}
+
+\input{intro}
+%\input{vectorclass}
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
