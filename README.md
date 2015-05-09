@@ -5,7 +5,7 @@ to be submitted to the C++ committee. It incorporates the work presented in N418
 While the previous papers described the API as implemented originally in the Vc library, this paper focuses
 on getting it ready for LEWG.
 
-To build the paper you need make, LuaLaTeX (only tested with a recent TexLive distribution), and Biber.
+To build the paper you need make, LuaLaTeX (only tested with a recent TeXLive distribution), and Biber.
 Simply run
 
     make final
