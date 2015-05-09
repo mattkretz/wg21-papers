@@ -1,0 +1,233 @@
+\usepackage{xspace}
+\usepackage{tikz}
+\usepackage{ifoddpage}
+\usepackage{setspace}
+\usetikzlibrary{calc}
+%\usepackage{hyphenat}
+
+\newcommand{\code}[1]{\texorpdfstring{\texttt{#1}}{#1}}
+\@ifclassloaded{beamer}{%
+\newcommand{\type}[1]{\texorpdfstring{{\ttfamily\color{fg!65!bg}\bfseries #1}}{#1}}
+}{
+\definecolor{my@inlinetypes}{cmyk}{0, 0, 0, 0.8}
+\newcommand{\type}[1]{\texorpdfstring{{\ttfamily\color{my@inlinetypes}\bfseries #1}}{#1}}
+}
+
+\newcommand\MayBreak{\discretionary{}{}{}}
+
+\newcommand{\sseType}{\mbox{\type{\_\_m128}}\xspace}
+\newcommand{\sseTypeI}{\mbox{\type{\_\_m128i}}\xspace}
+\newcommand{\sseTypeD}{\mbox{\type{\_\_m128d}}\xspace}
+\newcommand{\avxType}{\mbox{\type{\_\_m256}}\xspace}
+\newcommand{\avxTypeI}{\mbox{\type{\_\_m256i}}\xspace}
+\newcommand{\avxTypeD}{\mbox{\type{\_\_m256d}}\xspace}
+\newcommand{\lrbType}{\mbox{\type{\_\_m512}}\xspace}
+\newcommand{\lrbTypeI}{\mbox{\type{\_\_m512i}}\xspace}
+\newcommand{\lrbTypeD}{\mbox{\type{\_\_m512d}}\xspace}
+\newcommand{\lrbTypeMask}{\mbox{\type{\_\_mmask}}\xspace}
+\newcommand{\sizet  }{\code{std\MayBreak::\MayBreak\type{size\_t}}\xspace}
+\newcommand{\void   }{\type{void}\xspace}
+\newcommand{\chart  }{\type{char}\xspace}
+\newcommand{\schar  }{\type{signed char}\xspace}
+\newcommand{\uchar  }{\type{unsigned char}\xspace}
+\newcommand{\short  }{\type{short}\xspace}
+\newcommand{\ushort }{\type{unsigned short}\xspace}
+\newcommand{\intt   }{\type{int}\xspace}
+\newcommand{\longt   }{\type{long}\xspace}
+\newcommand{\ulong   }{\type{unsigned long}\xspace}
+\newcommand{\longlong}{\type{long long}\xspace}
+\newcommand{\ulonglong}{\type{unsigned long long}\xspace}
+\newcommand{\uint   }{\type{unsigned int}\xspace}
+\newcommand{\bool   }{\type{bool}\xspace}
+\newcommand{\double }{\type{double}\xspace}
+\newcommand{\float  }{\type{float}\xspace}
+\newcommand{\doublev}{\type{double\MayBreak\_v}\xspace}
+\newcommand{\floatv }{\type{float\MayBreak\_v}\xspace}
+\newcommand{\sfloatv}{\type{sfloat\MayBreak\_v}\xspace}
+\newcommand{\intv   }{\type{\nohyphens{int\_v}}\xspace}
+\newcommand{\uintv  }{\type{\nohyphens{uint\_v}}\xspace}
+\newcommand{\shortv }{\type{short\_v}\xspace}
+\newcommand{\ushortv}{\type{ushort\_v}\xspace}
+\newcommand{\doublem}{\type{double\_m}\xspace}
+\newcommand{\floatm }{\type{float\_m}\xspace}
+\newcommand{\sfloatm}{\type{sfloat\_m}\xspace}
+\newcommand{\intm   }{\type{\nohyphens{int\_m}}\xspace}
+\newcommand{\uintm  }{\type{\nohyphens{uint\_m}}\xspace}
+\newcommand{\shortm }{\type{short\_m}\xspace}
+\newcommand{\ushortm}{\type{ushort\_m}\xspace}
+\newcommand{\const}{\type{const}\xspace}
+\newcommand{\true}{\texttt{true}\xspace}
+\newcommand{\false}{\texttt{false}\xspace}
+\newcommand{\NaN}{\texttt{NaN}\xspace}
+\renewcommand{\inf}{\texttt{inf}\xspace}
+
+\newcommand\union{\code{union}\xspace}
+\newcommand\struct{\code{struct}\xspace}
+\newcommand\class{\code{class}\xspace}
+\newcommand\enum{\code{enum}\xspace}
+
+\newcommand\GCC{\ac{GCC}\xspace}
+\newcommand\clang{clang\xspace}
+\@ifclassloaded{acronym}{%
+\acused{GCC}
+}
+
+\newcommand{\fig}[1]{Figure~\ref{fig:#1}}
+\newcommand{\tab}[1]{Table~\ref{tab:#1}}
+\newcommand{\lst}[1]{Listing~\ref{lst:#1}}
+\newcommand{\eq}[1]{(\ref{eq:#1})}
+\newcommand{\sect}[1]{Section~\ref{sec:#1}}
+\newcommand{\appx}[1]{Ap\-pen\-dix~\ref{app:#1}}
+\newcommand{\chapt}[1]{Chapter~\ref{ch:#1}}
+
+%\definecolor{goetheblau}{rgb}{0, 0.36470588235294, 0.65490196078431}
+\DefineNamedColor{named}{RoyalBlue}     {cmyk}{1,0.50,0,0}
+\DefineNamedColor{named}{White}         {cmyk}{0,0,0,0}
+\DefineNamedColor{named}{Black}         {cmyk}{0,0,0,1}
+\DefineNamedColor{named}{Red}           {cmyk}{0,1,1,0}
+\newcommand{\missing}{\fcolorbox{Red}{White!80!Red}{\color{RoyalBlue!50!Black}\bfseries\scshape to\kern.1emdo}}
+\newcommand{\FIXME}[1]{\par\noindent%
+{\small\centering\fcolorbox{Red}{White!80!Red}{\begin{minipage}{0.85\linewidth}{\bfseries\scshape fix\kern.1emme}: #1\end{minipage}}\par}\vspace{0.1em}}
+%\newcommand{\TODO}[1]{\par\noindent%
+%{\small\centering%
+%\fcolorbox{RoyalBlue}{White!90!RoyalBlue}{%
+%\begin{minipage}{0.85\linewidth}%
+%\color{RoyalBlue!50!Black}%
+%\begin{center}\bfseries\scshape to\kern.1emdo\end{center}%
+%\vspace{-1.5ex}%
+%\begin{list}{$\checkmark$}{\settowidth{\leftmargin}{$\checkmark$\hskip0.6em}\topsep=0pt}%
+%#1
+%\end{list}%
+%\end{minipage}}%
+%\par}\vspace{0.1em}}
+\newcommand{\TODO}[1]{%
+  \begingroup%
+  \color{RoyalBlue}%
+  \def\todoitem{\item[] {\sffamily\scshape T\kern.2emO\kern.2emD\kern.2emO:}\hskip1em%
+    \ifdefined\todoweek(W\todoweek) \fi%
+    \rightskip=0pt plus 4em%
+  }%
+\begin{list}{}{%
+  \setlength{\topsep}{0pt}%
+  \setlength{\leftmargin}{0pt}%
+  \setlength{\rightmargin}{0pt}%
+  \setlength{\listparindent}{\parindent}%
+  \settowidth{\itemindent}{{\sffamily\scshape T\kern.2emO\kern.2emD\kern.2emO:}\hskip1em}%
+  \advance\rightmargin by \itemindent%
+  \advance\leftmargin by \itemindent%
+  \multiply\itemindent by -1%
+  \parskip=1ex plus 0.5ex%
+  \setlength{\parsep}{\parskip}%
+}
+#1
+\end{list}%
+\endgroup
+}
+
+% nicer C++
+\ifdefined\directlua
+\newlength\cxx@capitalC
+\newlength\cxx@plus@raise
+\DeclareRobustCommand{\CC}{\texorpdfstring{%
+  \begingroup%
+  \settoheight\cxx@capitalC{C}%
+  C%
+  \fontsize{1.6ex}{1.6ex}\selectfont%
+  \settoheight\cxx@plus@raise{C}%
+  %\typeout{C: \the\cxx@plus@raise}%
+  \setlength\cxx@plus@raise{\directlua{
+    local largetop = string.sub('\the\cxx@capitalC',1,-3) * 100
+    local smalltop = string.sub('\the\cxx@plus@raise',1,-3) * 100
+    %inspect(largetop, smalltop)
+    local descriptions = font.getfont(font.current()).shared.rawdata.descriptions
+    local pdata = descriptions[utf.byte('+')]
+    local cdata = descriptions[utf.byte('C')]
+    %inspect(pdata.boundingbox, cdata.boundingbox)
+    local pbottom = pdata.boundingbox[2]
+    local ptop    = pdata.boundingbox[4]
+    local pheight = ptop - pbottom
+    local cbottom = 0 %cdata.boundingbox[2] * largetop / smalltop
+    local ctop    = cdata.boundingbox[4] * largetop / smalltop
+    local cheight = ctop - cbottom
+    %inspect(pbottom, ptop, pheight, cbottom, ctop, cheight)
+    tex.sprint((smalltop / cdata.boundingbox[4] * ((cheight - pheight) * 0.5 - pbottom - cbottom)) * 0.01 .. 'pt')
+  }}%
+  %\typeout{raise: \the\cxx@plus@raise}%
+  \kern-.08em\raise\cxx@plus@raise\hbox{+\kern-.08em+}%
+  \endgroup%
+}{C++}\xspace}
+\else
+\newlength\cxx@c@height
+\newlength\cxx@plus@height
+\newcommand\cxx@plus@fontsize{\fontsize{1.6ex}{1.92ex}\selectfont}
+\DeclareRobustCommand{\CC}{\texorpdfstring{%
+  \settoheight\cxx@c@height{C}%
+  \settoheight\cxx@plus@height{\cxx@plus@fontsize+}%
+  \advance\cxx@c@height by -\cxx@plus@height%
+  \multiply\cxx@c@height by 10% div by 2.3
+  \divide\cxx@c@height by 23%
+  C\kern-.08em\raise\cxx@c@height\hbox{\cxx@plus@fontsize+\kern-.08em+}%
+}{C++}\xspace}
+\fi
+\def\CCC{C/\CC}
+
+\newcommand\BlurText[1]{%
+  \begin{tikzpicture}[inner sep=0,outer sep=0,anchor=center,opacity=0.01]%
+    \foreach \xoff in {-1.0pt, -0.7pt, ..., 1.0pt}{%
+      \foreach \yoff in {-0.1pt, 0pt, 0.1pt}{%
+        \node[xshift=\xoff,yshift=\yoff] {#1};%
+      }%
+    }%
+  \end{tikzpicture}%
+}
+
+\def\new@comment#1#2{%
+}
+
+%\newcounter{comment@count}[page]
+%\setcounter{comment@count}{0}
+\newlength\comment@margin
+\def\comment#1{%
+\ifdefined\tikzexternaldisable%
+  \tikzexternaldisable%
+\fi%
+\noindent\begin{tikzpicture}[remember picture,overlay]%
+  \setlength\comment@margin{0.5\paperwidth}%
+  \addtolength\comment@margin{-0.5\textwidth}%
+  %\addtocounter{comment@count}{1}%
+  \checkoddpage%
+  \ifoddpageoroneside%
+    \path[draw] let \p1 = ($(current page.east)-(\comment@margin+1em,0)$) in
+    (-0.2em,0) -- +(0,-0.5ex) -- (\x1,-0.5ex)
+    node[text width=\comment@margin-0.4em,fill=yellow,fill opacity=0.25,text opacity=1,anchor=west,inner sep=0.3em,outer sep=0]
+    {\begin{spacing}{0.9}\sffamily\footnotesize #1\end{spacing}};
+  \else%
+    \path[draw] let \p1 = ($(current page.west)+(\comment@margin+1em,0)$) in
+    (-0.2em,0) -- +(0,-0.5ex) -- (\x1,-0.5ex)
+    node[text width=\comment@margin-0.4em,fill=yellow,fill opacity=0.25,text opacity=1,anchor=east,inner sep=0.3em,outer sep=0]
+    {\begin{spacing}{0.9}\sffamily\footnotesize #1\end{spacing}};
+  \fi%
+  \path[fill=black] (-0.2em,0) circle (-0.1em);
+\end{tikzpicture}%
+\ifdefined\tikzexternalenable%
+  \tikzexternalenable%
+\fi%
+}
+
+\newif\ifreplace@all
+\replace@allfalse
+\def\replaceall{\replace@alltrue}
+\newcommand{\replace}[2]{\ifreplace@all{#2}\else{\color{blue}#2}\comment{\color{red}#1}\fi}
+
+\newenvironment{changemargin}[2]{%
+\begin{list}{}{%
+  \setlength{\topsep}{0pt}%
+  \setlength{\leftmargin}{#1}%
+  \setlength{\rightmargin}{#2}%
+  \setlength{\listparindent}{\parindent}%
+  \setlength{\itemindent}{\parindent}%
+  \setlength{\parsep}{\parskip}%
+}%
+\item[]}{\end{list}}
+
+% vim: sw=2 et

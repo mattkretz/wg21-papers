@@ -1,0 +1,89 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{typenames}[2014/05/23]
+
+% STL names:
+%\newcommand\Size{entry_count\xspace}
+%\newcommand\MemoryAlignment{memory_alignment\xspace}
+%\newcommand\MaskType{mask\_type\xspace}
+%\newcommand\EntryType{\protect{value\_type}\xspace}
+%\newcommand\VectorType{internal\_type\xspace}
+%\newcommand\VectorEntryReference{value\_reference\xspace}
+%\newcommand\Vector{simdvector}
+%\newcommand\Mask{simdmask}
+%\newcommand\simdarray{simdarray}
+%\newcommand\simdmaskarray{simdmaskarray}
+
+% Vc names:
+\newcommand\nameSize{size()}
+\newcommand\nameMemoryAlignment{Mem\-ory\-Align\-ment}
+\newcommand\nameIndexesFromZero{In\-dex\-es\-From\-Ze\-ro()}
+\newcommand\nameMaskType{Mask\-Type}
+\newcommand\nameEntryType{En\-try\-Type}
+\newcommand\nameVectorType{Vec\-tor\-Type}
+\newcommand\nameVectorEntryReference{En\-try\-Ref\-er\-ence}
+\newcommand\nameVector{Vec\-tor}
+\newcommand\nameMask{Mask}
+\newcommand\namesimdarray{Simd\-Ar\-ray}
+\newcommand\namesimdmaskarray{Simd\-Mask\-Ar\-ray}
+\newcommand\nameVc{Vc}
+
+\newcommand\Size{\nameSize\xspace}
+\newcommand\MemoryAlignment{\nameMemoryAlignment\xspace}
+\newcommand\IndexesFromZero{\nameIndexesFromZero\xspace}
+\newcommand\MaskType{\nameMaskType\xspace}
+\newcommand\EntryType{\nameEntryType\xspace}
+\newcommand\VectorType{\nameVectorType\xspace}
+\newcommand\VectorEntryReference{\nameVectorEntryReference\xspace}
+\newcommand\Vector{\nameVector\xspace}
+\newcommand\Mask{\nameMask\xspace}
+\newcommand\simdarray{\namesimdarray\xspace}
+\newcommand\simdmaskarray{\namesimdmaskarray\xspace}
+
+\DeclareRobustCommand\Vc{\code{\nameVc\MayBreak::\MayBreak}}
+\DeclareRobustCommand\std{\code{std\MayBreak::\MayBreak}}
+\DeclareRobustCommand\codeSize{\code{\nameSize}\xspace}
+\DeclareRobustCommand\scopeSize{\MayBreak\code{::\MayBreak\nameSize}\xspace}
+\DeclareRobustCommand\codeMemoryAlignment{\code{\nameMemoryAlignment}\xspace}
+\DeclareRobustCommand\codeIndexesFromZero{\code{\nameIndexesFromZero}\xspace}
+\DeclareRobustCommand\typeMaskType{\type{\nameMaskType}\xspace}
+\DeclareRobustCommand\typeVectorType{\type{\nameVectorType}\xspace}
+\DeclareRobustCommand\typeVectorEntryReference{\type{\nameVectorEntryReference}\xspace}
+\DeclareRobustCommand\typeEntryType{\type{\nameEntryType}\xspace}
+\DeclareRobustCommand\typeVector[1]{\type{\nameVector}\code{<\MayBreak{}#1>}}
+\DeclareRobustCommand\typeVectorT{\type{\nameVector}\code{<\MayBreak\type T>}\xspace}
+\DeclareRobustCommand\typeMask[1]{\type{\nameMask}\code{<\MayBreak{}#1>}}
+\DeclareRobustCommand\typeMaskT{\type{\nameMask}\code{<\type T>}\xspace}
+\DeclareRobustCommand\typesimdarray[1]{\code{\type{\namesimdarray}<\MayBreak{}#1>}}
+\DeclareRobustCommand\typesimdmaskarray[2]{\code{\type{\namesimdmaskarray}<\MayBreak{}#1, #2>}}
+\DeclareRobustCommand\typesimdarrayTN{\code{\type{\namesimdarray}<\MayBreak{}\type{T}, N>}\xspace}
+\DeclareRobustCommand\typesimdmaskarrayTN{\code{\type{\namesimdmaskarray}<\MayBreak{}\type{T}, N>}\xspace}
+
+\DeclareRobustCommand\VcVectorWithoutArgument{\code{\Vc\type{\nameVector}}}
+\DeclareRobustCommand\VcVectorT[1]{\VcVectorWithoutArgument\MayBreak\code{<\MayBreak\type{#1}>}}
+\DeclareRobustCommand\VcVector{\@ifnextchar\bgroup{\VcVectorT}{\VcVectorWithoutArgument}\xspace}
+\DeclareRobustCommand\VcVectorSize[1]{\VcVectorT{#1}\MayBreak\code{::\MayBreak\Size}}
+\DeclareRobustCommand\VcMaskWithoutArgument{\code{\Vc\type{\nameMask}}}
+\DeclareRobustCommand\VcMaskT[1]{\VcMaskWithoutArgument\MayBreak\code{<\MayBreak\type{#1}\MayBreak>}}
+\DeclareRobustCommand\VcMask{\@ifnextchar\bgroup{\VcMaskT}{\VcMaskWithoutArgument}\xspace}
+\DeclareRobustCommand\VcMaskSize[1]{\VcMaskT{#1}\MayBreak\code{::\MayBreak\Size}}
+\DeclareRobustCommand\simdizeA[1]{\code{\type{simdize}\MayBreak<\MayBreak\type{#1}>}}
+\DeclareRobustCommand\simdizeB[2]{\code{\type{simdize}\MayBreak<\MayBreak\type{#1}, \type{#2}>}}
+\DeclareRobustCommand\simdizeC[3]{\code{\type{simdize}\MayBreak<\MayBreak\type{#1}, \type{#2}, \type{#3}>}}
+\newcommand\simdize[1]{\code{\type{simd\-ize}<\MayBreak{}#1>}}
+\newcommand\simdizeT{\code{\type{simd\-ize}<\MayBreak{}\type{T}>}\xspace}
+
+\newcommand\valarray{\type{val\-ar\-ray}\xspace}
+\newcommand\valarrayT{\code{\type{val\-ar\-ray}<\type{T}>}\xspace}
+\newcommand\indirectarray{\type{in\-di\-rect\MayBreak{}\_\MayBreak{}ar\-ray}\xspace}
+
+\DeclareRobustCommand\allof{\code{all\_of}\xspace}
+\DeclareRobustCommand\anyof{\code{any\_of}\xspace}
+\DeclareRobustCommand\noneof{\code{none\_of}\xspace}
+\DeclareRobustCommand\someof{\code{some\_of}\xspace}
+
+\newcommand\AoS{\emph{AoS}\xspace}
+\newcommand\SoA{\emph{SoA}\xspace}
+\newcommand\AoVS{\emph{AoVS}\xspace}
+
+% C++ keywords
+\DeclareRobustCommand\constexpr{\code{constexpr}\xspace}

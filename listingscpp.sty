@@ -1,0 +1,185 @@
+\RequirePackage{listings}
+
+\newif\iflstcpp@mono@
+\lstcpp@mono@false
+\DeclareOption{mono}{\lstcpp@mono@true}
+\ProcessOptions
+
+\lstdefinelanguage{MyC++}{
+sensitive,
+comment=[s]{/*}{*/},
+morecomment=[l]//,
+string=[b]",
+morestring=[b]',
+%statements
+keywords=[0]{goto,break,return,continue,asm,__asm__,new,delete,this,friend,using,override,final,requires,concept,static_assert},
+%labels
+keywords=[1]{case,default},
+%conditionals
+keywords=[2]{if,else,switch},
+%repeat
+keywords=[3]{while,for,do},
+%operators
+keywords=[4]{typeof,operator,typeid,sizeof,alignof,alignas,decltype},
+%types
+keywords=[5]{int,long,short,char,void,signed,unsigned,float,double,
+  virtual,explicit,export,bool,
+  shared_ptr,unique_ptr,weak_ptr,
+  size_t,ssize_t,off_t,wchar_t,ptrdiff_t,sig_atomic_t,fpos_t,
+  clock_t,time_t,va_list,jmp_buf,FILE,DIR,div_t,ldiv_t,
+  mbstate_t,wctrans_t,wint_t,wctype_t,
+  int8_t,int16_t,int32_t,int64_t,
+  uint8_t,uint16_t,uint32_t,uint64_t,
+  int_least8_t,int_least16_t,int_least32_t,int_least64_t,
+  uint_least8_t,uint_least16_t,uint_least32_t,uint_least64_t,
+  int_fast8_t,int_fast16_t,int_fast32_t,int_fast64_t,
+  uint_fast8_t,uint_fast16_t,uint_fast32_t,uint_fast64_t,
+  intptr_t,uintptr_t,intmax_t,uintmax_t,
+  __m128,__m128i,__m128d,_M128,_M128I,_M128D,
+  __m256,__m256i,__m256d,_M256,_M256I,_M256D,
+  __m512,__m512i,__m512d,_M512,_M512I,_M512D},
+%structure
+keywords=[6]{struct,union,enum,typedef,class,typename,template,namespace},
+%storage class
+keywords=[7]{static,register,auto,volatile,extern,const,constexpr,
+  __attribute__,inline,restrict,__restrict__,mutable},
+%constants
+keywords=[8]{M_PI,true,false,nullptr},
+%access
+keywords=[9]{public,protected,private},
+%exceptions
+keywords=[10]{throw,try,catch},
+%casts
+keywords=[11]{const_cast,static_cast,dynamic_cast,reinterpret_cast,static_pointer_cast,const_pointer_cast,dynamic_pointer_cast},
+moredelim=*[directive]\#,
+directives={define,elif,else,endif,error,if,ifdef,ifndef,line,
+include,pragma,undef,warning}
+}[keywords,comments,strings,directives]
+
+\iflstcpp@mono@
+\definecolor{identifier}{cmyk}{0, 0, 0, 1}
+\definecolor{constants}{cmyk}{0, 0, 0, 1}
+\definecolor{types}{gray}{0.2}
+\definecolor{codekeywords}{gray}{0.2}
+\definecolor{strings}{cmyk}{0, 0, 0, 0.9}
+\definecolor{directives}{cmyk}{0, 0, 0, 1}
+\definecolor{comments}{cmyk}{0, 0, 0, 0.7}
+\else
+\definecolor{identifier}{rgb}{0, 0, 0}
+\definecolor{constants}{rgb}{0.6, 0, 0}
+\definecolor{types}{cmyk}{0.8, 0, 1.0, 0.4}
+\definecolor{codekeywords}{cmyk}{0, 0, 1, 0.6}
+\definecolor{strings}{rgb}{0.5, 0, 0.5}
+\definecolor{directives}{rgb}{0, 0, 0.6}
+\definecolor{comments}{cmyk}{1.0, 0.8, 0, 0.4}
+
+\@ifclassloaded{beamer}{%
+\mode<handout>{
+\definecolor{identifier}{rgb}{0, 0, 0}
+\definecolor{constants}{rgb}{0.3, 0, 0}
+\definecolor{types}{rgb}{0, 0.2, 0}
+\definecolor{codekeywords}{rgb}{0.2, 0.2, 0}
+\definecolor{strings}{rgb}{0.2, 0, 0.2}
+\definecolor{directives}{rgb}{0, 0, 0.3}
+\definecolor{comments}{rgb}{0, 0, 0.6}
+}
+\mode<presentation>{
+\usebeamercolor{normal text}
+\usebeamercolor{alerted text}
+\usebeamercolor{example text}
+\usebeamercolor{local structure}
+\colorlet{identifier}{normal text.fg}
+\colorlet{types}{example text.fg!75!normal text.fg}
+\colorlet{constants}{alerted text.fg!75!normal text.fg}
+\colorlet{codekeywords}{local structure.fg!75!normal text.fg}
+\colorlet{comments}{local structure.fg!75!normal text.fg}
+}
+}
+\fi
+
+\lstset{language=MyC++,
+escapeinside={/*!}{*/},
+basicstyle=\ttfamily,
+identifierstyle=\color{identifier},
+numberstyle=\ttfamily\tiny,
+stepnumber=1,
+stringstyle=\color{strings},
+commentstyle=\color{comments},
+directivestyle=\color{directives},
+% combine: access,statements,casts (9,0,11)
+keywordstyle=[0]\color{codekeywords}\bfseries,
+keywordstyle=[9]\color{codekeywords}\bfseries,
+keywordstyle=[11]\color{codekeywords}\bfseries,
+%labels
+keywordstyle=[1]\color{codekeywords}\bfseries,
+%conditionals
+keywordstyle=[2]\color{codekeywords}\bfseries,
+%repeat
+keywordstyle=[3]\color{codekeywords}\bfseries,
+%operators
+keywordstyle=[4]\color{codekeywords}\bfseries,
+%types
+keywordstyle=[5]\color{types}\bfseries,
+%structure
+keywordstyle=[6]\color{types}\bfseries,
+%storage class
+keywordstyle=[7]\color{types}\bfseries,
+%constants
+keywordstyle=[8]\color{constants},
+%exceptions
+keywordstyle=[10]\color{codekeywords}\bfseries,
+aboveskip=0ex,belowskip=0ex,
+showstringspaces=false
+}
+
+\lstdefinestyle{alert}{basicstyle=\ttfamily\bfseries\color{darkred},identifierstyle=\color{darkred}}
+\newcommand{\lstalert}[1]{\alert{\underbar{\lstinline[style=alert]#1}}}
+
+\lstdefinestyle{Vc}{morekeywords=[5]{float_v,double_v,int_v,uint_v,short_v,ushort_v,
+  Vector,Mask,
+  long_v,ulong_v,longlong_v,ulonglong_v,schar_v,uchar_v,
+  long_m,ulong_m,longlong_m,ulonglong_m,schar_m,uchar_m,
+  float_m,double_m,int_m,uint_m,short_m,ushort_m},
+  morekeywords=[8]{IndexesFromZero,Zero,One,Size,error,Error,wrong,MemoryAlignment},
+  morekeywords=[3]{foreach_bit}
+}
+
+\lstdefinestyle{VcHighlight}
+{
+  emph={
+    float_v,double_v,int_v,uint_v,short_v,ushort_v,
+    float_m,double_m,int_m,uint_m,short_m,ushort_m
+  },emphstyle=\color{types}\bfseries\underbar,
+  emph={[2]
+    IndexesFromZero,Zero,One,Size
+  },emphstyle={[2]\color{constants}\bfseries\underbar},
+  emph={[3]
+    foreach_bit
+  },emphstyle={[3]\color{codekeywords}\bfseries\underbar}
+}
+
+\newcommand\lstoverlay[1]{
+  \begin{tikzpicture}[overlay]
+      \mode<beamer>{\path[anchor=west,rounded corners,opacity=1.0,minimum width=\linewidth,minimum height=\baselineskip] let
+        \n1 = {(#1-1)},
+        \p1 = (-0.5em,0.25em-\n1\baselineskip)
+      in
+      (\p1) node[fill=yellow!50!red!50!white] {};}
+  \end{tikzpicture}\vskip-\baselineskip
+}
+
+\newcommand\lstoverlayX[3]{
+  \begin{tikzpicture}[overlay]
+      \path[anchor=west,rounded corners,opacity=1.0,minimum
+      width=#3 em,minimum height=\baselineskip] let
+        \n1 = {(#1-1)},
+        \n2 = {#2},
+        \p1 = (-0.5em+\n2 em,0.25em-\n1\baselineskip)
+      in
+      (\p1) node[fill=yellow!90!red!50!white] {};
+  \end{tikzpicture}\vskip-\baselineskip
+}
+
+\lstset{frame=none,captionpos=b}
+
+% vim: sw=2 sts=2 ai tw=80 et

@@ -1,0 +1,536 @@
+% wg21.sty
+%
+% Copyright (C) 2013-2014 Matthias Kretz <kretz@kde.org>
+% Copyright (C) 2011 Andr\'e Miede http://www.miede.de
+%
+% License:
+% This program is free software; you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation; either version 2 of the License, or
+% (at your option) any later version.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+% GNU General Public License for more details.
+%
+% You should have received a copy of the GNU General Public License
+% along with this program; see the file COPYING.  If not, write to
+% the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+% Boston, MA 02111-1307, USA.
+
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{wg21}[2014/05/22 v1.0 Template for WG21 papers]
+\RequirePackage{ifthen}
+    \newboolean{@tocaligned} % the left column of the toc will be aligned (no indention)
+    \newboolean{@subfig} % setup for preloaded @subfig package
+    \newboolean{@dottedtoc} % page numbers in ToC flushed right
+
+\setboolean{@subfig}{true}
+\setboolean{@dottedtoc}{true}
+
+% Options
+% ********************************************************************
+\DeclareOption{tocaligned}{\setboolean{@tocaligned}{true}}
+\DeclareOption{nosubfig}{\setboolean{@subfig}{false}}
+\DeclareOption{nodottedtoc}{\setboolean{@dottedtoc}{false}}
+\ProcessOptions\relax
+
+% fix floatrow \count error
+\usepackage{etex}
+\reserveinserts{20}
+
+% subfig-related stuff
+\@ifpackageloaded{subfig}%
+    {\setboolean{@subfig}{true}%
+    }{\relax}
+\ifthenelse{\boolean{@subfig}}%
+    {\PassOptionsToPackage{subfigure}{tocloft}%
+    }{\relax}%
+
+\KOMAoptions{numbers=noenddot}
+\RequirePackage[american]{babel}
+\AtBeginDocument{\raggedbottom\frenchspacing}
+\usepackage[natbib=true,backend=biber,maxcitenames=1]{biblatex}
+\addbibresource{wg21.bib}
+\defbibheading{bibliography}[\bibname]{%
+  \section{#1}\label{app:bibliography}% %\addcontentsline{toc}{chapter}{\tocEntry{\bibname}}% %\markboth{\spacedlowsmallcaps{\bibname}}{\spacedlowsmallcaps{\bibname}}%
+}
+\AtEndDocument{
+\vspace{2\bigskipamount}
+\appendix
+\section{Acknowledgements}\wgAcknowledgements
+
+\printbibliography
+}
+
+\RequirePackage[fleqn]{amsmath} % math environments and more by the AMS
+\RequirePackage{wg21macros}
+
+% WG21 defaults
+\newcommand\wgGroup{Library Working Group}
+
+% Setup, finetuning, and useful commands
+% ********************************************************************
+\newcommand{\ie}{i.\,e.\xspace}
+\newcommand{\Ie}{I.\,e.\xspace}
+\newcommand{\eg}{e.\,g.\xspace}
+\newcommand{\Eg}{E.\,g.\xspace}
+
+% 3. Loading some handy packages
+\RequirePackage{datetime}
+\renewcommand{\dateseparator}{-}
+
+% 4. Setup floats: tables, (sub)figures, and captions
+% ****************************************************************************************************
+\RequirePackage{tabularx} % better tables
+  \setlength{\extrarowheight}{3pt} % increase table row height
+\newcommand{\tableheadline}[1]{\multicolumn{1}{c}{\spacedlowsmallcaps{#1}}}
+\newcommand{\myfloatalign}{\centering} % to be used with each float for alignment
+\RequirePackage{caption}
+\captionsetup{format=hang,font=small}
+\RequirePackage{subfig}
+
+
+% 5. Setup code listings
+% ****************************************************************************************************
+\RequirePackage{listings}
+
+
+% 6. PDFLaTeX, hyperreferences and citation backreferences
+% ****************************************************************************************************
+% Using PDFLaTeX
+% ********************************************************************
+\PassOptionsToPackage{pdftex,hyperfootnotes=false,pdfpagelabels}{hyperref}
+  \RequirePackage{hyperref}  % backref linktocpage pagebackref
+\pdfcompresslevel=9
+\pdfadjustspacing=1
+\PassOptionsToPackage{pdftex}{graphicx}
+  \RequirePackage{graphicx}
+
+% Hyperreferences
+% ********************************************************************
+\hypersetup{%
+    %draft,  % = no hyperlinking at all (useful in b/w printouts)
+    colorlinks=false, linktocpage=true, pdfstartpage=3, pdfstartview=FitV,%
+    pdfborder={0 0 0},%
+    % uncomment the following line if you want to have black links (e.g., for printing)
+    %colorlinks=false, linktocpage=false, pdfstartpage=3, pdfstartview=FitV,%
+    breaklinks=true, pdfpagemode=UseNone, pageanchor=true, pdfpagemode=UseOutlines,%
+    plainpages=false, bookmarksnumbered, bookmarksopen=true, bookmarksopenlevel=1,%
+    hypertexnames=true, pdfhighlight=/O,%nesting=true,%frenchlinks,%
+    urlcolor=webbrown, linkcolor=RoyalBlue, citecolor=webgreen, %pagecolor=RoyalBlue,%
+    %urlcolor=Black, linkcolor=Black, citecolor=Black, %pagecolor=Black,%
+    pdftitle={\wgTitle\ [\wgDocumentNumber]},%
+    pdfauthor={\textcopyright\ \wgName},%
+    pdfsubject={SIMD Programming in C++},%
+    pdfkeywords={SIMD,SSE,AVX,MIC,Xeon Phi,C++,Library Design,SIMD Abstraction}%
+}
+
+% Setup autoreferences
+% ********************************************************************
+% There are some issues regarding autorefnames
+% http://www.ureader.de/msg/136221647.aspx
+% http://www.tex.ac.uk/cgi-bin/texfaq2html?label=latexwords
+% you have to redefine the makros for the
+% language you use, e.g., american, ngerman
+% (as chosen when loading babel/AtBeginDocument)
+\@ifpackageloaded{babel}%
+    {%
+       \addto\extrasamerican{%
+          \renewcommand*{\figureautorefname}{Figure}%
+          \renewcommand*{\tableautorefname}{Table}%
+          \renewcommand*{\partautorefname}{Part}%
+          \renewcommand*{\chapterautorefname}{Chapter}%
+          \renewcommand*{\sectionautorefname}{Section}%
+          \renewcommand*{\subsectionautorefname}{Section}%
+          \renewcommand*{\subsubsectionautorefname}{Section}%
+        }%
+       \addto\extrasngerman{%
+          \renewcommand*{\paragraphautorefname}{Absatz}%
+          \renewcommand*{\subparagraphautorefname}{Unterabsatz}%
+          \renewcommand*{\footnoteautorefname}{Fu\"snote}%
+          \renewcommand*{\FancyVerbLineautorefname}{Zeile}%
+          \renewcommand*{\theoremautorefname}{Theorem}%
+          \renewcommand*{\appendixautorefname}{Anhang}%
+          \renewcommand*{\equationautorefname}{Gleichung}%
+          \renewcommand*{\itemautorefname}{Punkt}%
+        }%
+      % Fix to getting autorefs for subfigures right (thanks to Belinda Vogt for changing the definition)
+      \providecommand{\subfigureautorefname}{\figureautorefname}%
+    }{\relax}
+
+% PDF Stuff
+% ********************************************************************
+\RequirePackage{ifpdf}
+\ifpdf\RequirePackage{hyperref}\fi % for texorpdfstring command below
+
+% Colors
+% ********************************************************************
+\definecolor{halfgray}{gray}{0.55} % chapter numbers will be semi transparent .5 .55 .6 .0
+\definecolor{Maroon}{cmyk}{0, 0.87, 0.68, 0.32}
+\definecolor{RoyalBlue}{cmyk}{1, 0.50, 0, 0}
+\definecolor{Headings}{cmyk}{0.72, 0.54, 0, 0.20}
+\definecolor{HeadingRule}{gray}{0.8}
+
+\newfont{\sectionNumberFont}{eurb10 scaled 2000}%
+
+% Own Stuff
+% ********************************************************************
+% Disable single lines at the start of a paragraph (Schusterjungen)
+\clubpenalty = 10000
+% Disable single lines at the end of a paragraph (Hurenkinder)
+\widowpenalty = 10000
+\displaywidowpenalty = 10000 % formulas
+
+
+% Enumeration environment with small caps
+\newenvironment{aenumerate}
+    {\def\theenumi{\textsc{\alph{enumi}}}%
+     \enumerate}
+    {\endenumerate}
+
+% Fancy Stuff
+% ********************************************************************
+\RequirePackage{booktabs} % for better rules in tables
+
+% \spaced... (letterspacing for titles)
+\RequirePackage{soul} % for letterspacing
+  \sodef\allcapsspacing{}{0em}{0.45em}{0.35em}%
+  \sodef\lowsmallcapsspacing{}{0em}{0.45em}{0.35em}%
+  \sodef\smallcapsspacing{}{0em}{0.45em}{0.35em}%
+  \DeclareRobustCommand{\spacedallcaps}[1]%
+    {{\scshape\addfontfeature{LetterSpace=4}\allcapsspacing{\protect{\MakeUppercase{#1}}}}}%
+  \DeclareRobustCommand{\spacedallcapscentered}[1]%
+    {\hfill\spacedallcaps{#1}\hfill}
+  \DeclareRobustCommand{\spacedlowsmallcaps}[1]%
+    {{\scshape\addfontfeature{LetterSpace=7}\lowsmallcapsspacing{\protect{\MakeLowercase{#1}}}}}
+  \DeclareRobustCommand{\spacedsmallcaps}[1]%
+    {{\scshape\addfontfeature{LetterSpace=7}\smallcapsspacing{\protect{#1}}}}%
+
+% headlines
+% ********************************************************************
+\PassOptionsToPackage{automark}{scrpage2}
+  \RequirePackage{scrpage2} % provides headers and footers (KOMA Script)
+    \clearscrheadings
+    %\setheadsepline{0.3pt}
+    \renewcommand{\sectionmark}[1]{\markright{\color{Headings}\spacedsmallcaps{\thesection\enspace{}#1}}}
+    \rohead{\mbox{\hfil{\headmark}}}
+    \lohead{\mbox{\color{halfgray}\spacedallcaps{\wgDocumentNumber}}}
+    \lofoot{\hfill\thepage\hfill}
+    \renewcommand{\headfont}{\normalsize}
+    % hack to get the content headlines right (thanks, Lorenzo!)
+    \def\toc@heading{%
+       \section*{\contentsname}
+       \@mkboth{\spacedsmallcaps{\contentsname}}{\spacedsmallcaps{\contentsname}}}
+
+
+% layout of the chapter-, section-, subsection-, subsubsection-,
+% paragraph and description-headings
+% ********************************************************************
+\RequirePackage[explicit,nobottomtitles*]{titlesec}
+    \def\@myheadingrule{\nopagebreak\titleline{\color{HeadingRule}\titlerule}}
+    % sections \FloatBarrier
+    \newlength{\ct@labelwidth}%
+    \titleformat{\section}%
+      {\color{Headings}}%
+      {{\sectionNumberFont\thesection}}%
+      {-1em}%
+      {%
+        {\hfill\large\color{Headings}\spacedallcaps{#1}}%
+        \nopagebreak\vskip-0.05\baselineskip%
+        \@myheadingrule\nopagebreak%
+      }%
+    % subsections
+    \titleformat{\subsection}
+      {\color{Headings}}
+      {\spacedlowsmallcaps{\thesubsection}}%
+      {0pt}
+      {%
+        \hfill\spacedlowsmallcaps{#1}%
+        \nopagebreak\vskip-0.05\baselineskip%
+        \@myheadingrule\nopagebreak%
+      }
+    % subsubsections
+    \titleformat{\subsubsection}%
+      {\color{Headings}}%
+      {\spacedlowsmallcaps{\thesubsubsection}}%
+      {0pt}%
+      {\hfill\normalsize\spacedlowsmallcaps{#1}\nopagebreak}
+    % paragraphs
+    \titleformat{\paragraph}[runin]
+      {\normalfont\normalsize}
+      {\theparagraph}
+      {0pt}
+      {\spacedlowsmallcaps{#1}}
+    % descriptionlabels
+    \renewcommand{\descriptionlabel}[1]{\hspace*{\labelsep}\spacedsmallcaps{#1}}   % spacedlowsmallcaps textit textsc
+    % spacing
+    \titlespacing*{\section}{0pt}{1.25\baselineskip plus 1.5\baselineskip minus 0.25\baselineskip}{-.5\baselineskip plus 0.05\baselineskip}
+    \titlespacing*{\subsection}{0pt}{1.0\baselineskip plus 1.5\baselineskip minus 0.2\baselineskip}{-.5\baselineskip plus 0.05\baselineskip}
+    \titlespacing*{\subsubsection}{0pt}{0.75\baselineskip plus 1.5\baselineskip minus 0.15\baselineskip}{.1\baselineskip plus 0.05\baselineskip}
+    \titlespacing*{\paragraph}{0pt}{.4\baselineskip plus 0.2\baselineskip minus 0.10\baselineskip}{1em plus 1.0em minus 0.4em}
+
+% layout of the TOC, LOF and LOT (LOL-workaround see next section)
+% ********************************************************************
+\PassOptionsToPackage{titles}{tocloft}
+  \RequirePackage{tocloft}
+    % avoid page numbers being right-aligned in fixed-size box
+    \newlength{\newnumberwidth}
+    \settowidth{\newnumberwidth}{99} % yields overfull hbox warnings for pages > 999
+    \cftsetpnumwidth{\newnumberwidth}
+    % have the bib neatly positioned after the rest
+    \newlength{\beforebibskip}
+    \setlength{\beforebibskip}{0em}
+    % only show sections
+    \setcounter{tocdepth}{1}
+    % sections
+      \setlength{\cftbeforesecskip}{.1em}%
+      \setlength{\beforebibskip}{.2em}%
+      \renewcommand{\cftsecpresnum}{\spacedsmallcaps}%
+      \renewcommand{\cftsecfont}{\spacedsmallcaps}%
+      \renewcommand{\cftsecpagefont}{\normalfont\scshape\addfontfeature{Numbers={Monospaced}}}%
+      \ifthenelse{\boolean{@dottedtoc}}{\relax}%
+      {%
+        \renewcommand{\cftsecleader}{\hspace{1.5em}}%
+        \renewcommand{\cftsecafterpnum}{\cftparfillskip}%
+      }
+      \ifthenelse{\boolean{@tocaligned}}{\renewcommand{\cftsecindent}{0em}}{\relax}
+    % subsections
+      \renewcommand{\cftsubsecpresnum}{\relax}%
+      \renewcommand{\cftsubsecfont}{\normalfont\spacedsmallcaps}%
+      \renewcommand{\cftsubsecpagefont}{\normalfont\scshape}%
+      \ifthenelse{\boolean{@dottedtoc}}{\relax}%
+      {%
+        \renewcommand{\cftsubsecleader}{\hspace{1.5em}}%
+        \renewcommand{\cftsubsecafterpnum}{\cftparfillskip}%
+      }
+      \ifthenelse{\boolean{@tocaligned}}{\renewcommand{\cftsubsecindent}{0em}}{\relax}
+    % subsubsections
+      \renewcommand{\cftsubsubsecpresnum}{\relax}%
+      \renewcommand{\cftsubsubsecfont}{\normalfont\spacedsmallcaps}%
+      \renewcommand{\cftsubsubsecpagefont}{\normalfont\scshape}%
+      \ifthenelse{\boolean{@dottedtoc}}{\relax}%
+      {%
+        \renewcommand{\cftsubsubsecleader}{\hspace{1.5em}}%
+        \renewcommand{\cftsubsubsecafterpnum}{\cftparfillskip}%
+      }
+      \ifthenelse{\boolean{@tocaligned}}{\renewcommand{\cftsubsubsecindent}{0em}}{\relax}
+    % figures
+      \renewcommand{\cftfigpresnum}{\scshape\MakeLowercase}%
+      \renewcommand{\cftfigfont}{\normalfont}%
+      \ifthenelse{\boolean{@dottedtoc}}{\relax}%
+      {%
+        \renewcommand{\cftfigleader}{\hspace{1.5em}}%
+        \renewcommand{\cftfigafterpnum}{\cftparfillskip}%
+      }
+      \renewcommand{\cftfigpresnum}{\figurename~}%Fig.~}
+      \newlength{\figurelabelwidth}
+      \settowidth{\figurelabelwidth}{\cftfigpresnum~999}
+      \addtolength{\figurelabelwidth}{2.5em}
+      \cftsetindents{figure}{0em}{\figurelabelwidth}
+    % tables
+      \renewcommand{\cfttabpresnum}{\scshape\MakeLowercase}%
+      \renewcommand{\cfttabfont}{\normalfont}%
+      \ifthenelse{\boolean{@dottedtoc}}{\relax}%
+      {%
+        \renewcommand{\cfttableader}{\hspace{1.5em}}%
+        \renewcommand{\cfttabafterpnum}{\cftparfillskip}%
+      }
+      \renewcommand{\cfttabpresnum}{\tablename~}%Tab.~}
+      \newlength{\tablelabelwidth}
+      \settowidth{\tablelabelwidth}{\cfttabpresnum~999}
+      \addtolength{\tablelabelwidth}{2.5em}
+      %\cftsetindents{table}{0em}{\tablelabelwidth}
+      \cftsetindents{table}{0em}{\figurelabelwidth}
+    % listings
+    \ifdefined\lstset
+      \newlistof{listings}{lol}{\lstlistlistingname}%
+      \renewcommand{\cftlistingspresnum}{\scshape\MakeLowercase}%
+      \renewcommand{\cftlistingsfont}{\normalfont}%
+      \renewcommand{\cftlistingspresnum}{\lstlistingname~}%
+      \renewcommand{\cftlistingspagefont}{\normalfont\scshape}%
+      \ifthenelse{\boolean{@dottedtoc}}{\relax}%
+      {%
+        \renewcommand{\cftlistingsleader}{\hspace{1.5em}}%
+        \renewcommand{\cftlistingsafterpnum}{\cftparfillskip}%
+      }
+      \newlength{\listingslabelwidth}%
+      \settowidth{\listingslabelwidth}{\cftlistingspresnum~999}%
+      \addtolength{\listingslabelwidth}{2.5em}%
+      %\cftsetindents{listings}{0em}{\listingslabelwidth}%
+      \cftsetindents{listings}{0em}{\figurelabelwidth}%
+      \let\l@lstlisting\l@listings%
+      \let\lstlistoflistings\listoflistings%
+    \fi
+
+    \DeclareRobustCommand*{\deactivateaddvspace}{\let\addvspace\@gobble}%
+    \AtBeginDocument{%
+      \addtocontents{lof}{\deactivateaddvspace}%
+      \addtocontents{lot}{\deactivateaddvspace}%
+      \ifdefined\lstset
+        \addtocontents{lol}{\deactivateaddvspace}%
+      \fi
+    }%
+
+% footnotes setup
+% ********************************************************************
+\ifdefined\deffootnote
+  % KOMA-command, footnotemark not superscripted at the bottom
+  \deffootnote{0em}{0em}{\thefootnotemark\hspace*{.5em}}%
+  \message{Using KOMA-command "deffootnote" for footnote setup}%
+\else
+  \PassOptionsToPackage{flushmargin}{footmisc}%
+  \RequirePackage{footmisc}%
+  \setlength{\footnotemargin}{-.5em}%
+    \PackageWarningNoLine{classicthesis}{Using package "footmisc" with option %
+      "flushmargin" for footnote setup (not 100\% the same as with KOMA)}%
+\fi
+
+% Drafting Stuff
+% ********************************************************************
+\RequirePackage{xstring}
+\newcommand{\finalVersionString}{}
+\IfBeginWith{\wgDocumentNumber}{N}{%
+  \renewcommand{\finalVersionString}{\emph{Final Version} as of \today\ (\texttt{classicthesis} \wgVersion).}
+}{%
+  \RequirePackage{scrtime} % time access
+  \RequirePackage{draftwatermark}%
+  \SetWatermarkLightness{0.95}
+  \SetWatermarkScale{.5}
+  \SetWatermarkText{\wgDocumentNumber}
+  \PassOptionsToPackage{draft}{prelim2e}
+  \RequirePackage{prelim2e}
+  \renewcommand{\PrelimWords}{\relax}
+  \renewcommand{\PrelimText}{\footnotesize--- \today\ at \thistime\ --- \wgVersion\ ---}
+}
+
+% Caption numbering now w/o chapter number
+% ********************************************************************
+\ifdefined\lstset
+  \lstset{numberbychapter=false}
+\fi
+\RequirePackage{remreset}%
+  \renewcommand{\thetable}{\arabic{table}}%
+  \renewcommand{\thefigure}{\arabic{figure}}%
+  \renewcommand{\theequation}{\arabic{equation}}%
+
+% Fonts:
+% ********************************************************************
+\usepackage{lualatex-math}
+\usepackage{fontspec}
+\linespread{1.09}
+\renewcommand{\familydefault}{\sfdefault}
+
+%TeXGyrePagella / SwitzeraADFLight
+\setmainfont[Ligatures=TeX,
+             SmallCapsFeatures={Numbers={Monospaced,OldStyle}}]{TeXGyreTermes}
+\setsansfont[Ligatures=TeX,
+             SmallCapsFont={TeXGyreAdventor},
+             SmallCapsFeatures={Letters=SmallCaps,Scale=MatchLowercase,Numbers={Proportional}}]{SwitzeraADFLight}
+\setmonofont[Ligatures=NoCommon,
+             FakeStretch=0.87]{TeXGyreCursor}
+
+% Math fonts:
+\usepackage{unicode-math}
+\setmathfont{latinmodern-math}
+%\setmathfont[range=\mathrm]{texgyrepagella-math.otf}
+%\setmathfont[range=\mathsf]{SwitzeraADFLight}
+%\setmathfont[range=\mathtt,Ligatures=NoCommon,FakeStretch=0.87]{TeXGyreCursor}
+%\setmathfont[range=\mathcal]{latinmodern-math}
+
+% Hyphenations
+%\usepackage{hyphenat}
+%\usepackage{hyphenations}
+
+\usepackage{units}
+\usepackage{tikz}
+\usetikzlibrary{calc,fit,positioning}
+
+\usepackage{caption}
+\usepackage{floatrow}
+\captionsetup{
+  font=sf,
+  labelfont={sf,color={halfgray},bf}
+}
+\floatsetup{
+  font=sf
+}
+
+\usepackage{listingscpp}
+\usepackage{xfrac}
+\usepackage{typelist}
+\usepackage{relsize}
+
+\def\listingssize{\smaller[1]}
+\lstset{backgroundcolor=\color[cmyk]{0,0,0,0.015},
+fillcolor=\color[cmyk]{0,0,0,0.015},
+rulesepcolor=\color[cmyk]{0,0,0,0.015},
+frame=single,
+framerule=0.4pt,
+framesep=3pt,
+frameround=ffff,
+rulesep=2pt,
+rulecolor=\color[cmyk]{0,0,0,0.1},
+floatplacement=btp,
+numberstyle=\scshape\addfontfeature{Numbers={Uppercase,Monospaced}}\tiny,
+basicstyle=\listingssize\ttfamily
+}
+\lstset{%
+  emph={implementation_defined,target_dependent},
+  emphstyle={\itshape}
+}
+
+\definecolor{inlinetypes}{gray}{0.2}
+\DeclareRobustCommand{\code}[1]{\texorpdfstring{\texttt{#1}}{{#1}}}
+\DeclareRobustCommand{\type}[1]{\texorpdfstring{\texttt{#1}}{{#1}}}
+%\DeclareRobustCommand{\type}[1]{\texorpdfstring{\texttt{\color{inlinetypes}\bfseries #1}}{#1}}
+\newcommand\codelst{\lstinline[style=Vc,breaklines,basicstyle=\ttfamily]}
+\newcommand\centerbox[1]{\\*\makebox[\linewidth]{\vbox{\vskip 0.1ex\centering #1}}}
+\newcommand\codebox[1]{\\*\makebox[\linewidth]{\vbox{#1}}}
+
+\newenvironment{wgTitlepage}{
+  \pagenumbering{roman}
+  \begin{titlepage}
+    \begin{tabular}{@{}ll@{}}
+      Document Number: & \wgDocumentNumber \\
+      \ifdefined\wgPreviousDocumentNumber
+        Revision of: & \wgPreviousDocumentNumber \\
+      \fi
+      Date: & \yyyymmdddate\today \\
+      Project: & Programming Language \CC{}, \wgGroup \\
+      Reply-to: & \parbox[t]{\textwidth}{\wgName}
+    \end{tabular}
+    \begin{center}
+      \huge
+      \vskip2em
+      \color{Maroon}
+      \spacedsmallcaps{\wgTitle}
+    \end{center}
+    \vfill
+    {\hfill\large\color{Headings}\spacedallcaps{Abstract}}
+
+    \medskip
+    \parindent0pt
+}{
+    \vfill
+    \tableofcontents
+  \end{titlepage}
+  \pagenumbering{arabic}
+  \pagestyle{scrheadings}
+}
+
+\newcommand{\round}[1]{\left\lfloor #1\right\rceil}
+\newcommand\textiff{iff\xspace}
+\newcommand\VSize[1]{\ensuremath{\mathcal{W}_{\mathtt{#1}}}}
+\newcommand\sizeof[1]{\ensuremath{\mathtt{sizeof(#1)}}}
+\newcommand\ac[1]{#1}
+\newcommand\acp[1]{#1s}
+\newcommand\acl[1]{#1}
+\renewcommand\comment[1]{\relax}
+\newcommand\datatype{data type\xspace}
+\newcommand\datatypes{data types\xspace}
+\newcommand\datastructure{data structure\xspace}
+\newcommand\datastructures{data structures\xspace}
+\newcommand\workingset{working set\xspace}
+\newcommand\workingsets{working sets\xspace}

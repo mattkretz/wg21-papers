@@ -1,0 +1,18 @@
+\newcommand\typelist@item[1]{\hspace*{\labelsep}\type{#1}}%
+
+\newenvironment*{typelist}[1][]{%
+  \begin{list}{}{%
+    \settowidth\labelwidth{\type{#1}}%
+    \itemindent-\leftmargin%
+    \let\makelabel\typelist@item%
+    \advance\itemindent\labelwidth%
+  }%
+}{\end{list}}
+\newenvironment*{typelist*}{%
+  \begin{list}{}{%
+    \labelwidth\linewidth%
+    \itemindent-\leftmargin%
+    \let\makelabel\typelist@item%
+    \advance\itemindent\labelwidth%
+  }%
+}{\end{list}}
