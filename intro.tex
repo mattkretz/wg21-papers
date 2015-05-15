@@ -1,0 +1,48 @@
+\section{Introduction}
+\subsection{SIMD Registers and Operations}
+Since many years the number of SIMD instructions and the size of SIMD registers have been growing.
+Newer microarchitectures introduce new operations for optimizing certain (common or specialized) operations.
+Additionally, the size of SIMD registers has increased and may increase further in the future.
+
+The typical minimal set of SIMD instructions for a given scalar data type comes down to the following:
+\begin{itemize}
+  \item Load instructions: load \VSize{T} successive scalar values starting from a given address into a SIMD register.
+  \item Store instructions: store from a SIMD register to \VSize{T} successive scalar values at a given address.
+  \item Arithmetic instructions: apply the arithmetic operation to each pair of scalar values in the two SIMD registers and store the results back to a SIMD register.
+  \item Compare instructions: apply the compare operation to each pair of scalar values in the two SIMD registers and store the results back to a SIMD mask register.
+  \item Bitwise instructions: bitwise operations on SIMD registers.
+\end{itemize}
+
+The set of available operations can differ considerably between different microarchitectures of the same CPU family.
+Furthermore there are different SIMD register sizes.
+Future extensions will certainly add more instructions and larger SIMD registers.
+
+\subsection{Motivation for SIMD Types}
+SIMD registers and operations are the low-level ingredients to SIMD programming.
+Higher-level abstractions can be built on top of these.
+If the low-level access to SIMD is not provided, users of \CC{} will be constrained to work within the limits of the provided abstraction.
+
+In some cases the compiler might generate better code if only the intent is stated instead of an exact sequence of operations.
+Therefore, higher-level abstractions might seem preferable to low-level SIMD types.
+In my experience this is not an issue because programming with SIMD types makes intent very clear and compilers can optimize sequences of SIMD operations just like they can for scalar operations.
+SIMD types do not lead to an easy and obvious answer for efficient and easily usable data structures, though.
+But, in contrast to vector loops, SIMD types make unsuitable data structures glaringly obvious and can significantly support the developer in creating more suitable data layouts.
+
+One major benefit from SIMD types is that the programmer can gain an intuition for SIMD.
+This subsequently influences further design of data structures and algorithms to better suit SIMD architectures.
+
+There are already many users of SIMD intrinsics (and thus a primitive form of SIMD types).
+Providing a cleaner and portable SIMD API would provide many of them with a better alternative.
+Thus, SIMD types in \CC{} would capture and improve on widespread existing practice.
+
+The challenge remains in providing \emph{portable} SIMD types and operations.
+
+\subsection{Problem}
+\CC{} has no means to use SIMD operations directly.
+There are indirect uses through automatic loop vectorization or optimized algorithms (that use extensions to C/\CC{} or assembly for their implementation).
+
+All compiler vendors (that I worked with) add intrinsics support to their compiler products to make SIMD operations accessible from C.
+These intrinsics are inherently not portable and most of the time very directly bound to a specific instruction.
+(Compilers are able to statically evaluate and optimize SIMD code written via intrinsics, though.)
+
+% ft=tex tw=0 et sw=2 spell
