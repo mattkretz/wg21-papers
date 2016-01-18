@@ -391,7 +391,7 @@
 % ********************************************************************
 \RequirePackage{xstring}
 \newcommand{\finalVersionString}{}
-\IfBeginWith{\wgDocumentNumber}{N}{%
+\IfBeginWith{\wgDocumentNumber}{P}{%
   \renewcommand{\finalVersionString}{\emph{Final Version} as of \today\ (\texttt{classicthesis} \wgVersion).}
 }{%
   \RequirePackage{scrtime} % time access
