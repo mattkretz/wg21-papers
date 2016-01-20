@@ -1,5 +1,5 @@
 \section{Introduction}
-(Nothing new here compared to the earlier revisions.)
+(Contains minor improvements and clarifications compared to the earlier revisions.)
 
 \subsection{SIMD Registers and Operations}
 Since many years the number of SIMD instructions and the size of SIMD registers have been growing.
@@ -13,20 +13,24 @@ The typical minimal set of SIMD instructions for a given scalar data type comes 
   \item Arithmetic instructions: apply the arithmetic operation to each pair of scalar values in the two SIMD registers and store the results back to a SIMD register.
   \item Compare instructions: apply the compare operation to each pair of scalar values in the two SIMD registers and store the results back to a SIMD mask register.
   \item Bitwise instructions: bitwise operations on SIMD registers.
+  \item Shuffle instructions: permutation and/or blending of scalars in (a) SIMD register(s).
 \end{itemize}
 
-The set of available operations can differ considerably between different microarchitectures of the same CPU family.
+The set of available instructions may differ considerably between different microarchitectures of the same CPU family.
 Furthermore there are different SIMD register sizes.
 Future extensions will certainly add more instructions and larger SIMD registers.
 
-\subsection{Motivation for SIMD Types}
-SIMD registers and operations are the low-level ingredients to SIMD programming.
-Higher-level abstractions can be built on top of these.
-If the low-level access to SIMD is not provided, users of \CC{} will be constrained to work within the limits of the provided abstraction.
+\subsection{Motivation for Data-Parallel Types}
+SIMD registers and operations are the low-level ingredients to efficient programming for SIMD CPUs.
+At a more abstract level this is is not only about SIMD CPUs, but efficient data-parallel execution (CPUs, GPUs, possibly FPGAs and classical vector supercomputers).
+The familiar abstraction of CPU registers and operations in the \CC{} language are the fundamental types together with their operations.
+Thus, a data-parallel type (SIMD type) can provide the necessary interface for writing software that can utilize data-parallel hardware efficiently.
+Higher-level abstractions can be built on top of these types.
+Note that if a low-level access to SIMD is not provided, users of \CC{} are either constrained to work within the limits of the provided abstraction or resort to non-portable extensions, such as SIMD intrinsics.
 
 In some cases the compiler might generate better code if only the intent is stated instead of an exact sequence of operations.
 Therefore, higher-level abstractions might seem preferable to low-level SIMD types.
-In my experience this is not an issue because programming with SIMD types makes intent very clear and compilers can optimize sequences of SIMD operations just like they can for scalar operations.
+In my experience this is a non-issue because programming with SIMD types makes intent very clear and compilers can optimize sequences of SIMD operations just like they can for scalar operations.
 SIMD types do not lead to an easy and obvious answer for efficient and easily usable data structures, though.
 But, in contrast to vector loops, SIMD types make unsuitable data structures glaringly obvious and can significantly support the developer in creating more suitable data layouts.
 

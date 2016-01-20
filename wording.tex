@@ -1,5 +1,6 @@
 \section{Wording}
 
+The following is a rough draft of possible wording that defines a basic set of data-parallel types.
 
 \begin{wgText}
   \wgSection{Data-Parallel Types}{datapar.types}
@@ -7,8 +8,89 @@
   \wgSubsection{Header \code{<datapar>} synopsis}{datapar.syn}
   \lstinputlisting[]{synopsis.cpp}
 
-  \wgSubsection{Class template \code{datapar}}{datapar}
+  \pnum
+  The header \code{<datapar>} defines two class templates (\datapar, and \mask), several tag types, and a series of related function templates for concurrent manipulation of the values in \datapar and \mask objects.
 
-  \wgSubsection{Class template \code{mask}}{datapar.mask}
+  \begin{itemdecl}
+    namespace datapar_target {
+      struct scalar {};
+      // implementation-defined tag types, e.g. sse, avx, avx512, neon, ...
+      typedef implementation_defined widest;
+    }
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum
+    The target types are tag types to be used as the second template argument to \datapar.
+
+    \pnum
+    The \type{scalar} tag is present in all implementations and forces \datapar and \mask to store a single component (i.e. \datapar\type{<T, datapar_target::scalar>::size()} returns \code 1).
+
+    \pnum
+    An implementation may choose to implement data-parallel execution for many different targets.
+    All tag types this implementation supports shall be present independent of the chosen target.
+    %\wgNote{This means that if the type \type{datapar_target::abc} is implemented for the \emph{abc} target system, compilation for the target \emph{xyz} will also have the \type{datapar_target::abc} tag type.}
+
+    \pnum
+    The \type{datapar_target::widest} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution.
+  \end{itemdescr}
+
+  \begin{itemdecl}
+    template <size_t> struct target_for_width {
+      typedef implementation_defined type;
+    };
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum
+    The \type{target_for_width} class template defines the member type \type{type} to one of the tag types in \code{datapar_target} or not at all, depending on the value of the template parameters.
+
+    \pnum
+    \code{datapar<T, target_for_width_t<T, N>>::size()} must return \code N or result in a substitution failure.
+  \end{itemdescr}
+
+  \wgSubsection{Class template \datapar}{datapar}
+  \wgSubsubsection{Class template \datapar overview}{datapar.overview}
+  \lstinputlisting[]{datapar.cpp}
+
+  The class template \datapar\type{<T, Target>} is a one-dimensional smart array.
+  In contrast to \type{valarray} (26.6), the number of elements in the array is determined at compile time, according to the \type{Target} template parameter.
+
+  \begin{itemdecl}
+    typedef implementation_defined internal_type;
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum
+    The \type{internal_type} member type is an alias for the \code{internal()} member function return type.
+    It is used to expose an implementation-defined handle for implementation- and target-specific extensions.
+  \end{itemdescr}
+
+  \begin{itemdecl}
+    typedef implementation_defined register_value_type;
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \wgSubsubsection{\datapar constructors}{datapar.ctor}
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \wgSubsection{Class template \mask}{datapar.mask}
+  \lstinputlisting[]{mask.cpp}
 
 \end{wgText}

@@ -1,0 +1,42 @@
+\section{Discussion}
+
+\subsection{Member Types}
+The member types may not seem obvious.
+Rationales:
+\begin{typelist*}
+  \item[value_type]
+    In the spirit of the \valuetype member of STL containers, this type denotes the \emph{logical} type of the values in the vector.
+
+  \item[register_value_type]
+    On some targets it may be beneficial to implement \datapar instantiations of some \type T with a different type \type{register_value_type}, which has higher precision than \type T.
+    This is mostly an implementation detail, but can be important to know in some situations, especially whenever \type{internal_type} is involved.
+
+  \item[internal_type]
+    The type used for enabling access to an implementation-defined member object (via the \code{internal()} function).
+
+  \item[reference]
+    Used as the return type of the non-const scalar subscript operator.
+    This may use implementation-defined means to solve possible type aliasing issues.
+
+  \item[const_reference]
+    Used as the return type of the const scalar subscript operator.
+    From my experience with Vc, it is safest to actually not use a const lvalue reference here, but a temporary.
+
+  \item[mask_type]
+    The natural mask type for this \datapar instantiation.
+    This type is used as return type of compares and write-mask on assignments.
+
+  \item[size_type]
+    Standard member type used for \code{size()} and \code{operator[]}.
+
+  \item[target_type]
+    The \type{Target} template parameter to \datapar.
+
+\end{typelist*}
+
+\subsection{Conversions}
+The \datapar conversion constructor only allows implicit conversion from \datapar template instantiations with the same \type{Target} type and compatible \valuetype.
+Discussion in SG1 showed clear preference for only allowing implicit conversion between integral types that only differ in signedness.
+All other conversions could be implemented via an explicit conversion constructor.
+The alternative (preferred) is to use \simdcast consistently for all other conversions.
+

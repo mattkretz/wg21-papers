@@ -31,6 +31,7 @@
 \RequirePackage[normalem]{ulem}
 \RequirePackage{xcolor}
 \RequirePackage{relsize}
+\RequirePackage{listings}
 
 \newif\ifwgmacros@mono@
 \wgmacros@mono@false
@@ -52,11 +53,15 @@
 \newenvironment{wgText}[1][]{
   \begingroup
   \lstset{%
-      numbers=none,%
-      backgroundcolor=,%
-      fillcolor=,%
+      numbers=none,
+      backgroundcolor=,
+      fillcolor=,
+      texcl=true,
+      frame=none,
+      commentstyle={\rmfamily\itshape\color{comments}},
       basicstyle={\ttfamily\smaller[1]}%
   }
+  \let\type=\code
   \rmfamily\smaller[1]
   \par\noindent\hrulefill #1\\
 }
@@ -81,6 +86,66 @@
   \scriptsize\raisebox{.7ex}{\arabic{Paras}}}\hspace{\@totalleftmargin}\quad}}
 \makeatother
 
+\newenvironment{indented}
+{\list{}{}\item\relax}
+{\endlist}
+
+\lstnewenvironment{itemdecl}
+{
+ \lstset{escapechar=@,
+ frame=none,
+ backgroundcolor=,
+ fillcolor=,
+ xleftmargin=0em,
+ aboveskip=2ex,
+ belowskip=0ex	% leave this alone: it keeps these things out of the
+				% footnote area
+ }
+}
+{
+}
+
+\newenvironment{itemdescr}
+{
+ \begin{indented}}
+{
+ \end{indented}
+}
+
+\newcommand{\Fundescx}[1]{\textit{#1}\xspace}
+\newcommand{\Fundesc}[1]{\Fundescx{#1:}}
+\newcommand{\required}{\Fundesc{Required behavior}}
+\newcommand{\requires}{\Fundesc{Requires}}
+\newcommand{\effects}{\Fundesc{Effects}}
+\newcommand{\postconditions}{\Fundesc{Postconditions}}
+\newcommand{\postcondition}{\Fundesc{Postcondition}}
+\newcommand{\preconditions}{\requires}
+\newcommand{\precondition}{\requires}
+\newcommand{\returns}{\Fundesc{Returns}}
+\newcommand{\throws}{\Fundesc{Throws}}
+\newcommand{\default}{\Fundesc{Default behavior}}
+\newcommand{\complexity}{\Fundesc{Complexity}}
+\newcommand{\remark}{\Fundesc{Remark}}
+\newcommand{\remarks}{\Fundesc{Remarks}}
+\newcommand{\note}{\remark}
+\newcommand{\notes}{\remarks}
+\newcommand{\realnote}{\Fundesc{Note}}
+\newcommand{\realnotes}{\Fundesc{Notes}}
+\newcommand{\errors}{\Fundesc{Error conditions}}
+\newcommand{\sync}{\Fundesc{Synchronization}}
+\newcommand{\implimits}{\Fundesc{Implementation limits}}
+\newcommand{\replaceable}{\Fundesc{Replaceable}}
+\newcommand{\exceptionsafety}{\Fundesc{Exception safety}}
+\newcommand{\returntype}{\Fundesc{Return type}}
+\newcommand{\cvalue}{\Fundesc{Value}}
+\newcommand{\ctype}{\Fundesc{Type}}
+\newcommand{\ctypes}{\Fundesc{Types}}
+\newcommand{\dtype}{\Fundesc{Default type}}
+\newcommand{\ctemplate}{\Fundesc{Class template}}
+\newcommand{\templalias}{\Fundesc{Alias template}}
+
+\DeclareRobustCommand\std{\code{std\MayBreak::\MayBreak}}
+
 \newcommand{\wgSection}[2]{%
     \par%
     \vskip1.0\baselineskip plus 1.5\baselineskip minus 0.2\baselineskip%
@@ -93,11 +158,23 @@
 }
 \newcommand\wgSubsection[2]{%
     \par%
-    \vskip0.75\baselineskip plus 1.5\baselineskip minus 0.15\baselineskip%
+    \vskip0.75\baselineskip plus 1.0\baselineskip minus 0.15\baselineskip%
     \phantomsection%
     \addtocounter{subsubsection}{1}%
+    \setcounter{Paras}{0}%
     \addcontentsline{toc}{subsubsection}{#1}%
     {\larger[1]\noindent\thesubsubsection{} #1\label{sec:#2}\hfill[#2]}\\%
+    \vskip.1\baselineskip plus 0.05\baselineskip%
+    \noindent%
+}
+\newcommand\wgSubsubsection[2]{%
+    \par%
+    \vskip0.5\baselineskip plus .5\baselineskip minus 0.1\baselineskip%
+    \phantomsection%
+    \addtocounter{paragraph}{1}%
+    \setcounter{Paras}{0}%
+    \addcontentsline{toc}{paragraph}{#1}%
+    {\noindent\theparagraph{} #1\label{sec:#2}\hfill[#2]}\\%
     \vskip.1\baselineskip plus 0.05\baselineskip%
     \noindent%
 }
