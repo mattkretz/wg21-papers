@@ -39,6 +39,9 @@ draft: $(DRAFT).pdf
 final: $(NAME).pdf
 mobile: $(NAME)_mobile.pdf
 
+upload: $(NAME).pdf
+	scp $< lxpool.gsi.de:web-docs/datapar.pdf
+
 loop-internal:
 	@while true; do \
 	  while true; do \
