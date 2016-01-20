@@ -6,7 +6,7 @@ dist: trusty
 
 install:
   - sudo apt-get update -q
-  - sudo apt-get install texlive-luatex ttf-adf-switzera fonts-texgyre texlive-latex-extra -y
+  - sudo apt-get install texlive-luatex ttf-adf-switzera fonts-texgyre texlive-latex-extra texlive-bibtex-extra biber -y
 
 script:
   - make
