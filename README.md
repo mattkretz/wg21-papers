@@ -9,4 +9,5 @@ To build the paper you need make, LuaLaTeX (only tested with a recent TeXLive di
 Simply run
 
     make final
-to build the paper.
+
+to build the paper. You can find a recent upload at https://web-docs.gsi.de/~mkretz/datapar.pdf
