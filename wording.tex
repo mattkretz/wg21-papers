@@ -20,10 +20,10 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
-    The target types are tag types to be used as the second template argument to \datapar.
+    The target types are tag types to be used as the second template argument to \datapar and \mask.
 
     \pnum
-    The \type{scalar} tag is present in all implementations and forces \datapar and \mask to store a single component (i.e. \datapar\type{<T, datapar_target::scalar>::size()} returns \code 1).
+    The \type{scalar} tag is present in all implementations and forces \datapar and \mask to store a single component (i.e. \datapar{}\type{<T, datapar_target::scalar>::size()} returns \code 1).
 
     \pnum
     An implementation may choose to implement data-parallel execution for many different targets.
@@ -51,7 +51,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   \wgSubsubsection{Class template \datapar overview}{datapar.overview}
   \lstinputlisting[]{datapar.cpp}
 
-  The class template \datapar\type{<T, Target>} is a one-dimensional smart array.
+  The class template \datapar{}\type{<T, Target>} is a one-dimensional smart array.
   In contrast to \type{valarray} (26.6), the number of elements in the array is determined at compile time, according to the \type{Target} template parameter.
 
   \begin{itemdecl}
@@ -71,18 +71,74 @@ The following is a rough draft of possible wording that defines a basic set of d
 
   \wgSubsubsection{\datapar constructors}{datapar.ctor}
   \begin{itemdecl}
+    datapar() = default;
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum
+    \effects
+    Constructs an object with all elements initialized to \code{T()}.
+    \wgNote{This zero-initializes the object.}
   \end{itemdescr}
 
   \begin{itemdecl}
+    datapar(value_type);
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum
+    \effects
+    Constructs an object with all elements initialized to the value of the argument.
   \end{itemdescr}
 
   \begin{itemdecl}
+    template <typename U> datapar(datapar<U, Target>);
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum
+    \effects
+    Constructs an object from the argument, converting every element of type \type U to \type T.
+  \end{itemdescr}
+
+  \wgSubsubsection{\datapar load functions}{datapar.load}
+  \begin{itemdecl}
+    static datapar load(const value_type *x);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum
+    \effects
+    Constructs an object with each element $i$ initialized to \code{x[i]}.
+
+    \pnum
+    If \datapar{}\code{::size()} is greater than the number of values pointed to by the argument, the behavior is undefined.
+  \end{itemdescr}
+
+  \begin{itemdecl}
+    template <typename Flags> static datapar load(const value_type *, Flags);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum
+    \effects
+    Constructs an object with each element $i$ initialized to \code{x[i]}.
+
+    \pnum
+    If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+
+    \pnum
+    If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
+  \end{itemdescr}
+
+  \begin{itemdecl}
+    template <typename U, typename Flags = unaligned_tag> static datapar load(const U *, Flags = Flags());
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum
+    \effects
+    Constructs an object with each element $i$ initialized to \code{static_cast<T>(x[i])}.
+
+    \pnum
+    If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+
+    \pnum
+    If the second template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type U>}, the behavior is undefined.
   \end{itemdescr}
 
   \begin{itemdecl}

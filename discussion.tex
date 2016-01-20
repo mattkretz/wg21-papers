@@ -40,3 +40,6 @@ Discussion in SG1 showed clear preference for only allowing implicit conversion 
 All other conversions could be implemented via an explicit conversion constructor.
 The alternative (preferred) is to use \simdcast consistently for all other conversions.
 
+\subsection{Broadcast Constructor}
+The broadcast constructor is not declared as \code{explicit} to ease the use of scalar prvalues in expressions involving data-parallel operations.
+The operations where such a conversion should not be implicit consequently need to use SFINAE / concepts to inhibit the conversion.
