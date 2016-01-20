@@ -1,0 +1,15 @@
+language: cpp
+
+# The following gives us Ubuntu 14.04 LTS instead of 12.04 LTS
+sudo: required
+dist: trusty
+
+install:
+  - sudo apt-get update -q
+  - sudo apt-get install texlive-luatex -y
+
+script:
+  - make
+
+notifications:
+  email: false
