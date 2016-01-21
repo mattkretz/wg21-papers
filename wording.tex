@@ -179,7 +179,7 @@ void store(value_type *x, mask_type);
   \begin{itemdescr}
     \pnum \effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is stored to \code{x[i]}.
 
-    \pnum If the largest $i$ where the second argument is \true \code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+    \pnum If the largest $i$ where the second argument is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
   \end{itemdescr}
 
   \begin{itemdecl}
@@ -188,7 +188,7 @@ template <typename Flags> void store(value_type *x, mask_type, Flags);
   \begin{itemdescr}
     \pnum \effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is stored to \code{x[i]}.
 
-    \pnum If the largest $i$ where the second argument is \true \code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+    \pnum If the largest $i$ where the second argument is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
 
     \pnum If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
   \end{itemdescr}
@@ -199,7 +199,7 @@ template <typename U, typename Flags = unaligned_tag> void store(U *x, mask_type
   \begin{itemdescr}
     \pnum \effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is first converted to \type U and then stored to \code{x[i]}.
 
-    \pnum If the largest $i$ where the second argument is \true \code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+    \pnum If the largest $i$ where the second argument is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
 
     \pnum If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type U>}, the behavior is undefined.
   \end{itemdescr}
