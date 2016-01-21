@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/mattkretz/vector-types-paper.svg?branch=master)](https://travis-ci.org/mattkretz/vector-types-paper)
 # vector-types-paper
 
 This repository holds the LuaLaTeX sources for the “Data-Parallel Vector Types &amp; Operations” paper
