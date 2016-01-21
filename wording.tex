@@ -12,11 +12,11 @@ The following is a rough draft of possible wording that defines a basic set of d
   The header \code{<datapar>} defines two class templates (\datapar, and \mask), several tag types, and a series of related function templates for concurrent manipulation of the values in \datapar and \mask objects.
 
   \begin{itemdecl}
-    namespace datapar_target {
-      struct scalar {};
-      // implementation-defined tag types, e.g. sse, avx, avx512, neon, ...
-      typedef implementation_defined widest;
-    }
+namespace datapar_target {
+  struct scalar {};
+  // implementation-defined tag types, e.g. sse, avx, avx512, neon, ...
+  typedef implementation_defined widest;
+}
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
@@ -35,9 +35,9 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    template <size_t> struct target_for_width {
-      typedef implementation_defined type;
-    };
+template <size_t> struct target_for_width {
+  typedef implementation_defined type;
+};
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
@@ -51,11 +51,11 @@ The following is a rough draft of possible wording that defines a basic set of d
   \wgSubsubsection{Class template \datapar overview}{datapar.overview}
   \lstinputlisting[]{datapar.cpp}
 
-  The class template \datapar{}\type{<T, Target>} is a one-dimensional smart array.
+  \pnum The class template \datapar{}\type{<T, Target>} is a one-dimensional smart array.
   In contrast to \type{valarray} (26.6), the number of elements in the array is determined at compile time, according to the \type{Target} template parameter.
 
   \begin{itemdecl}
-    typedef implementation_defined internal_type;
+typedef implementation_defined internal_type;
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
@@ -64,14 +64,14 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    typedef implementation_defined register_value_type;
+typedef implementation_defined register_value_type;
   \end{itemdecl}
   \begin{itemdescr}
   \end{itemdescr}
 
   \wgSubsubsection{\datapar constructors}{datapar.ctor}
   \begin{itemdecl}
-    datapar() = default;
+datapar() = default;
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
@@ -81,7 +81,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    datapar(value_type);
+datapar(value_type);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
@@ -90,7 +90,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    template <typename U> datapar(datapar<U, Target>);
+template <typename U> datapar(datapar<U, Target>);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
@@ -100,7 +100,7 @@ The following is a rough draft of possible wording that defines a basic set of d
 
   \wgSubsubsection{\datapar load functions}{datapar.load}
   \begin{itemdecl}
-    static datapar load(const value_type *x);
+static datapar load(const value_type *x);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
@@ -112,7 +112,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    template <typename Flags> static datapar load(const value_type *x, Flags);
+template <typename Flags> static datapar load(const value_type *x, Flags);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
@@ -127,7 +127,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    template <typename U, typename Flags = unaligned_tag> static datapar load(const U *x, Flags = Flags());
+template <typename U, typename Flags = unaligned_tag> static datapar load(const U *x, Flags = Flags());
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
@@ -143,7 +143,7 @@ The following is a rough draft of possible wording that defines a basic set of d
 
   \wgSubsubsection{\datapar store functions}{datapar.store}
   \begin{itemdecl}
-    void store(value_type *x);
+void store(value_type *x);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum \effects Copies each element such that the $i$-th element is stored to \code{x[i]}.
@@ -152,7 +152,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    template <typename Flags> void store(value_type *x, Flags);
+template <typename Flags> void store(value_type *x, Flags);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum \effects Copies each element such that the $i$-th element is stored to \code{x[i]}.
@@ -163,7 +163,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    template <typename U, typename Flags = unaligned_tag> void store(U *x, Flags = Flags());
+template <typename U, typename Flags = unaligned_tag> void store(U *x, Flags = Flags());
   \end{itemdecl}
   \begin{itemdescr}
     \pnum \effects Copies each element such that the $i$-th element is first converted to \type U and then stored to \code{x[i]}.
@@ -174,7 +174,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    void store(value_type *x, mask_type);
+void store(value_type *x, mask_type);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum \effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is stored to \code{x[i]}.
@@ -183,7 +183,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    template <typename Flags> void store(value_type *x, mask_type, Flags);
+template <typename Flags> void store(value_type *x, mask_type, Flags);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum \effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is stored to \code{x[i]}.
@@ -194,7 +194,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    template <typename U, typename Flags = unaligned_tag> void store(U *x, mask_type, Flags = Flags());
+template <typename U, typename Flags = unaligned_tag> void store(U *x, mask_type, Flags = Flags());
   \end{itemdecl}
   \begin{itemdescr}
     \pnum \effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is first converted to \type U and then stored to \code{x[i]}.
