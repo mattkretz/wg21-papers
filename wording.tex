@@ -112,7 +112,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    template <typename Flags> static datapar load(const value_type *, Flags);
+    template <typename Flags> static datapar load(const value_type *x, Flags);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
@@ -127,7 +127,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   \end{itemdescr}
 
   \begin{itemdecl}
-    template <typename U, typename Flags = unaligned_tag> static datapar load(const U *, Flags = Flags());
+    template <typename U, typename Flags = unaligned_tag> static datapar load(const U *x, Flags = Flags());
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
@@ -139,6 +139,132 @@ The following is a rough draft of possible wording that defines a basic set of d
 
     \pnum
     If the second template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type U>}, the behavior is undefined.
+  \end{itemdescr}
+
+  \wgSubsubsection{\datapar store functions}{datapar.store}
+  \begin{itemdecl}
+    void store(value_type *x);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum \effects Copies each element such that the $i$-th element is stored to \code{x[i]}.
+
+    \pnum If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \end{itemdescr}
+
+  \begin{itemdecl}
+    template <typename Flags> void store(value_type *x, Flags);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum \effects Copies each element such that the $i$-th element is stored to \code{x[i]}.
+
+    \pnum If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+
+    \pnum If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
+  \end{itemdescr}
+
+  \begin{itemdecl}
+    template <typename U, typename Flags = unaligned_tag> void store(U *x, Flags = Flags());
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum \effects Copies each element such that the $i$-th element is first converted to \type U and then stored to \code{x[i]}.
+
+    \pnum If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+
+    \pnum If the second template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type U>}, the behavior is undefined.
+  \end{itemdescr}
+
+  \begin{itemdecl}
+    void store(value_type *x, mask_type);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum \effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is stored to \code{x[i]}.
+
+    \pnum If the largest $i$ where the second argument is \true \code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \end{itemdescr}
+
+  \begin{itemdecl}
+    template <typename Flags> void store(value_type *x, mask_type, Flags);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum \effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is stored to \code{x[i]}.
+
+    \pnum If the largest $i$ where the second argument is \true \code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+
+    \pnum If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
+  \end{itemdescr}
+
+  \begin{itemdecl}
+    template <typename U, typename Flags = unaligned_tag> void store(U *x, mask_type, Flags = Flags());
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum \effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is first converted to \type U and then stored to \code{x[i]}.
+
+    \pnum If the largest $i$ where the second argument is \true \code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+
+    \pnum If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type U>}, the behavior is undefined.
+  \end{itemdescr}
+
+  \wgSubsubsection{\datapar subscript operators}{datapar.subscr}
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \wgSubsubsection{\datapar unary operators}{datapar.unary}
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
+  \end{itemdescr}
+
+  \wgSubsubsection{\datapar internal handles}{datapar.intern}
+  \begin{itemdecl}
+  \end{itemdecl}
+  \begin{itemdescr}
   \end{itemdescr}
 
   \begin{itemdecl}
