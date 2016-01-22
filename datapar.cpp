@@ -43,10 +43,6 @@ namespace std {
       template <typename Flags> void store(value_type *, mask_type, Flags);
       template <typename U, typename Flags = unaligned_tag> void store(U *, mask_type, Flags = Flags());
 
-      // shuffles:
-      auto operator[](std::initializer_list<int> shuffle_pattern)
-          -> datapar<T, target_for_width_t<shuffle_pattern.size()>> const;
-
       // scalar access:
       reference operator[](size_type);
       const_reference operator[](size_type) const;

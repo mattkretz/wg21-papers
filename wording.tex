@@ -54,6 +54,11 @@ template <size_t> struct target_for_width {
   \pnum The class template \datapar{}\type{<T, Target>} is a one-dimensional smart array.
   In contrast to \type{valarray} (26.6), the number of elements in the array is determined at compile time, according to the \type{Target} template parameter.
 
+  \pnum The first template argument \type T must be an integral or floating-point fundamental type.
+  The type \bool is not allowed.
+
+  \pnum The second template argument \type{Target} must be a tag type from the \code{datapar_target} namespace.
+
   \begin{itemdecl}
 typedef implementation_defined internal_type;
   \end{itemdecl}
@@ -86,16 +91,16 @@ datapar(value_type);
   \begin{itemdescr}
     \pnum
     \effects
-    Constructs an object with all elements initialized to the value of the argument.
+    Constructs an object with each element initialized to the value of the argument.
   \end{itemdescr}
 
   \begin{itemdecl}
-template <typename U> datapar(datapar<U, Target>);
+template <typename U> datapar(datapar<U, Target> x);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
     \effects
-    Constructs an object from the argument, converting every element of type \type U to \type T.
+    Constructs an object with the $i$-th element initialized to \code{static_cast<T>(x[i])} for all elements.
   \end{itemdescr}
 
   \wgSubsubsection{\datapar load functions}{datapar.load}
@@ -103,42 +108,29 @@ template <typename U> datapar(datapar<U, Target>);
 static datapar load(const value_type *x);
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum
-    \effects
-    Constructs an object with each element $i$ initialized to \code{x[i]}.
-
-    \pnum
-    If \datapar{}\code{::size()} is greater than the number of values pointed to by the argument, the behavior is undefined.
+    \pnum \effects Constructs an object with each element $i$ initialized to \code{x[i]} for all elements.
+    \pnum \returns The constructed object.
+    \pnum \remarks If \datapar{}\code{::size()} is greater than the number of values pointed to by the argument, the behavior is undefined.
   \end{itemdescr}
 
   \begin{itemdecl}
 template <typename Flags> static datapar load(const value_type *x, Flags);
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum
-    \effects
-    Constructs an object with each element $i$ initialized to \code{x[i]}.
-
-    \pnum
-    If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
-
-    \pnum
-    If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
+    \pnum\effects Constructs an object with each element $i$ initialized to \code{x[i]}.
+    \pnum\returns The constructed object.
+    \pnum\remarks If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+    \pnum         If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
   \end{itemdescr}
 
   \begin{itemdecl}
 template <typename U, typename Flags = unaligned_tag> static datapar load(const U *x, Flags = Flags());
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum
-    \effects
-    Constructs an object with each element $i$ initialized to \code{static_cast<T>(x[i])}.
-
-    \pnum
-    If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
-
-    \pnum
-    If the second template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type U>}, the behavior is undefined.
+    \pnum\effects Constructs an object with each element $i$ initialized to \code{static_cast<T>(x[i])}.
+    \pnum\returns The constructed object.
+    \pnum\remarks If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+    \pnum         If the second template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type U>}, the behavior is undefined.
   \end{itemdescr}
 
   \wgSubsubsection{\datapar store functions}{datapar.store}
@@ -146,130 +138,156 @@ template <typename U, typename Flags = unaligned_tag> static datapar load(const 
 void store(value_type *x);
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum \effects Copies each element such that the $i$-th element is stored to \code{x[i]}.
-
-    \pnum If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+    \pnum\effects Copies each element such that the $i$-th element is stored to \code{x[i]}.
+    \pnum\remarks If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
   \end{itemdescr}
 
   \begin{itemdecl}
 template <typename Flags> void store(value_type *x, Flags);
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum \effects Copies each element such that the $i$-th element is stored to \code{x[i]}.
-
-    \pnum If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
-
-    \pnum If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
+    \pnum\effects Copies each element such that the $i$-th element is stored to \code{x[i]}.
+    \pnum\remarks If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+    \pnum         If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
   \end{itemdescr}
 
   \begin{itemdecl}
 template <typename U, typename Flags = unaligned_tag> void store(U *x, Flags = Flags());
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum \effects Copies each element such that the $i$-th element is first converted to \type U and then stored to \code{x[i]}.
-
-    \pnum If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
-
-    \pnum If the second template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type U>}, the behavior is undefined.
+    \pnum\effects Copies each element such that the $i$-th element is first converted to \type U and then stored to \code{x[i]}.
+    \pnum\remarks If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+    \pnum         If the second template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type U>}, the behavior is undefined.
   \end{itemdescr}
 
   \begin{itemdecl}
 void store(value_type *x, mask_type);
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum \effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is stored to \code{x[i]}.
-
-    \pnum If the largest $i$ where the second argument is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
+    \pnum\effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is stored to \code{x[i]}.
+    \pnum\remarks If the largest $i$ where the second argument is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
   \end{itemdescr}
 
   \begin{itemdecl}
 template <typename Flags> void store(value_type *x, mask_type, Flags);
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum \effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is stored to \code{x[i]}.
-
-    \pnum If the largest $i$ where the second argument is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
-
-    \pnum If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
+    \pnum\effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is stored to \code{x[i]}.
+    \pnum\remarks If the largest $i$ where the second argument is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
+    \pnum         If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
   \end{itemdescr}
 
   \begin{itemdecl}
 template <typename U, typename Flags = unaligned_tag> void store(U *x, mask_type, Flags = Flags());
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum \effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is first converted to \type U and then stored to \code{x[i]}.
-
-    \pnum If the largest $i$ where the second argument is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
-
-    \pnum If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type U>}, the behavior is undefined.
+    \pnum\effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is first converted to \type U and then stored to \code{x[i]}.
+    \pnum\remarks If the largest $i$ where the second argument is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
+    \pnum         If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type U>}, the behavior is undefined.
   \end{itemdescr}
 
   \wgSubsubsection{\datapar subscript operators}{datapar.subscr}
   \begin{itemdecl}
+reference operator[](size_type i);
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum\returns An lvalue reference to the $i$-th element.
+    \pnum\postconditions Assignment of objects of type \type T modify the $i$-th element without aliasing violations.
+    \pnum                Modification of \code{*this} does not invalidate references held to the return value.
+    Subsequent reads from such references yield the new value of the $i$-th element.
   \end{itemdescr}
 
   \begin{itemdecl}
+const_reference operator[](size_type) const;
   \end{itemdecl}
   \begin{itemdescr}
-  \end{itemdescr}
-
-  \begin{itemdecl}
-  \end{itemdecl}
-  \begin{itemdescr}
+    \pnum\returns A \const lvalue reference to the $i$-th element.
+    \pnum\postconditions Modification of \code{*this} does not invalidate references held to the return value.
+    Subsequent reads from such references yield the new value of the $i$-th element.
   \end{itemdescr}
 
   \wgSubsubsection{\datapar unary operators}{datapar.unary}
   \begin{itemdecl}
+datapar &operator++();
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum\effects Increments every element of \code{*this} by one.
+    \pnum\returns An lvalue reference to \code{*this} after incrementing.
+    \pnum\remarks Overflow semantics follow the same semantics as for \type T.
   \end{itemdescr}
 
   \begin{itemdecl}
+datapar operator++(int);
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum\effects Increments every element of \code{*this} by one.
+    \pnum\returns A copy of \code{*this} before incrementing.
+    \pnum\remarks Overflow semantics follow the same semantics as for \type T.
   \end{itemdescr}
 
   \begin{itemdecl}
+datapar &operator--();
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum\effects Decrements every element of \code{*this} by one.
+    \pnum\returns An lvalue reference to \code{*this} after decrementing.
+    \pnum\remarks Underflow semantics follow the same semantics as for \type T.
   \end{itemdescr}
 
   \begin{itemdecl}
+datapar operator--(int);
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum\effects Decrements every element of \code{*this} by one.
+    \pnum\returns A copy of \code{*this} before decrementing.
+    \pnum\remarks Underflow semantics follow the same semantics as for \type T.
   \end{itemdescr}
 
   \begin{itemdecl}
+mask_type operator!() const;
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum\returns A mask object with the $i$-th element set to \code{!operator[](i)} for all elements.
   \end{itemdescr}
 
   \begin{itemdecl}
+datapar operator~() const;
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum\requires The first template argument \type T to \datapar must be an integral type.
+    \pnum\effects Constructs an object where each bit of \code{*this} is inverted.
+    \pnum\returns The new object.
+    \pnum\remarks \datapar{}\code{operator~()} shall not participate in overload resolution if \type T is a floating-point type.
   \end{itemdescr}
 
   \begin{itemdecl}
+datapar operator+() const;
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum \returns A copy of \code{*this}
   \end{itemdescr}
 
   \begin{itemdecl}
+datapar operator-() const;
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum\effects Constructs an object where the $i$-th element is initialized to \code{-operator[](i)} for all elements.
+    \pnum\returns The new object.
   \end{itemdescr}
 
   \wgSubsubsection{\datapar internal handles}{datapar.intern}
   \begin{itemdecl}
+internal_type &internal();
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum\returns An lvalue reference to the implementation-specific object implementing the data-parallel semantics.
   \end{itemdescr}
 
   \begin{itemdecl}
+const internal_type &internal() const;
   \end{itemdecl}
   \begin{itemdescr}
+    \pnum\returns A \const lvalue reference to the implementation-specific object implementing the data-parallel semantics.
   \end{itemdescr}
 
   \wgSubsection{Class template \mask}{datapar.mask}
