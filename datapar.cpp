@@ -2,7 +2,7 @@ namespace std {
   namespace experimental {
     template <typename T, typename Target = implementation_defined> class datapar {
     public:
-      typedef implementation_defined internal_type;
+      typedef implementation_defined native_type;
       typedef T value_type;
       typedef implementation_defined register_value_type;
       typedef implementation_defined reference;
@@ -61,9 +61,9 @@ namespace std {
       datapar operator+() const;
       datapar operator-() const;
 
-      // internal access
-      internal_type &internal();
-      const internal_type &internal() const;
+      // access to the internals for implementation-specific extensions
+      native_type &native_handle();
+      const native_type &native_handle() const;
     };
   }
 }

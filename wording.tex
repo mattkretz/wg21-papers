@@ -60,11 +60,11 @@ template <size_t> struct target_for_width {
   \pnum The second template argument \type{Target} must be a tag type from the \code{datapar_target} namespace.
 
   \begin{itemdecl}
-typedef implementation_defined internal_type;
+typedef implementation_defined native_type;
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
-    The \type{internal_type} member type is an alias for the \code{internal()} member function return type.
+    The \type{native_type} member type is an alias for the \code{native_handle()} member function return type.
     It is used to expose an implementation-defined handle for implementation- and target-specific extensions.
   \end{itemdescr}
 
@@ -275,16 +275,16 @@ datapar operator-() const;
     \pnum\returns The new object.
   \end{itemdescr}
 
-  \wgSubsubsection{\datapar internal handles}{datapar.intern}
+  \wgSubsubsection{\datapar native handles}{datapar.native}
   \begin{itemdecl}
-internal_type &internal();
+native_type &native_handle();
   \end{itemdecl}
   \begin{itemdescr}
     \pnum\returns An lvalue reference to the implementation-specific object implementing the data-parallel semantics.
   \end{itemdescr}
 
   \begin{itemdecl}
-const internal_type &internal() const;
+const native_type &native_handle() const;
   \end{itemdecl}
   \begin{itemdescr}
     \pnum\returns A \const lvalue reference to the implementation-specific object implementing the data-parallel semantics.
