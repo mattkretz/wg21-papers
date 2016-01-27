@@ -27,8 +27,8 @@ namespace datapar_target {
 
     \pnum
     An implementation may choose to implement data-parallel execution for many different targets.
-    All tag types this implementation supports shall be present independent of the chosen target.
-    %\wgNote{This means that if the type \type{datapar_target::abc} is implemented for the \emph{abc} target system, compilation for the target \emph{xyz} will also have the \type{datapar_target::abc} tag type.}
+    \wgNote{There can certainly be more than one tag type per (micro-)architecture, e.g. to support different vector lengths or partial register usage.}
+    All tag types an implementation supports shall be present independent of the chosen target.
 
     \pnum
     The \type{datapar_target::widest} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution.
