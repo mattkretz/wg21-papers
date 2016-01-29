@@ -23,7 +23,7 @@ Future extensions will certainly add more instructions and larger SIMD registers
 \subsection{Motivation for Data-Parallel Types}
 SIMD registers and operations are the low-level ingredients to efficient programming for SIMD CPUs.
 At a more abstract level this is is not only about SIMD CPUs, but efficient data-parallel execution (CPUs, GPUs, possibly FPGAs and classical vector supercomputers).
-The familiar abstraction of CPU registers and operations in the \CC{} language are the fundamental types together with their operations.
+Operations on fundamental types in \CC{} form the abstraction for CPU registers and instructions.
 Thus, a data-parallel type (SIMD type) can provide the necessary interface for writing software that can utilize data-parallel hardware efficiently.
 Higher-level abstractions can be built on top of these types.
 Note that if a low-level access to SIMD is not provided, users of \CC{} are either constrained to work within the limits of the provided abstraction or resort to non-portable extensions, such as SIMD intrinsics.
