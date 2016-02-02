@@ -45,3 +45,26 @@ The alternative (preferred) is to use \simdcast consistently for all other conve
 \subsection{Broadcast Constructor}
 The broadcast constructor is not declared as \code{explicit} to ease the use of scalar prvalues in expressions involving data-parallel operations.
 The operations where such a conversion should not be implicit consequently need to use SFINAE / concepts to inhibit the conversion.
+
+\subsection{Fundamental SIMD Type or Not?}
+There is a renewed discussion over the question whether \CC{} should define a fundamental, native SIMD type (let us call it \type{fundamental}) and a generic data-parallel type on top which supports an arbitrary number of elements (call it \type{arbitrary}).
+The alternative is to only provide the \type{arbitrary}, since it encompasses the \type{fundamental} type.
+
+With regard to this proposal this would add a third template parameter to \datapar and \mask:
+\begin{lstlisting}[style=Vc]
+template <class T, size_t N = datapar_size_v<T, datapar_target::compatible>,
+          class Target = datapar_target::compatible>
+class datapar;
+\end{lstlisting}
+
+The controversy is about how the flexibility of a type with arbitrary \code N is presented to the users.
+Is there a (clear) distinction between a “fundamental” type with target-dependent (i.e. fixed) \code N and a higher-level abstraction with arbitrary \code N which can potentially compile to inefficient machine code.
+Or should the \CC{} standard only define \type{arbitrary} and set it to a default \code N value that corresponds to the target-dependent \code N.
+Thus, the default \code N, of \type{arbitrary} corresponds to \type{fundamental}.
+
+It is interesting to note that \type{arbitrary<T, 1>} is the class variant of \type T.
+Consequently, if we say there is no need for a \type{fundamental} type then we could argue for the deprecation of the builtin arithmetic types, in favor of \type{arbitrary<T, 1>}. \wgNote{This is an academic discussion, of course.}
+
+The author has implemented a library where a clear distinction is made between \type{fundamental<T, Target>} and \type{arbitrary<T, N>}.
+The documentation and all teaching material says that the user should program with \type{fundamental}.
+The \type{arbitrary} type should be used in special circumstances, or wherever \type{fundamental} works with the \type{arbitrary} type in its interfaces (e.g. for gather \& scatter or the \code{ldexp} \& \code{frexp} functions).
