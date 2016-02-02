@@ -15,6 +15,7 @@ The following is a rough draft of possible wording that defines a basic set of d
 namespace datapar_target {
   struct scalar {};
   // implementation-defined tag types, e.g. sse, avx, avx512, neon, ...
+  typedef implementation_defined compatible;
   typedef implementation_defined widest;
 }
   \end{itemdecl}
@@ -31,13 +32,14 @@ namespace datapar_target {
     All tag types an implementation supports shall be present independent of the chosen target.
 
     \pnum
+    The \type{datapar_target::compatible} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that ensures the highest compatibility on the target architecture.
+
+    \pnum
     The \type{datapar_target::widest} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that is supported on the target system.
   \end{itemdescr}
 
   \begin{itemdecl}
-template <size_t> struct target_for_width {
-  typedef implementation_defined type;
-};
+template <class T, size_t N> struct target_for_width { typedef implementation_defined type; };
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
@@ -45,6 +47,16 @@ template <size_t> struct target_for_width {
 
     \pnum
     \code{datapar<T, target_for_width_t<T, N>>::size()} must return \code N or result in a substitution failure.
+  \end{itemdescr}
+
+  \begin{itemdecl}
+template <class T, class Target = datapar_target::compatible>
+struct datapar_size : public integral_constant<size_t, implementation_defined> {};
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum The \type{datapar_size} class template inherits from \type{integral_constant} with a value that equals \datapar{}\code{<T, Target>::size()}.
+
+    \pnum \code{datapar_size<T, Target>::value} shall result in a substitution failure if any of the template arguments \type T and \type{Target} are invalid template arguments to \datapar.
   \end{itemdescr}
 
   \wgSubsection{Class template \datapar}{datapar}
@@ -60,11 +72,11 @@ template <size_t> struct target_for_width {
   \pnum The second template argument \type{Target} must be a tag type from the \code{datapar_target} namespace.
 
   \begin{itemdecl}
-typedef implementation_defined native_type;
+typedef implementation_defined native_handle_type;
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
-    The \type{native_type} member type is an alias for the \code{native_handle()} member function return type.
+    The \type{native_handle_type} member type is an alias for the \code{native_handle()} member function return type.
     It is used to expose an implementation-defined handle for implementation- and target-specific extensions.
   \end{itemdescr}
 
@@ -277,14 +289,14 @@ datapar operator-() const;
 
   \wgSubsubsection{\datapar native handles}{datapar.native}
   \begin{itemdecl}
-native_type &native_handle();
+native_handle_type &native_handle();
   \end{itemdecl}
   \begin{itemdescr}
     \pnum\returns An lvalue reference to the implementation-specific object implementing the data-parallel semantics.
   \end{itemdescr}
 
   \begin{itemdecl}
-const native_type &native_handle() const;
+const native_handle_type &native_handle() const;
   \end{itemdecl}
   \begin{itemdescr}
     \pnum\returns A \const lvalue reference to the implementation-specific object implementing the data-parallel semantics.

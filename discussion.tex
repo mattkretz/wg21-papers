@@ -9,11 +9,11 @@ Rationales:
 
   \item[register_value_type]
     On some targets it may be beneficial to implement \datapar instantiations of some \type T with a different type \type{register_value_type}, which has higher precision than \type T.
-    This is mostly an implementation detail, but can be important to know in some situations, especially whenever \type{native_type} is involved.
+    This is mostly an implementation detail, but can be important to know in some situations, especially whenever \type{native_handle_type} is involved.
 
     \guidance{A better name might be \type{native_value_type}.}
 
-  \item[native_type]
+  \item[native_handle_type]
     The type used for enabling access to an implementation-defined member object (via the \code{native_handle()} function).
 
   \item[reference]

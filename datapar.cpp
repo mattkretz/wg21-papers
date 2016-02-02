@@ -1,8 +1,8 @@
 namespace std {
   namespace experimental {
-    template <typename T, typename Target = implementation_defined> class datapar {
+    template <class T, class Target = datapar_target::compatible> class datapar {
     public:
-      typedef implementation_defined native_type;
+      typedef implementation_defined native_handle_type;
       typedef T value_type;
       typedef implementation_defined register_value_type;
       typedef implementation_defined reference;
@@ -11,7 +11,7 @@ namespace std {
       typedef size_t size_type;
       typedef Target target_type;
 
-      template <typename U = T> static constexpr size_t memory_alignment = implementation_defined;
+      template <class U = T> static constexpr size_t memory_alignment = implementation_defined;
 
       static constexpr size_type size();
 
@@ -26,22 +26,22 @@ namespace std {
       datapar(value_type);
 
       // implicit type conversion constructor
-      template <typename U> datapar(datapar<U, Target>);
+      template <class U> datapar(datapar<U, Target>);
 
       // loads:
       static datapar load(const value_type *);
-      template <typename Flags> static datapar load(const value_type *, Flags);
-      template <typename U, typename Flags = unaligned_tag> static datapar load(const U *, Flags = Flags());
+      template <class Flags> static datapar load(const value_type *, Flags);
+      template <class U, class Flags = unaligned_tag> static datapar load(const U *, Flags = Flags());
 
       // stores:
       void store(value_type *);
-      template <typename Flags> void store(value_type *, Flags);
-      template <typename U, typename Flags = unaligned_tag> void store(U *, Flags = Flags());
+      template <class Flags> void store(value_type *, Flags);
+      template <class U, class Flags = unaligned_tag> void store(U *, Flags = Flags());
 
       // masked stores:
       void store(value_type *, mask_type);
-      template <typename Flags> void store(value_type *, mask_type, Flags);
-      template <typename U, typename Flags = unaligned_tag> void store(U *, mask_type, Flags = Flags());
+      template <class Flags> void store(value_type *, mask_type, Flags);
+      template <class U, class Flags = unaligned_tag> void store(U *, mask_type, Flags = Flags());
 
       // scalar access:
       reference operator[](size_type);
@@ -62,8 +62,12 @@ namespace std {
       datapar operator-() const;
 
       // access to the internals for implementation-specific extensions
-      native_type &native_handle();
-      const native_type &native_handle() const;
+      native_handle_type &native_handle();
+      const native_handle_type &native_handle() const;
     };
+
+    template <class T, class Target>
+    template <class U>
+    constexpr size_t datapar<T, Target>::memory_alignment<U>;
   }
 }
