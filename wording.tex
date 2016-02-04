@@ -12,7 +12,7 @@ The following is a rough draft of possible wording that defines a basic set of d
   The header \code{<datapar>} defines two class templates (\datapar, and \mask), several tag types, and a series of related function templates for concurrent manipulation of the values in \datapar and \mask objects.
 
   \begin{itemdecl}
-namespace datapar_target {
+namespace datapar_abi {
   struct scalar {};
   // implementation-defined tag types, e.g. sse, avx, avx512, neon, ...
   typedef implementation_defined compatible;
@@ -21,10 +21,10 @@ namespace datapar_target {
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
-    The target types are tag types to be used as the second template argument to \datapar and \mask.
+    The ABI types are tag types to be used as the second template argument to \datapar and \mask.
 
     \pnum
-    The \type{scalar} tag is present in all implementations and forces \datapar and \mask to store a single component (i.e. \datapar{}\type{<T, datapar_target::scalar>::size()} returns \code 1).
+    The \type{scalar} tag is present in all implementations and forces \datapar and \mask to store a single component (i.e. \datapar{}\type{<T, datapar_abi::scalar>::size()} returns \code 1).
 
     \pnum
     An implementation may choose to implement data-parallel execution for many different targets.
@@ -32,44 +32,44 @@ namespace datapar_target {
     All tag types an implementation supports shall be present independent of the chosen target.
 
     \pnum
-    The \type{datapar_target::compatible} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that ensures the highest compatibility on the target architecture.
+    The \type{datapar_abi::compatible} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that ensures the highest compatibility on the target architecture.
 
     \pnum
-    The \type{datapar_target::widest} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that is supported on the target system.
+    The \type{datapar_abi::widest} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that is supported on the target system.
   \end{itemdescr}
 
   \begin{itemdecl}
-template <class T, size_t N> struct target_for_width { typedef implementation_defined type; };
+template <class T, size_t N> struct abi_for_width { typedef implementation_defined type; };
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
-    The \type{target_for_width} class template defines the member type \type{type} to one of the tag types in \code{datapar_target} or not at all, depending on the value of the template parameters.
+    The \type{abi_for_width} class template defines the member type \type{type} to one of the tag types in \code{datapar_abi} or not at all, depending on the value of the template parameters.
 
     \pnum
-    \code{datapar<T, target_for_width_t<T, N>>::size()} must return \code N or result in a substitution failure.
+    \code{datapar<T, abi_for_width_t<T, N>>::size()} must return \code N or result in a substitution failure.
   \end{itemdescr}
 
   \begin{itemdecl}
-template <class T, class Target = datapar_target::compatible>
+template <class T, class Abi = datapar_abi::compatible>
 struct datapar_size : public integral_constant<size_t, implementation_defined> {};
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum The \type{datapar_size} class template inherits from \type{integral_constant} with a value that equals \datapar{}\code{<T, Target>::size()}.
+    \pnum The \type{datapar_size} class template inherits from \type{integral_constant} with a value that equals \datapar{}\code{<T, Abi>::size()}.
 
-    \pnum \code{datapar_size<T, Target>::value} shall result in a substitution failure if any of the template arguments \type T and \type{Target} are invalid template arguments to \datapar.
+    \pnum \code{datapar_size<T, Abi>::value} shall result in a substitution failure if any of the template arguments \type T and \type{Abi} are invalid template arguments to \datapar.
   \end{itemdescr}
 
   \wgSubsection{Class template \datapar}{datapar}
   \wgSubsubsection{Class template \datapar overview}{datapar.overview}
   \lstinputlisting[]{datapar.cpp}
 
-  \pnum The class template \datapar{}\type{<T, Target>} is a one-dimensional smart array.
-  In contrast to \type{valarray} (26.6), the number of elements in the array is determined at compile time, according to the \type{Target} template parameter.
+  \pnum The class template \datapar{}\type{<T, Abi>} is a one-dimensional smart array.
+  In contrast to \type{valarray} (26.6), the number of elements in the array is determined at compile time, according to the \type{Abi} template parameter.
 
   \pnum The first template argument \type T must be an integral or floating-point fundamental type.
   The type \bool is not allowed.
 
-  \pnum The second template argument \type{Target} must be a tag type from the \code{datapar_target} namespace.
+  \pnum The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
 
   \begin{itemdecl}
 typedef implementation_defined native_handle_type;
@@ -107,7 +107,7 @@ datapar(value_type);
   \end{itemdescr}
 
   \begin{itemdecl}
-template <typename U> datapar(datapar<U, Target> x);
+template <typename U> datapar(datapar<U, Abi> x);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum

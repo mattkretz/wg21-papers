@@ -1,15 +1,15 @@
 namespace std {
   namespace experimental {
-    template <class T, class Target = datapar_target::compatible> class mask {
+    template <class T, class Abi = datapar_abi::compatible> class mask {
     public:
       typedef implementation_defined internal_type;
       typedef bool value_type;
       typedef implementation_defined register_value_type;
       typedef implementation_defined reference;
       typedef implementation_defined const_reference;
-      typedef mask<T, Target> mask_type;
+      typedef mask<T, Abi> mask_type;
       typedef size_t size_type;
-      typedef Target target_type;
+      typedef Abi abi_type;
 
       template <class U = T> static constexpr size_t memory_alignment = implementation_defined;
 
@@ -26,7 +26,7 @@ namespace std {
       mask(value_type);
 
       // implicit type conversion constructor
-      template <class U> mask(mask<U, Target>);
+      template <class U> mask(mask<U, Abi>);
 
       // loads:
       static mask load(const value_type *);
@@ -49,8 +49,8 @@ namespace std {
       mask operator~() const;
     };
 
-    template <class T, class Target>
+    template <class T, class Abi>
     template <class U>
-    constexpr size_t mask<T, Target>::memory_alignment<U>;
+    constexpr size_t mask<T, Abi>::memory_alignment<U>;
   }
 }

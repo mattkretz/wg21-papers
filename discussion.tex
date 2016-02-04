@@ -32,12 +32,12 @@ Rationales:
     Standard member type used for \code{size()} and \code{operator[]}.
 
   \item[target_type]
-    The \type{Target} template parameter to \datapar.
+    The \type{Abi} template parameter to \datapar.
 
 \end{typelist*}
 
 \subsection{Conversions}
-The \datapar conversion constructor only allows implicit conversion from \datapar template instantiations with the same \type{Target} type and compatible \valuetype.
+The \datapar conversion constructor only allows implicit conversion from \datapar template instantiations with the same \type{Abi} type and compatible \valuetype.
 Discussion in SG1 showed clear preference for only allowing implicit conversion between integral types that only differ in signedness.
 All other conversions could be implemented via an explicit conversion constructor.
 The alternative (preferred) is to use \simdcast consistently for all other conversions.
@@ -65,6 +65,6 @@ Thus, the default \code N, of \type{arbitrary} corresponds to \type{fundamental}
 It is interesting to note that \type{arbitrary<T, 1>} is the class variant of \type T.
 Consequently, if we say there is no need for a \type{fundamental} type then we could argue for the deprecation of the builtin arithmetic types, in favor of \type{arbitrary<T, 1>}. \wgNote{This is an academic discussion, of course.}
 
-The author has implemented a library where a clear distinction is made between \type{fundamental<T, Target>} and \type{arbitrary<T, N>}.
+The author has implemented a library where a clear distinction is made between \type{fundamental<T, Abi>} and \type{arbitrary<T, N>}.
 The documentation and all teaching material says that the user should program with \type{fundamental}.
 The \type{arbitrary} type should be used in special circumstances, or wherever \type{fundamental} works with the \type{arbitrary} type in its interfaces (e.g. for gather \& scatter or the \code{ldexp} \& \code{frexp} functions).

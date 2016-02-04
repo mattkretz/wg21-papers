@@ -1,15 +1,15 @@
 namespace std {
   namespace experimental {
-    template <class T, class Target = datapar_target::compatible> class datapar {
+    template <class T, class Abi = datapar_abi::compatible> class datapar {
     public:
       typedef implementation_defined native_handle_type;
       typedef T value_type;
       typedef implementation_defined register_value_type;
       typedef implementation_defined reference;
       typedef implementation_defined const_reference;
-      typedef mask<T, Target> mask_type;
+      typedef mask<T, Abi> mask_type;
       typedef size_t size_type;
-      typedef Target target_type;
+      typedef Abi abi_type;
 
       template <class U = T> static constexpr size_t memory_alignment = implementation_defined;
 
@@ -26,7 +26,7 @@ namespace std {
       datapar(value_type);
 
       // implicit type conversion constructor
-      template <class U> datapar(datapar<U, Target>);
+      template <class U> datapar(datapar<U, Abi>);
 
       // loads:
       static datapar load(const value_type *);
@@ -66,8 +66,8 @@ namespace std {
       const native_handle_type &native_handle() const;
     };
 
-    template <class T, class Target>
+    template <class T, class Abi>
     template <class U>
-    constexpr size_t datapar<T, Target>::memory_alignment<U>;
+    constexpr size_t datapar<T, Abi>::memory_alignment<U>;
   }
 }
