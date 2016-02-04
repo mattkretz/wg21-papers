@@ -40,7 +40,9 @@ final: $(NAME).pdf
 mobile: $(NAME)_mobile.pdf
 
 upload: $(NAME).pdf
-	scp $< lxpool.gsi.de:web-docs/datapar.pdf
+	@echo -n "Uploading $< ."
+	@while ! timeout 2s scp -B $< lxpool.gsi.de:web-docs/datapar.pdf; do echo -n .; done
+	@echo .
 
 loop-internal:
 	@while true; do \
