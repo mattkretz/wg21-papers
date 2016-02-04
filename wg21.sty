@@ -392,7 +392,7 @@
 \RequirePackage{xstring}
 \newcommand{\finalVersionString}{}
 \IfBeginWith{\wgDocumentNumber}{P}{%
-  \renewcommand{\finalVersionString}{\emph{Final Version} as of \today\ (\texttt{classicthesis} \wgVersion).}
+  \renewcommand{\finalVersionString}{\emph{Final Version} as of \today.}
 }{%
   \RequirePackage{scrtime} % time access
   \RequirePackage{draftwatermark}%
@@ -402,7 +402,7 @@
   \PassOptionsToPackage{draft}{prelim2e}
   \RequirePackage{prelim2e}
   \renewcommand{\PrelimWords}{\relax}
-  \renewcommand{\PrelimText}{\footnotesize--- \today\ at \thistime\ --- \wgVersion\ ---}
+  \renewcommand{\PrelimText}{{\normalfont\footnotesize--- \today\ at \thistime\ ---}}
 }
 
 % Caption numbering now w/o chapter number
