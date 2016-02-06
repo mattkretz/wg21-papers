@@ -110,9 +110,11 @@ datapar(value_type);
 template <typename U> datapar(datapar<U, Abi> x);
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum
-    \effects
-    Constructs an object with the $i$-th element initialized to \code{static_cast<T>(x[i])} for all elements.
+    \pnum\remarks This constructor shall not participate in overload resolution unless
+                  \type U and \type T are different integral types and
+                  \code{make_signed<U>::type} equals \code{make_signed<T>::type}.
+    \pnum\effects Constructs an object of type \datapar.
+    \pnum\postcondition The $i$-th element equals \code{static_cast<T>(x[i])} for all elements.
   \end{itemdescr}
 
   \wgSubsubsection{\datapar load functions}{datapar.load}
@@ -269,7 +271,7 @@ datapar operator~() const;
     \pnum\requires The first template argument \type T to \datapar must be an integral type.
     \pnum\effects Constructs an object where each bit of \code{*this} is inverted.
     \pnum\returns The new object.
-    \pnum\remarks \datapar{}\code{operator~()} shall not participate in overload resolution if \type T is a floating-point type.
+    \pnum\remarks \datapar{}\code{::operator\textasciitilde{}()} shall not participate in overload resolution if \type T is a floating-point type.
   \end{itemdescr}
 
   \begin{itemdecl}
@@ -301,6 +303,103 @@ const native_handle_type &native_handle() const;
   \begin{itemdescr}
     \pnum\returns A \const lvalue reference to the implementation-specific object implementing the data-parallel semantics.
   \end{itemdescr}
+
+  \wgSubsection{\datapar non-member operations}{datapar.nonmembers}
+  \wgSubsubsection{\datapar binary operators}{datapar.binary}
+  \begin{itemdecl}
+template <class L, class R> using datapar_return_type = ...;  // exposition only
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator+ (datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator- (datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator* (datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator/ (datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator% (datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator& (datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator| (datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator^ (datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator<<(datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator>>(datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator+ (const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator- (const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator* (const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator/ (const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator% (const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator& (const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator| (const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator^ (const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator<<(const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum\remarks The return type of these operators shall be deduced according to the following rules:
+       \begin{itemize}
+         \item If \code{is_datapar_v<U> == true}
+           then the return type shall be \datapar{}\type{<decltype(declval<T>() + declval<typename U::value_type>()), Abi>}.
+         \item Otherwise, if \type U is a fundamental arithmetic type and \datapar{}\type{<U, Abi>} is a valid type
+           then the return type shall be \datapar{}\type{<decltype(declval<T>() + declval<U>()), Abi>}.
+         \item Otherwise, if \type U is implicitly convertible to \datapar{}\type{<V, Abi>}, where \type{V} is determined according to standard template type deduction,
+           then the return type shall be \datapar{}\type{<decltype(declval<T>() + declval<V>()), Abi>}.
+       \end{itemize}
+    \pnum\remarks Each of these operators only participates in overload resolution if all of the following hold:
+    \begin{itemize}
+      \item The indicated operator can be applied to objects of type \type{datapar_return_type<datapar<T, Abi>, U>::value_type}.
+      \item \datapar{}\type{<T, Abi>} is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
+      \item \type U is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
+    \end{itemize}
+    \pnum\remarks The operators with \type{const U \&} as first parameter, shall not participate in overload resolution if \code{is_datapar_v<U> == true}.
+    \pnum\effects Both arguments are first converted to \type{datapar_return_type<datapar<T, Abi>, U>}.
+      Each of these operators subsequently performs the indicated operation component-wise on each of the elements of the first argument and the corresponding element of the second argument.
+    \pnum\notes   The conversion of the argument of type \type U perfectly forwards the argument.
+    \pnum\returns An object of type \type{datapar_return_type<datapar<T, Abi>, U>} containing the results of the component-wise operator application.
+  \end{itemdescr}
+
+  \wgSubsubsection{\datapar compound assignment}{datapar.cassign}
+  \begin{itemdecl}
+template <class T, class Abi, class U> datapar<T, Abi> &operator+= (datapar<T, Abi> &, U &&);
+template <class T, class Abi, class U> datapar<T, Abi> &operator-= (datapar<T, Abi> &, U &&);
+template <class T, class Abi, class U> datapar<T, Abi> &operator*= (datapar<T, Abi> &, U &&);
+template <class T, class Abi, class U> datapar<T, Abi> &operator/= (datapar<T, Abi> &, U &&);
+template <class T, class Abi, class U> datapar<T, Abi> &operator%= (datapar<T, Abi> &, U &&);
+template <class T, class Abi, class U> datapar<T, Abi> &operator&= (datapar<T, Abi> &, U &&);
+template <class T, class Abi, class U> datapar<T, Abi> &operator|= (datapar<T, Abi> &, U &&);
+template <class T, class Abi, class U> datapar<T, Abi> &operator^= (datapar<T, Abi> &, U &&);
+template <class T, class Abi, class U> datapar<T, Abi> &operator<<=(datapar<T, Abi> &, U &&);
+template <class T, class Abi, class U> datapar<T, Abi> &operator>>=(datapar<T, Abi> &, U &&);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum\remarks Each of these operators only participates in overload resolution if all of the following hold:
+    \begin{itemize}
+      \item The indicated operator can be applied to objects of type \type{datapar_return_type<datapar<T, Abi>, U>::value_type}.
+      \item \datapar{}\type{<T, Abi>} is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
+      \item \type U is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
+    \end{itemize}
+    \pnum\effects Each of these operators performs the indicated operation component-wise on each the elements of the first argument and the corresponding element of the second argument after conversion to \datapar{}\code{<T, Abi>}.
+    \pnum\notes   The conversion of the second argument to \datapar{}\code{<T, Abi>} perfectly forwards the second argument.
+    \pnum\returns A reference to the first argument.
+  \end{itemdescr}
+
+  \wgSubsubsection{\datapar logical operators}{datapar.comparison}
+
+  \wgSubsubsection{\datapar transcendentals}{datapar.transcend}
 
   \wgSubsection{Class template \mask}{datapar.mask}
   \lstinputlisting[]{mask.cpp}
