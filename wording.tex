@@ -16,7 +16,7 @@ namespace datapar_abi {
   struct scalar {};
   // implementation-defined tag types, e.g. sse, avx, avx512, neon, ...
   typedef implementation_defined compatible;
-  typedef implementation_defined widest;
+  typedef implementation_defined native;
 }
   \end{itemdecl}
   \begin{itemdescr}
@@ -35,7 +35,7 @@ namespace datapar_abi {
     The \type{datapar_abi::compatible} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that ensures the highest compatibility on the target architecture.
 
     \pnum
-    The \type{datapar_abi::widest} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that is supported on the target system.
+    The \type{datapar_abi::native} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that is supported on the target system.
   \end{itemdescr}
 
   \begin{itemdecl}

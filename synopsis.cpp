@@ -4,7 +4,7 @@ namespace std {
       struct scalar {};  // always present
       // implementation-defined tag types, e.g. sse, avx, avx512, neon, ...
       typedef implementation_defined compatible;  // always present
-      typedef implementation_defined widest;  // always present
+      typedef implementation_defined native;  // always present
     }
 
     struct unaligned_tag {};
