@@ -394,16 +394,16 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
 
   \wgSubsubsection{\datapar compound assignment}{datapar.cassign}
   \begin{itemdecl}
-template <class T, class Abi, class U> datapar<T, Abi> &operator+= (datapar<T, Abi> &, U &&);
-template <class T, class Abi, class U> datapar<T, Abi> &operator-= (datapar<T, Abi> &, U &&);
-template <class T, class Abi, class U> datapar<T, Abi> &operator*= (datapar<T, Abi> &, U &&);
-template <class T, class Abi, class U> datapar<T, Abi> &operator/= (datapar<T, Abi> &, U &&);
-template <class T, class Abi, class U> datapar<T, Abi> &operator%= (datapar<T, Abi> &, U &&);
-template <class T, class Abi, class U> datapar<T, Abi> &operator&= (datapar<T, Abi> &, U &&);
-template <class T, class Abi, class U> datapar<T, Abi> &operator|= (datapar<T, Abi> &, U &&);
-template <class T, class Abi, class U> datapar<T, Abi> &operator^= (datapar<T, Abi> &, U &&);
-template <class T, class Abi, class U> datapar<T, Abi> &operator<<=(datapar<T, Abi> &, U &&);
-template <class T, class Abi, class U> datapar<T, Abi> &operator>>=(datapar<T, Abi> &, U &&);
+template <class T, class Abi, class U> datapar<T, Abi> &operator+= (datapar<T, Abi> &, const U &);
+template <class T, class Abi, class U> datapar<T, Abi> &operator-= (datapar<T, Abi> &, const U &);
+template <class T, class Abi, class U> datapar<T, Abi> &operator*= (datapar<T, Abi> &, const U &);
+template <class T, class Abi, class U> datapar<T, Abi> &operator/= (datapar<T, Abi> &, const U &);
+template <class T, class Abi, class U> datapar<T, Abi> &operator%= (datapar<T, Abi> &, const U &);
+template <class T, class Abi, class U> datapar<T, Abi> &operator&= (datapar<T, Abi> &, const U &);
+template <class T, class Abi, class U> datapar<T, Abi> &operator|= (datapar<T, Abi> &, const U &);
+template <class T, class Abi, class U> datapar<T, Abi> &operator^= (datapar<T, Abi> &, const U &);
+template <class T, class Abi, class U> datapar<T, Abi> &operator<<=(datapar<T, Abi> &, const U &);
+template <class T, class Abi, class U> datapar<T, Abi> &operator>>=(datapar<T, Abi> &, const U &);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum\remarks Each of these operators only participates in overload resolution if all of the following hold:
@@ -411,9 +411,9 @@ template <class T, class Abi, class U> datapar<T, Abi> &operator>>=(datapar<T, A
       \item The indicated operator can be applied to objects of type \type{datapar_return_type<datapar<T, Abi>, U>::value_type}.
       \item \datapar{}\type{<T, Abi>} is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
       \item \type U is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
+      \item \type{datapar_return_type<datapar<T, Abi>, U>} is implicitly convertible to \datapar{}\type{<T, Abi>}.
     \end{itemize}
-    \pnum\effects Each of these operators performs the indicated operation component-wise on each the elements of the first argument and the corresponding element of the second argument after conversion to \datapar{}\code{<T, Abi>}.
-    \pnum\notes   The conversion of the second argument to \datapar{}\code{<T, Abi>} perfectly forwards the second argument.
+    \pnum\effects Each of these operators performs the indicated operation component-wise on each of the elements of the first argument and the corresponding element of the second argument after conversion to \datapar{}\code{<T, Abi>}.
     \pnum\returns A reference to the first argument.
   \end{itemdescr}
 

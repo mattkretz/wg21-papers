@@ -22,16 +22,16 @@ namespace std {
     template <class T, class Abi = datapar_abi::compatible> class mask;
 
     // compound assignment
-    template <class T, class Abi, class U> datapar<T, Abi> &operator+= (datapar<T, Abi> &, U &&);
-    template <class T, class Abi, class U> datapar<T, Abi> &operator-= (datapar<T, Abi> &, U &&);
-    template <class T, class Abi, class U> datapar<T, Abi> &operator*= (datapar<T, Abi> &, U &&);
-    template <class T, class Abi, class U> datapar<T, Abi> &operator/= (datapar<T, Abi> &, U &&);
-    template <class T, class Abi, class U> datapar<T, Abi> &operator%= (datapar<T, Abi> &, U &&);
-    template <class T, class Abi, class U> datapar<T, Abi> &operator&= (datapar<T, Abi> &, U &&);
-    template <class T, class Abi, class U> datapar<T, Abi> &operator|= (datapar<T, Abi> &, U &&);
-    template <class T, class Abi, class U> datapar<T, Abi> &operator^= (datapar<T, Abi> &, U &&);
-    template <class T, class Abi, class U> datapar<T, Abi> &operator<<=(datapar<T, Abi> &, U &&);
-    template <class T, class Abi, class U> datapar<T, Abi> &operator>>=(datapar<T, Abi> &, U &&);
+    template <class T, class Abi, class U> datapar<T, Abi> &operator+= (datapar<T, Abi> &, const U &);
+    template <class T, class Abi, class U> datapar<T, Abi> &operator-= (datapar<T, Abi> &, const U &);
+    template <class T, class Abi, class U> datapar<T, Abi> &operator*= (datapar<T, Abi> &, const U &);
+    template <class T, class Abi, class U> datapar<T, Abi> &operator/= (datapar<T, Abi> &, const U &);
+    template <class T, class Abi, class U> datapar<T, Abi> &operator%= (datapar<T, Abi> &, const U &);
+    template <class T, class Abi, class U> datapar<T, Abi> &operator&= (datapar<T, Abi> &, const U &);
+    template <class T, class Abi, class U> datapar<T, Abi> &operator|= (datapar<T, Abi> &, const U &);
+    template <class T, class Abi, class U> datapar<T, Abi> &operator^= (datapar<T, Abi> &, const U &);
+    template <class T, class Abi, class U> datapar<T, Abi> &operator<<=(datapar<T, Abi> &, const U &);
+    template <class T, class Abi, class U> datapar<T, Abi> &operator>>=(datapar<T, Abi> &, const U &);
 
     template <class L, class R> using datapar_return_type = ...;  // exposition only
 

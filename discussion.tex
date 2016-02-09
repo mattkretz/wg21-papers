@@ -46,6 +46,18 @@ The alternative (preferred) is to use \simdcast consistently for all other conve
 The broadcast constructor is not declared as \code{explicit} to ease the use of scalar prvalues in expressions involving data-parallel operations.
 The operations where such a conversion should not be implicit consequently need to use SFINAE / concepts to inhibit the conversion.
 
+\subsection{Compound Assignment}
+The semantics of compound assignment would allow less strict implicit conversion rules.
+Consider \code{datapar<int>() *= double()}: the corresponding multiplication operator would not compile because the implicit conversion to \datapar[<float>] is non-portable.
+Compound assignment, on the other hand, implies an implicit conversion back to the type of the expression on the left of the assignment operator.
+Thus, it is possible to define compound operators that execute the operation correctly on the promoted type without sacrificing portability.
+There are two arguments for not relaxing the rules for compound assignment, though:
+\begin{enumerate}
+  \item Consistency: The conversion of an expression with compound assignment to a binary operator suddenly would not compile anymore.
+  \item The implicit conversion in the \code{int * double} case could be expensive and unintended.
+    This is already a problem for builtin types where many developers multiply \float variables with \double prvalues.
+\end{enumerate}
+
 \subsection{Fundamental SIMD Type or Not?}
 \subsubsection{The Issue}
 There has been renewed discussion on the reflectors over the question whether \CC{} should define a fundamental, native SIMD type (let us call it \type{fundamental}) and a generic data-parallel type on top which supports an arbitrary number of elements (call it \type{arbitrary}).
