@@ -351,25 +351,45 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
   \end{itemdecl}
   \begin{itemdescr}
     \pnum\remarks The return type of these operators shall be deduced according to the following rules:
-       \begin{itemize}
-         \item If \code{is_datapar_v<U> == true}
-           then the return type shall be \datapar{}\type{<decltype(declval<T>() + declval<typename U::value_type>()), Abi>}.
-         \item Otherwise, if \type U is a fundamental arithmetic type and \datapar{}\type{<U, Abi>} is a valid type
-           then the return type shall be \datapar{}\type{<decltype(declval<T>() + declval<U>()), Abi>}.
-         \item Otherwise, if \type U is implicitly convertible to \datapar{}\type{<V, Abi>}, where \type{V} is determined according to standard template type deduction,
-           then the return type shall be \datapar{}\type{<decltype(declval<T>() + declval<V>()), Abi>}.
-       \end{itemize}
+    \begin{itemize}
+      \item If \code{is_datapar_v<U> == true}
+        then the return type shall be determined from \type T and \type{U::value_type} according to the following paragraph.
+      \item Otherwise, if \type T is integral and \type U is \intt
+        the return type shall be \datapar{}\type{<T, Abi>}.
+      \item Otherwise, if \type T is integral and \type U is \uint
+        the return type shall be \datapar{}\code{<make_unsigned_t<T>, Abi>}.
+      \item Otherwise, if \type U is a fundamental arithmetic type or \type U is convertible to \intt
+        then the return type shall be determined from \type T and \type U according to the following paragraph.
+      \item Otherwise, if \type U is implicitly convertible to \datapar{}\type{<V, Abi>}, where \type V is determined according to standard template type deduction,
+        then the return type shall be determined from \type T and \type V according to the following paragraph.
+      \item Otherwise, if \type U is implicitly convertible to \datapar{}\type{<T, Abi>},
+        the return type shall be \datapar{}\type{<T, Abi>}.
+      \item Otherwise no return type is defined (SFINAE).
+    \end{itemize}
+
+    \pnum\remarks Given the types \type T and \type{Abi} from the class template argument list and a third type \type U determined by the rules of the previous paragraph a return type is deduced according to the following rules:
+    \begin{itemize}
+      \item If \type U is not a fundamental arithmetic type then the return type shall be \datapar{}\type{<T, Abi>}.
+      \item Otherwise, if at least one of the  types \type T and \type U is a floating-point type
+        the return type shall be \datapar{}\type{<decltype(T() + U()), Abi>}.
+      \item Otherwise, if \code{sizeof(T) < sizeof(U)} the return type shall be \datapar{}\type{<U, Abi>}.
+      \item Otherwise, if \code{sizeof(T) > sizeof(U)} the return type shall be \datapar{}\type{<T, Abi>}.
+      \item Otherwise, the type \type T or \type U that is farthest back in the list of \textit{standard integer types} (cf. [basic.fundamental]) is used as type \type V and
+        the return type shall be \datapar{}\type{<V, Abi>} if both types \type T and \type U are signed, otherwise the return type shall be \datapar{}\type{<make_unsigned_t<V>, Abi>}.
+    \end{itemize}
+
     \pnum\remarks Each of these operators only participates in overload resolution if all of the following hold:
     \begin{itemize}
-      \item The indicated operator can be applied to objects of type \type{datapar_return_type<datapar<T, Abi>, U>::value_type}.
-      \item \datapar{}\type{<T, Abi>} is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
-      \item \type U is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
+      \item The indicated operator can be applied to objects of type \type{R::value_type}, with \type R the return type.
+      \item \datapar{}\type{<T, Abi>} is implicitly convertible to the return type.
+      \item \type U is implicitly convertible to the return type.
     \end{itemize}
-    \pnum\remarks The operators with \type{const U \&} as first parameter, shall not participate in overload resolution if \code{is_datapar_v<U> == true}.
-    \pnum\effects Both arguments are first converted to \type{datapar_return_type<datapar<T, Abi>, U>}.
+
+    \pnum\remarks The operators with \type{const U \&} as first parameter shall not participate in overload resolution if \code{is_datapar_v<U> == true}.
+
+    \pnum\effects Both arguments are first converted to the return type.
       Each of these operators subsequently performs the indicated operation component-wise on each of the elements of the first argument and the corresponding element of the second argument.
-    \pnum\notes   The conversion of the argument of type \type U perfectly forwards the argument.
-    \pnum\returns An object of type \type{datapar_return_type<datapar<T, Abi>, U>} containing the results of the component-wise operator application.
+    \pnum\returns An object containing the results of the component-wise operator application.
   \end{itemdescr}
 
   \wgSubsubsection{\datapar compound assignment}{datapar.cassign}
