@@ -60,12 +60,12 @@ There are two arguments for not relaxing the rules for compound assignment, thou
 
 \subsection{Fundamental SIMD Type or Not?}
 \subsubsection{The Issue}
-There has been renewed discussion on the reflectors over the question whether \CC{} should define a fundamental, native SIMD type (let us call it \type{fundamental}) and a generic data-parallel type on top which supports an arbitrary number of elements (call it \type{arbitrary}).
-The alternative to defining both types is to only define \type{arbitrary}, since it encompasses the \type{fundamental} type.
+There has been renewed discussion on the reflectors over the question whether \CC{} should define a fundamental, native SIMD type (let us call it \type{fundamental<T>}) and a generic data-parallel type on top which supports an arbitrary number of elements (call it \type{arbitrary<T, N>}).
+The alternative to defining both types is to only define \type{arbitrary<T, N = default_size<T>>}, since it encompasses the \type{fundamental<T>} type.
 
-With regard to this proposal this would add a third template parameter to \datapar and \mask as shown in \lst{datapar N}.
+With regard to this proposal this second approach would add a third template parameter to \datapar and \mask as shown in \lst{datapar N}.
 \begin{lstlisting}[style=Vc,numbers=left,float,label=lst:datapar N,caption={
-  Possible declaration of the class template parameters of a generic (i.e. \type{arbitrary}) \datapar class.
+  Possible declaration of the class template parameters of a \datapar class with arbitrary width.
 }]
 template <class T, size_t N = datapar_size_v<T, datapar_abi::compatible>,
           class Abi = datapar_abi::compatible>
@@ -76,7 +76,7 @@ class datapar;
 The controversy is about how the flexibility of a type with arbitrary \code N is presented to the users.
 Is there a (clear) distinction between a “fundamental” type with target-dependent (i.e. fixed) \code N and a higher-level abstraction with arbitrary \code N which can potentially compile to inefficient machine code.
 Or should the \CC{} standard only define \type{arbitrary} and set it to a default \code N value that corresponds to the target-dependent \code N.
-Thus, the default \code N, of \type{arbitrary} corresponds to \type{fundamental}.
+Thus, the default \code N, of \type{arbitrary} would correspond to \type{fundamental}.
 
 It is interesting to note that \type{arbitrary<T, 1>} is the class variant of \type T.
 Consequently, if we say there is no need for a \type{fundamental} type then we could argue for the deprecation of the builtin arithmetic types, in favor of \type{arbitrary<T, 1>}. \wgNote{This is an academic discussion, of course.}
@@ -85,47 +85,77 @@ The author has implemented a library where a clear distinction is made between \
 The documentation and all teaching material says that the user should program with \type{fundamental}.
 The \type{arbitrary} type should be used in special circumstances, or wherever \type{fundamental} works with the \type{arbitrary} type in its interfaces (e.g. for gather \& scatter or the \code{ldexp} \& \code{frexp} functions).
 
+\subsubsection{Issues}
 The definition of two separate class templates can alleviate some source compatibility issues resulting from different \code N on different target systems.
-Consider the \code{ldexp} function in \lst{ldexp}.
-\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:ldexp,caption={
-  Declaration of \code{ldexp} for \type{fundamental} and \type{arbitrary} (only single-precision \float).
-}]
-template <class Abi>
-fundamental<float, Abi> ldexp(fundamental<float, Abi> x,
-                              arbitrary<int, fundamental<float, Abi>::size()> exp);
-template <int N> arbitrary<float, N> ldexp(arbitrary<float, N> x, arbitrary<int, N> exp);
+Consider the simplest example of a multiplication of an \intt vector with a \float vector:
+\smallskip\begin{lstlisting}[style=Vc]
+arbitrary<float>() * arbitrary<int>();  // compiles for some targets, fails for others
+fundamental<float>() * fundamental<int>();  // never compiles, requires explicit cast
 \end{lstlisting}
-\lst{fundamental-ldexp}
-\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:fundamental-ldexp,caption={
-  Calls to \code{ldexp} compile or fail to compile independent of the target.
-}]
-fundamental<float> a = ...;
-fundamental<int> exp = ...;
-a = ldexp(a, exp);  // compiles nowhere
+The \datapar[<T>] operators specified in such a way that source compatibility is ensured.
+For a type with user definable \code N, the binary operators should work slightly different with regard to implicit conversions.
+Most importantly, \type{arbitrary<T, N>} solves the issue of portable code containing mixed integral and floating-point values.
+A user would typically create aliases such as:
+\smallskip\begin{lstlisting}[style=Vc]
+using floatvec = datapar<float>;
+using intvec = arbitrary<int, floatvec::size()>;
+using doublevec = arbitrary<int, floatvec::size()>;
 \end{lstlisting}
-\lst{arbitrary-ldexp}
-\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:arbitrary-ldexp,caption={
-  Calls to \code{ldexp} compile or fail to compile depending on the target.
-}]
-arbitrary<float> a = ...;
-arbitrary<int> exp = ...;
-a = ldexp(a, exp);  // compiles where a.size() == exp.size(), fails otherwise
-\end{lstlisting}
+Objects of types \type{floatvec}, \type{intvec}, and \type{doublevec} will work together independent of the target system.
 
-
-The \type{fundamental} and \type{arbitrary} types have mostly the same interface.
-It is interesting to make \type{arbitrary} behave slightly differently, catering to the special use cases where \type{fundamental} is designed for safety.
-Consider implicit conversions (cf. \lst{implicit conversions}): \type{fundamental} must be very restrictive with regard to implicit conversions.
-\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:implicit conversion,caption={
-  Implicit conversions behave differently for \type{fundamental} and \type{arbitrary}.
-}]
-auto x0 = fundamental<int>() * 1.f; // fails to compile since fundamental<int>::size()
-                                    // might be different to fundamental<float>::size()
-auto x1 = arbitrary<int>() * 1.f;   // x1 is of type arbitrary<float,
-                                    // arbitrary<int>::size()>
+Obviously these type aliases are basically the same if the \code N parameter of \type{arbitrary} has a default value:
+\smallskip\begin{lstlisting}[style=Vc]
+using floatvec = arbitrary<float>;
+using intvec = arbitrary<int, floatvec::size()>;
+using doublevec = arbitrary<int, floatvec::size()>;
 \end{lstlisting}
-Implicit conversions are only allowed where \code{size()} is equal for the two types for each conceivable target systems.\footnote{
-  The safest approach is to disallow all implicit conversions.
-  Vc allows conversion between signed and unsigned integral types.
-}
-The \type{arbitrary} type, on the other hand, can allow implicit conversions to work much more alike to the fundamental arithmetic types.
+The ability to create these aliases is not the issue.
+Seeing the need for using such a pattern is the issue.
+Typically a developer will think no more of it if his code compiles on his machine.
+If \code{arbitrary<float>() * arbitrary<int>()} just happens to compile (which is likely) then this is the code that will get checked in to the repository.
+Note that with the existence of the \type{fundamental} class template, the \code N parameter of the \type{arbitrary} class would not have a default value and thus force the user to think a second longer about portability.
+
+%Consider the \code{ldexp} function in \lst{ldexp}.
+%\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:ldexp,caption={
+%  Declaration of \code{ldexp} for \type{fundamental} and \type{arbitrary} (only single-precision \float).
+%}]
+%template <class Abi>
+%fundamental<float, Abi> ldexp(fundamental<float, Abi> x,
+%                              arbitrary<int, fundamental<float, Abi>::size()> exp);
+%template <int N>
+%arbitrary<float, N> ldexp(arbitrary<float, N> x, arbitrary<int, N> exp);
+%\end{lstlisting}
+%%\lst{fundamental-ldexp}
+%\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:fundamental-ldexp,caption={
+%  Calls to \code{ldexp} compile or fail to compile independent of the target.
+%}]
+%fundamental<float> a = ...;
+%fundamental<int> exp = ...;
+%a = ldexp(a, exp);  // compiles nowhere
+%\end{lstlisting}
+%%\lst{arbitrary-ldexp}
+%\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:arbitrary-ldexp,caption={
+%  Calls to \code{ldexp} compile or fail to compile depending on the target.
+%}]
+%arbitrary<float> a = ...;
+%arbitrary<int> exp = ...;
+%a = ldexp(a, exp);  // compiles where a.size() == exp.size(), fails otherwise
+%\end{lstlisting}
+%
+%
+%The \type{fundamental} and \type{arbitrary} types have mostly the same interface.
+%It is interesting to make \type{arbitrary} behave slightly differently, catering to the special use cases where \type{fundamental} is designed for safety.
+%Consider implicit conversions (cf. \lst{implicit conversions}): \type{fundamental} must be very restrictive with regard to implicit conversions.
+%\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:implicit conversion,caption={
+%  Implicit conversions behave differently for \type{fundamental} and \type{arbitrary}.
+%}]
+%auto x0 = fundamental<int>() * 1.f; // fails to compile since fundamental<int>::size()
+%                                    // might be different to fundamental<float>::size()
+%auto x1 = arbitrary<int>() * 1.f;   // x1 is of type arbitrary<float,
+%                                    // arbitrary<int>::size()>
+%\end{lstlisting}
+%Implicit conversions are only allowed where \code{size()} is equal for the two types for each conceivable target systems.\footnote{
+%  The safest approach is to disallow all implicit conversions.
+%  Vc allows conversion between signed and unsigned integral types.
+%}
+%The \type{arbitrary} type, on the other hand, can allow implicit conversions to work much more alike to the fundamental arithmetic types.
