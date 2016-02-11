@@ -29,7 +29,7 @@ namespace datapar_abi {
     \pnum
     An implementation may choose to implement data-parallel execution for many different targets.
     \wgNote{There can certainly be more than one tag type per (micro-)architecture, e.g. to support different vector lengths or partial register usage.}
-    All tag types an implementation supports shall be present independent of the chosen target.
+    All tag types an implementation supports shall be present independent of the target architecture determined at invocation of the compiler.
 
     \pnum
     The \type{datapar_abi::compatible} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that ensures the highest compatibility on the target architecture.
@@ -39,14 +39,14 @@ namespace datapar_abi {
   \end{itemdescr}
 
   \begin{itemdecl}
-template <class T, size_t N> struct abi_for_width { typedef implementation_defined type; };
+template <class T, size_t N> struct abi_for_size { typedef implementation_defined type; };
   \end{itemdecl}
   \begin{itemdescr}
     \pnum
-    The \type{abi_for_width} class template defines the member type \type{type} to one of the tag types in \code{datapar_abi} or not at all, depending on the value of the template parameters.
+    The \type{abi_for_size} class template defines the member type \type{type} to one of the tag types in \code{datapar_abi} or not at all, depending on the value of the template parameters.
 
     \pnum
-    \code{datapar<T, abi_for_width_t<T, N>>::size()} must return \code N or result in a substitution failure.
+    \code{datapar<T, abi_for_size_t<T, N>>::size()} must return \code N or result in a substitution failure.
   \end{itemdescr}
 
   \begin{itemdecl}
@@ -56,7 +56,7 @@ struct datapar_size : public integral_constant<size_t, implementation_defined> {
   \begin{itemdescr}
     \pnum The \type{datapar_size} class template inherits from \type{integral_constant} with a value that equals \datapar{}\code{<T, Abi>::size()}.
 
-    \pnum \code{datapar_size<T, Abi>::value} shall result in a substitution failure if any of the template arguments \type T and \type{Abi} are invalid template arguments to \datapar.
+    \pnum \code{datapar_size<T, Abi>::value} shall result in a substitution failure if any of the template arguments \type T or \type{Abi} are invalid template arguments to \datapar.
   \end{itemdescr}
 
   \wgSubsection{Class template \datapar}{datapar}

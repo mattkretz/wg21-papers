@@ -10,8 +10,8 @@ namespace std {
     struct unaligned_tag {};
     struct aligned_tag {};
 
-    template <class T, size_t N> struct abi_for_width { typedef implementation_defined type; };
-    template <size_t N> using abi_for_width_t = typename abi_for_width<N>::type;
+    template <class T, size_t N> struct abi_for_size { typedef implementation_defined type; };
+    template <size_t N> using abi_for_size_t = typename abi_for_size<N>::type;
 
     template <class T, class Abi = datapar_abi::compatible>
     struct datapar_size : public integral_constant<size_t, implementation_defined> {};
