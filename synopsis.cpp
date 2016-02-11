@@ -76,18 +76,30 @@ namespace std {
     template <class T, class Abi, class U>
     datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
 
-    template <class T, class Abi>
-    mask<T, Abi> operator==(const datapar<T, Abi> &, const datapar<T, Abi> &);
-    template <class T, class Abi>
-    mask<T, Abi> operator!=(const datapar<T, Abi> &, const datapar<T, Abi> &);
-    template <class T, class Abi>
-    mask<T, Abi> operator>=(const datapar<T, Abi> &, const datapar<T, Abi> &);
-    template <class T, class Abi>
-    mask<T, Abi> operator<=(const datapar<T, Abi> &, const datapar<T, Abi> &);
-    template <class T, class Abi>
-    mask<T, Abi> operator>(const datapar<T, Abi> &, const datapar<T, Abi> &);
-    template <class T, class Abi>
-    mask<T, Abi> operator<(const datapar<T, Abi> &, const datapar<T, Abi> &);
+    template <class T, class Abi, class U>
+    typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator==(datapar<T, Abi>, const U &);
+    template <class T, class Abi, class U>
+    typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator!=(datapar<T, Abi>, const U &);
+    template <class T, class Abi, class U>
+    typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator>=(datapar<T, Abi>, const U &);
+    template <class T, class Abi, class U>
+    typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator<=(datapar<T, Abi>, const U &);
+    template <class T, class Abi, class U>
+    typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator> (datapar<T, Abi>, const U &);
+    template <class T, class Abi, class U>
+    typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator< (datapar<T, Abi>, const U &);
+    template <class T, class Abi, class U>
+    typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator==(const U &, datapar<T, Abi>);
+    template <class T, class Abi, class U>
+    typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator!=(const U &, datapar<T, Abi>);
+    template <class T, class Abi, class U>
+    typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator>=(const U &, datapar<T, Abi>);
+    template <class T, class Abi, class U>
+    typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator<=(const U &, datapar<T, Abi>);
+    template <class T, class Abi, class U>
+    typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator> (const U &, datapar<T, Abi>);
+    template <class T, class Abi, class U>
+    typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator< (const U &, datapar<T, Abi>);
 
     template <class T> struct is_datapar : public false_type {};
     template <class T, class Abi> struct is_datapar<datapar<T, Abi>> : public true_type {};

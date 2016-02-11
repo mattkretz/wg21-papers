@@ -417,7 +417,52 @@ template <class T, class Abi, class U> datapar<T, Abi> &operator>>=(datapar<T, A
     \pnum\returns A reference to the first argument.
   \end{itemdescr}
 
-  \wgSubsubsection{\datapar logical operators}{datapar.comparison}
+  \wgSubsubsection{\datapar logical operators}{datapar.logical}
+  \textit{TODO}
+
+  \wgSubsubsection{\datapar compare operators}{datapar.comparison}
+  \begin{itemdecl}
+template <class T, class Abi, class U>
+typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator==(datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator!=(datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator>=(datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator<=(datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator> (datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator< (datapar<T, Abi>, const U &);
+template <class T, class Abi, class U>
+typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator==(const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator!=(const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator>=(const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator<=(const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator> (const U &, datapar<T, Abi>);
+template <class T, class Abi, class U>
+typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator< (const U &, datapar<T, Abi>);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum\remarks The return type of these operators shall be the \type{mask_type} member type of the type deduced according to the rules defined in [datapar.binary].
+
+    \pnum\remarks Each of these operators only participates in overload resolution if all of the following hold:
+    \begin{itemize}
+      \item \datapar{}\type{<T, Abi>} is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
+      \item \type U is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
+    \end{itemize}
+
+    \pnum\remarks The operators with \type{const U \&} as first parameter shall not participate in overload resolution if \code{is_datapar_v<U> == true}.
+
+    \pnum\effects Both arguments are first converted to \type{datapar_return_type<datapar<T, Abi>, U>}.
+      Each of these operators subsequently performs the indicated operation component-wise on each of the elements of the first argument and the corresponding element of the second argument.
+
+    \pnum\returns An object containing the results of the component-wise operator application.
+  \end{itemdescr}
 
   \wgSubsubsection{\datapar transcendentals}{datapar.transcend}
 
