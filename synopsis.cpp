@@ -107,5 +107,12 @@ namespace std {
     template <class T, class U, class... Us>
     conditional_t<(T::size() == (U::size() + Us::size()...)), T,
                   array<T, (U::size() + Us::size()...) / T::size()>> datapar_cast(U, Us...);
+
+    template <class T, class Abi> bool  all_of(mask<T, Abi>);
+    template <class T, class Abi> bool  any_of(mask<T, Abi>);
+    template <class T, class Abi> bool none_of(mask<T, Abi>);
+    template <class T, class Abi> bool some_of(mask<T, Abi>);
+
+    template <class T, class U, class Abi> implementation_defined where(mask<T, Abi>, datapar<U, Abi> &);
   }
 }

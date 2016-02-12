@@ -2,12 +2,12 @@ namespace std {
   namespace experimental {
     template <class T, class Abi = datapar_abi::compatible> class mask {
     public:
-      typedef implementation_defined internal_type;
+      typedef implementation_defined native_handle_type;
       typedef bool value_type;
       typedef implementation_defined register_value_type;
       typedef implementation_defined reference;
       typedef implementation_defined const_reference;
-      typedef mask<T, Abi> mask_type;
+      typedef datapar<T, Abi> datapar_type;
       typedef size_t size_type;
       typedef Abi abi_type;
 
@@ -44,9 +44,12 @@ namespace std {
       reference operator[](size_type);
       const_reference operator[](size_type) const;
 
-      // unary operators (for integral T)
+      // negation:
       mask operator!() const;
-      mask operator~() const;
+
+      // access to the internals for implementation-specific extensions
+      native_handle_type &native_handle();
+      const native_handle_type &native_handle() const;
     };
 
     template <class T, class Abi>
