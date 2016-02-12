@@ -204,12 +204,36 @@ constexpr bool some_of(bool);
   \pnum\realnote \code{some_of(bool)} unconditionally returns \false.
 \end{itemdescr}
 
+\begin{itemdecl}
+template <class T, class Abi> int popcount(mask<T, Abi>);
+constexpr int popcount(bool);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The number of boolean elements that are \true.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class T, class Abi> int find_first_set(mask<T, Abi> m);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The lowest element index \code i where \code{m[i] == true}.
+  \pnum\remarks If \code{none_of(m) == true} the behavior is undefined.
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr int find_first_set(bool);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns 0 if the argument is \true.
+\end{itemdescr}
+
 \wgSubsubsection{Masked assigment}{mask.where}
 \begin{itemdecl}
 template <class T, class U, class Abi> implementation_defined where(mask<U, Abi> m, datapar<T, Abi> &v);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks The function only participates in overload resolution if \mask[<U, Abi>] is implicitly convertible to \mask[<T, Abi>].
+
   \pnum\returns A temporary object with the following properties:
   \begin{enumerate}
     \item The object is not \textit{CopyConstructible}.
@@ -223,25 +247,14 @@ template <class T, class U, class Abi> implementation_defined where(mask<U, Abi>
 template <class T> implementation_defined where(bool, T &);
 \end{itemdecl}
 \begin{itemdescr}
-  \textit{TODO}
-\end{itemdescr}
+  \pnum\remarks The function only participates in overload resolution if \type T is a fundamental arithmetic type.
 
-\begin{itemdecl}
-\end{itemdecl}
-\begin{itemdescr}
-\end{itemdescr}
-
-\begin{itemdecl}
-\end{itemdecl}
-\begin{itemdescr}
-\end{itemdescr}
-
-\begin{itemdecl}
-\end{itemdecl}
-\begin{itemdescr}
-\end{itemdescr}
-
-\begin{itemdecl}
-\end{itemdecl}
-\begin{itemdescr}
+  \pnum\returns A temporary object with the following properties:
+  \begin{enumerate}
+    \item The object is not \textit{CopyConstructible}.
+    \item Assignment and compound assignment operators only participate in overload resolution if the corresponding operator for \type T is usable.
+    \item \effects If the first argument is \false, the assignment operators do nothing.
+      If the first argument is \true, the assignment operators forward to the corresponding builtin assignment operator.
+    \item The assignment and compound assignment operators return \void.
+  \end{enumerate}
 \end{itemdescr}

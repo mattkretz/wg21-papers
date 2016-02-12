@@ -133,6 +133,10 @@ namespace std {
     constexpr bool none_of(bool);
     template <class T, class Abi> bool some_of(mask<T, Abi>);
     constexpr bool some_of(bool);
+    template <class T, class Abi> int popcount(mask<T, Abi>);
+    constexpr int popcount(bool);
+    template <class T, class Abi> int find_first_set(mask<T, Abi>);
+    constexpr int find_first_set(bool);
 
     // masked assignment [mask.where]
     template <class T, class U, class Abi> implementation_defined where(mask<U, Abi>, datapar<T, Abi> &);
