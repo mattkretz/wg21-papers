@@ -464,6 +464,43 @@ typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator< (const U &
     \pnum\returns An object containing the results of the component-wise operator application.
   \end{itemdescr}
 
+  \wgSubsubsection{\datapar type traits}{datapar.traits}
+  \begin{itemdecl}
+template <class T> struct is_datapar;
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum\effects The \type{is_datapar} type derives from \type{true_type} if \type T is an instance of the \datapar class template.
+    Otherwise it derives from \type{false_type}.
+  \end{itemdescr}
+
+  \wgSubsubsection{\datapar casts}{datapar.casts}
+  \begin{itemdecl}
+template <class T, class U, class... Us>
+conditional_t<(T::size() == (U::size() + Us::size()...)), T,
+              array<T, (U::size() + Us::size()...) / T::size()>> datapar_cast(U, Us...);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum\remarks The \code{datapar_cast} function only participates in overload resolution if all of the following hold:
+    \begin{itemize}
+      \item \code{is_datapar_v<T>}
+      \item \code{is_datapar_v<U>}
+      \item All types in the template parameter pack \type{Us} are equal to \type U.
+      \item \code{U::size() + Us::size()...} is an integral multiple of \code{T::size()}.
+    \end{itemize}
+
+    \pnum\effects All scalar elements \code{x\textsubscript{i}} of the function argument(s) are converted as if
+    \code{y\textsubscript{i} = static_cast<typename T::value_type>(x\textsubscript{i})} is executed.
+    The resulting \code{y\textsubscript{i}} are stored into the return object(s) of type \type T.
+    \wgNote{%
+      For \code{T::size() == 2 * U::size()} the following holds:
+      \code{datapar_cast<T>(x0, x1)[i] == static_cast<typename T::value_type>(array<U, 2>\{x0, x1\}[i / U::size()][i \% U::size()])}.
+      For \code{2 * T::size() == U::size()} the following holds:
+      \code{datapar_cast<T>(x)[i][j] == static_cast<typename T::value_type>(x[i * T\MayBreak::size() + j])}.
+    }
+
+    \pnum\returns The converted values as one object of \type T or an array of \type T.
+  \end{itemdescr}
+
   \wgSubsubsection{\datapar transcendentals}{datapar.transcend}
 
   \wgSubsection{Class template \mask}{datapar.mask}
