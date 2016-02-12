@@ -46,6 +46,19 @@ The alternative (preferred) is to use \simdcast consistently for all other conve
 The broadcast constructor is not declared as \code{explicit} to ease the use of scalar prvalues in expressions involving data-parallel operations.
 The operations where such a conversion should not be implicit consequently need to use SFINAE / concepts to inhibit the conversion.
 
+\subsection{Aliasing of Subscript Operators}
+Note that the way the subscript operators are declared, some kind of type punning needs to happen.\footnote{
+  Note: The vector builtins of clang do not suffice to implement the subscript operators, even though they support subscripting the vector object.
+  An implementation might have to use a mechanism such as the \code{gnu::may_alias} attribute.
+}
+An lvalue reference to \type{register_value_type} needs to reference the same object as is contained as one element of the \datapar object.
+An alternative to an lvalue reference would be a smart reference object.
+This would require progress on language improvements for smart references first.
+
+The subscript operator of the \mask type, on the other hand, may not use lvalue references and must use a smart reference wrapper instead.
+This is necessary because there are systems where a single boolean element is stored as a single bit.
+To ensure source compatibility the return type must therefore be a smart reference on all implementations.
+
 \subsection{Parameters of Binary and Compare Operators}
 It is easier to implement and possibly easier to specify these operators if the signature is specified as:
 \begin{itemdecl}
