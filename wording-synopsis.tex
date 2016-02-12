@@ -1,0 +1,70 @@
+\wgSubsection{Header \code{<datapar>} synopsis}{datapar.syn}
+\lstinputlisting[]{synopsis.cpp}
+
+\pnum
+The header \code{<datapar>} defines two class templates (\datapar, and \mask), several tag types, and a series of related function templates for concurrent manipulation of the values in \datapar and \mask objects.
+
+\begin{itemdecl}
+namespace datapar_abi {
+struct scalar {};
+// implementation-defined tag types, e.g. sse, avx, avx512, neon, ...
+typedef implementation_defined compatible;
+typedef implementation_defined native;
+}
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  The ABI types are tag types to be used as the second template argument to \datapar and \mask.
+
+  \pnum
+  The \type{scalar} tag is present in all implementations and forces \datapar and \mask to store a single component (i.e. \datapar{}\type{<T, datapar_abi::scalar>::size()} returns \code 1).
+
+  \pnum
+  An implementation may choose to implement data-parallel execution for many different targets.
+  \wgNote{There can certainly be more than one tag type per (micro-)architecture, e.g. to support different vector lengths or partial register usage.}
+  All tag types an implementation supports shall be present independent of the target architecture determined at invocation of the compiler.
+
+  \pnum
+  The \type{datapar_abi::compatible} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that ensures the highest compatibility on the target architecture.
+
+  \pnum
+  The \type{datapar_abi::native} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that is supported on the target system.
+\end{itemdescr}
+
+\wgSubsubsection{\datapar type traits}{datapar.traits}
+\begin{itemdecl}
+template <class T> struct is_datapar;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum The \type{is_datapar} type derives from \type{true_type} if \type T is an instance of the \datapar class template.
+  Otherwise it derives from \type{false_type}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class T> struct is_mask;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum The \type{is_mask} type derives from \type{true_type} if \type T is an instance of the \mask class template.
+  Otherwise it derives from \type{false_type}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class T, size_t N> struct abi_for_size { typedef implementation_defined type; };
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  The \type{abi_for_size} class template defines the member type \type{type} to one of the tag types in \code{datapar_abi} or not at all, depending on the value of the template parameters.
+
+  \pnum
+  \code{datapar<T, abi_for_size_t<T, N>>::size()} shall return \code N or result in a substitution failure.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class T, class Abi = datapar_abi::compatible>
+struct datapar_size : public integral_constant<size_t, implementation_defined> {};
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum The \type{datapar_size} class template inherits from \type{integral_constant} with a value that equals \datapar{}\code{<T, Abi>::size()}.
+
+  \pnum \code{datapar_size<T, Abi>::value} shall result in a substitution failure if any of the template arguments \type T or \type{Abi} are invalid template arguments to \datapar.
+\end{itemdescr}

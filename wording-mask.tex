@@ -1,0 +1,247 @@
+\wgSubsection{Class template \type{mask}}{mask}
+\wgSubsubsection{Class template \mask overview}{mask.overview}
+\lstinputlisting[]{mask.cpp}
+
+\pnum The class template \mask[<T, Abi>] is a one-dimensional smart array of booleans.
+The number of elements in the array is determined at compile time, equal to the number of elements in \datapar[<T, Abi>].
+
+\pnum The first template argument \type T must be an integral or floating-point fundamental type.
+The type \bool is not allowed.
+
+\pnum The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
+
+\begin{itemdecl}
+typedef implementation_defined native_handle_type;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum The \type{native_handle_type} member type is an alias for the \code{native_handle()} member function return type.
+  It is used to expose an implementation-defined handle for implementation- and target-specific extensions.
+\end{itemdescr}
+
+\begin{itemdecl}
+static constexpr size_type size();
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns the number of boolean elements stored in objects of the given \mask[<T, Abi>] type.
+\end{itemdescr}
+
+\wgSubsubsection{\mask constructors}{mask.ctor}
+\begin{itemdecl}
+mask() = default;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Constructs an object with all elements initialized to \code{bool()}.
+  \wgNote{This zero-initializes the object.}
+\end{itemdescr}
+
+\begin{itemdecl}
+mask(value_type);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Constructs an object with each element initialized to the value of the argument.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class U> mask(mask<U, Abi> x);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks This constructor shall not participate in overload resolution unless
+    \datapar[<U, Abi>] is implicitly convertible to \datapar[<T, Abi>].
+  \pnum\effects Constructs an object of type \mask.
+  \pnum\postcondition The $i$-th element equals \code{x[i]} for all elements.
+\end{itemdescr}
+
+\wgSubsubsection{\mask load functions}{mask.load}
+\begin{itemdecl}
+static mask load(const value_type *x);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum \effects Constructs an object with each element $i$ initialized to \code{x[i]} for all elements.
+  \pnum \returns The constructed object.
+  \pnum \remarks If \mask{}\code{::size()} is greater than the number of values pointed to by the argument, the behavior is undefined.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class Flags> static mask load(const value_type *x, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Constructs an object with each element $i$ initialized to \code{x[i]} for all elements.
+  \pnum\returns The constructed object.
+  \pnum\remarks If \mask{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \pnum\remarks If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
+\end{itemdescr}
+
+\wgSubsubsection{\mask{} store functions}{mask.store}
+\begin{itemdecl}
+void store(value_type *x);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Copies each element such that the $i$-th element is stored to \code{x[i]}.
+  \pnum\remarks If \mask{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class Flags> void store(value_type *x, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Copies each element such that the $i$-th element is stored to \code{x[i]}.
+  \pnum\remarks If \mask{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \pnum\remarks If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
+\end{itemdescr}
+
+\begin{itemdecl}
+void store(value_type *x, mask);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is stored to \code{x[i]}.
+  \pnum\remarks If the largest $i$ where the second argument is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class Flags> void store(value_type *x, mask, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Copies each element where the corresponding element in the second argument is \true such that the $i$-th element is stored to \code{x[i]}.
+  \pnum\remarks If the largest $i$ where the second argument is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \pnum\remarks If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
+\end{itemdescr}
+
+\wgSubsubsection{\mask{} subscript operators}{mask.subscr}
+\begin{itemdecl}
+reference operator[](size_type i);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns A temporary object acting as a smart reference wrapper to the $i$-th element.
+  \pnum\postconditions Assignment of objects of type \bool modify the $i$-th element without aliasing violations.
+  \pnum                Modification of \code{*this} does not invalidate references held to the return value.
+  Subsequent reads from such references yield the new value of the $i$-th element.
+\end{itemdescr}
+
+\begin{itemdecl}
+const_reference operator[](size_type) const;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns A \const lvalue reference to the $i$-th element.
+  \pnum\postconditions Modification of \code{*this} does not invalidate references held to the return value.
+  Subsequent reads from such references yield the new value of the $i$-th element.
+\end{itemdescr}
+
+\wgSubsubsection{\mask unary operators}{mask.unary}
+\begin{itemdecl}
+mask operator!() const;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns A mask object with the $i$-th element set to the logical negation for all elements.
+\end{itemdescr}
+
+\wgSubsubsection{\mask native handles}{mask.native}
+\begin{itemdecl}
+native_handle_type &native_handle();
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns An lvalue reference to the implementation-specific object implementing the data-parallel semantics.
+\end{itemdescr}
+
+\begin{itemdecl}
+const native_handle_type &native_handle() const;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns A \const lvalue reference to the implementation-specific object implementing the data-parallel semantics.
+\end{itemdescr}
+
+\wgSubsection{\type{mask} non-member operations}{mask.nonmembers}
+\wgSubsubsection{\mask binary operators}{mask.binary}
+
+\wgSubsubsection{\mask compares}{mask.comparison}
+\begin{itemdecl}
+template <class T, class Abi, class U> bool operator==(mask<T, Abi>, const U &);
+template <class T, class Abi, class U> bool operator!=(mask<T, Abi>, const U &);
+template <class T, class Abi, class U> bool operator==(const U &, mask<T, Abi>);
+template <class T, class Abi, class U> bool operator!=(const U &, mask<T, Abi>);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks Each of these operators only participates in overload resolution if \type U is implicitly convertible to \mask[<T, Abi>].
+
+  \pnum\remarks The operators with \type{const U \&} as first parameter shall not participate in overload resolution if \code{is_mask_v<U> == true}.
+
+  \pnum\returns The equality operator returns \true if all boolean elements of the first argument equal the corresponding element of the second argument.
+  It returns \false otherwise.
+
+  \pnum\returns The inequality operator returns the negation of the equality operator.
+\end{itemdescr}
+
+\wgSubsubsection{\mask reductions}{mask.reductions}
+\begin{itemdecl}
+template <class T, class Abi> bool  all_of(mask<T, Abi>);
+constexpr bool  all_of(bool);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns \true if all boolean elements in the function argument equal \true, \false otherwise.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class T, class Abi> bool  any_of(mask<T, Abi>);
+constexpr bool  any_of(bool);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns \true if at least one boolean element in the function argument equals \true, \false otherwise.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class T, class Abi> bool none_of(mask<T, Abi>);
+constexpr bool none_of(bool);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns \true if none of the boolean element in the function argument equals \true, \false otherwise.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class T, class Abi> bool some_of(mask<T, Abi>);
+constexpr bool some_of(bool);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns \true if at least one of the boolean elements in the function argument equals \true and at least one of the boolean elements in the function argument equals \false, \false otherwise.
+  \pnum\realnote \code{some_of(bool)} unconditionally returns \false.
+\end{itemdescr}
+
+\wgSubsubsection{Masked assigment}{mask.where}
+\begin{itemdecl}
+template <class T, class U, class Abi> implementation_defined where(mask<U, Abi> m, datapar<T, Abi> &v);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks The function only participates in overload resolution if \mask[<U, Abi>] is implicitly convertible to \mask[<T, Abi>].
+  \pnum\returns A temporary object with the following properties:
+  \begin{enumerate}
+    \item The object is not \textit{CopyConstructible}.
+    \item Assignment and compound assignment operators only participate in overload resolution if the corresponding operator for \datapar[<T, Abi>] is usable.
+    \item \effects Assignment and compound assignment implement the same semantics as the corresponding operator for \datapar[<T, Abi>] with the exception that elements of \code v stay unmodified if the corresponding boolean element in \code m is \false.
+    \item The assignment and compound assignment operators return \void.
+  \end{enumerate}
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class T> implementation_defined where(bool, T &);
+\end{itemdecl}
+\begin{itemdescr}
+  \textit{TODO}
+\end{itemdescr}
+
+\begin{itemdecl}
+\end{itemdecl}
+\begin{itemdescr}
+\end{itemdescr}
+
+\begin{itemdecl}
+\end{itemdecl}
+\begin{itemdescr}
+\end{itemdescr}
+
+\begin{itemdecl}
+\end{itemdecl}
+\begin{itemdescr}
+\end{itemdescr}
+
+\begin{itemdecl}
+\end{itemdecl}
+\begin{itemdescr}
+\end{itemdescr}

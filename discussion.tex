@@ -81,6 +81,22 @@ There are two arguments for not relaxing the rules for compound assignment, thou
     This is already a problem for builtin types where many developers multiply \float variables with \double prvalues.
 \end{enumerate}
 
+\subsection{Return Type of Masked Assignment Operators}
+The assignment operators of the type returned by \code{where(mask, datapar)} could return one of:
+\begin{itemize}
+  \item A reference to the \datapar object that was modified.
+  \item A temporary \datapar object that only contains the elements where the \mask is \true.
+  \item The object returned from the \code{where} function.
+  \item Nothing (\ie \void).
+\end{itemize}
+My first choice was a reference to the modified \datapar object.
+However, then the statement \code{(where(x < 0, x) *= -1) += 2} may be surprising: it adds \code 2 to all vector entries, independent of the mask.
+Likewise, \code{y += (where(x < 0, x) *= -1)} has a possibly confusing interpretation because of the \mask in the middle of the expression.
+
+Consider that write-masked assignment is used as a replacement for \code{if}-statements.
+Using \void as return type therefore is a more fitting choice because \code{if}-statements have no return value.
+By declaring the return type as \void the above expressions become ill-formed, which seems to be the best solution for guiding users to write maintainable code and express intent clearly.
+
 \subsection{Fundamental SIMD Type or Not?}
 \subsubsection{The Issue}
 There has been renewed discussion on the reflectors over the question whether \CC{} should define a fundamental, native SIMD type (let us call it \type{fundamental<T>}) and a generic data-parallel type on top which supports an arbitrary number of elements (call it \type{arbitrary<T, N>}).
