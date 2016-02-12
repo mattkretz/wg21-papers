@@ -46,6 +46,16 @@ The alternative (preferred) is to use \simdcast consistently for all other conve
 The broadcast constructor is not declared as \code{explicit} to ease the use of scalar prvalues in expressions involving data-parallel operations.
 The operations where such a conversion should not be implicit consequently need to use SFINAE / concepts to inhibit the conversion.
 
+\subsection{Parameters of Binary and Compare Operators}
+It is easier to implement and possibly easier to specify these operators if the signature is specified as:
+\begin{itemdecl}
+template <class T, class U>
+datapar_return_type<T, U> operator+(const T &, const U &);
+\end{itemdecl}
+The motivation for using a variant where at least one function parameter is constrained to the \datapar class template is compilation speed.
+The compiler can drop the operator from the overload resolution set quicker.
+With concepts it might be worthwhile to revisit this decision.
+
 \subsection{Compound Assignment}
 The semantics of compound assignment would allow less strict implicit conversion rules.
 Consider \code{datapar<int>() *= double()}: the corresponding multiplication operator would not compile because the implicit conversion to \datapar[<float>] is non-portable.
