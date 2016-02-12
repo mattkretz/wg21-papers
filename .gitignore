@@ -1,5 +1,5 @@
 aux-md5sums
-final.aux
+*.aux
 final.auxlock
 final.bbl
 final.blg
@@ -14,7 +14,6 @@ final.run.xml
 D4XXX.pdf
 .stamp
 .stamp.new
-mobile.aux
 mobile.bbl
 mobile.bcf
 mobile.blg
