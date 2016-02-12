@@ -68,7 +68,9 @@
 \RequirePackage{wg21macros}
 
 % WG21 defaults
-\newcommand\wgGroup{Library Working Group}
+\ifdefined\wgGroup\else
+\newcommand\wgGroup{SG1}
+\fi
 
 % Setup, finetuning, and useful commands
 % ********************************************************************
@@ -498,8 +500,8 @@ basicstyle=\listingssize\ttfamily
         Revision of: & \wgPreviousDocumentNumber \\
       \fi
       Date: & \yyyymmdddate\today \\
-      Project: & Programming Language \CC{}, \wgGroup \\
-      Reply-to: & \parbox[t]{\textwidth}{\wgName}
+      Reply-to: & \parbox[t]{\textwidth}{\wgName} \\
+      Audience: & \wgGroup \\
     \end{tabular}
     \begin{center}
       \huge
