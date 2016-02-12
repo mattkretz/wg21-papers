@@ -2,7 +2,7 @@ NAME := $(shell grep 'newcommand.wgDocumentNumber' main.tex|cut -f2 -d'{'|cut -f
 DRAFT := $(NAME)_draft
 TEXINPUTS := .:
 PDFLATEX := TEXINPUTS=$(TEXINPUTS) flock . lualatex --shell-escape --halt-on-error --file-line-error --interaction nonstopmode
-BIBER := biber --input-directory ../common --output-directory .
+BIBER := biber --input-directory . --output-directory .
 MAKEINDEX := makeindex
 SHELL := /bin/bash
 EXTRA_DEPS := $(wildcard *.sty) .dummy.tex

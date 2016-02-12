@@ -1,24 +1,28 @@
-@standard{cpp11,
-    type = {Standard},
-    edition = {3},
-    organization = {ISO/IEC JTC 1/SC 22},
-    title = {ISO/IEC 14882:2011},
-    subtitle = {Information technology --- Programming languages --- \CC{}},
-    url = {http://www.iso.org/iso/home/store/catalogue_ics/catalogue_detail_ics.htm?csnumber=50372},
-    date = {2011-09-01}
-}
-@standard{cpp14,
-    type = {Standard},
-    edition = {4},
-    organization = {ISO/IEC JTC 1/SC 22},
-    title = {ISO/IEC 14882:2014},
-    subtitle = {Information technology --- Programming languages --- \CC{}},
-    url = {http://www.iso.org/iso/home/store/catalogue_ics/catalogue_detail_ics.htm?csnumber=64029},
-    year = {2014}
-}
 @manual{XeonPhi2012,
     abstract = {This document describes new vector instructions for the Intel® Xeon PhiTM coprocessor.},
     organization = {Intel Corporation},
     title = {{Intel® Xeon Phi™ Coprocessor Instruction Set Architecture Reference Manual}},
     year = {2012}
+}
+@phdthesis{Kretz2015,
+  abstract = {Data-parallel programming is more important than ever since
+    serial performance is stagnating. All mainstream computing architectures have
+      been and are still enhancing their support for general purpose computing with
+      explicitly data-parallel execution. For CPUs, data-parallel execution is
+      implemented via SIMD instructions and registers. GPU hardware works very
+      similar allowing very efficient parallel processing of wide data streams with
+      a common instruction stream. These advances in parallel hardware have not been
+      accompanied by the necessary advances in established programming languages.
+      Developers have thus not been enabled to explicitly state the data-parallelism
+      inherent in their algorithms. Some approaches of GPU and CPU vendors have
+      introduced new programming languages, language extensions, or dialects
+      enabling explicit data-parallel programming. ...},
+  author = {Kretz, Matthias},
+  hdsurl = {https://hds.hebis.de/ubffm/Record/HEB366553658},
+  keywords = {C++, SIMD, data parallel, parallel programming, vectorization},
+  note = {Frankfurt (Main), Univ.},
+  title = {Extending C++ for Explicit Data-Parallel Programming via SIMD Vector Types},
+  uniqueid = {HEB366553658},
+  url = {http://publikationen.ub.uni-frankfurt.de/frontdoor/index/index/docId/38415},
+  year = 2015
 }
