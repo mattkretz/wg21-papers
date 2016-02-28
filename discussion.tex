@@ -131,7 +131,7 @@ Consider the simplest example of a multiplication of an \intt vector with a \flo
 arbitrary<float>() * arbitrary<int>();  // compiles for some targets, fails for others
 fundamental<float>() * fundamental<int>();  // never compiles, requires explicit cast
 \end{lstlisting}
-The \datapar[<T>] operators specified in such a way that source compatibility is ensured.
+The \datapar[<T>] operators are specified in such a way that source compatibility is ensured.
 For a type with user definable \code N, the binary operators should work slightly different with regard to implicit conversions.
 Most importantly, \type{arbitrary<T, N>} solves the issue of portable code containing mixed integral and floating-point values.
 A user would typically create aliases such as:
@@ -142,7 +142,7 @@ using doublevec = arbitrary<int, floatvec::size()>;
 \end{lstlisting}
 Objects of types \type{floatvec}, \type{intvec}, and \type{doublevec} will work together independent of the target system.
 
-Obviously these type aliases are basically the same if the \code N parameter of \type{arbitrary} has a default value:
+Obviously, these type aliases are basically the same if the \code N parameter of \type{arbitrary} has a default value:
 \smallskip\begin{lstlisting}[style=Vc]
 using floatvec = arbitrary<float>;
 using intvec = arbitrary<int, floatvec::size()>;
@@ -150,7 +150,7 @@ using doublevec = arbitrary<int, floatvec::size()>;
 \end{lstlisting}
 The ability to create these aliases is not the issue.
 Seeing the need for using such a pattern is the issue.
-Typically a developer will think no more of it if his code compiles on his machine.
+Typically, a developer will think no more of it if his code compiles on his machine.
 If \code{arbitrary<float>() * arbitrary<int>()} just happens to compile (which is likely) then this is the code that will get checked in to the repository.
 Note that with the existence of the \type{fundamental} class template, the \code N parameter of the \type{arbitrary} class would not have a default value and thus force the user to think a second longer about portability.
 
