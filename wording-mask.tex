@@ -221,7 +221,16 @@ template <class T, class Abi> int find_first_set(mask<T, Abi> m);
 \end{itemdescr}
 
 \begin{itemdecl}
+template <class T, class Abi> int find_last_set(mask<T, Abi> m);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The highest element index \code i where \code{m[i] == true}.
+  \pnum\remarks If \code{none_of(m) == true} the behavior is undefined.
+\end{itemdescr}
+
+\begin{itemdecl}
 constexpr int find_first_set(bool);
+constexpr int find_last_set(bool);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns 0 if the argument is \true.

@@ -137,6 +137,8 @@ namespace std {
     constexpr int popcount(bool);
     template <class T, class Abi> int find_first_set(mask<T, Abi>);
     constexpr int find_first_set(bool);
+    template <class T, class Abi> int find_last_set(mask<T, Abi>);
+    constexpr int find_last_set(bool);
 
     // masked assignment [mask.where]
     template <class T, class U, class Abi> implementation_defined where(mask<U, Abi>, datapar<T, Abi> &);
