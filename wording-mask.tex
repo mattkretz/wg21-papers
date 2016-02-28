@@ -47,8 +47,7 @@ template <class U> mask(mask<U, Abi> x);
 \begin{itemdescr}
   \pnum\remarks This constructor shall not participate in overload resolution unless
     \datapar[<U, Abi>] is implicitly convertible to \datapar[<T, Abi>].
-  \pnum\effects Constructs an object of type \mask.
-  \pnum\postcondition The $i$-th element equals \code{x[i]} for all elements.
+  \pnum\effects Constructs an object of type \mask where the $i$-th element equals \code{x[i]} \foralli.
 \end{itemdescr}
 
 \wgSubsubsection{\mask load functions}{mask.load}
@@ -56,8 +55,7 @@ template <class U> mask(mask<U, Abi> x);
 static mask load(const value_type *x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum \effects Constructs an object with each element $i$ initialized to \code{x[i]} for all elements.
-  \pnum \returns The constructed object.
+  \pnum \returns A new \mask object with each element $i$ initialized to \code{x[i]} \foralli.
   \pnum \remarks If \mask{}\code{::size()} is greater than the number of values pointed to by the argument, the behavior is undefined.
 \end{itemdescr}
 
@@ -65,8 +63,7 @@ static mask load(const value_type *x);
 template <class Flags> static mask load(const value_type *x, Flags);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\effects Constructs an object with each element $i$ initialized to \code{x[i]} for all elements.
-  \pnum\returns The constructed object.
+  \pnum\returns A new \mask object with each element $i$ initialized to \code{x[i]} \foralli.
   \pnum\remarks If \mask{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
   \pnum\remarks If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
 \end{itemdescr}
@@ -131,7 +128,7 @@ const_reference operator[](size_type) const;
 mask operator!() const;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns A mask object with the $i$-th element set to the logical negation for all elements.
+  \pnum\returns A mask object with the $i$-th element set to the logical negation \foralli.
 \end{itemdescr}
 
 \wgSubsubsection{\mask native handles}{mask.native}

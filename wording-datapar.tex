@@ -59,8 +59,7 @@ template <class U> datapar(datapar<U, Abi> x);
   \pnum\remarks This constructor shall not participate in overload resolution unless
                 \type U and \type T are different integral types and
                 \code{make_signed<U>::type} equals \code{make_signed<T>::type}.
-  \pnum\effects Constructs an object of type \datapar.
-  \pnum\postcondition The $i$-th element equals \code{static_cast<T>(x[i])} for all elements.
+  \pnum\effects Constructs an object where the $i$-th element equals \code{static_cast<T>(x[i])} \foralli.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar load functions}{datapar.load}
@@ -68,8 +67,7 @@ template <class U> datapar(datapar<U, Abi> x);
 static datapar load(const value_type *x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum \effects Constructs an object with each element $i$ initialized to \code{x[i]} for all elements.
-  \pnum \returns The constructed object.
+  \pnum \returns A new \datapar object with each element $i$ initialized to \code{x[i]} \foralli.
   \pnum \remarks If \datapar{}\code{::size()} is greater than the number of values pointed to by the argument, the behavior is undefined.
 \end{itemdescr}
 
@@ -77,8 +75,7 @@ static datapar load(const value_type *x);
 template <class Flags> static datapar load(const value_type *x, Flags);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\effects Constructs an object with each element $i$ initialized to \code{x[i]}.
-  \pnum\returns The constructed object.
+  \pnum\returns A new \datapar object with each element $i$ initialized to \code{x[i]} \foralli.
   \pnum\remarks If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
   \pnum\remarks If the template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
 \end{itemdescr}
@@ -87,8 +84,7 @@ template <class Flags> static datapar load(const value_type *x, Flags);
 template <class U, class Flags = unaligned_tag> static datapar load(const U *x, Flags = Flags());
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\effects Constructs an object with each element $i$ initialized to \code{static_cast<T>(x[i])}.
-  \pnum\returns The constructed object.
+  \pnum\returns A new \datapar object with each element $i$ initialized to \code{static_cast<T>(x[i])} \foralli.
   \pnum\remarks If \datapar{}\code{::size()} is greater than the number of values pointed to by the first argument, the behavior is undefined.
   \pnum\remarks If the second template parameter is of type \type{aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type U>}, the behavior is undefined.
 \end{itemdescr}
@@ -207,7 +203,7 @@ datapar operator--(int);
 mask_type operator!() const;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns A mask object with the $i$-th element set to \code{!operator[](i)} for all elements.
+  \pnum\returns A mask object with the $i$-th element set to \code{!operator[](i)} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -215,8 +211,7 @@ datapar operator~() const;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\requires The first template argument \type T to \datapar must be an integral type.
-  \pnum\effects Constructs an object where each bit of \code{*this} is inverted.
-  \pnum\returns The new object.
+  \pnum\returns A new \datapar object where each bit is the inverse of the corresponding bit in \code{*this}.
   \pnum\remarks \datapar{}\code{::operator\textasciitilde{}()} shall not participate in overload resolution if \type T is a floating-point type.
 \end{itemdescr}
 
@@ -231,8 +226,7 @@ datapar operator+() const;
 datapar operator-() const;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\effects Constructs an object where the $i$-th element is initialized to \code{-operator[](i)} for all elements.
-  \pnum\returns The new object.
+  \pnum\returns A new \datapar object where the $i$-th element is initialized to \code{-operator[](i)} \foralli.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar native handles}{datapar.native}
@@ -333,9 +327,7 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
 
   \pnum\remarks The operators with \type{const U \&} as first parameter shall not participate in overload resolution if \code{is_datapar_v<U> == true}.
 
-  \pnum\effects Both arguments are first converted to the return type.
-    Each of these operators subsequently performs the indicated operation component-wise on each of the elements of the first argument and the corresponding element of the second argument.
-  \pnum\returns An object containing the results of the component-wise operator application.
+  \pnum\returns A new \datapar object initialized with the results of the component-wise application of the indicated operator after both operands have been converted to the return type.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar compound assignment}{datapar.cassign}
@@ -404,10 +396,7 @@ typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator< (const U &
 
   \pnum\remarks The operators with \type{const U \&} as first parameter shall not participate in overload resolution if \code{is_datapar_v<U> == true}.
 
-  \pnum\effects Both arguments are first converted to \type{datapar_return_type<datapar<T, Abi>, U>}.
-    Each of these operators subsequently performs the indicated operation component-wise on each of the elements of the first argument and the corresponding element of the second argument.
-
-  \pnum\returns An object containing the results of the component-wise operator application.
+  \pnum\returns A new \mask object initialized with the results of the component-wise application of the indicated operator after both operands have been converted to \type{datapar_return_type<datapar<T, Abi>, U>}.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar casts}{datapar.casts}
@@ -425,17 +414,16 @@ conditional_t<(T::size() == (U::size() + Us::size()...)), T,
     \item \code{U::size() + Us::size()...} is an integral multiple of \code{T::size()}.
   \end{itemize}
 
-  \pnum\effects All scalar elements \code{x\textsubscript{i}} of the function argument(s) are converted as if
+  \pnum\returns A new \datapar object initialized with the converted values as one object of \type T or an array of \type T.
+  All scalar elements \code{x\textsubscript{i}} of the function argument(s) are converted as if
   \code{y\textsubscript{i} = static_cast<typename T::value_type>(x\textsubscript{i})} is executed.
-  The resulting \code{y\textsubscript{i}} are stored into the return object(s) of type \type T.
+  The resulting \code{y\textsubscript{i}} intialize the return object(s) of type \type T.
   \wgNote{%
     For \code{T::size() == 2 * U::size()} the following holds:
     \code{datapar_cast<T>(x0, x1)[i] == static_cast<typename T::value_type>(array<U, 2>\{x0, x1\}[i / U::size()][i \% U::size()])}.
     For \code{2 * T::size() == U::size()} the following holds:
     \code{datapar_cast<T>(x)[i][j] == static_cast<typename T::value_type>(x[i * T\MayBreak::size() + j])}.
   }
-
-  \pnum\returns The converted values as one object of \type T or an array of \type T.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar transcendentals}{datapar.transcend}
