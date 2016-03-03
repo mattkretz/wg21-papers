@@ -11,8 +11,6 @@ namespace std {
       typedef size_t size_type;
       typedef Abi abi_type;
 
-      template <class U = T> static constexpr size_t memory_alignment = implementation_defined;
-
       static constexpr size_type size();
 
       datapar() = default;
@@ -65,9 +63,5 @@ namespace std {
       native_handle_type &native_handle();
       const native_handle_type &native_handle() const;
     };
-
-    template <class T, class Abi>
-    template <class U>
-    constexpr size_t datapar<T, Abi>::memory_alignment<U>;
   }
 }

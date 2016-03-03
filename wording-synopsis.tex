@@ -69,3 +69,12 @@ struct datapar_size : public integral_constant<size_t, implementation_defined> {
   \pnum \code{datapar_size<T, Abi>::value} shall result in a substitution failure if any of the template arguments \type T or \type{Abi} are invalid template arguments to \datapar.
 \end{itemdescr}
 
+\begin{itemdecl}
+template <class T, class U = typename T::value_type>
+constexpr size_t memory_alignment = implementation_defined;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\requires The template parameter \type T must be a valid instantiation of either the \datapar or the \mask class template.
+  \pnum\requires The template parameter \type U must be a type supported by the load and store functions for \type T.
+  \pnum The value of \code{memory_alignment<T, U>} identifies the alignment restrictons on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U.
+\end{itemdescr}

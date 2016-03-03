@@ -25,6 +25,9 @@ namespace std {
     template <class T, class Abi = datapar_abi::compatible>
     constexpr size_t datapar_size_v = datapar_size<T, Abi>::value;
 
+    template <class T, class U = typename T::value_type>
+    constexpr size_t memory_alignment = implementation_defined;
+
     // class template datapar [datapar]
     template <class T, class Abi = datapar_abi::compatible> class datapar;
 
