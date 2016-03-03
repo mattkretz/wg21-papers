@@ -2,6 +2,7 @@ namespace std {
   namespace experimental {
     namespace datapar_abi {
       struct scalar {};  // always present
+      template <int N> struct fixed_size {};  // always present
       // implementation-defined tag types, e.g. sse, avx, avx512, neon, ...
       typedef implementation_defined compatible;  // always present
       typedef implementation_defined native;  // always present
