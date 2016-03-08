@@ -80,9 +80,11 @@
 \counterwithin{Paras}{subsection}
 \counterwithin{Paras}{subsubsection}
 \counterwithin{Paras}{paragraph}
-\counterwithin{Paras}{subparagraph}
+%\counterwithin{Paras}{subparagraph}
 \makeatletter
-\def\pnum{\par\addtocounter{Paras}{1}\noindent\llap{{%
+\def\pnum{\par%
+  \addtocounter{Paras}{1}\protected@edef\@currentlabel{\theparagraph~p.\arabic{Paras}}%
+\noindent\llap{{%
   \scriptsize\raisebox{.5ex}{\arabic{Paras}}}\hspace{\@totalleftmargin}\quad}}
 \makeatother
 
@@ -150,7 +152,7 @@
     \par%
     \vskip1.0\baselineskip plus 1.5\baselineskip minus 0.2\baselineskip%
     \phantomsection%
-    \addtocounter{subsection}{1}%
+    \refstepcounter{subsection}%
     \addcontentsline{toc}{subsection}{#1}%
     {\larger[2]\noindent\thesubsection{} #1\label{sec:#2}\hfill[#2]}\\%
     \noindent%
@@ -159,7 +161,7 @@
     \par%
     \vskip0.75\baselineskip plus 1.0\baselineskip minus 0.15\baselineskip%
     \phantomsection%
-    \addtocounter{subsubsection}{1}%
+    \refstepcounter{subsubsection}%
     \setcounter{Paras}{0}%
     \addcontentsline{toc}{subsubsection}{#1}%
     {\larger[1]\noindent\thesubsubsection{} #1\label{sec:#2}\hfill[#2]}\\%
@@ -169,7 +171,7 @@
     \par%
     \vskip0.5\baselineskip plus .5\baselineskip minus 0.1\baselineskip%
     \phantomsection%
-    \addtocounter{paragraph}{1}%
+    \refstepcounter{paragraph}%
     \setcounter{Paras}{0}%
     \addcontentsline{toc}{paragraph}{#1}%
     {\noindent\theparagraph{} #1\label{sec:#2}\hfill[#2]}\\%
