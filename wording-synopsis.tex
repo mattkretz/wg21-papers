@@ -4,6 +4,8 @@
 \pnum
 The header \code{<datapar>} defines two class templates (\datapar, and \mask), several tag types, and a series of related function templates for concurrent manipulation of the values in \datapar and \mask objects.
 
+\wgSubsubsection{\datapar ABI tags}{datapar.abi}
+
 \begin{itemdecl}
 namespace datapar_abi {
   struct scalar {};
@@ -20,12 +22,14 @@ namespace datapar_abi {
   \pnum
   The \type{scalar} tag is present in all implementations and forces \datapar and \mask to store a single component (i.e. \datapar{}\type{<T, datapar_abi::scalar>::size()} returns \code 1).
 
-  \pnum
-  The \type{fixed_size} tag is present in all implementations.
-  Use of \type{fixed_size<N>} forces \datapar and \mask to store and manipulate \code N components (i.e. \datapar{}\type{<T, datapar_abi::fixed_size<N>>::size()} returns \code N).
+  \pnum\label{datapar.fixedsize.def}
+  The \fixedsize tag is present in all implementations.
+  Use of \fixedsizeN forces \datapar and \mask to store and manipulate \code N components (i.e. \datapar{}\type{<T, \fixedsizeN{}>::size()} returns \code N).
+  An implementation must support at least any \code N $\in [1\ldots 32]$.
+  Additionally, an implementation must support any \code N $\in \left\{\code{\datapar[<U>]::size()}, \forall \type{U} \in \{\mathrm{arithmetic\ types}\} \right\}$.
   \wgNote{
-    An implementation may choose to not ensure ABI compatibility for \datapar and \mask instantiations using the same \type{fixed_size<N>} tag.
-    In case of ABI compatibilty between differently compiled translation units, the efficiency of \datapar[<T, Abi>] is likely to be better than for \datapar[<T, fixed_size<datapar_size_v<T, Abi>>>] (with \type{Abi} not a instance of \type{fixed_size}).
+    An implementation may choose to not ensure ABI compatibility for \datapar and \mask instantiations using the same \fixedsizeN tag.
+    In case of ABI compatibilty between differently compiled translation units, the efficiency of \datapar[<T, Abi>] is likely to be better than for \datapar[<T, fixed_size<datapar_size_v<T, Abi>>>] (with \type{Abi} not a instance of \fixedsizescoped).
   }
 
   \pnum
@@ -62,10 +66,16 @@ template <class T, size_t N> struct abi_for_size { typedef implementation_define
 \end{itemdecl}
 \begin{itemdescr}
   \pnum
-  The \type{abi_for_size} class template defines the member type \type{type} to one of the tag types in \code{datapar_abi} or not at all, depending on the value of the template parameters.
+  The \type{abi_for_size} class template defines the member type \type{type} to one of the tag types in \code{datapar_abi}.
+  If a tag type \type A exists that satisfies
+  \begin{itemize}
+    \item \code{datapar_size_v<T, A> == N},
+    \item \type A is a supported \type{Abi} parameter to \datapar[<T, Abi>] for the current compilation target, and
+    \item \type A is not \fixedsizeN,
+  \end{itemize} then the member type \type{type} is an alias for \type A.
+  Otherwise \type{type} is an alias for \fixedsizeN.
 
-  \pnum
-  \code{datapar<T, abi_for_size_t<T, N>>::size()} shall return \code N or result in a substitution failure.
+  \pnum \code{abi_for_size<T, N>::type} shall result in a substitution failure if \type T is not supported by \datapar or if \code N is not supported by the implementation (cf. [\ref{datapar.fixedsize.def}]).
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -85,5 +95,5 @@ constexpr size_t memory_alignment = implementation_defined;
 \begin{itemdescr}
   \pnum\requires The template parameter \type T must be a valid instantiation of either the \datapar or the \mask class template.
   \pnum\requires The template parameter \type U must be a type supported by the load and store functions for \type T.
-  \pnum The value of \code{memory_alignment<T, U>} identifies the alignment restrictons on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U.
+  \pnum The value of \code{memory_alignment<T, U>} identifies the alignment restrictions on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U.
 \end{itemdescr}

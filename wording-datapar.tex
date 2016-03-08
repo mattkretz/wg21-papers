@@ -52,17 +52,24 @@ datapar(value_type);
   Constructs an object with each element initialized to the value of the argument.
 \end{itemdescr}
 
+\comment{Should I add a generator ctor, taking a lambda to initialize the elements?}
+
 \begin{itemdecl}
-template <class U> datapar(datapar<U, Abi> x);
+template <class U, class Abi2> datapar(datapar<U, Abi2> x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks This constructor shall not participate in overload resolution unless
-                \type U and \type T are different integral types and
-                \code{make_signed<U>::type} equals \code{make_signed<T>::type}.
+  \pnum\remarks This constructor shall not participate in overload resolution unless either
+  \begin{itemize}
+    \item \type{Abi} and \type{Abi2} are equal and
+      \type U and \type T are different integral types and
+      \code{make_signed<U>::type} equals \code{make_signed<T>::type}, or
+    \item at least one of \type{Abi} or \type{Abi2} is an instantiation of \fixedsizescoped and \code{size() == x.size()} and \type U is implicitly convertible to \type T.
+  \end{itemize}
   \pnum\effects Constructs an object where the $i$-th element equals \code{static_cast<T>(x[i])} \foralli.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar load functions}{datapar.load}
+\comment{Move to non-member. Ask LEWG about load expression vs. template param.}
 \begin{itemdecl}
 static datapar load(const value_type *x);
 \end{itemdecl}
@@ -290,10 +297,29 @@ template <class T, class Abi, class U>
 datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
 \end{itemdecl}
 \begin{itemdescr}
+  \newcommand\common[2]{\code{\textit{common}(\type{#1}, \type{#2})}}
   \pnum\remarks The return type of these operators shall be deduced according to the following rules:
   \begin{itemize}
-    \item If \code{is_datapar_v<U> == true}
-      then the return type shall be determined from \type T and \type{U::value_type} according to the following paragraph.
+    \item Let \common{A}{B} identify the type:
+      \comment{\textit{unusual arithmetic conversions} ;-)}
+      \begin{itemize}
+        \item \type A if \type A equals \type B.
+        \item Otherwise, \type A if \type B is not a fundamental arithmetic type.
+        \item Otherwise, \type B if \type A is not a fundamental arithmetic type.
+        \item Otherwise, \code{decltype(A() + B())} if either one of the types \type A or \type B is a floating-point type.
+        \item Otherwise, \type A if \code{sizeof(A) > sizeof(B)}.
+        \item Otherwise, \type B if \code{sizeof(A) < sizeof(B)}.
+        \item Otherwise, \type C shall identify the type with greater integer conversion rank of the types \type A and \type B and:
+          \begin{itemize}
+            \item \type C is used if \code{is_signed_v<A> == is_signed_v<B>}, and
+            \item \code{make_unsigned_t<C>} otherwise.
+          \end{itemize}
+      \end{itemize}
+  \end{itemize}
+
+  \begin{itemize}
+    \item If \code{is_datapar_v<U> == true} and \code{datapar_size_v<T, Abi> == U::size()}
+      then the return type is \datapar[<\common{T}{U::value_type}, Abi>]\comment{If the Abi tags don't match: should it prefer \fixedsize or the native Abi tag?}.
     \item Otherwise, if \type T is integral and \type U is \intt
       the return type shall be \datapar{}\type{<T, Abi>}.
     \item Otherwise, if \type T is integral and \type U is \uint
@@ -304,26 +330,20 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
       then the return type shall be determined from \type T and \type V according to the following paragraph.
     \item Otherwise, if \type U is implicitly convertible to \datapar{}\type{<T, Abi>},
       the return type shall be \datapar{}\type{<T, Abi>}.
-    \item Otherwise no return type is defined (SFINAE).
+    \item Otherwise the operator does not participate in overload resolution.\comment{This seems a strange place to put this. I could just say return \void, though. It would have the same effect.}
   \end{itemize}
 
-  \pnum\remarks Given the types \type T and \type{Abi} from the class template argument list and a third type \type U determined by the rules of the previous paragraph a return type is deduced according to the following rules:
+  \pnum\remarks Each of these operators only participate in overload resolution if all of the following hold:
+  \newcommand\dataparreturntype{\type{datapar_return_type<datapar<T, Abi>, U>}\xspace}
   \begin{itemize}
-    \item If \type U is not a fundamental arithmetic type then the return type shall be \datapar{}\type{<T, Abi>}.
-    \item Otherwise, if at least one of the  types \type T and \type U is a floating-point type
-      the return type shall be \datapar{}\type{<decltype(T() + U()), Abi>}.
-    \item Otherwise, if \code{sizeof(T) < sizeof(U)} the return type shall be \datapar{}\type{<U, Abi>}.
-    \item Otherwise, if \code{sizeof(T) > sizeof(U)} the return type shall be \datapar{}\type{<T, Abi>}.
-    \item Otherwise, the type \type T or \type U that is farthest back in the list of \textit{standard integer types} (cf. [basic.fundamental]) is used as type \type V and
-      the return type shall be \datapar{}\type{<V, Abi>} if both types \type T and \type U are signed, otherwise the return type shall be \datapar{}\type{<make_unsigned_t<V>, Abi>}.
+    \item The indicated operator can be applied to objects of type \dataparreturntype{}\code{::}\type{value_type}.
+    \item \datapar{}\type{<T, Abi>} is implicitly convertible to \dataparreturntype.
+    \item \type U is implicitly convertible to \dataparreturntype.
   \end{itemize}
-
-  \pnum\remarks Each of these operators only participates in overload resolution if all of the following hold:
-  \begin{itemize}
-    \item The indicated operator can be applied to objects of type \type{R::value_type}, with \type R the return type.
-    \item \datapar{}\type{<T, Abi>} is implicitly convertible to the return type.
-    \item \type U is implicitly convertible to the return type.
-  \end{itemize}
+  \comment{
+    I think this allows \code{datapar<float, fixed_size<4>>() + double()} and returns \datapar[<double, fixed_size<4>>].
+    I also think that's what we want.
+  }
 
   \pnum\remarks The operators with \type{const U \&} as first parameter shall not participate in overload resolution if \code{is_datapar_v<U> == true}.
 
