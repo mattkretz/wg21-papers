@@ -69,7 +69,10 @@ template <class U, class Abi2> datapar(datapar<U, Abi2> x);
 \end{itemdescr}
 
 \wgSubsubsection{\datapar load functions}{datapar.load}
-\comment{Move to non-member. Ask LEWG about load expression vs. template param.}
+\comment{Move to non-member.
+  Ask LEWG about load expression vs. template param.
+  Chat with Fabio: try \code{load<T, Abi = void>(const T *)} where \type T may be an arithmetic type or a \datapar.
+}
 \begin{itemdecl}
 static datapar load(const value_type *x);
 \end{itemdecl}

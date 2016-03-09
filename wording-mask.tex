@@ -158,6 +158,10 @@ template <class T, class Abi, class U> bool operator!=(const U &, mask<T, Abi>);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Each of these operators only participates in overload resolution if \type U is implicitly convertible to \mask[<T, Abi>].
+  \comment{
+    Is this good enough?
+    The situation here is a lot simpler because no fundamental types are supported for \type U.
+  }
 
   \pnum\remarks The operators with \type{const U \&} as first parameter shall not participate in overload resolution if \code{is_mask_v<U> == true}.
 
