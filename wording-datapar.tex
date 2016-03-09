@@ -462,6 +462,31 @@ conditional_t<(T::size() == (U::size() + Us::size()...)), T,
   }
 \end{itemdescr}
 
-\wgSubsubsection{\datapar transcendentals}{datapar.transcend}
-\textit{TODO}
+\wgSubsubsection{\datapar math library}{datapar.math}
+\begin{tabular}[h]{|lllll|}
+  \hline
+  \multicolumn{5}{|l|}{\textbf{Math Functions:}} \\
+  \code{abs} & \code{cbrt} & \code{ceil} & \code{copysign} & \code{fdim} \\
+  \code{floor} & \code{fma} & \code{fmax} & \code{fmin} & \code{fmod} \\
+  \code{frexp} & \code{hypot} & \code{ilogb} & \code{ldexp} & \code{logb} \\
+  \code{lrint} & \code{lround} & \code{modf} & \code{nan} & \code{nanf} \\
+  \code{nanl} & \code{nearbyint} & \code{nextafter} & \code{nexttoward} & \code{pow} \\
+  \code{remainder} & \code{remquo} & \code{rint} & \code{round} & \code{scalbln} \\
+  \code{scalbn} & \code{sqrt} & \code{tgamma} & \code{trunc} & \\
+  \hline
+  \multicolumn{5}{|l|}{\textbf{Classification/comparison Functions:}} \\
+  \code{fpclassify} & \code{isfinite} & \code{isgreater} & \code{isgreaterequal} & \code{isinf} \\
+  \code{isless} & \code{islessequal} & \code{islessgreater} & \code{isnan} & \code{isnormal} \\
+  \code{isunordered} & \code{signbit} & & & \\
+  \hline
+  \multicolumn{5}{|l|}{\textbf{Integer Functions:}} \\
+  \code{div} & \code{ldiv} & \code{lldiv} & & \\
+  \hline
+\end{tabular}
+\comment{
+  Is there any function missing that we want to see in the first round?
+  SG1 voted against trig functions (and I assume that includes \code{exp} and \code{log} as well).
+}
+
+\textit{TODO: Add wording which types are supposed to work with the above functions and how they are supposed to behave.}
 
