@@ -19,7 +19,7 @@ namespace std {
     template <class T> constexpr bool is_mask_v = is_mask<T>::value;
 
     template <class T, size_t N> struct abi_for_size { typedef implementation_defined type; };
-    template <size_t N> using abi_for_size_t = typename abi_for_size<N>::type;
+    template <class T, size_t N> using abi_for_size_t = typename abi_for_size<T, N>::type;
 
     template <class T, class Abi = datapar_abi::compatible>
     struct datapar_size : public integral_constant<size_t, implementation_defined> {};

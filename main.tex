@@ -49,22 +49,28 @@
 
 \section{Changelog}
 \subsection{First Revision R1}
-\begin{itemize}
-  \item Extended the \code{datapar_abi} tag types with a \code{fixed_size<N>} tag to handle arbitrarily sized vectors.
-  \item Converted \code{memory_alignment} into a non-member trait.
-  \item The load functions were converted to non-member functions.
-    SG1 asked for guidance from LEWG whether a load-expression or a template parameter to load is more appropriate.
-  \item The store functions were converted to non-member functions to be consistent with the load functions.
-  \item Added wording to ensure that masked stores do not invoke out-of-bounds accesses for masked-off elements of the vector.
-  \item Converted the return type of \datapar{}\code{::operator[]} to return a smart reference instead of an lvalue reference.
-  \item Modified the wording of \code{native_handle()} to make the existence of the functions implementation-defined, instead of only the return type.
-  \item Dropped the section on “\datapar logical operators”. Added a note in the discussion that the omission is deliberate.
-  \item Added a minimal set of math functions on \datapar.
-  \item Added initial wording for an \code{execution_policy} for parallel algorithms to use vector types.
-  \item Added an example showing the use of the new execution policy.
-  \item Added an example of a possible \code{execute} implementation for a vectorizing executor.
-  \item Specified that masked stores do not trigger out-of-bounds stores on masked-off elements.
-\end{itemize}
+\begingroup
+  \newcommand\chck{\item[\ensuremath{\checkmark}]}
+  \begin{itemize}
+      \chck Converted \code{memory_alignment} into a non-member trait.
+      \chck Extended the \code{datapar_abi} tag types with a \code{fixed_size<N>} tag to handle arbitrarily sized vectors.
+      \chck Extended implicit conversions to handle \fixedsizeN.
+      \chck Extended binary operators to convert correctly with \fixedsizeN.
+    \item Extended mask wording to cope with \fixedsizeN.
+    \item The load functions were converted to non-member functions.
+      SG1 asked for guidance from LEWG whether a load-expression or a template parameter to load is more appropriate.
+    \item The store functions were converted to non-member functions to be consistent with the load functions.
+    \item Added wording to ensure that masked stores do not invoke out-of-bounds accesses for masked-off elements of the vector.
+    \item Converted the return type of \datapar{}\code{::operator[]} to return a smart reference instead of an lvalue reference.
+    \item Modified the wording of \code{native_handle()} to make the existence of the functions implementation-defined, instead of only the return type.
+    \item Dropped the section on “\datapar logical operators”. Added a note in the discussion that the omission is deliberate.
+    \item Added a minimal set of math functions on \datapar.
+    \item Added initial wording for an \code{execution_policy} for parallel algorithms to use vector types.
+    \item Added an example showing the use of the new execution policy.
+    \item Added an example of a possible \code{execute} implementation for a vectorizing executor.
+    \item Added usage examples
+  \end{itemize}
+\endgroup
 
 \input{intro}
 \input{wording}

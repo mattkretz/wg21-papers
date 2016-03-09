@@ -298,7 +298,9 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
 \end{itemdecl}
 \begin{itemdescr}
   \newcommand\common[2]{\code{\textit{common}(\type{#1}, \type{#2})}}
-  \pnum\remarks The return type of these operators shall be deduced according to the following rules:
+  \newcommand\commonabi[3]{\code{\textit{commonabi}(\type{#1}, \type{#2}, \type{#3})}}
+  \newcommand\dataparreturntype{\type{datapar_return_type<datapar<T, Abi>, U>}\xspace}
+  \pnum\remarks The return type of these operators (\dataparreturntype) shall be deduced according to the following rules:
   \begin{itemize}
     \item Let \common{A}{B} identify the type:
       \comment{\textit{unusual arithmetic conversions} ;-)}
@@ -315,26 +317,37 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
             \item \code{make_unsigned_t<C>} otherwise.
           \end{itemize}
       \end{itemize}
-  \end{itemize}
-
-  \begin{itemize}
-    \item If \code{is_datapar_v<U> == true} and \code{datapar_size_v<T, Abi> == U::size()}
-      then the return type is \datapar[<\common{T}{U::value_type}, Abi>]\comment{If the Abi tags don't match: should it prefer \fixedsize or the native Abi tag?}.
+    \item Let \commonabi{A0}{A1}{T} identify the type:
+      \begin{itemize}
+        \item \type{A0} if \type{A0} equals \type{A1}. % the remaining cases therefore only cover one native ABI and one fixed_size<N>
+        \item Otherwise, \code{abi_for_size_t<T, datapar_size_v<T, A0>>} if it is equal to either \type{A0} or \type{A1}.
+        \item Otherwise, \fixedsizescoped{}\code{<datapar_size_v<T, A0>>}.
+      \end{itemize}
+    \item If \code{is_datapar_v<U> == true}
+      then the return type is \datapar[<\common{T}{U::value_type}, \commonabi{Abi}{U::abi_type}{\common{T}{U::value_type}}>].
+      \wgNote{
+        This rule also matches if \code{datapar_size_v<T, Abi> != U::size()}.
+        The overload resolution participation condition in the next paragraph discards the operator.
+      }
     \item Otherwise, if \type T is integral and \type U is \intt
       the return type shall be \datapar{}\type{<T, Abi>}.
     \item Otherwise, if \type T is integral and \type U is \uint
       the return type shall be \datapar{}\code{<make_unsigned_t<T>, Abi>}.
     \item Otherwise, if \type U is a fundamental arithmetic type or \type U is convertible to \intt
-      then the return type shall be determined from \type T and \type U according to the following paragraph.
-    \item Otherwise, if \type U is implicitly convertible to \datapar{}\type{<V, Abi>}, where \type V is determined according to standard template type deduction,
-      then the return type shall be determined from \type T and \type V according to the following paragraph.
+      then the return type shall be \datapar[<\common{T}{U}, \commonabi{Abi}{\fixedsizescoped{}\code{<datapar_size_v<T, Abi>>}}{\common{T}{U}}>].
+    \item Otherwise, if \type U is implicitly convertible to \datapar{}\type{<V, A>}, where \type V and \type A are determined according to standard template type deduction,
+      then the return type shall be \datapar[<\common{T}{V}, \commonabi{Abi}{A}{\common{T}{V}}>].
     \item Otherwise, if \type U is implicitly convertible to \datapar{}\type{<T, Abi>},
       the return type shall be \datapar{}\type{<T, Abi>}.
-    \item Otherwise the operator does not participate in overload resolution.\comment{This seems a strange place to put this. I could just say return \void, though. It would have the same effect.}
+    \item Otherwise the operator does not participate in overload resolution.%
+      \comment{
+        This seems a strange place to put this.
+        Alternatively, modify the above rule to unconditionally use \datapar{}\type{<T, Abi>}.
+        The paragraph below would lead to the same effect.
+      }
   \end{itemize}
 
   \pnum\remarks Each of these operators only participate in overload resolution if all of the following hold:
-  \newcommand\dataparreturntype{\type{datapar_return_type<datapar<T, Abi>, U>}\xspace}
   \begin{itemize}
     \item The indicated operator can be applied to objects of type \dataparreturntype{}\code{::}\type{value_type}.
     \item \datapar{}\type{<T, Abi>} is implicitly convertible to \dataparreturntype.
@@ -376,7 +389,7 @@ template <class T, class Abi, class U> datapar<T, Abi> &operator>>=(datapar<T, A
 \end{itemdescr}
 
 \wgSubsubsection{\datapar logical operators}{datapar.logical}
-\textit{TODO}
+\realnote The omission of logical operators is deliberate.
 
 \wgSubsubsection{\datapar compare operators}{datapar.comparison}
 \begin{itemdecl}
