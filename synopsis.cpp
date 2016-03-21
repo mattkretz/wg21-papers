@@ -122,11 +122,24 @@ namespace std {
     conditional_t<(T::size() == (U::size() + Us::size()...)), T,
                   array<T, (U::size() + Us::size()...) / T::size()>> datapar_cast(U, Us...);
 
+    // mask binary operators [mask.binary]
+    template <class T0, class A0, class T1, class A1> using mask_return_type = ...  // exposition only
+    template <class T0, class A0, class T1, class A1>
+    mask_return_type<T0, A0, T1, A1> operator&&(const mask<T0, A0> &, const mask<T1, A1> &);
+    template <class T0, class A0, class T1, class A1>
+    mask_return_type<T0, A0, T1, A1> operator||(const mask<T0, A0> &, const mask<T1, A1> &);
+    template <class T0, class A0, class T1, class A1>
+    mask_return_type<T0, A0, T1, A1> operator& (const mask<T0, A0> &, const mask<T1, A1> &);
+    template <class T0, class A0, class T1, class A1>
+    mask_return_type<T0, A0, T1, A1> operator| (const mask<T0, A0> &, const mask<T1, A1> &);
+    template <class T0, class A0, class T1, class A1>
+    mask_return_type<T0, A0, T1, A1> operator^ (const mask<T0, A0> &, const mask<T1, A1> &);
+
     // mask compares [mask.comparison]
-    template <class T, class Abi, class U> bool operator==(mask<T, Abi>, const U &);
-    template <class T, class Abi, class U> bool operator!=(mask<T, Abi>, const U &);
-    template <class T, class Abi, class U> bool operator==(const U &, mask<T, Abi>);
-    template <class T, class Abi, class U> bool operator!=(const U &, mask<T, Abi>);
+    template <class T0, class A0, class T1, class A1>
+    bool operator==(const mask<T0, A0> &, const mask<T1, A1> &);
+    template <class T0, class A0, class T1, class A1>
+    bool operator!=(const mask<T0, A0> &, const mask<T1, A1> &);
 
     // reductions [mask.reductions]
     template <class T, class Abi> bool  all_of(mask<T, Abi>);
