@@ -26,18 +26,6 @@ namespace std {
       // implicit type conversion constructor
       template <class U> mask(mask<U, Abi>);
 
-      // loads:
-      static mask load(const value_type *);
-      template <class Flags> static mask load(const value_type *, Flags);
-
-      // stores:
-      void store(value_type *);
-      template <class Flags> void store(value_type *, Flags);
-
-      // masked stores:
-      void store(value_type *, mask);
-      template <class Flags> void store(value_type *, mask, Flags);
-
       // scalar access:
       reference operator[](size_type);
       const_reference operator[](size_type) const;

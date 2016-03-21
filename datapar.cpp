@@ -26,21 +26,6 @@ namespace std {
       // implicit type conversion constructor
       template <class U> datapar(datapar<U, Abi>);
 
-      // loads:
-      static datapar load(const value_type *);
-      template <class Flags> static datapar load(const value_type *, Flags);
-      template <class U, class Flags = unaligned_tag> static datapar load(const U *, Flags = Flags());
-
-      // stores:
-      void store(value_type *);
-      template <class Flags> void store(value_type *, Flags);
-      template <class U, class Flags = unaligned_tag> void store(U *, Flags = Flags());
-
-      // masked stores:
-      void store(value_type *, mask_type);
-      template <class Flags> void store(value_type *, mask_type, Flags);
-      template <class U, class Flags = unaligned_tag> void store(U *, mask_type, Flags = Flags());
-
       // scalar access:
       reference operator[](size_type);
       const_reference operator[](size_type) const;
