@@ -214,6 +214,10 @@ void store(const datapar<T0, A0> &x, U *y, const mask<T1, A1> &k, Flags = Flags{
   \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace and \type T is implicitly or explicitly convertible\comment{ditto.} to \type U and \mask[<T1, A1>] is implicitly convertible to \mask[<T0, A0>].
   \pnum\effects Copies each element $i$ where \code{k[i]} is \true as if \code{y[i] = static_cast<U>(x[i])} \foralli.
   \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by \code y, the behavior is undefined.
+  \wgNote{
+    Masked stores only write to the bytes in memory selected by the \code k argument.
+    This prohibits implementations that load, blend, and store the complete vector.
+  }
   \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::aligned_tag} and the pointer value of \code y is not a multiple of \code{memory_alignment<\datapar[<T0, A0>], \type U>}, the behavior is undefined.
 \end{itemdescr}
 
