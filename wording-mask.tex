@@ -263,18 +263,19 @@ constexpr int find_last_set(bool);
 
 \wgSubsubsection{Masked assigment}{mask.where}
 \begin{itemdecl}
-template <class T, class U, class Abi> implementation_defined where(mask<U, Abi> m, datapar<T, Abi> &v);
+template <class T0, class A0, class T1, class A1>
+implementation_defined where(const mask<T0, A0> &m, datapar<T1, A1> &v);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks The function only participates in overload resolution if \mask[<U, Abi>] is implicitly convertible to \mask[<T, Abi>].
+  \pnum\remarks The function only participates in overload resolution if \mask[<T0, A0>] is implicitly convertible to \mask[<T1, A1>].
 
   \pnum\returns A temporary object with the following properties:
-  \begin{enumerate}
+  \begin{itemize}
     \item The object is not \textit{CopyConstructible}.
-    \item Assignment and compound assignment operators only participate in overload resolution if the corresponding operator for \datapar[<T, Abi>] is usable.
-    \item \effects Assignment and compound assignment implement the same semantics as the corresponding operator for \datapar[<T, Abi>] with the exception that elements of \code v stay unmodified if the corresponding boolean element in \code m is \false.
+    \item Assignment and compound assignment operators only participate in overload resolution if the corresponding operator for \datapar[<T1, A1>] is usable.
+    \item \effects Assignment and compound assignment implement the same semantics as the corresponding operator for \datapar[<T1, A1>] with the exception that elements of \code v stay unmodified if the corresponding boolean element in \code m is \false.
     \item The assignment and compound assignment operators return \void.
-  \end{enumerate}
+  \end{itemize}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -284,11 +285,11 @@ template <class T> implementation_defined where(bool, T &);
   \pnum\remarks The function only participates in overload resolution if \type T is a fundamental arithmetic type.
 
   \pnum\returns A temporary object with the following properties:
-  \begin{enumerate}
+  \begin{itemize}
     \item The object is not \textit{CopyConstructible}.
     \item Assignment and compound assignment operators only participate in overload resolution if the corresponding operator for \type T is usable.
     \item \effects If the first argument is \false, the assignment operators do nothing.
       If the first argument is \true, the assignment operators forward to the corresponding builtin assignment operator.
     \item The assignment and compound assignment operators return \void.
-  \end{enumerate}
+  \end{itemize}
 \end{itemdescr}

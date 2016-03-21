@@ -158,7 +158,8 @@ namespace std {
     constexpr int find_last_set(bool);
 
     // masked assignment [mask.where]
-    template <class T, class U, class Abi> implementation_defined where(mask<U, Abi>, datapar<T, Abi> &);
+    template <class T0, class A0, class T1, class A1>
+    implementation_defined where(const mask<T0, A0> &, datapar<T1, A1> &);
     template <class T> implementation_defined where(bool, T &);
   }
 }
