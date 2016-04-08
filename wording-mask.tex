@@ -55,10 +55,7 @@ template <class U> mask(mask<U, Abi> x);
 reference operator[](size_type i);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns A temporary object acting as a smart reference wrapper to the $i$-th element.
-  \pnum\postconditions Assignment of objects of type \bool modify the $i$-th element without aliasing violations.
-  \pnum                Modification of \code{*this} does not invalidate references held to the return value.
-  Subsequent reads from such references yield the new value of the $i$-th element.
+  \dataparElementReference
 \end{itemdescr}
 
 \begin{itemdecl}

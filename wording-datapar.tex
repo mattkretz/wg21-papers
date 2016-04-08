@@ -69,10 +69,7 @@ template <class U, class Abi2> datapar(datapar<U, Abi2> x);
 \end{itemdescr}
 
 \wgSubsubsection{\datapar subscript operators}{datapar.subscr}
-\begin{itemdecl}
-reference operator[](size_type i);
-\end{itemdecl}
-\begin{itemdescr}
+\newcommand{\dataparElementReference}{
   \pnum\returns A temporary object with the following properties:
   \begin{itemize}
     \item \remarks The object is neither \textit{DefaultConstructible}, \textit{CopyConstructible}, \textit{MoveConstructible}, \textit{CopyAssignable}, nor \textit{MoveAssignable}.
@@ -80,10 +77,16 @@ reference operator[](size_type i);
     \item \remarks Assignment, compound assignment, increment, and decrement operators only participate in overload resolution if
       called in rvalue context and the corresponding operator of type \valuetype is usable.
 
-    \item \effects The assignment, compound assignment, increment, and decrement operators execute the operation on the $i$-th element in the \datapar object.
+    \item \effects The assignment, compound assignment, increment, and decrement operators execute the indicated operation on the $i$-th element in the \datapar object.
 
     \item \effects Conversion to \valuetype returns a copy of the $i$-th element.
   \end{itemize}
+}
+\begin{itemdecl}
+reference operator[](size_type i);
+\end{itemdecl}
+\begin{itemdescr}
+  \dataparElementReference
 \end{itemdescr}
 
 \begin{itemdecl}

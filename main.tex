@@ -65,7 +65,8 @@ Previous revision: \citep{P0214R0}.
     SG1 asked for guidance from LEWG whether a load-expression or a template parameter to load is more appropriate.
   \chck Converted the store functions to non-member functions to be consistent with the load functions.
   \chck Added a note about masked stores not invoking out-of-bounds accesses for masked-off elements of the vector.
-  \item Converted the return type of \datapar{}\code{::operator[]} to return a smart reference instead of an lvalue reference.
+  \chck Converted the return type of \datapar{}\code{::operator[]} to return a smart reference instead of an lvalue reference.
+  \chck Modified the wording of \mask{}\code{::operator[]} to match the reference type returned from \datapar{}\code{::operator[]}.
   \item Modified the wording of \code{native_handle()} to make the existence of the functions implementation-defined, instead of only the return type.
   \item Added a minimal set of math functions on \datapar.
   \item Added initial wording for an \code{execution_policy} for parallel algorithms to use vector types.
