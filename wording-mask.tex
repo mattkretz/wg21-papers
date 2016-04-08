@@ -62,12 +62,10 @@ reference operator[](size_type i);
 \end{itemdescr}
 
 \begin{itemdecl}
-const_reference operator[](size_type) const;
+value_type operator[](size_type) const;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns A \const lvalue reference to the $i$-th element.
-  \pnum\postconditions Modification of \code{*this} does not invalidate references held to the return value.
-  Subsequent reads from such references yield the new value of the $i$-th element.
+  \pnum\returns A copy of the $i$-th element.
 \end{itemdescr}
 
 \wgSubsubsection{\mask unary operators}{mask.unary}

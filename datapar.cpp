@@ -6,7 +6,6 @@ namespace std {
       typedef T value_type;
       typedef implementation_defined register_value_type;
       typedef implementation_defined reference;
-      typedef implementation_defined const_reference;
       typedef mask<T, Abi> mask_type;
       typedef size_t size_type;
       typedef Abi abi_type;
@@ -28,7 +27,7 @@ namespace std {
 
       // scalar access:
       reference operator[](size_type);
-      const_reference operator[](size_type) const;
+      value_type operator[](size_type) const;
 
       // increment and decrement:
       datapar &operator++();

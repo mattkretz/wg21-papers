@@ -6,7 +6,6 @@ namespace std {
       typedef bool value_type;
       typedef implementation_defined register_value_type;
       typedef implementation_defined reference;
-      typedef implementation_defined const_reference;
       typedef datapar<T, Abi> datapar_type;
       typedef size_t size_type;
       typedef Abi abi_type;
@@ -28,7 +27,7 @@ namespace std {
 
       // scalar access:
       reference operator[](size_type);
-      const_reference operator[](size_type) const;
+      value_type operator[](size_type) const;
 
       // negation:
       mask operator!() const;

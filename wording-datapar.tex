@@ -73,19 +73,24 @@ template <class U, class Abi2> datapar(datapar<U, Abi2> x);
 reference operator[](size_type i);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns An lvalue reference to the $i$-th element.
-  \pnum\postconditions Assignment of objects of type \type T modify the $i$-th element without aliasing violations.
-  \pnum                Modification of \code{*this} does not invalidate references held to the return value.
-  Subsequent reads from such references yield the new value of the $i$-th element.
+  \pnum\returns A temporary object with the following properties:
+  \begin{itemize}
+    \item \remarks The object is neither \textit{DefaultConstructible}, \textit{CopyConstructible}, \textit{MoveConstructible}, \textit{CopyAssignable}, nor \textit{MoveAssignable}.
+
+    \item \remarks Assignment, compound assignment, increment, and decrement operators only participate in overload resolution if
+      called in rvalue context and the corresponding operator of type \valuetype is usable.
+
+    \item \effects The assignment, compound assignment, increment, and decrement operators execute the operation on the $i$-th element in the \datapar object.
+
+    \item \effects Conversion to \valuetype returns a copy of the $i$-th element.
+  \end{itemize}
 \end{itemdescr}
 
 \begin{itemdecl}
-const_reference operator[](size_type) const;
+value_type operator[](size_type) const;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns A \const lvalue reference to the $i$-th element.
-  \pnum\postconditions Modification of \code{*this} does not invalidate references held to the return value.
-  Subsequent reads from such references yield the new value of the $i$-th element.
+  \pnum\returns A copy of the $i$-th element.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar unary operators}{datapar.unary}
