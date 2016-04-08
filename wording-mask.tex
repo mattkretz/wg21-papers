@@ -103,7 +103,7 @@ template <class T, class Flags = flags::load_default> T load(const bool *, Flags
 
 \wgSubsubsection{\mask store functions}{mask.store}
 \begin{itemdecl}
-template <class T, class Abi, class Flags = flags::load_default>
+template <class T, class Abi, class Flags = flags::store_default>
 void store(const mask<T, Abi> &x, bool *y, Flags = Flags{});
 \end{itemdecl}
 \begin{itemdescr}
@@ -114,7 +114,7 @@ void store(const mask<T, Abi> &x, bool *y, Flags = Flags{});
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T0, class A0, class T1, class A1, class Flags = flags::load_default>
+template <class T0, class A0, class T1, class A1, class Flags = flags::store_default>
 void store(const mask<T0, A0> &x, bool *y, const mask<T1, A1> &k, Flags = Flags{});
 \end{itemdecl}
 \begin{itemdescr}

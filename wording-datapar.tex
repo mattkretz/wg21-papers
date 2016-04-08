@@ -186,7 +186,7 @@ const native_handle_type &native_handle() const;
   But we still don't have customized decay on template deduction \ldots
 }
 \begin{itemdecl}
-template <class T = void, class U, class Flags = default_load_flags>
+template <class T = void, class U, class Flags = load_default>
 conditional_t<is_same_v<T, void>, datapar<U>, conditional_t<is_datapar_v<T>, T, datapar<T>>> load(
     const U *, Flags = Flags{});
 \end{itemdecl}
