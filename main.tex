@@ -23,8 +23,11 @@
 \newcommand\fixedsizescoped{\type{datapar\_abi::fixed\_size}\xspace}
 \newcommand\fixedsize{\type{fixed\_size}\xspace}
 
+\usepackage{pifont}
+
 \newcommand\foralli{for all $i \in [0\ldots \code{size()}[$\xspace}
-\newcommand\chck{\item[\ensuremath{\checkmark}]}
+\newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
+\newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
 
 \begin{document}
 \selectlanguage{american}
@@ -67,12 +70,13 @@ Previous revision: \citep{P0214R0}.
   \chck Added a note about masked stores not invoking out-of-bounds accesses for masked-off elements of the vector.
   \chck Converted the return type of \datapar{}\code{::operator[]} to return a smart reference instead of an lvalue reference.
   \chck Modified the wording of \mask{}\code{::operator[]} to match the reference type returned from \datapar{}\code{::operator[]}.
-  \item Modified the wording of \code{native_handle()} to make the existence of the functions implementation-defined, instead of only the return type.
-  \item Added a minimal set of math functions on \datapar.
-  \item Added initial wording for an \code{execution_policy} for parallel algorithms to use vector types.
-  \item Added an example showing the use of the new execution policy.
-  \item Added an example of a possible \code{execute} implementation for a vectorizing executor.
-  \item Added usage examples
+  \todo \textit{in progress:} Added a minimal set of math functions on \datapar.
+  \todo Modified the wording of \code{native_handle()} to make the existence of the functions implementation-defined, instead of only the return type.
+  \todo Added initial wording for an \code{execution_policy} for parallel algorithms to use vector types.
+  \todo Added an example showing the use of the new execution policy.
+  \todo Added an example of a possible \code{execute} implementation for a vectorizing executor.
+  \todo Added usage examples
+  \todo Fix missing flag objects and specify the freedom for implementations to add additional flags and that \code{operator|} must work.
 \end{itemize}
 
 \input{intro}
