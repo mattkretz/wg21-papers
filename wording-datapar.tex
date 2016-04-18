@@ -16,7 +16,6 @@ typedef implementation_defined native_handle_type;
 \begin{itemdescr}
   \pnum
   The \type{native_handle_type} member type is an alias for the \code{native_handle()} member function return type.
-  It is used to expose an implementation-defined handle for implementation- and target-specific extensions.
 \end{itemdescr}
 
 %  \begin{itemdecl}
@@ -168,14 +167,16 @@ datapar operator-() const;
 native_handle_type &native_handle();
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns An lvalue reference to the implementation-specific object implementing the data-parallel semantics.
+  \pnum\returns An lvalue reference to the implementation-defined data member.
+  \pnum\realnote The function exposes an implementation-defined type and interface and provides no guarantee for source and/or binary compatibility.
 \end{itemdescr}
 
 \begin{itemdecl}
 const native_handle_type &native_handle() const;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns A \const lvalue reference to the implementation-specific object implementing the data-parallel semantics.
+  \pnum\returns A \const lvalue reference to the implementation-defined data member.
+  \pnum\realnote The function exposes an implementation-defined type and interface and provides no guarantee for source and/or binary compatibility.
 \end{itemdescr}
 
 \wgSubsection{\type{datapar} non-member operations}{datapar.nonmembers}
