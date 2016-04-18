@@ -190,6 +190,10 @@ template <class T = void, class U, class Flags = load_default>
 conditional_t<is_same_v<T, void>, datapar<U>, conditional_t<is_datapar_v<T>, T, datapar<T>>> load(
     const U *, Flags = Flags{});
 \end{itemdecl}
+\comment{
+  Should \type{Flags} really have a default?
+  It might be a good idea to force users to think about alignment whenever they call load \& store.
+}
 \begin{itemdescr}
   \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace and either
   \begin{itemize}
