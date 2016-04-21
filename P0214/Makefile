@@ -1,8 +1,8 @@
 NAME := $(shell grep 'newcommand.wgDocumentNumber' main.tex|cut -f2 -d'{'|cut -f1 -d'}')
 DRAFT := $(NAME)_draft
-TEXINPUTS := .:
+TEXINPUTS := ..:.:
 PDFLATEX := TEXINPUTS=$(TEXINPUTS) flock . lualatex --shell-escape --halt-on-error --file-line-error --interaction nonstopmode
-BIBER := biber --input-directory . --output-directory .
+BIBER := biber --input-directory .. --output-directory .
 MAKEINDEX := makeindex
 SHELL := /bin/bash
 EXTRA_DEPS := $(wildcard *.sty) .dummy.tex
@@ -66,13 +66,13 @@ loop-internal:
 	done
 
 draft-loop:
-	$(MAKE) loopinternaltarget=$(DRAFT) MORE_DEPS=draft.tex loop-internal
+	$(MAKE) loopinternaltarget=$(DRAFT) MORE_DEPS=../draft.tex loop-internal
 
 final-loop:
-	$(MAKE) loopinternaltarget=$(NAME) MORE_DEPS=final.tex loop-internal
+	$(MAKE) loopinternaltarget=$(NAME) MORE_DEPS=../final.tex loop-internal
 
 %-loop:
-	$(MAKE) loopinternaltarget=$(NAME)_$* MORE_DEPS=$*.tex loop-internal
+	$(MAKE) loopinternaltarget=$(NAME)_$* MORE_DEPS=../$*.tex loop-internal
 
 final-figure%-loop:
 	@while true; do $(MAKE) -q final-figure$*.pdf || $(MAKE) final-figure$*.pdf && sleep 1s; done
@@ -82,31 +82,31 @@ clean:
 
 ALL_DEPS=$(TEX_INPUTS) $(TEX_LISTINGS) $(EXTRA_DEPS) $(TEX_PLOTDATA)
 
-$(DRAFT).pdf: draft.tex $(ALL_DEPS)
-	$(PDFLATEX) draft
+$(DRAFT).pdf: ../draft.tex $(ALL_DEPS)
+	$(PDFLATEX) ../draft
 	@test -s draft.pdf && mv draft.pdf $@
 	$(BIBER) draft || true
 
-$(NAME).pdf: final.tex $(ALL_DEPS)
+$(NAME).pdf: ../final.tex $(ALL_DEPS)
 	@$(CREATEMD5)
-	$(PDFLATEX) final
+	$(PDFLATEX) ../final
 	@test -s final.pdf && mv final.pdf $@
 	$(BIBER) final || true
 	@while ! $(CHECKMD5); do \
 		$(CREATEMD5); \
-		$(PDFLATEX) final; \
+		$(PDFLATEX) ../final; \
 		test -s final.pdf && mv final.pdf $@; \
 	done
 
-$(NAME)_%.pdf: %.tex $(ALL_DEPS)
+$(NAME)_%.pdf: ../%.tex $(ALL_DEPS)
 	@$(CREATEMD5)
-	$(PDFLATEX) $*
+	$(PDFLATEX) ../$*
 	@test -s $*.pdf && mv $*.pdf $@
 	test -f $*.bcf && $(BIBER) $* || true
 	test -f $*.ind && $(MAKEINDEX) $* || true
 	while ! $(CHECKMD5); do \
 		$(CREATEMD5); \
-		$(PDFLATEX) $*; \
+		$(PDFLATEX) ../$*; \
 		test -s $*.pdf && mv $*.pdf $@; \
 		test -f $*.ind && $(MAKEINDEX) $*; \
 	done
