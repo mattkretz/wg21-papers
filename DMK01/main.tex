@@ -1,0 +1,37 @@
+\newcommand\wgTitle{Assumptions about the size of datapar}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{D0000R0}
+\newcommand\wgGroup{SG1}
+\newcommand\wgAcknowledgements{
+  This work was supported by GSI Helmholtzzentrum für Schwerionenforschung
+  and the Hessian LOEWE initiative through the Helmholtz International Center
+  for FAIR (HIC for FAIR).
+}
+
+\usepackage{underscore}
+\usepackage{typenames}
+\usepackage{mymacros}
+\usepackage{wg21}
+
+\addbibresource{extra.bib}
+
+\newcommand\datapar[1][]{\type{datapar#1}\xspace}
+\newcommand\valuetype{\type{value\_type}\xspace}
+\newcommand\simdcast{\code{datapar\_cast}\xspace}
+\newcommand\mask[1][]{\type{mask#1}\xspace}
+\newcommand\fixedsizeN{\type{datapar\_abi::fixed\_size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{datapar\_abi::fixed\_size}\xspace}
+\newcommand\fixedsize{\type{fixed\_size}\xspace}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper discusses consequences of using \datapar for architectures with variable vector width.
+  The assumptions a compiler can make about the \code{size()} of \datapar has consequences for optimizations.
+  On the other hand, this requires restrictions on \datapar[::size()] that may be surprising to users.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+\input{intro}
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
