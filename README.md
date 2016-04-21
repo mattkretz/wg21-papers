@@ -3,6 +3,10 @@
 
 This repository holds the LuaLaTeX sources for my papers to the C++ committee.
 
+| Paper Number | Title |
+| ------------ | ----- |
+| P0214 | Data-Parallel Vector Types & Operations |
+
 To build the papers you need make, LuaLaTeX (only tested with a recent TeXLive distribution), and Biber.
 Simply run
 
