@@ -10,7 +10,6 @@ install:
   - sudo apt-get install -y texlive-latex-extra texlive-xetex texlive-math-extra texlive-bibtex-extra biber
 
 script:
-  - cd P0214
   - make
 
 notifications:

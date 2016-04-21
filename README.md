@@ -1,14 +1,11 @@
-[![Build Status](https://travis-ci.org/mattkretz/vector-types-paper.svg?branch=master)](https://travis-ci.org/mattkretz/vector-types-paper)
-# vector-types-paper
+[![Build Status](https://travis-ci.org/mattkretz/wg21-papers.svg?branch=master)](https://travis-ci.org/mattkretz/wg21-papers)
+# WG21 Papers
 
-This repository holds the LuaLaTeX sources for the “Data-Parallel Vector Types &amp; Operations” paper
-to be submitted to the C++ committee. It incorporates the work presented in N4184, N4185, and N4395.
-While the previous papers described the API as implemented originally in the Vc library, this paper focuses
-on getting it ready for LEWG.
+This repository holds the LuaLaTeX sources for my papers to the C++ committee.
 
-To build the paper you need make, LuaLaTeX (only tested with a recent TeXLive distribution), and Biber.
+To build the papers you need make, LuaLaTeX (only tested with a recent TeXLive distribution), and Biber.
 Simply run
 
     make final
 
-to build the paper. You can find a recent upload at https://web-docs.gsi.de/~mkretz/datapar.pdf
+to build the paper. You can find a recent upload of P0214 at https://web-docs.gsi.de/~mkretz/datapar.pdf
