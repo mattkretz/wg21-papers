@@ -1,3 +1,43 @@
 \section{Introduction}
 
-% vim: sw=2 sts=2 ai et tw=0
+For more information on \datapar see \cite{P0214R0} and \cite{Kretz2015}.
+
+\subsection{Hardware Applicability}
+The assumption that \datapar[<T>::size()] yields a constant expression on every conceivable hardware implementation for efficient data parallel execution is limiting.
+There exist vector machines that advertise a variable vector length.
+There may be research going into future hardware to loosen the vector width on SIMD instructions.
+Consequently, the static member functions \code{static constexpr size_t size()} in \datapar and \mask may inhibit or at least reduce the applicability of the programming model to the widest range of available and future hardware.
+
+\subsection{Optimization Opportunities}
+Consider the following code snippet:
+\smallskip\begin{lstlisting}[style=Vc]
+void f(const float *input, float *output, size_t N) {
+  using V = datapar<float>;
+  for (int i = 0; i + V::size() <= N; i += V::size()) {
+    const V x = load<V>(&input[i]);
+    store(x + 1, &output[i]);
+  }
+  // process the rest
+}
+\end{lstlisting}
+The compiler sees a loop that reads \code{V::size()} elements from \code{input} and writes the same number of elements to \code{output} before going into the next iteration.
+The compiler traditionally would do alias analysis if it wants to determine whether it can reorder the loads and stores, as they could be dependent.
+With \datapar there is an opportunity to loosen the rules.
+Consider that \datapar[<float>] returns a different number for \code{size()} depending on the target system and available SIMD instruction set.
+The type did not require any specific number of elements.
+If the compiler thus were allowed to assume \type V to have any \code{size()}, it could assume \code{size() == N}.
+In this case it would not have to do the alias analysis and could unroll and reorder more freely.
+
+However, consider the following calling code (in a different TU to make things worse):
+\smallskip \begin{lstlisting}[style=Vc]
+void g() {
+  float data[1000] = ...;
+  if (datapar<float>::size() <= 8) {
+    f(data, data + 8, 1000 - 8);
+  }
+}
+\end{lstlisting}
+The user ensured that the load store dependencies are met.
+The above optimization thus would break the users intention.
+
+% vim: sw=2 sts=2 ai et tw=0 spell

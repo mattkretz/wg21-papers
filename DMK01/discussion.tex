@@ -1,0 +1,110 @@
+\section{Discussion}
+
+Having a \code{constexpr} \code{size()} in \datapar and \mask for ABI parameters that are not \type{fixed_size<N>} thus appears to inhibit the full potential of expressing data parallelism via the type system.
+Is it possible to weaken the \code{size()} function to resolve the issues?
+At this point I have no solution.
+This paper is meant to set a starting point to either figuring out a solution or a well-informed decision to not pursue this as a design goal any further.
+
+\subsection{No \code{sizeof}}
+Let us start with the simple loop:
+\smallskip \begin{lstlisting}[style=Vc]
+using V = datapar<float>;
+for(int i = 0; i < N; i += V::size()) {
+  store(1 + load(&input[i]), &output[i]);
+}
+\end{lstlisting}
+If the compiler shall generate code for hardware that determines the vector width only when executing the SIMD load/store/add instructions, then \code{V::size()} cannot be a constant expression.
+Rather, the machine code would have to increment \code i using a value obtained from some register or instruction.
+(If \code{V::size()} is a constant expression, then the increment can be encoded into the instruction itself.)
+Would dropping \code{constexpr} from \code{size()} help?
+At least it would decouple the number of elements from the type information.
+However, as a consequence \code{sizeof(V)} could also not return any useful value, since one could infer the \code{constexpr size()} from \code{sizeof}.
+Thus, the declaration of structures with \datapar members could not have a useful \code{sizeof}.
+
+The major advantage of types with data-parallel semantics over the control-flow approach is the vectorization of data structures.
+Suddenly this would not work anymore.
+At this point this approach does not show much appeal.
+
+\subsection{A \code{variable} ABI}
+Consider a special ABI tag, called \code{datapar_abi::variable} in the following.
+An instance of \datapar[<T, variable>] would not have a \code{constexpr size()} function, no \code{sizeof}, and using it as a data member would be ill-formed.
+So what is it useable for?
+\smallskip\begin{lstlisting}[style=Vc]
+using V = datapar<float, datapar_abi::variable>;
+for (int i = 0; i < N; i += V::size()) {
+  store(1 + load(&input[i]), &output[i]);
+}
+\end{lstlisting}
+In essence this would be equivalent to writing (using some hypothetical \code{simd_for} loop construct, which allows vector execution of the loop body):
+\smallskip\begin{lstlisting}[style=Vc]
+simd_for (int i = 0; i < N; ++i) {
+  output[i] = 1 + input[i];
+}
+\end{lstlisting}
+
+I cannot image any advantage of this construction over control-flow based vectorization except maybe the ability to mark functions as vectorizable.
+
+\subsection{Parallel Algorithms}
+Consider writing the loop as
+\smallskip\begin{lstlisting}[style=Vc]
+transform(execution_policy::datapar,
+          begin(input), end(input), begin(output) [](auto x) {
+  return x + 1;
+});
+\end{lstlisting}
+Here the use of \datapar is implicit.
+The implementation chooses the number of elements.
+The user has no influence on choosing the \code{datapar_abi} and thus has no guarantee for the \code{size()} outside of the loop.
+(Inside the loop the code can still query \code{x.size()} and choose different branches.)
+But at this point the compiler has all necessary information to use a variable vector width or to unroll the loop and reorder loads and stores.
+
+Is this still true if there are function calls from inside the callable?
+The following code can still be assumed to work correctly with an arbitrary number of elements in \datapar, because the \code{Abi} parameter is unconstrained:
+\smallskip\begin{lstlisting}[style=Vc]
+template <typename T, typename Abi>
+datapar<T, Abi> f(datapar<T, Abi> x) { return x + 1; }
+
+transform(execution_policy::datapar,
+          begin(input), end(input), begin(output) [](auto x) {
+  return f(x);
+});
+\end{lstlisting}
+
+If, however, the \code{Abi} parameter is constrained, the compiler would have to be conservative.
+It would have to assume that the maximum number of elements it may reorder is bounded by the maximum number of elements the overloads of \code g support.
+\smallskip\begin{lstlisting}[style=Vc]
+template <typename T>
+datapar<T, datapar_abi::avx> g(datapar<T, datapar_abi::avx> x) { return x + 1; }
+template <typename T>
+datapar<T, datapar_abi::sse> g(datapar<T, datapar_abi::sse> x) { return x + 1; }
+template <typename T>
+datapar<T, datapar_abi::scalar> g(datapar<T, datapar_abi::scalar> x) { return x + 1; }
+
+transform(execution_policy::datapar,
+          begin(input), end(input), begin(output) [](auto x) {
+  return g(x);
+});
+\end{lstlisting}
+However, it is unlikely that the above code could work with all implementations of \code{transform}.
+An implementation might choose to use a \datapar[<T, fixed_size<N>>], e.g. for prologue and epilogue.
+Thus, the user would have to provide a \datapar[<T, fixed_size<N>>] overload:
+\smallskip\begin{lstlisting}[style=Vc]
+template <typename T, int N>
+datapar<T, datapar_abi::fixed_size<N>> g(datapar<T, datapar_abi::fixed_size<N>> x) {
+  return x + 1;
+}
+template <typename T>
+datapar<T, datapar_abi::avx> g(datapar<T, datapar_abi::avx> x) { return x + 1; }
+template <typename T>
+datapar<T, datapar_abi::sse> g(datapar<T, datapar_abi::sse> x) { return x + 1; }
+template <typename T>
+datapar<T, datapar_abi::scalar> g(datapar<T, datapar_abi::scalar> x) { return x + 1; }
+
+transform(execution_policy::datapar,
+          begin(input), end(input), begin(output) [](auto x) {
+  return g(x);
+});
+\end{lstlisting}
+And suddenly the vector width is unbounded again.
+
+% vim : sw = 2 sts = 2 ai et tw = 0 spell
