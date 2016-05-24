@@ -5,6 +5,8 @@ Is it possible to weaken the \code{size()} function to resolve the issues?
 At this point I have no solution.
 This paper is meant to set a starting point to either figuring out a solution or a well-informed decision to not pursue this as a design goal any further.
 
+Considering that the inhibitor is restricted load-store reordering because of aliasing, the best and most general solution may be to enable \code{restrict} or something similar in \CC{}.
+
 \subsection{No \code{sizeof}}
 Let us start with the simple loop:
 \smallskip \begin{lstlisting}[style=Vc]
@@ -43,6 +45,9 @@ simd_for (int i = 0; i < N; ++i) {
 \end{lstlisting}
 
 I cannot image any advantage of this construction over control-flow based vectorization except maybe the ability to mark functions as vectorizable.
+
+In any case, calling it \datapar[<T, variable>] is asking for repeating the \std\type{vector<bool>} mistake.
+Therefore, it should rather use a name such as \type{dyndatapar<T>}\footnote{Yes, it would likely repeat many of the discussions around \type{dynarray}.}
 
 \subsection{Parallel Algorithms}
 Consider writing the loop as

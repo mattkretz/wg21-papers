@@ -28,11 +28,11 @@ The type did not require any specific number of elements.
 If the compiler thus were allowed to assume \type V to have any \code{size()}, it could assume \code{size() == N}.
 In this case it would not have to do the alias analysis and could unroll and reorder more freely.
 
-Enabling this optimization has a major impact.
+Enabling this optimization can have a noticeable impact (depending on the target architecture, of course).
 Consider x86 where the \float add instruction has a latency of 3 cycles and a throughput of 1 cycle.
-If the sequence of instructions must follow \textit{load x0; x0 += 1; store x0; load x1; x1 += 1; store x1; \ldots}, then a single loop iteration requires the sum of latencies from \textit{load + add + store} (\textasciitilde{}5 cycles).
-If, however, the sequence of operations can be reordered to e.g. \textit{load x0; load x1; x0 += 1; load x2; load x3; x1 += 1; load x4; load x5; x2 += 1; load x6; store x0; x3 += 1; store x1; \dots}, then the add instructions can be enqueued efficiently in the execution pipeline.
-The efficiency of the loop can thus be lowered to \textasciitilde{}1 cycle per iteration.
+If the sequence of instructions must follow \textit{load x0; x0 += 1; store x0; load x1; x1 += 1; store x1; \ldots}, the CPU must ensure that the loads and stores of subsequent iterations are independent to enable out-of-order, pipelined, superscalar execution.
+Depending on the (micro)architecture, this incurs a noticeable inefficiency.
+If, however, the sequence of operations can be reordered by the compiler to e.g. \textit{load x0; load x1; x0 += 1; load x2; load x3; x1 += 1; load x4; load x5; x2 += 1; load x6; store x0; x3 += 1; store x1; \dots}, then the CPU can easily pipeline the add instructions.
 
 However, consider the following calling code (in a different TU to make things worse):
 \smallskip \begin{lstlisting}[style=Vc]
