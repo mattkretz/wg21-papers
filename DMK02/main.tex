@@ -1,0 +1,53 @@
+\newcommand\wgTitle{Integrating datapar with parallel algorithms and executors}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{D0000R0}
+\newcommand\wgGroup{SG1}
+\newcommand\wgAcknowledgements{
+  This work was supported by GSI Helmholtzzentrum für Schwerionenforschung
+  and the Hessian LOEWE initiative through the Helmholtz International Center
+  for FAIR (HIC for FAIR).
+}
+
+\usepackage{vectorpictures}
+\usepackage{typenames}
+\usepackage{mymacros}
+\usepackage{wg21}
+\undef\BreakableUnderscore
+\usepackage{underscore}
+
+\addbibresource{extra.bib}
+
+\newcommand\datapar[1][]{\type{datapar#1}\xspace}
+\newcommand\valuetype{\type{value\textunderscore{}type}\xspace}
+\newcommand\simdcast{\code{datapar\textunderscore{}cast}\xspace}
+\newcommand\mask[1][]{\type{mask#1}\xspace}
+\newcommand\fixedsizeN{\type{datapar\textunderscore{}abi::fixed\textunderscore{}size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{datapar\textunderscore{}abi::fixed\textunderscore{}size}\xspace}
+\newcommand\fixedsize{\type{fixed\textunderscore{}size}\xspace}
+\newcommand\dataparEP{\type{datapar\textunderscore{}execution}\xspace}
+\DeclareRobustCommand\dataparEPT{\type{datapar\textunderscore{}execution\textunderscore{}policy}\xspace}
+\newcommand\seqEP{\code{std::}\type{sequential}\xspace}
+
+\newcommand\foralli{for all $i \in [0\ldots \code{size()}[$\xspace}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper discusses a new execution policy for integrating datapar with \emph{parallel algorithms}.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+\addtocounter{section}{-1}
+\section{Remarks}
+\begin{itemize}
+  \item This documents talks about “vector” types/objects.
+    In general this will not refer to the \std\type{vector} class template.
+    References to the container type will explicitly call out the \code{std} prefix to avoid confusion.
+  \item \citep{P0214R1} is the last paper on \datapar.
+\end{itemize}
+
+\input{intro}
+\input{algorithms}
+\input{executors}
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0 spell

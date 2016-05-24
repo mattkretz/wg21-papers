@@ -1,0 +1,31 @@
+\section{Executors}
+
+Consider the example in \lst{executor example}.
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:executor example,caption={
+  Example use of the \type{datapar_executor}.
+}]
+std::vector<float> data = ...;
+datapar_executor exec;
+exec.execute([&](auto idx) {/*! \label{lstline:execute} */
+  auto x = data[idx];  // decltype(x) is datapar<float, Abi>/*! \label{lstline:load} */
+  where(x < 0, x) += 360.f;/*! \label{lstline:modify} */
+  data[idx] = x;/*! \label{lstline:store} */
+}, data.size());/*! \label{lstline:size} */
+\end{lstlisting}
+The line \ref{lstline:execute} requests the \type{datapar_executor} to generate index objects for the index range \code 0--\code{data.size()}.
+The type of the index object is determined via deduction and can be different in subsequent invocations of the callable.
+For example, if \code{data.size()} is 13, the first \code{idx} object may denote the range 0--7, the second \code{idx} object denotes 8--11, and the third \code{idx} object denotes 12.
+An overload of the subscript operator of \std\type{vector} in line \ref{lstline:load} turns the expression into an efficient SIMD vector load operation.\footnote{
+  Note that the executor cannot know anything about the alignment of \code{data}.
+  Therefore, the conservative approach must default to unaligned loads and stores.
+  Load-store flags, applicable to load and store operations of \datapar, could be incorporated into the type of \code{idx}.
+  The question remains, how the \code{execute} function determines those flags.
+  This likely needs to be a template parameter of the \type{datapar_executor} class.
+}
+Line \ref{lstline:modify} modifies the elements of \code x that are negative.
+Line \ref{lstline:store} finally stores the result back to \code{data}.
+
+The example shows how the executor solves the “load store problem” of \datapar: Requiring the user to explicitly partition the loop into different chunk sizes and call loads and stores explicitly is more low-level than we want the average user to work.
+The executor solves this and at the same time enables better composition with the upcoming facilities for concurrency in \CC{}.
+
+% vim: sw=2 sts=2 ai et tw=0 spell

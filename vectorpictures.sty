@@ -1,0 +1,417 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{vectorpictures}[2010/06/30 v0.1 TikZ pictures for SIMD vectors]
+\RequirePackage{tikz}
+
+\pdfpageattr{/Group <</S /Transparency /I true /CS /DeviceRGB>>}
+
+\newif\ifvecpic@shadow@
+\newif\ifvecpic@mono@
+\newif\ifvecpic@draft@
+\vecpic@shadow@false
+\vecpic@mono@false
+\vecpic@draft@false
+\DeclareOption{shadow}{\vecpic@shadow@true}
+\DeclareOption{mono}{\vecpic@mono@true}
+\DeclareOption{draft}{\vecpic@draft@true}
+\DeclareOption{final}{\vecpic@draft@false}
+\ProcessOptions
+
+\usetikzlibrary{shadows,calc,fit,positioning,backgrounds}
+
+\newlength{\vNodeSize}
+\newlength{\vNodeWidth}
+\newlength{\vNodeHeight}
+
+\colorlet{vTextColor}{white}
+\ifvecpic@mono@
+%yellow:
+\definecolor{shadetop0}{gray}{0.75}
+\definecolor{shadebot0}{gray}{0.3}
+%green:
+\definecolor{shadetop1}{gray}{0.75}
+\definecolor{shadebot1}{gray}{0.3}
+%cyan:
+\definecolor{shadetop2}{gray}{0.75}
+\definecolor{shadebot2}{gray}{0.3}
+%blue:
+\definecolor{shadetop3}{gray}{0.75}
+\definecolor{shadebot3}{gray}{0.3}
+%magenta:
+\definecolor{shadetop4}{gray}{0.75}
+\definecolor{shadebot4}{gray}{0.3}
+%red:
+\definecolor{shadetop5}{gray}{0.75}
+\definecolor{shadebot5}{gray}{0.3}
+
+\definecolor{vMemoryMarkColor}{gray}{0.5}
+\else
+%yellow:
+\definecolor{shadetop0}{cmyk}{0,0,0.1,0.25}
+\definecolor{shadebot0}{cmyk}{0,0,0.4,0.7}
+%green:
+\definecolor{shadetop1}{cmyk}{0.01,0,0.01,0.3}
+\definecolor{shadebot1}{cmyk}{0.1,0,0.1,0.7}
+%cyan:
+\definecolor{shadetop2}{cmyk}{0.1,0,0,0.25}
+\definecolor{shadebot2}{cmyk}{0.4,0,0,0.7}
+%blue:
+\definecolor{shadetop3}{cmyk}{0.01,0.01,0,0.20}
+\definecolor{shadebot3}{cmyk}{0.10,0.10,0,0.40}
+%magenta:
+\definecolor{shadetop4}{cmyk}{0,0.1,0,0.25}
+\definecolor{shadebot4}{cmyk}{0,0.4,0,0.7}
+%red:
+\definecolor{shadetop5}{cmyk}{0,0.15,0.15,0.2}
+\definecolor{shadebot5}{cmyk}{0,0.2,0.2,0.6}
+
+\definecolor{vMemoryMarkColor}{cmyk}{0,0.4,0.7,0.4}
+\fi
+
+\colorlet{shademid0}{shadetop0!50!shadebot0}
+\colorlet{shademid1}{shadetop1!50!shadebot1}
+\colorlet{shademid2}{shadetop2!50!shadebot2}
+\colorlet{shademid3}{shadetop3!75!shadebot3}
+\colorlet{shademid4}{shadetop4!50!shadebot4}
+\colorlet{shademid5}{shadetop5!50!shadebot5}
+
+\@ifclassloaded{beamer}{%
+  \usebeamercolor{normal text}
+  \usebeamercolor{background canvas}
+  \usebeamercolor{alerted text}
+  \usebeamercolor{local structure}
+
+  \colorlet{shadetop1}{background canvas.bg!70!white}
+  \colorlet{shademid1}{background canvas.bg}
+  \colorlet{shadebot1}{background canvas.bg!70!black}
+
+  \colorlet{shadetop3}{local structure.fg!70!white}
+  \colorlet{shademid3}{local structure.fg}
+  \colorlet{shadebot3}{local structure.fg!70!black}
+
+  \colorlet{shadetop5}{alerted text.fg!70!white}
+  \colorlet{shademid5}{alerted text.fg}
+  \colorlet{shadebot5}{alerted text.fg!70!black}
+
+  \colorlet{vMemoryMarkColor}{alerted text.fg}
+  \colorlet{vTextColor}{normal text.fg}
+}
+
+\ifvecpic@draft@
+\vecpic@shadow@false
+\tikzstyle{vector nodes}=[draw,rectangle,text centered
+,minimum height=\vNodeHeight
+,minimum width=\vNodeWidth
+]
+
+\tikzstyle{vector node text}=[text=black
+,yshift=-0.25ex
+,anchor=mid
+]
+
+\tikzstyle{text node}=[text=black]
+
+\tikzstyle{mask node 0}=[draw,rectangle,text centered
+,text=black,text width=\vNodeWidth,
+inner sep=0,outer sep=0,%text height=1.5ex,text depth=.35ex,
+minimum height=\vNodeHeight,minimum width=\vNodeWidth,
+]
+
+\tikzstyle{mask node 1}=[draw,rectangle,text centered
+,text=black,text width=\vNodeWidth,
+inner sep=0,outer sep=0,%text height=1.5ex,text depth=.35ex,
+minimum height=\vNodeHeight,minimum width=\vNodeWidth,
+]
+
+\tikzstyle{memory node}=[draw]
+
+\tikzstyle{memory mark}=[
+  inner sep=0,outer sep=0,draw=vMemoryMarkColor
+]
+\else
+\tikzstyle{vector nodes}=[rectangle
+,draw,very thin
+,text centered
+,shading=axis
+,top color=shadetop1
+,bottom color=shadebot1
+,middle color=shademid1
+,minimum height=\vNodeHeight
+,minimum width=\vNodeWidth
+]
+
+\tikzstyle{vector node text}=[text=vTextColor
+,yshift=-0.25ex
+,anchor=mid
+]
+
+\tikzstyle{text node}=[text=black]
+
+\tikzstyle{special nodes}=[vector nodes
+,top color=shadetop5
+,bottom color=shadebot5
+,middle color=shademid5
+]
+
+\tikzstyle{mask node 0}=[rectangle
+,draw,very thin
+,text centered
+,top color=shadebot5
+,bottom color=shadetop5
+,middle color=shademid5
+,text=vTextColor,text width=\vNodeWidth,
+inner sep=0,outer sep=0,%text height=1.5ex,text depth=.35ex,
+minimum height=\vNodeHeight,minimum width=\vNodeWidth,
+]
+
+\tikzstyle{mask node 1}=[rectangle
+,draw,very thin
+,text centered
+,shading=axis
+,top color=shadetop5
+,bottom color=shadebot5
+,middle color=shademid5
+,text=vTextColor,text width=\vNodeWidth,
+inner sep=0,outer sep=0,%text height=1.5ex,text depth=.35ex,
+minimum height=\vNodeHeight,minimum width=\vNodeWidth,
+]
+
+\tikzstyle{memory node}=[draw,very thin,shading=axis,
+top color=shadetop3,bottom color=shadebot3,
+middle color=shademid3,
+drop shadow={opacity=0.9,shadow xshift=0.1em,shadow yshift=-0.1em}]
+
+\tikzstyle{memory mark}=[
+  inner sep=0,outer sep=0,draw=black,thin,
+  shading=axis,top color=vMemoryMarkColor,bottom color=vMemoryMarkColor,
+  middle color=vMemoryMarkColor!70!,fill opacity=0.5
+]
+\fi
+
+\tikzstyle{vector operations}=[text centered,text width=\vNodeWidth,
+minimum height=\vNodeHeight,minimum width=\vNodeWidth]
+
+\newcounter{vectornodeindexouter}
+\newcounter{vectornodeindexinner}
+\newcounter{vectoropcounter}
+\newcounter{vmemorymarkcounter}
+\newcounter{vArrowCounter}
+
+%\tikzfading[name=circularfade,inner color=transparent!0,outer color=transparent!100]
+%\tikzfading[name=fadedown,top color=transparent!0,bottom color=transparent!100]
+%\tikzfading[name=faderight,left color=transparent!0,right color=transparent!100]
+
+\newcommand\vNodeShadow{
+\ifvecpic@shadow@
+  \begin{pgfonlayer}{background}
+    \node[fit=(\v@FirstNodeName) (\v@LastNodeName)
+      ,inner sep=0,outer sep=0
+      ,xshift=0.7pt
+      ,yshift=-0.8pt
+      ] (vNodeShadowBox) {};
+    \foreach \xoff in {-0.5pt, -0.3pt, ..., 0.5pt}{
+      \foreach \yoff in {-0.5pt, -0.3pt, ..., 0.5pt}{
+        \node[fit=(vNodeShadowBox)
+          ,fill=black
+          ,inner sep=0,outer sep=0
+          ,xshift=\xoff
+          ,yshift=\yoff
+          ,fill opacity=0.02
+        ] {};%
+    }}
+  \end{pgfonlayer}
+\fi
+}
+
+\def\v@TextShadow#1{
+\ifvecpic@shadow@
+  \path coordinate (shadow) at ($(op)+(0.3pt,-0.4pt)$);
+  \begin{pgfonlayer}{background}
+    %\draw[nodes=vector operations,opacity=0.5] ($(op)+$) node {#1};
+    \foreach \xoff in {-0.2pt, -0.1pt, ..., 0.2pt}{
+      \foreach \yoff in {-0.2pt, -0.1pt, ..., 0.2pt}{
+        \draw[nodes=vector operations,opacity=0.01] (shadow) node[xshift=\xoff,yshift=\yoff] {#1};
+    }}
+  \end{pgfonlayer}
+\fi
+}
+
+\newcommand\v@DrawNodeFrame{
+  \node[draw,inner sep=0,very thin,fit=(\v@FirstNodeName) (\v@LastNodeName)] {};
+}
+
+\newcommand{\vTextNode}[1]{
+\addtocounter{vectornodeindexouter}{1}%
+\coordinate (myp) at ($(p)+(-1.5\vNodeWidth,-\vNodeHeight)$);
+\node[text node
+  ,outer sep=0
+  ,inner sep=2pt
+  ,minimum height=\vNodeHeight
+  ,text height=1.5ex
+  ,text depth=.35ex
+  ,text width=3\vNodeWidth
+  ,anchor=west
+  ,at=(myp)
+  ,name=\Alph{vectornodeindexouter}] {#1};%
+\path let \p1 = (p) in coordinate (p) at (\x1+\vNodeWidth,\y1);
+}
+\newcommand{\vNode}[1]{
+  \addtocounter{vectornodeindexouter}{1}%
+  \setcounter{vectoropcounter}{0}%
+  \setcounter{vectornodeindexinner}{0}%
+  \edef\v@FirstNodeName{\Alph{vectornodeindexouter}0}%
+  \foreach \name in {#1}{
+    \coordinate (p) at ($(p)+(0,-\vNodeHeight)$);
+    \global\edef\v@LastNodeName{\Alph{vectornodeindexouter}\arabic{vectornodeindexinner}}%
+    \draw[nodes=vector nodes] (p)
+    node[name=\v@LastNodeName] {};%
+    \node[vector node text,at=(p)] {\name};%
+    \addtocounter{vectornodeindexinner}{1}%
+  }
+  %\v@DrawNodeFrame
+  \vNodeShadow
+  \path let \p1 = (p) in coordinate (p) at (\x1+2\vNodeWidth,\y1+\arabic{vectornodeindexinner}\vNodeHeight);
+}
+
+\newcommand{\vSqrt}{
+\draw let \p1 = ($(p)+(0.05\vNodeWidth,2\vNodeHeight)$) in
+(\p1)
+-- ++(0.1\vNodeWidth,0)
+-- ++(0.1\vNodeWidth,-0.7\vNodeHeight)
+-- ++(0.05\vNodeWidth,1.4\vNodeHeight)
+-- ++(\arabic{vectornodeindexinner}\vNodeWidth,0)
+-- ++(0.4\vNodeWidth,0)
+;
+\draw let \p1 = ($(p)+(0.15\vNodeWidth,2\vNodeHeight)$) in
+(\p1)
+-- ++(0.1\vNodeWidth,-0.66\vNodeHeight)
+;
+}
+
+\newcommand{\vMaskNode}[1]{
+  \addtocounter{vectornodeindexouter}{1}%
+  \setcounter{vectoropcounter}{0}%
+  \setcounter{vectornodeindexinner}{0}%
+  \edef\v@FirstNodeName{\Alph{vectornodeindexouter}0}%
+  \foreach \name in {#1}{
+    \coordinate (p) at ($(p)+(0,-\vNodeHeight)$);
+    \global\edef\v@LastNodeName{\Alph{vectornodeindexouter}\arabic{vectornodeindexinner}}%
+    \draw[nodes=mask node \name] (p)
+    node[name=\v@LastNodeName] {\name};%
+    \addtocounter{vectornodeindexinner}{1}%
+  }
+  %\v@DrawNodeFrame
+  \vNodeShadow
+  \path let \p1 = (p) in coordinate (p) at (\x1+2\vNodeWidth,\y1+\arabic{vectornodeindexinner}\vNodeHeight);
+}
+
+\newcommand{\vInit}[1][3em]{%
+  \setlength\vNodeHeight{3ex}%
+  \setlength\vNodeWidth{#1}%
+  \coordinate (p) at (0,0);%
+  \setcounter{vectornodeindexouter}{0}%
+  \setcounter{vmemorymarkcounter}{0}%
+}
+\newcommand\vResetNames{%
+  \setcounter{vectornodeindexouter}{0}%
+  \setcounter{vmemorymarkcounter}{0}%
+}
+
+% \p3 is used to normalize \p2, to allow the argument to vTranslate to be specified without units
+\newcommand{\vTranslate}[1]{\path let \p1 = (p), \p2 = (#1), \p3 = (1,1) in coordinate (p) at (\x1+\x2/\x3*\vNodeWidth,\y1-\y2/\y3*\vNodeHeight);}
+
+\newcommand{\vOperations}[2][\arabic{vectornodeindexinner}]{
+\foreach \pos in {1,...,#1}{
+\path let \p1 = (p) in coordinate (op) at (\x1-\vNodeWidth,\y1-\pos\vNodeHeight);
+\draw[nodes=vector operations] (op) node[name=\Alph{vectornodeindexouter} Op\arabic{vectoropcounter}] {#2};
+\addtocounter{vectoropcounter}{1}%
+\v@TextShadow{#2}
+}}
+\newcommand{\vOperationsX}[2]{
+\foreach \pos in {#1}{
+\path let \p1 = (p) in coordinate (op) at (\x1-\vNodeWidth,\y1-\pos\vNodeHeight);
+\draw[nodes=vector operations] (op) node[name=\Alph{vectornodeindexouter} Op\arabic{vectoropcounter}] {#2};
+\addtocounter{vectoropcounter}{1}%
+\v@TextShadow{#2}
+}}
+
+\newcommand{\vSpecialNode}[2]{
+\addtocounter{vectornodeindexouter}{1}%
+\setcounter{vectornodeindexinner}{0}%
+\edef\v@FirstNodeName{\Alph{vectornodeindexouter}0}%
+\edef\v@LastNodeName{\Alph{vectornodeindexouter}0}%
+\coordinate (specialp) at ($(p)+0.5*(\vNodeWidth+#1\vNodeWidth,0)$);
+\draw[nodes=special nodes] (specialp)
+node[name=\v@LastNodeName,minimum width=#1\vNodeWidth] {};%
+\node[vector node text,at=(specialp)] {#2};%
+\addtocounter{vectornodeindexinner}{1}%
+\vNodeShadow
+\path let \p1 = (p) in coordinate (p) at (\x1,\y1-2\vNodeHeight);
+}
+
+\newcommand{\vMemoryNode}[1]{
+  \setcounter{vectornodeindexinner}{#1}%
+  \addtocounter{vectornodeindexinner}{1}%
+    \path let
+      \p1 = ($(p) + (-0.5\vNodeWidth,-0.5\vNodeHeight)$),
+      \p2 = ($(p) + (0.5\vNodeWidth,-#1\vNodeHeight-1.5\vNodeHeight)$)
+      in
+      coordinate (lefttop) at (\p1)
+      coordinate (rightbottom) at (\p2);
+    \draw[memory node] let
+      \p1 = (lefttop),
+      \p2 = (rightbottom),
+      \p3 = (-0.3\vNodeWidth,-0.25\vNodeHeight),
+      \p4 = (-\x3,-\y3)
+      in
+    (\x2,\y2)
+    ..  controls +(\p3) and +(\p4) ..
+    (\x1,\y2) --
+    (\p1)
+    ..  controls +(\p4) and +(\p3) ..
+    (\x2,\y1) -- cycle;
+\path let \p1 = (p) in coordinate (p) at (\x1+2\vNodeWidth,\y1);
+}
+
+\newcommand{\vMemoryMark}[3][0.5]{
+\foreach \left in {#3}{
+  \path let
+      \n1 = {0.25*#2},
+      \p1 = ($(p)+(-1.45\vNodeWidth,-0.8\vNodeHeight-\n1*\left\vNodeHeight)$),
+      \p2 = ($(\p1)-(1.1\vNodeWidth,\n1\vNodeHeight)$)
+    in
+  node[memory mark,fill opacity=#1,fit=(\p1) (\p2),name=Mark\arabic{vmemorymarkcounter}] {};
+  \addtocounter{vmemorymarkcounter}{1}
+}
+}
+
+\newcommand{\vArrows}[1]{
+\foreach \left/\right in {#1}
+  \draw[->] (\left) to [out=0,in=180] (\right);
+}
+
+\newcommand{\vArrowsStraight}[1]{
+\foreach \left/\right in {#1}
+  \draw[->] (\left.east) to (\right.west);
+}
+
+\newcommand{\vArrowsL}[2][0.2]{
+  \setcounter{vArrowCounter}{1}
+  \foreach \left/\right in {#2} {
+    \draw[->] (\left.east) -- +(#1*\arabic{vArrowCounter}\vNodeWidth, 0) |- (\right.west);
+    \addtocounter{vArrowCounter}{1}
+  }
+}
+
+\newcommand{\vCaption}[2][1]{
+\addtocounter{vectornodeindexinner}{1}%
+  \coordinate (myp) at ($(p)+(-1.5\vNodeWidth-#1*0.5\vNodeWidth,-\arabic{vectornodeindexinner}\vNodeHeight)$);
+\addtocounter{vectornodeindexinner}{-1}%
+\node[text centered
+  ,anchor=north
+  ,text width=#1*\vNodeWidth
+  %,fill=red
+  ,at=(myp)
+  ,outer sep=0,inner sep=0] {#2};
+}
+
+% vim: sw=2 sts=2 ai et

@@ -1,0 +1,27 @@
+\section{Introduction}
+
+\subsection{Parallel Algorithms}
+Parallel Algorithms enable implementations of the existing STL algorithms to use non-sequential semantics when executing the user-supplied code (explicit callable or implicit operator call).
+The first argument to the algorithm function determines this change in execution semantics via an \emph{execution policy}.
+This paper introduces a new execution policy, called \dataparEP.
+\dataparEP requires user-provided function objects to be callable with \datapar[<T, Abi>] arguments instead of the \type T arguments the \seqEP variant would use.
+The algorithm therefore processes chunks of \datapar[<T, Abi>::size()] objects concurrently.
+The execution order of the chunks retains the sequential semantics of the non-parallel algorithms.
+
+As a consequence, the applicability of the execution policy is limited to iterators where \datapar[<Iterator::value_type>] is a valid template instantiation of \datapar.
+A future extension of \datapar may lift this restriction by allowing certain (or all) user-defined types as first template argument to \datapar.
+
+\subsection{Executors}
+Executors abstract execution resources (see e.g. \citep{P0058R1}).
+One of the execution resources this covers is SIMD units (or any other comparable data-parallel execution).
+\citep{P0058R1} shows an example for a \type{vector_executor} implementation using \code{\#pragma simd}.
+An alternative approach (competing or complementary) uses \datapar to express the data parallelism via the type system.
+The user-provided function object to the executor's \code{execute} function follows the same idea as for the parallel algorithms.
+The executor passes an index object to the user-provided function object to identify the partition of the work the function needs to process.
+For a \type{datapar_executor} this index object could be a new type identifying an index range.
+Overloads of the subscript operator (or other functions) can be used to load/store \datapar objects using this index range object.
+
+\subsection{Future Work}
+Finally, though not covered in this paper, we should consider using \datapar as the ABI type that enables calling into vectorized functions from code executed via \type{std::par_vec} or from a \type{vector_executor} as suggested in \citep{P0058R1}.
+
+% vim: sw=2 sts=2 ai et tw=0 spell

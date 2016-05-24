@@ -1,0 +1,219 @@
+\section{Parallel Algorithms}
+
+\subsection{Example}
+Consider the example in \lst{datapar foreach}.
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:datapar foreach,caption={
+  Example using \dataparEP with \code{iota} and \code{for_each}.
+}]
+vector<float> data;
+data.resize(99);
+iota(/*!\dataparEP{}*/, data.begin(), data.end(), 0.f);
+for_each(/*!\dataparEP{}*/, data.begin(), data.end(), [](auto &x) {
+  x *= x;
+});
+\end{lstlisting}
+The \code{iota} and \code{for_each} functions each could create an internal \datapar iterator adaptor, depending on the iterator category.
+The information about contiguous storage is most important in this context to enable vector loads and stores.
+The \type{vector} iterators are \emph{contiguous iterators}.
+An implementation could thus generate the equivalent of \lst{datapar iota implementation} and \lst{datapar foreach implementation}.
+\lstinputlisting[style=Vc,numbers=left,float,label=lst:datapar iota implementation,caption={
+  Pseudo-implementation of the \code{iota} function used in \lst{datapar foreach}.
+}]{iota.cpp}
+\lstinputlisting[style=Vc,numbers=left,float,label=lst:datapar foreach implementation,caption={
+  Pseudo-implementation of the \code{for_each} function used in \lst{datapar foreach}.
+}]{foreach.cpp}
+
+\begin{figure}[]
+  \centering
+  \begin{tikzpicture}
+    \ttfamily
+    \vInit
+    \vMemoryNode{6}
+    \vMemoryMark[0.25]{2}{0,1,2,3,4,5,6,7,8,9,10,11}
+    \vTranslate{-2,10}
+    \draw[fill=black] (p) circle (.2em) ++(0,\vNodeHeight) circle (.2em) ++(0,\vNodeHeight) circle (.2em);
+    \vMemoryNode{5}
+    \vMemoryMark[0.25]{2}{0,1,2,3,4,5,6}
+    \vTranslate{-6,-16}
+    \vNode{0,1,2,3}
+    \vArrowsStraight{A0/Mark0,A1/Mark1,A2/Mark2,A3/Mark3}
+    \vTranslate{-6,4.5}
+    \vNode{0,1,2,3}
+    \vOperations{+}
+    \vNode{4,4,4,4}
+    \vOperations{=}
+    \vNode{4,5,6,7}
+    \vArrowsStraight{D0/Mark4,D1/Mark5,D2/Mark6,D3/Mark7}
+    \vTranslate{-6,4.5}
+    \vNode{4,5,6,7}
+    \vOperations{+}
+    \vNode{4,4,4,4}
+    \vOperations{=}
+    \vNode{8,9,10,11}
+    \vArrowsStraight{G0/Mark8,G1/Mark9,G2/Mark10,G3/Mark11}
+    \vTranslate{-4,7}
+    \draw[fill=black] (p) circle (.2em) ++(0,\vNodeHeight) circle (.2em) ++(0,\vNodeHeight) circle (.2em);
+    \vTranslate{-2,0}
+    \vNode{88,89,90,91}
+    \vOperations{+}
+    \vNode{4,4,4,4}
+    \vOperations{=}
+    \vNode{92,93,94,95}
+    \vArrowsStraight{J0/Mark12,J1/Mark13,J2/Mark14,J3/Mark15}
+    \vTranslate{-6,4.5}
+    \vNode{95}
+    \vOperations{+}
+    \vNode{1}
+    \vOperations{=}
+    \vNode{96}
+    \vArrowsStraight{M0/Mark16}
+    \vTranslate{-6,1.5}
+    \vNode{96}
+    \vOperations{+}
+    \vNode{1}
+    \vOperations{=}
+    \vNode{97}
+    \vArrowsStraight{P0/Mark17}
+    \vTranslate{-6,1.5}
+    \vNode{97}
+    \vOperations{+}
+    \vNode{1}
+    \vOperations{=}
+    \vNode{98}
+    \vArrowsStraight{S0/Mark18}
+  \end{tikzpicture}
+  \caption{Visualization of chunking the \code{iota} call with $\VSize{T}=4$ in \lst{datapar foreach}.}
+  \label{fig:datapar iota}
+\end{figure}
+
+\begin{figure}[]
+  \centering
+  \begin{tikzpicture}
+    \ttfamily
+    \vInit
+    \draw[fill=black] (p) circle (.2em) ++(0,\vNodeHeight) circle (.2em) ++(0,\vNodeHeight) circle (.2em);
+    \vMemoryNode{5}
+    \vMemoryMark[0.25]{2}{0,1,2,3,4,5,6}
+    \vTranslate{-4,8}
+    \vNode{92,93,94,95}
+    \vOperations{*}
+    \vNode{92,93,94,95}
+    \vOperations{=}
+    \vNode{92²,93²,94²,95²}
+    \vTranslate{-6,4.5}
+    \vNode{96}
+    \vOperations{*}
+    \vNode{96}
+    \vOperations{=}
+    \vNode{96²}
+    \vTranslate{-6,1.5}
+    \vNode{97}
+    \vOperations{*}
+    \vNode{97}
+    \vOperations{=}
+    \vNode{97²}
+    \vTranslate{-6,1.5}
+    \vNode{98}
+    \vOperations{*}
+    \vNode{98}
+    \vOperations{=}
+    \vNode{98²}
+    \draw[->] (Mark0.west) -- +(-2.0\vNodeWidth,0) |- (A0);
+    \draw[->] (Mark1.west) -- +(-2.2\vNodeWidth,0) |- (A1);
+    \draw[->] (Mark2.west) -- +(-2.4\vNodeWidth,0) |- (A2);
+    \draw[->] (Mark3.west) -- +(-2.6\vNodeWidth,0) |- (A3);
+    \draw[->] (Mark4.west) -- +(-2.8\vNodeWidth,0) |- (D0);
+    \draw[->] (Mark5.west) -- +(-3.0\vNodeWidth,0) |- (G0);
+    \draw[->] (Mark6.west) -- +(-3.2\vNodeWidth,0) |- (J0);
+    \draw[<-] (Mark0.east) -- +(2.0\vNodeWidth,0) |- (C0);
+    \draw[<-] (Mark1.east) -- +(2.2\vNodeWidth,0) |- (C1);
+    \draw[<-] (Mark2.east) -- +(2.4\vNodeWidth,0) |- (C2);
+    \draw[<-] (Mark3.east) -- +(2.6\vNodeWidth,0) |- (C3);
+    \draw[<-] (Mark4.east) -- +(2.8\vNodeWidth,0) |- (F0);
+    \draw[<-] (Mark5.east) -- +(3.0\vNodeWidth,0) |- (I0);
+    \draw[<-] (Mark6.east) -- +(3.2\vNodeWidth,0) |- (L0);
+  \end{tikzpicture}
+  \caption{Visualization of chunking the \code{foreach} call in \lst{datapar foreach}.}
+  \label{fig:datapar foreach}
+\end{figure}
+
+\subsection{Wording for the policy}
+
+Add a new execution policy to \citep[§20.18.2]{N4582}:
+\begin{wgText}[{§20.18.2 [execpol.syn]}]
+  \begingroup
+  \ttfamily
+  // 20.18.6, parallel+vector execution policy:\\
+  class parallel_vector_execution_policy;\\
+  \\
+  \wgAdd{// 20.18.7, \datapar execution policy:}\\
+  \wgAdd{class \dataparEPT{};}\\
+  \\
+  // 20.18.\wgRemove{7}\wgAdd{8}, execution policy objects:\\
+  constexpr sequential_execution_policy sequential\{ \textit{unspecified} \};\\
+  constexpr parallel_execution_policy par\{ \textit{unspecified} \};\\
+  constexpr parallel_vector_execution_policy par_vec\{ \textit{unspecified} \};\\
+  \wgAdd{constexpr \dataparEPT{} \dataparEP{}\{ \textit{unspecified} \};}
+  \endgroup
+\end{wgText}
+
+Renumber §20.18.7 to §20.18.8 and add §20.18.7 [execpol.datapar]:
+\begin{wgText}
+  \color{WgAdd}
+  \begin{itemdecl}
+class @\dataparEPT{}@ { unspecified };
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum The class \dataparEPT is an execution policy type used as a unique type to disambiguate parallel algorithm overloading and indicate that a parallel algorithm's execution may be vectorized using \datapar for interfacing with user-provided functionality.
+  \end{itemdescr}
+\end{wgText}
+
+Add to §20.18.8 [parallel.execpol.objects]:
+\begin{wgText}
+  \ttfamily\wgAdd{constexpr \dataparEPT{} \dataparEP{}\{ \textit{unspecified} \};}
+\end{wgText}
+
+\citep[§25.2.2]{N4582} defines requirements on user-provided function objects.
+This might be the right place to add:
+\begin{wgText}[{§25.2.2 [algorithms.parallel.user]}]
+  \addtocounter{Paras}{1}
+  \color{WgAdd}
+  \pnum Function objects passed into parallel algorithms instantiated with the \dataparEP execution policy shall be callable with any argument of type \datapar[<T, Abi>], where \type T is the type obtained from dereferencing the iterator.
+\end{wgText}
+
+The following subsection in \citep[§25.2.3]{N4582} defines the semantics of the execution policies.
+A new paragraph for \dataparEP is needed.
+The intent is to
+\begin{enumerate}
+  \item constrain execution to the calling thread,
+  \item allow implementations to assume unordered access for all internal element access functions (most importantly loads and stores),
+  \item apply user-provided function objects in the order the \datapar chunks are created from sequential iteration over the iterator(s).
+\end{enumerate}
+\begin{wgText}[{§25.2.3 [algorithms.parallel.exec]}]
+  \addtocounter{Paras}{5}%
+  \color{WgAdd}%
+  \uline{%
+  \pnum
+  The invocations of element access functions in parallel algorithms invoked with an execution policy object of type \dataparEPT are permitted to execute in an unordered fashion in the calling thread, except for the application of user-provided function objects.
+  User-provided function objects are called with an im\-ple\-men\-ta\-tion-defined number of sequence elements combined into a }\underline{\datapar[<T, Abi>]}\uline{ object.
+  The type for \type{Abi} is chosen by the implementation.
+  It may be different for subsequent applications of the user-provided function in the same parallel algorithm invocation.
+  The type for \type T is the decayed type of the sequence elements.
+  The order of elements in the \datapar object is equal to the order of the corresponding elements in the sequence argument.
+  The invocation order of user-provided function objects is sequential.
+}
+\end{wgText}
+
+\citep[§25.2.4 (2.2)]{N4582} needs to add \dataparEPT.
+\begin{wgText}[{§25.2.4 (2.2) [algorithms.parallel.exceptions]}]
+  If the execution policy object is of type \type{sequential_execution_policy}\wgAdd{, \dataparEPT,} or \type{parallel_execution_policy}, the execution of the algorithm exits via an exception.
+\end{wgText}
+There is no need for multiple exceptions when applying user-provided function objects.
+The need for exception lists only arises in the vector-parallel execution of iterator operations.
+
+\subsection{Wording for individual algorithms}
+I have not identified the need for any additional wording in the subsections on the individual algorithms for the \dataparEPT at this point.
+
+It might be useful to only require \texttt{MoveConstructible} user-provided functions instead of the stricter requirement of \texttt{CopyConstructible}.
+
+% vim: sw=2 et ft=tex spell tw=0
