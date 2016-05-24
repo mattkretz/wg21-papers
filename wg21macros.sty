@@ -44,12 +44,14 @@
 #1
 —~\textit{end note}~]}
 \ifwgmacros@mono@
-\newcommand\wgAdd[1]{{\uline{#1}}}
-\newcommand\wgRemove[1]{{\sout{#1}}}
+\colorlet{WgAdd}{black}
+\colorlet{WgRemove}{black}
 \else
-\newcommand\wgAdd[1]{{\color{green!40!black}\uline{#1}}}
-\newcommand\wgRemove[1]{{\color{red!40!black}\sout{#1}}}
+\colorlet{WgAdd}{green!40!black}
+\colorlet{WgRemove}{red!40!black}
 \fi
+\newcommand\wgAdd[1]{{\color{WgAdd}\underline{#1}}}
+\newcommand\wgRemove[1]{{\color{WgRemove}\sout{#1}}}
 \newenvironment{wgText}[1][]{
   \begingroup
   \lstset{%
