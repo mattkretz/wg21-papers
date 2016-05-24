@@ -13,15 +13,19 @@ for_each(/*!\dataparEP{}*/, data.begin(), data.end(), [](auto &x) {
 });
 \end{lstlisting}
 The \code{iota} and \code{for_each} functions each could create an internal \datapar iterator adaptor, depending on the iterator category.
-The information about contiguous storage is most important in this context to enable vector loads and stores.
-The \type{vector} iterators are \emph{contiguous iterators}.
-An implementation could thus generate the equivalent of \lst{datapar iota implementation} and \lst{datapar foreach implementation}.
+Being able to determine whether the storage, the iterator points to, is contiguous, is most important in this context as it enables vector loads and stores.
+Since the \std\type{vector} iterators are \emph{contiguous iterators}, the example implementations shown in \lst{datapar iota implementation} and \lst{datapar foreach implementation} could be used for the example.
 \lstinputlisting[style=Vc,numbers=left,float,label=lst:datapar iota implementation,caption={
-  Pseudo-implementation of the \code{iota} function used in \lst{datapar foreach}.
+  Implementation idea for the \code{iota} function used in \lst{datapar foreach}.
 }]{iota.cpp}
 \lstinputlisting[style=Vc,numbers=left,float,label=lst:datapar foreach implementation,caption={
-  Pseudo-implementation of the \code{for_each} function used in \lst{datapar foreach}.
+  Implementation idea for the \code{for_each} function used in \lst{datapar foreach}.
 }]{foreach.cpp}
+
+Both implementations might be improved with a prologue that enables aligned loads and stores.
+Also note that \code{for_each} allows the \code{Function} parameter to mutate the argument if the iterator is a mutable iterator.
+The implementation uses a compile-time trait to determine whether the function \code{f} uses a reference parameter, in which case it stores the temporary \datapar object back.
+Otherwise, the store is optimized away.
 
 \begin{figure}[]
   \centering
@@ -61,26 +65,19 @@ An implementation could thus generate the equivalent of \lst{datapar iota implem
     \vNode{92,93,94,95}
     \vArrowsStraight{J0/Mark12,J1/Mark13,J2/Mark14,J3/Mark15}
     \vTranslate{-6,4.5}
-    \vNode{95}
+    \vNode{96,96}
     \vOperations{+}
-    \vNode{1}
+    \vNode{0,1}
     \vOperations{=}
-    \vNode{96}
-    \vArrowsStraight{M0/Mark16}
-    \vTranslate{-6,1.5}
-    \vNode{96}
+    \vNode{96,97}
+    \vArrowsStraight{M0/Mark16,M1/Mark17}
+    \vTranslate{-6,2.5}
+    \vNode{98}
     \vOperations{+}
-    \vNode{1}
-    \vOperations{=}
-    \vNode{97}
-    \vArrowsStraight{P0/Mark17}
-    \vTranslate{-6,1.5}
-    \vNode{97}
-    \vOperations{+}
-    \vNode{1}
+    \vNode{0}
     \vOperations{=}
     \vNode{98}
-    \vArrowsStraight{S0/Mark18}
+    \vArrowsStraight{P0/Mark18}
   \end{tikzpicture}
   \caption{Visualization of chunking the \code{iota} call with $\VSize{T}=4$ in \lst{datapar foreach}.}
   \label{fig:datapar iota}
@@ -101,18 +98,12 @@ An implementation could thus generate the equivalent of \lst{datapar iota implem
     \vOperations{=}
     \vNode{92²,93²,94²,95²}
     \vTranslate{-6,4.5}
-    \vNode{96}
+    \vNode{96,97}
     \vOperations{*}
-    \vNode{96}
+    \vNode{96,97}
     \vOperations{=}
-    \vNode{96²}
-    \vTranslate{-6,1.5}
-    \vNode{97}
-    \vOperations{*}
-    \vNode{97}
-    \vOperations{=}
-    \vNode{97²}
-    \vTranslate{-6,1.5}
+    \vNode{96²,97²}
+    \vTranslate{-6,2.5}
     \vNode{98}
     \vOperations{*}
     \vNode{98}
@@ -123,17 +114,17 @@ An implementation could thus generate the equivalent of \lst{datapar iota implem
     \draw[->] (Mark2.west) -- +(-2.4\vNodeWidth,0) |- (A2);
     \draw[->] (Mark3.west) -- +(-2.6\vNodeWidth,0) |- (A3);
     \draw[->] (Mark4.west) -- +(-2.8\vNodeWidth,0) |- (D0);
-    \draw[->] (Mark5.west) -- +(-3.0\vNodeWidth,0) |- (G0);
-    \draw[->] (Mark6.west) -- +(-3.2\vNodeWidth,0) |- (J0);
+    \draw[->] (Mark5.west) -- +(-3.0\vNodeWidth,0) |- (D1);
+    \draw[->] (Mark6.west) -- +(-3.2\vNodeWidth,0) |- (G0);
     \draw[<-] (Mark0.east) -- +(2.0\vNodeWidth,0) |- (C0);
     \draw[<-] (Mark1.east) -- +(2.2\vNodeWidth,0) |- (C1);
     \draw[<-] (Mark2.east) -- +(2.4\vNodeWidth,0) |- (C2);
     \draw[<-] (Mark3.east) -- +(2.6\vNodeWidth,0) |- (C3);
     \draw[<-] (Mark4.east) -- +(2.8\vNodeWidth,0) |- (F0);
-    \draw[<-] (Mark5.east) -- +(3.0\vNodeWidth,0) |- (I0);
-    \draw[<-] (Mark6.east) -- +(3.2\vNodeWidth,0) |- (L0);
+    \draw[<-] (Mark5.east) -- +(3.0\vNodeWidth,0) |- (F1);
+    \draw[<-] (Mark6.east) -- +(3.2\vNodeWidth,0) |- (I0);
   \end{tikzpicture}
-  \caption{Visualization of chunking the \code{foreach} call in \lst{datapar foreach}.}
+  \caption{Visualization of chunking the \code{foreach} call with $\VSize{T}=4$ in \lst{datapar foreach}.}
   \label{fig:datapar foreach}
 \end{figure}
 
