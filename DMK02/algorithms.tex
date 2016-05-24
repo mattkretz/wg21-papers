@@ -27,6 +27,19 @@ Also note that \code{for_each} allows the \code{Function} parameter to mutate th
 The implementation uses a compile-time trait to determine whether the function \code{f} uses a reference parameter, in which case it stores the temporary \datapar object back.
 Otherwise, the store is optimized away.
 
+\fig{datapar iota} shows a visualization how the \code{iota} implementation works.
+The \code{init} \datapar object is stored via vector stores to 4 (native \datapar[::size()]) elements in the \std\type{vector}.
+In each iteration the \code{init} object is incremented by \datapar[::size()] and stored to the following elements in the \std\type{vector}.
+Since the \std\type{vector} has 99 elements, the last three elements cannot be initialized with a vector store of four elements.
+Instead the \code{epilogue} recursion generates a new \code{init} \datapar object for size 2 and subsequently for size 1.
+
+\fig{datapar foreach} visualizes the end of the \code{for_each} implementation.
+The main \code{for} loop processes four elements of the \std\type{vector} in parallel.
+It executes a vector load, calls the user-provided function with the temporary \datapar object, and executes a vector store back to the same memory location.
+The remaining three elements are again handled by an \code{epilogue} recursion which divides the number of processed elements by 2 with every step.
+
+For both algorithms it would be perfectly valid to implement the epilogue as a sequential loop using \datapar objects with size 1.
+
 \begin{figure}[]
   \centering
   \begin{tikzpicture}
