@@ -5,13 +5,13 @@ PDFLATEX := TEXINPUTS=$(TEXINPUTS) flock . lualatex --shell-escape --halt-on-err
 BIBER := biber --input-directory .. --output-directory .
 MAKEINDEX := makeindex
 SHELL := /bin/bash
-EXTRA_DEPS := $(wildcard *.sty) .dummy.tex
-CREATEMD5 := md5sum `find . -regex '.*\.\(aux\|bbl\|toc\|tex\|ind\)'` > aux-md5sums
-CHECKMD5  := md5sum --quiet -c aux-md5sums
+EXTRA_DEPS := $(wildcard *.sty) ._dummy.tex
+CREATEMD5 := md5sum `find . -regex '.*\.\(aux\|bbl\|toc\|tex\|ind\)'` > ._aux-md5sums
+CHECKMD5  := md5sum --quiet -c ._aux-md5sums
 
 all: final mobile
 
-.dummy.tex:
+._dummy.tex:
 	touch $@
 
 help:
@@ -26,8 +26,8 @@ help:
 	@echo "autocommit"
 
 TEX_INPUTS   := $(shell egrep '^[^%]*\\in(put|clude){.*?}' main.tex|sed 's@^.*{\(.*\)}.*$$@\1.tex@')
-TEX_INPUTS2  := $(shell test -n "$(TEX_INPUTS)" && egrep '^[^%]*\\in(put|clude){.*?}' $(TEX_INPUTS) .dummy.tex|sed -e 's@^.*{\([^.]*\)}.*$$@\1.tex@' -e 's@^.*{\(.*\)}.*$$@\1@') $(TEX_INPUTS)
-TEX_INPUTS   := $(shell test -n "$(TEX_INPUTS2)" && egrep '^[^%]*\\in(put|clude){.*?}' $(TEX_INPUTS2) .dummy.tex|sed -e 's@^.*{\([^.]*\)}.*$$@\1.tex@' -e 's@^.*{\(.*\)}.*$$@\1@') $(TEX_INPUTS2) $(TEX_INPUTS) main.tex
+TEX_INPUTS2  := $(shell test -n "$(TEX_INPUTS)" && egrep '^[^%]*\\in(put|clude){.*?}' $(TEX_INPUTS) ._dummy.tex|sed -e 's@^.*{\([^.]*\)}.*$$@\1.tex@' -e 's@^.*{\(.*\)}.*$$@\1@') $(TEX_INPUTS)
+TEX_INPUTS   := $(shell test -n "$(TEX_INPUTS2)" && egrep '^[^%]*\\in(put|clude){.*?}' $(TEX_INPUTS2) ._dummy.tex|sed -e 's@^.*{\([^.]*\)}.*$$@\1.tex@' -e 's@^.*{\(.*\)}.*$$@\1@') $(TEX_INPUTS2) $(TEX_INPUTS) main.tex
 TEX_LISTINGS := $(shell test -n "$(TEX_INPUTS)" && awk -F '{|}' -- '/lstinputlisting\[[^\]]*$$/ { getline; while($$0 !~ /\] *{.*\..*}$$/) getline; sub(/^.*\]/, ""); print } /lstinputlisting\[.*\] *{.*}/ { print }' $(TEX_INPUTS) |sed 's=.*\(\[[^]]*\]\)\?{\([^}]*\)}.*=\2='| sort -u)
 TEX_PLOTDATA := $(shell grep '\\addplot.* file' $(TEX_INPUTS)|sed 's=^.*\\addplot.* file *{\(.*\)}.*$$=\1=')
 GRAPHICS := $(shell grep 'includegraphics' main.tex $(TEX_INPUTS)|grep -v newcommand|sed -e 's=.*\\includegraphics[^{]*{\([^}]*\)}.*=\1=' |sort -u|while read f; do for d in $(subst :, ,$(TEXINPUTS)); do test -f $$d/$$f && echo $$d/$$f && break; done; done)
@@ -50,7 +50,7 @@ loop-internal:
 	    printf '\ekLaTeX waiting: $(loopinternaltarget)\e\\'; \
 	    if ! $(MAKE) -q $(loopinternaltarget).pdf>/dev/null; then \
 	      printf '\ekLaTeX build: $(loopinternaltarget)\e\\'; \
-	      ls -lt $(ALL_DEPS) | head -n1 > .stamp; \
+	      ls -lt $(ALL_DEPS) | head -n1 > ._stamp; \
 	      nice ionice -c idle $(MAKE) $(loopinternaltarget).pdf || break; \
 	    fi; \
 	    sleep 1s; \
@@ -58,10 +58,10 @@ loop-internal:
 	  printf '\ekfailed\e\\'; \
 	  kdialog --passivepopup "LaTeX ($(NAME)) failed" 1; \
 	  echo -e '\a'; \
-	  ls -lt $(ALL_DEPS) $(MORE_DEPS) | head -n1 > .stamp.new; \
-	  while diff -q .stamp .stamp.new; do \
+	  ls -lt $(ALL_DEPS) $(MORE_DEPS) | head -n1 > ._stamp.new; \
+	  while diff -q ._stamp ._stamp.new; do \
 	    sleep 1s; \
-	    ls -lt $(ALL_DEPS) $(MORE_DEPS) | head -n1 > .stamp.new; \
+	    ls -lt $(ALL_DEPS) $(MORE_DEPS) | head -n1 > ._stamp.new; \
 	  done; \
 	done
 
@@ -78,7 +78,7 @@ final-figure%-loop:
 	@while true; do $(MAKE) -q final-figure$*.pdf || $(MAKE) final-figure$*.pdf && sleep 1s; done
 
 clean:
-	rm -f $(NAME).pdf $(DRAFT).pdf *.aux *.bbl *.blg *.brf *.lof *.log *.lol *.lot *.out *.toc */*.aux *.auxlock aux-md5sums *.bcf *.run.xml .stamp .stamp.new
+	rm -f $(NAME).pdf $(DRAFT).pdf *.aux *.bbl *.blg *.brf *.lof *.log *.lol *.lot *.out *.toc */*.aux *.auxlock ._aux-md5sums *.bcf *.run.xml ._stamp ._stamp.new
 
 ALL_DEPS=$(TEX_INPUTS) $(TEX_LISTINGS) $(EXTRA_DEPS) $(TEX_PLOTDATA)
 
