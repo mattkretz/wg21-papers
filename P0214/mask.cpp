@@ -25,6 +25,9 @@ namespace std {
       // implicit type conversion constructor
       template <class U> mask(mask<U, Abi>);
 
+      // load constructor
+      template <class Flags> mask(const bool *mem, Flags);
+
       // scalar access:
       reference operator[](size_type);
       value_type operator[](size_type) const;

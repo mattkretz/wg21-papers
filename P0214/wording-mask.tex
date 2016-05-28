@@ -50,6 +50,15 @@ template <class U> mask(mask<U, Abi> x);
   \pnum\effects Constructs an object of type \mask where the $i$-th element equals \code{x[i]} \foralli.
 \end{itemdescr}
 
+\begin{itemdecl}
+template <class Flags> mask(const bool *mem, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Constructs an object where the $i$-th element is initialized to \code{mem[i]} \foralli.
+  \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\mask>}, the behavior is undefined.
+\end{itemdescr}
+
 \wgSubsubsection{\mask{} subscript operators}{mask.subscr}
 \begin{itemdecl}
 reference operator[](size_type i);

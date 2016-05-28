@@ -57,32 +57,30 @@
 \subsection{Changes from R0}
 Previous revision: \citep{P0214R0}.
 \begin{itemize}
-  \chck Extended the \code{datapar_abi} tag types with a \code{fixed_size<N>} tag to handle arbitrarily sized vectors (\ref{sec:datapar.abi}).
-  \chck Converted \code{memory_alignment} into a non-member trait (\ref{sec:datapar.traits}).
-  \chck Extended implicit conversions to handle \fixedsizeN (\ref{sec:datapar.ctor}).
-  \chck Extended binary operators to convert correctly with \fixedsizeN (\ref{sec:datapar.binary}).
-    %Nothing to do: \chck Extended mask wording to cope with \fixedsizeN.
-  \chck Dropped the section on “\datapar logical operators”. Added a note that the omission is deliberate (\ref{sec:datapar.logical}).
-  \chck Added logical and bitwise operators to \mask (\ref{sec:mask.binary}).
-  \chck Modified \mask compares to work better with implicit conversions (\ref{sec:mask.comparison}).
-  \chck Modified \code{where} to support different Abi tags on the \mask and \datapar arguments (\ref{sec:mask.where}).
-  \chck Converted the load functions to non-member functions.
+  \item Extended the \code{datapar_abi} tag types with a \code{fixed_size<N>} tag to handle arbitrarily sized vectors (\ref{sec:datapar.abi}).
+  \item Converted \code{memory_alignment} into a non-member trait (\ref{sec:datapar.traits}).
+  \item Extended implicit conversions to handle \fixedsizeN (\ref{sec:datapar.ctor}).
+  \item Extended binary operators to convert correctly with \fixedsizeN (\ref{sec:datapar.binary}).
+  \item Dropped the section on “\datapar logical operators”. Added a note that the omission is deliberate (\ref{sec:datapar.logical}).
+  \item Added logical and bitwise operators to \mask (\ref{sec:mask.binary}).
+  \item Modified \mask compares to work better with implicit conversions (\ref{sec:mask.comparison}).
+  \item Modified \code{where} to support different Abi tags on the \mask and \datapar arguments (\ref{sec:mask.where}).
+  \item Converted the load functions to non-member functions.
     SG1 asked for guidance from LEWG whether a load-expression or a template parameter to load is more appropriate.
-  \chck Converted the store functions to non-member functions to be consistent with the load functions.
-  \chck Added a note about masked stores not invoking out-of-bounds accesses for masked-off elements of the vector.
-  \chck Converted the return type of \datapar{}\code{::operator[]} to return a smart reference instead of an lvalue reference.
-  \chck Modified the wording of \mask{}\code{::operator[]} to match the reference type returned from \datapar{}\code{::operator[]}.
-  \todo \textit{in progress:} Added a minimal set of math functions on \datapar.
-  \todo Added discussion on defaulting load/store flags.
-  \todo Added sum, product, min, and max reductions for \datapar.
-  \todo Added load constructor.
-  \todo Modified the wording of \code{native_handle()} to make the existence of the functions implementation-defined, instead of only the return type.
-  \todo Added initial wording for an \code{execution_policy} for parallel algorithms to use vector types.
-  \todo Added an example showing the use of the new execution policy.
-  \todo Added an example of a possible \code{execute} implementation for a vectorizing executor.
-  \todo Added usage examples
-  \todo Fix missing flag objects and specify the freedom for implementations to add additional flags and that \code{operator|} must work.
+  \item Converted the store functions to non-member functions to be consistent with the load functions.
+  \item Added a note about masked stores not invoking out-of-bounds accesses for masked-off elements of the vector.
+  \item Converted the return type of \datapar{}\code{::operator[]} to return a smart reference instead of an lvalue reference.
+  \item Modified the wording of \mask{}\code{::operator[]} to match the reference type returned from \datapar{}\code{::operator[]}.
+  \item Added non-trig/pow/exp/log math functions on \datapar.
+  \item Added discussion on defaulting load/store flags.
+  \item Added sum, product, min, and max reductions for \datapar.
+  \item Added load constructor.
+  \item Modified the wording of \code{native_handle()} to make the existence of the functions implementation-defined, instead of only the return type.
+    Added a section in the discussion (cf. Section \ref{sec:native}).
+  \item Fixed missing flag objects.
 \end{itemize}
+  %\todo Fix missing flag objects and specify the freedom for implementations to add additional flags and that \code{operator|} must work.
+  %\todo Added usage examples
 
 \input{intro}
 \input{wording}

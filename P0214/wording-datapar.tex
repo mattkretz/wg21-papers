@@ -67,6 +67,15 @@ template <class U, class Abi2> datapar(datapar<U, Abi2> x);
   \pnum\effects Constructs an object where the $i$-th element equals \code{static_cast<T>(x[i])} \foralli.
 \end{itemdescr}
 
+\begin{itemdecl}
+template <class U, class Flags> datapar(const U *mem, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Constructs an object where the $i$-th element is initialized to \code{static_cast<T>(mem[i])} \foralli.
+  \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\datapar, \type U>}, the behavior is undefined.
+\end{itemdescr}
+
 \wgSubsubsection{\datapar subscript operators}{datapar.subscr}
 \newcommand{\dataparElementReference}{
   \pnum\returns A temporary object with the following properties:
@@ -162,11 +171,79 @@ datapar operator-() const;
   \pnum\returns A new \datapar object where the $i$-th element is initialized to \code{-operator[](i)} \foralli.
 \end{itemdescr}
 
+\wgSubsubsection{\datapar reductions}{datapar.redu}
+\begin{itemdecl}
+value_type sum() const;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The sum of all the elements stored in the \datapar object.
+    The order of summation is arbitrary.
+\end{itemdescr}
+
+\begin{itemdecl}
+value_type sum(mask_type) const;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The sum of all the elements stored in the \datapar object where the corresponding element in the first argument is \true.
+  The order of summation is arbitrary.
+  If all elements in the first argument are \false, then the return value is 0.
+\end{itemdescr}
+
+\begin{itemdecl}
+value_type product() const;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The product of all the elements stored in the \datapar object.
+    The order of multiplication is arbitrary.
+\end{itemdescr}
+
+\begin{itemdecl}
+value_type product(mask_type) const;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The product of all the elements stored in the \datapar object where the corresponding element in the first argument is \true.
+  The order of multiplication is arbitrary.
+  If all elements in the first argument are \false, then the return value is 1.
+\end{itemdescr}
+
+\begin{itemdecl}
+value_type min() const;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The value of an element $j$ for which \code{operator[](j) <= operator[](i)} \foralli.
+\end{itemdescr}
+
+\begin{itemdecl}
+value_type min(mask_type k) const;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The value of an element $j$ for which \code{k[j] == true} and \code{operator[](j) <= operator[](i) || !k[i]} \foralli.
+  \pnum\remarks If all elements in \code k are \false, the return value is undefined.%
+  \comment{Alternatively, it could return \code{numeric_limits<value_type>::min()}.}
+\end{itemdescr}
+
+\begin{itemdecl}
+value_type max() const;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The value of an element $j$ for which \code{operator[](j) >= operator[](i)} \foralli.
+\end{itemdescr}
+
+\begin{itemdecl}
+value_type max(mask_type k) const;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The value of an element $j$ for which \code{k[j] == true} and \code{operator[](j) >= operator[](i) || !k[i]} \foralli.
+  \pnum\remarks If all elements in \code k are \false, the return value is undefined.%
+  \comment{Alternatively, it could return \code{numeric_limits<value_type>::max()}.}
+\end{itemdescr}
+
 \wgSubsubsection{\datapar native handles}{datapar.native}
 \begin{itemdecl}
 native_handle_type &native_handle();
 \end{itemdecl}
 \begin{itemdescr}
+  \pnum\remarks Whether the function exists is implementation-defined.
   \pnum\returns An lvalue reference to the implementation-defined data member.
   \pnum\realnote The function exposes an implementation-defined type and interface and provides no guarantee for source and/or binary compatibility.
 \end{itemdescr}
@@ -175,6 +252,7 @@ native_handle_type &native_handle();
 const native_handle_type &native_handle() const;
 \end{itemdecl}
 \begin{itemdescr}
+  \pnum\remarks Whether the function exists is implementation-defined.
   \pnum\returns A \const lvalue reference to the implementation-defined data member.
   \pnum\realnote The function exposes an implementation-defined type and interface and provides no guarantee for source and/or binary compatibility.
 \end{itemdescr}
@@ -194,6 +272,7 @@ conditional_t<is_same_v<T, void>, datapar<U>, conditional_t<is_datapar_v<T>, T, 
 \comment{
   Should \type{Flags} really have a default?
   It might be a good idea to force users to think about alignment whenever they call load \& store.
+  cf. Section \ref{sec:flags}
 }
 \begin{itemdescr}
   \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace and either
@@ -443,30 +522,45 @@ conditional_t<(T::size() == (U::size() + Us::size()...)), T,
 \end{itemdescr}
 
 \wgSubsubsection{\datapar math library}{datapar.math}
-\begin{tabular}[h]{|lllll|}
-  \hline
-  \multicolumn{5}{|l|}{\textbf{Math Functions:}} \\
-  \code{abs} & \code{cbrt} & \code{ceil} & \code{copysign} & \code{fdim} \\
-  \code{floor} & \code{fma} & \code{fmax} & \code{fmin} & \code{fmod} \\
-  \code{frexp} & \code{hypot} & \code{ilogb} & \code{ldexp} & \code{logb} \\
-  \code{lrint} & \code{lround} & \code{modf} & \code{nan} & \code{nanf} \\
-  \code{nanl} & \code{nearbyint} & \code{nextafter} & \code{nexttoward} & \\
-  \code{remainder} & \code{remquo} & \code{rint} & \code{round} & \code{scalbln} \\
-  \code{scalbn} & \code{sqrt} & & \code{trunc} & \\
-  \hline
-  \multicolumn{5}{|l|}{\textbf{Classification/comparison Functions:}} \\
-  \code{fpclassify} & \code{isfinite} & \code{isgreater} & \code{isgreaterequal} & \code{isinf} \\
-  \code{isless} & \code{islessequal} & \code{islessgreater} & \code{isnan} & \code{isnormal} \\
-  \code{isunordered} & \code{signbit} & & & \\
-  \hline
-  \multicolumn{5}{|l|}{\textbf{Integer Functions:}} \\
-  \code{div} & \code{ldiv} & \code{lldiv} & & \\
-  \hline
-\end{tabular}
+\pnum \tab{math} summarizes the \code{<cmath>} and \code{<cstdlib>} functions that are overloaded with \datapar arguments.
+\begin{table}[h]
+  \rmfamily\smaller[1]
+  \caption{Overloads of \code{<cmath>} and \code{<cstdlib>} functions for \datapar}
+  \label{tab:math}
+  \begin{tabular}[h]{|lllll|}
+    \hline
+    \multicolumn{5}{|l|}{\textbf{Math Functions:}} \\
+    \code{abs} & \code{cbrt} & \code{ceil} & \code{copysign} & \code{fdim} \\
+    \code{floor} & \code{fma} & \code{fmax} & \code{fmin} & \code{fmod} \\
+    \code{frexp} & \code{hypot} & \code{ilogb} & \code{ldexp} & \code{logb} \\
+    \code{lrint} & \code{lround} & \code{modf} & \code{nan} & \code{nanf} \\
+    \code{nanl} & \code{nearbyint} & \code{nextafter} & \code{nexttoward} & \code{remainder} \\
+    \code{remquo} & \code{rint} & \code{round} & \code{scalbln} & \code{scalbn} \\
+    \code{sqrt} & \code{trunc} & & & \\
+    \hline
+    \multicolumn{5}{|l|}{\textbf{Classification/comparison Functions:}} \\
+    \code{fpclassify} & \code{isfinite} & \code{isgreater} & \code{isgreaterequal} & \code{isinf} \\
+    \code{isless} & \code{islessequal} & \code{islessgreater} & \code{isnan} & \code{isnormal} \\
+    \code{isunordered} & \code{signbit} & & & \\
+    \hline
+    \multicolumn{5}{|l|}{\textbf{Integer Functions:}} \\
+    \code{abs} & \code{div} & \code{labs} & \code{ldiv} & \code{llabs} \\
+    \code{lldiv} & & & & \\
+    \hline
+  \end{tabular}
+\end{table}
 \comment{
   Is there any function missing that we want to see in the first round?
   SG1 voted against trig functions (and I assume that includes \code{exp} and \code{log} as well).
 }
 
-\textit{TODO: Add wording which types are supposed to work with the above functions and how they are supposed to behave.}
+\pnum Each of these functions is provided for arguments of types \datapar[<float, Abi>], \datapar[<double, Abi>], and \datapar[<long double, Abi>]\comment{I would not mind dropping \type{long double} support.}, where \type{Abi} is any of the \code{datapar_abi} types supported by the implementation.
+The detailed signatures are:
+\lstinputlisting[]{math.cpp}
 
+\pnum The signatures of the integer functions are:
+\lstinputlisting[]{imath.cpp}
+
+\pnum If \code{abs()} is called with an argument of type \datapar[<X, Abi>] for which \code{is_unsigned<X>::value} is \true, the program is ill-formed.
+
+% vim: tw=0 spell sw=2

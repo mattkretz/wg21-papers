@@ -25,6 +25,9 @@ namespace std {
       // implicit type conversion constructor
       template <class U> datapar(datapar<U, Abi>);
 
+      // load constructor
+      template <class U, class Flags> datapar(const U *mem, Flags);
+
       // scalar access:
       reference operator[](size_type);
       value_type operator[](size_type) const;
@@ -42,6 +45,16 @@ namespace std {
       // unary operators (for any T)
       datapar operator+() const;
       datapar operator-() const;
+
+      // reductions
+      value_type sum() const;
+      value_type sum(mask_type) const;
+      value_type product() const;
+      value_type product(mask_type) const;
+      value_type min() const;
+      value_type min(mask_type) const;
+      value_type max() const;
+      value_type max(mask_type) const;
 
       // access to the internals for implementation-specific extensions
       native_handle_type &native_handle();

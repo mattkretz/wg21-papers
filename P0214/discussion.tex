@@ -161,7 +161,7 @@ Typically, a developer will think no more of it if his code compiles on his mach
 If \code{arbitrary<float>() * arbitrary<int>()} just happens to compile (which is likely) then this is the code that will get checked in to the repository.
 Note that with the existence of the \type{fundamental} class template, the \code N parameter of the \type{arbitrary} class would not have a default value and thus force the user to think a second longer about portability.
 
-\subsection{Native Handle}
+\subsection{Native Handle}\label{sec:native}
 The presence of a \code{native_handle} function for accessing an internal data member such as e.g. a vector builtin or SIMD intrinsic type is seen as an important feature for adoption in the target communities.
 Without such a handle the user is constrained to work within the (limited) API defined by the standard.
 Many SIMD instruction sets have domain-specific instructions that will not easily be usable (if at all) via the standardized interface.
@@ -173,3 +173,34 @@ I would be happy to settle on an alternative to exposing an lvalue reference to 
 Consider implementation-defined support casting (\code{static_cast}?) between \datapar and non-standard SIMD extension types.
 My understanding is that there could not be any normative wording about such a feature.
 However, I think it could be useful to add a non-normative note about making \code{static_cast}(?) able to convert between such non-standard extensions and \datapar.
+
+\subsection{Load \& Store Flags}\label{sec:flags}
+SIMD loads and stores require at least an alignment option.
+This is in contrast to implicit loads and stores present in \CC{}, where alignment is always assumed.
+Many SIMD instruction sets allow more options, though:
+\begin{itemize}
+  \item Streaming, non-temporal loads and stores
+  \item Software prefetching
+\end{itemize}
+In the Vc library I have added these as options in the load store flag parameter of the \code{load} and \code{store} functions.
+However, non-temporal loads \& stores and prefetching are also useful for the existing builtin types.
+I would like guidance on this question: should the general direction be to stick to \emph{only} alignment options for \datapar loads and stores?
+
+The other question is on the default of the load and store flags.
+Some argue for setting the default to \code{aligned}, as that's what the user should always aim for and is most efficient.
+Others argue for \code{unaligned} since this is safe per default.
+The Vc library before version 1.0 used aligned loads and stores per default.
+After the guidance from SG1 I changed the default to unaligned loads and stores with the Vc 1.0 release.
+Changing the default is probably the worst that could be done, though.\footnote{As I realized too late.}
+For Vc 2.0 I will drop the default.
+
+For \datapar I prefer no default:
+\begin{itemize}
+  \item This makes it obvious that the API has the alignment option.
+    Users should not just take the default and think no more of it.
+  \item If we decide to keep the load constructor, the alignment parameter (without default) nicely disambiguate the load from the broadcast.
+  \item The right default would be application/domain/experience specific.
+  \item Users can write their own load/store wrapper functions that implement their chosen default.
+\end{itemize}
+
+% vim: tw=0 sw=2 spell
