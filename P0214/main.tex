@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Data-Parallel Vector Types \& Operations}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P0214R1}
+\newcommand\wgDocumentNumber{D0214R2}
 \newcommand\wgGroup{LEWG / SG1}
 \newcommand\wgAcknowledgements{
   This work was supported by GSI Helmholtzzentrum für Schwerionenforschung
@@ -81,6 +81,11 @@ Previous revision: \citep{P0214R0}.
 \end{itemize}
   %\todo Fix missing flag objects and specify the freedom for implementations to add additional flags and that \code{operator|} must work.
   %\todo Added usage examples
+
+\subsection{Changes from R1}
+\begin{itemize}
+  \item Fixed converting constructor synopsis to also allow varying Abi types.
+\end{itemize}
 
 \input{intro}
 \input{wording}

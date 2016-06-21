@@ -23,7 +23,7 @@ namespace std {
       datapar(value_type);
 
       // implicit type conversion constructor
-      template <class U> datapar(datapar<U, Abi>);
+      template <class U, class Abi2> datapar(datapar<U, Abi2>);
 
       // load constructor
       template <class U, class Flags> datapar(const U *mem, Flags);
