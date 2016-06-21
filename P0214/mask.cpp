@@ -23,7 +23,7 @@ namespace std {
       mask(value_type);
 
       // implicit type conversion constructor
-      template <class U> mask(mask<U, Abi>);
+      template <class U, class Abi2> mask(mask<U, Abi2>);
 
       // load constructor
       template <class Flags> mask(const bool *mem, Flags);

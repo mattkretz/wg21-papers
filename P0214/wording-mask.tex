@@ -42,11 +42,11 @@ mask(value_type);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U> mask(mask<U, Abi> x);
+template <class U, class Abi2> mask(mask<U, Abi2> x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This constructor shall not participate in overload resolution unless
-    \datapar[<U, Abi>] is implicitly convertible to \datapar[<T, Abi>].
+    \datapar[<U, Abi2>] is implicitly convertible to \datapar[<T, Abi>].
   \pnum\effects Constructs an object of type \mask where the $i$-th element equals \code{x[i]} \foralli.
 \end{itemdescr}
 
