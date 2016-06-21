@@ -18,15 +18,13 @@ Rationales:
 
   \item[reference]
     Used as the return type of the non-const scalar subscript operator.
-    This may use implementation-defined means to solve possible type aliasing issues.
-
-  \item[const_reference]
-    Used as the return type of the const scalar subscript operator.
-    From my experience with Vc, it is safest to actually not use a const lvalue reference here, but a temporary.
 
   \item[mask_type]
-    The natural mask type for this \datapar instantiation.
+    The natural \mask type for this \datapar instantiation.
     This type is used as return type of compares and write-mask on assignments.
+
+  \item[datapar_type]
+    The natural \datapar type for this \mask instantiation.
 
   \item[size_type]
     Standard member type used for \code{size()} and \code{operator[]}.
