@@ -54,17 +54,15 @@ The broadcast constructor is not declared as \code{explicit} to ease the use of 
 The operations where such a conversion should not be implicit consequently need to use SFINAE / concepts to inhibit the conversion.
 
 \subsection{Aliasing of Subscript Operators}
-Note that the way the subscript operators are declared, some kind of type punning needs to happen.\footnote{
-  Note: The vector builtins of clang do not suffice to implement the subscript operators, even though they support subscripting the vector object.
-  An implementation might have to use a mechanism such as the \code{gnu::may_alias} attribute.
-}
-An lvalue reference to \type{register_value_type} needs to reference the same object as is contained as one element of the \datapar object.
-An alternative to an lvalue reference would be a smart reference object.
-This would require progress on language improvements for smart references first.
-
-The subscript operator of the \mask type, on the other hand, may not use lvalue references and must use a smart reference wrapper instead.
-This is necessary because there are systems where a single boolean element is stored as a single bit.
-To ensure source compatibility the return type must therefore be a smart reference on all implementations.
+The subscript operators return an rvalue.
+The const overload returns a copy of the element.
+The non-const overload returns a smart reference.
+This reference behaves mostly like an lvalue reference, but without the requirement to implement assignment via type punning.
+At this point the specification of the smart reference is very conservative / restrictive:
+The reference type is neither copyable nor movable.
+The intention is to avoid users to program like the operator returned an lvalue reference.
+The return type is significantly larger than an lvalue reference and harder to optimize when passed around.
+The restriction thus forces users to do element modification directly on the \datapar / \mask objects.
 
 \subsection{Parameters of Binary and Compare Operators}
 It is easier to implement and possibly easier to specify these operators if the signature is specified as:
