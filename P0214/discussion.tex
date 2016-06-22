@@ -62,6 +62,11 @@ The intention is to avoid users to program like the operator returned an lvalue 
 The return type is significantly larger than an lvalue reference and harder to optimize when passed around.
 The restriction thus forces users to do element modification directly on the \datapar / \mask objects.
 
+Guidance from SG1 at JAX 2016:\\
+\wgPoll{Should subscript operator return an lvalue reference?}{0  & 6 & 10 & 2 & 1}
+
+\wgPoll{Should subscript operator return a “smart reference”?}{1  & 7 & 10 & 0 & 0}
+
 \subsection{Parameters of Binary and Compare Operators}
 It is easier to implement and possibly easier to specify these operators if the signature is specified as:
 \begin{itemdecl}
