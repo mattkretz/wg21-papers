@@ -379,14 +379,23 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
             \item \code{make_unsigned_t<C>} otherwise.
           \end{itemize}
       \end{itemize}
-    \item Let \commonabi{A0}{A1}{T} identify the type:
+    \item Let \commonabi{V0}{V1}{T} identify the type:
+      % Consider:
+      % if datapar<int>::size() == datapar<float>::size() then the following may not happen:
+      % datapar<int> + datapar<float, fixed_size> -> datapar<float>
+      % because datapar<int> is not convertible to datapar<float>
+      %
+      % OTOH, it would be nice to get:
+      % datapar<float> + datapar<int, fixed_size> -> datapar<float>, because that type was one of the input types
+      % datapar<long> + datapar<unsigned int, fixed_size> -> datapar<unsigned long
+      % datapar<float, fixed_size> + datapar<double, fixed_size> -> datapar<double, fixed_size> (i.e. never native)
       \begin{itemize}
-        \item \type{A0} if \type{A0} equals \type{A1}. % the remaining cases therefore only cover one native ABI and one fixed_size<N>
-        \item Otherwise, \code{abi_for_size_t<T, datapar_size_v<T, A0>>} if it is equal to either \type{A0} or \type{A1}.
-        \item Otherwise, \fixedsizescoped{}\code{<datapar_size_v<T, A0>>}.
+        \item \type{V0::abi_type} if \type{V0::abi_type} equals \type{V1::abi_type}. % the remaining cases therefore only cover one native ABI and one fixed_size<N>
+        \item Otherwise, \code{abi_for_size_t<T, V0::size()>} if both \type{V0} and \type{V1} are implicitly convertible to it.
+        \item Otherwise, \fixedsizescoped{}\code{<\type{V0}::size()>}.
       \end{itemize}
     \item If \code{is_datapar_v<U> == true}
-      then the return type is \datapar[<\common{T}{U::value_type}, \commonabi{Abi}{U::abi_type}{\common{T}{U::value_type}}>].
+      then the return type is \datapar[<\common{T}{U::value_type}, \commonabi{datapar<T, Abi>}{U}{\common{T}{U::value_type}}>].
       \wgNote{
         This rule also matches if \code{datapar_size_v<T, Abi> != U::size()}.
         The overload resolution participation condition in the next paragraph discards the operator.
@@ -395,10 +404,12 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
       the return type shall be \datapar{}\type{<T, Abi>}.
     \item Otherwise, if \type T is integral and \type U is \uint
       the return type shall be \datapar{}\code{<make_unsigned_t<T>, Abi>}.
-    \item Otherwise, if \type U is a fundamental arithmetic type or \type U is convertible to \intt
-      then the return type shall be \datapar[<\common{T}{U}, \commonabi{Abi}{\fixedsizescoped{}\code{<datapar_size_v<T, Abi>>}}{\common{T}{U}}>].
+    \item Otherwise, if \type U is a fundamental arithmetic type
+      then the return type shall be \datapar[<\common{T}{U}, \commonabi{datapar<T, Abi>}{datapar<U, \fixedsizescoped{}<datapar_size_v<T, Abi>>>}{\common{T}{U}}>].
+    \item Otherwise, if \type U is convertible to \intt
+      then the return type shall be \datapar[<\common{T}{U}, \commonabi{datapar<T, Abi>}{datapar<int, \fixedsizescoped{}<datapar_size_v<T, Abi>>>}{\common{T}{U}}>].
     \item Otherwise, if \type U is implicitly convertible to \datapar{}\type{<V, A>}, where \type V and \type A are determined according to standard template type deduction,
-      then the return type shall be \datapar[<\common{T}{V}, \commonabi{Abi}{A}{\common{T}{V}}>].
+      then the return type shall be \datapar[<\common{T}{V}, \commonabi{datapar<T, Abi>}{datapar<V, A>}{\common{T}{V}}>].
     \item Otherwise, if \type U is implicitly convertible to \datapar{}\type{<T, Abi>},
       the return type shall be \datapar{}\type{<T, Abi>}.
     \item Otherwise the operator does not participate in overload resolution.%
