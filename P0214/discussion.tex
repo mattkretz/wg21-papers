@@ -107,7 +107,7 @@ By declaring the return type as \void the above expressions become ill-formed, w
 
 \subsection{Fundamental SIMD Type or Not?}
 \subsubsection{The Issue}
-There has been renewed discussion on the reflectors over the question whether \CC{} should define a fundamental, native SIMD type (let us call it \type{fundamental<T>}) and a generic data-parallel type on top which supports an arbitrary number of elements (call it \type{arbitrary<T, N>}).
+There was substantial discussion on the reflectors and SG1 meetings over the question whether \CC{} should define a fundamental, native SIMD type (let us call it \type{fundamental<T>}) and additionally a generic data-parallel type which supports an arbitrary number of elements (call it \type{arbitrary<T, N>}).
 The alternative to defining both types is to only define \type{arbitrary<T, N = default_size<T>>}, since it encompasses the \type{fundamental<T>} type.
 
 With regard to this proposal this second approach would add a third template parameter to \datapar and \mask as shown in \lst{datapar N}.
@@ -161,6 +161,47 @@ Seeing the need for using such a pattern is the issue.
 Typically, a developer will think no more of it if his code compiles on his machine.
 If \code{arbitrary<float>() * arbitrary<int>()} just happens to compile (which is likely) then this is the code that will get checked in to the repository.
 Note that with the existence of the \type{fundamental} class template, the \code N parameter of the \type{arbitrary} class would not have a default value and thus force the user to think a second longer about portability.
+
+\subsubsection{Progress}
+SG1 Guidance at JAX 2016:\\
+\wgPoll{Specify datapar width using ABI tag, with a special template tag for fixed size.}{3 & 7 & 0 & 0 & 1}
+\wgPoll{Specify datapar width using <T, N, abi>, where abi is not specified by the user.}{1 & 2 & 5 & 2 & 1}
+
+At the Jacksonville meeting, SG1 decided to continue with the \datapar[<T, Abi>] class template, with the addition of a new Abi type that denotes a user-requested number of elements in the vector (\fixedsizeN).
+This has the following implications:
+\begin{itemize}
+  \item There is only one class template with a common interface for \textit{fundamental} and \textit{arbitrary} (\fixedsize) vector types.
+  \item There are slight differences in the conversion semantics for \datapar types with the \fixedsize Abi type.
+    This may look like the \code{vector<bool>} mistake all over again.
+    I'll argue below why I believe this is not the case.
+  \item The \textit{fundamental} class instances could be implemented in such a way that they do not guarantee ABI compatibility on a given architecture where translation units are compiled with different compiler flags (for micro-architectural differences).
+  \item The \fixedsize class instances, on the other hand, could be implemented to be the ABI stable types (if an implementation thinks this is an important feature).
+    In implementation terms this means that \textit{fundamental} types are allowed to be passed via registers on function calls.
+    \fixedsize types can be implemented in such a way that they are only passed via the stack, and thus an implementation only needs to ensure equal alignment and memory representation across TU borders for a given \type T, \code N.
+\end{itemize}
+
+The conversion differences between the \textit{fundamental} and \fixedsize class template instances are the main motivation for having a distinction (cf. discussion above).
+The differences are chosen such that, in general, \textit{fundamental} types are more restrictive and do not turn into \fixedsize types on any operation that involves no \fixedsize types.
+Operations of \fixedsize types allow easier use of mixed precision code as long as no elements need to be dropped / generated (i.e. the number of elements of all involved \datapar objects is equal or a builtin arithmetic type is broadcast).
+
+Examples:
+
+\begin{enumerate}
+  \item Mixed \intt--\float operations
+\smallskip\begin{lstlisting}[style=Vc]
+using floatv = datapar<float>;  // native ABI
+using float_sized_abi = datapar_abi::fixed_size<floatv::size()>;
+using intv = datapar<int, float_sized_abi>;
+
+auto x = floatv() + intv();/*! \label{lstline:1} */
+floatv y = floatv() + intv();/*! \label{lstline:2} */
+\end{lstlisting}
+    Line \ref{lstline:1} is well-formed:
+    It states that $N$ (= \type{floatv}\code{::size()}) float elements are concurrently and component-wise added to $N$ \intt elements.
+    Effectively, the operands are converted to \datapar[<\float, \fixedsizeN{}>] and subsequently the type of \code x is the same.
+    Since implicit conversion from \datapar[<T, \fixedsizeN{}>] to \datapar[<\type U, \type{Abi}>] is allowed whenever \code{N == \datapar{}<\type U, \type{Abi}>::size()}, the construction of \code y on line \ref{lstline:2} is valid as well.
+\end{enumerate}
+
 
 \subsection{Native Handle}\label{sec:native}
 The presence of a \code{native_handle} function for accessing an internal data member such as e.g. a vector builtin or SIMD intrinsic type is seen as an important feature for adoption in the target communities.
