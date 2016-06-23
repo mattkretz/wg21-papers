@@ -36,8 +36,8 @@ namespace std {
       mask operator!() const;
 
       // access to the internals for implementation-specific extensions
-      native_handle_type &native_handle();
-      const native_handle_type &native_handle() const;
+      native_handle_type native_handle();
+      const native_handle_type native_handle() const;
     };
   }
 }

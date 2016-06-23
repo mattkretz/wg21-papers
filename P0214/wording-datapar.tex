@@ -240,21 +240,11 @@ value_type max(mask_type k) const;
 
 \wgSubsubsection{\datapar native handles}{datapar.native}
 \begin{itemdecl}
-native_handle_type &native_handle();
+native_handle_type native_handle();
+const native_handle_type native_handle() const;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks Whether the function exists is implementation-defined.
-  \pnum\returns An lvalue reference to the implementation-defined data member.
-  \pnum\realnote The function exposes an implementation-defined type and interface and provides no guarantee for source and/or binary compatibility.
-\end{itemdescr}
-
-\begin{itemdecl}
-const native_handle_type &native_handle() const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\remarks Whether the function exists is implementation-defined.
-  \pnum\returns A \const lvalue reference to the implementation-defined data member.
-  \pnum\realnote The function exposes an implementation-defined type and interface and provides no guarantee for source and/or binary compatibility.
+  \pnum\returns An implementation-defined reference or pointer to an object that may be usable with implementation-specific extensions.
 \end{itemdescr}
 
 \wgSubsection{\type{datapar} non-member operations}{datapar.nonmembers}
