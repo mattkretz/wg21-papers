@@ -73,7 +73,7 @@ template <class U, class Flags> datapar(const U *mem, Flags);
 \begin{itemdescr}
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{static_cast<T>(mem[i])} \foralli.
   \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
-  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\datapar, \type U>}, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\datapar, \type U>}, the behavior is undefined.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar subscript operators}{datapar.subscr}
@@ -265,15 +265,10 @@ const native_handle_type &native_handle() const;
   But we still don't have customized decay on template deduction \ldots
 }
 \begin{itemdecl}
-template <class T = void, class U, class Flags = load_default>
+template <class T = void, class U, class Flags>
 conditional_t<is_same_v<T, void>, datapar<U>, conditional_t<is_datapar_v<T>, T, datapar<T>>> load(
-    const U *, Flags = Flags{});
+    const U *, Flags);
 \end{itemdecl}
-\comment{
-  Should \type{Flags} really have a default?
-  It might be a good idea to force users to think about alignment whenever they call load \& store.
-  cf. Section \ref{sec:flags}
-}
 \begin{itemdescr}
   \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace and either
   \begin{itemize}
@@ -283,24 +278,24 @@ conditional_t<is_same_v<T, void>, datapar<U>, conditional_t<is_datapar_v<T>, T, 
   \end{itemize}
   \pnum\returns A new \datapar object with each element $i$ initialized to \code{static_cast<T>(x[i])} \foralli.
   \pnum\remarks If the \code{size()} function of the return type returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
-  \pnum\remarks If the third template parameter is of type \type{flags::aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\textit{return type}, \type U>}, the behavior is undefined.
+  \pnum\remarks If the third template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\textit{return type}, \type U>}, the behavior is undefined.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar store functions}{datapar.store}
 \begin{itemdecl}
-template <class T, class Abi, class U, class Flags = flags::store_default>
-void store(const datapar<T, Abi> &x, U *y, Flags = Flags{});
+template <class T, class Abi, class U, class Flags>
+void store(const datapar<T, Abi> &x, U *y, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace and \type T is implicitly or explicitly convertible\comment{ditto.} to \type U.
   \pnum\effects Copies each element $i$ as if \code{y[i] = static_cast<U>(x[i])} \foralli.
   \pnum\remarks If \datapar[<T, Abi>]\code{::size()} is greater than the number of values pointed to by \code y, the behavior is undefined.
-  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::aligned_tag} and the pointer value of \code y is not a multiple of \code{memory_alignment<\datapar[<T, Abi>], \type U>}, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value of \code y is not a multiple of \code{memory_alignment<\datapar[<T, Abi>], \type U>}, the behavior is undefined.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T0, class A0, class U, class T1, class A1, class Flags = flags::store_default>
-void store(const datapar<T0, A0> &x, U *y, const mask<T1, A1> &k, Flags = Flags{});
+template <class T0, class A0, class U, class T1, class A1, class Flags>
+void store(const datapar<T0, A0> &x, U *y, const mask<T1, A1> &k, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace and \type T is implicitly or explicitly convertible\comment{ditto.} to \type U and \mask[<T1, A1>] is implicitly convertible to \mask[<T0, A0>].
@@ -310,7 +305,7 @@ void store(const datapar<T0, A0> &x, U *y, const mask<T1, A1> &k, Flags = Flags{
     Masked stores only write to the bytes in memory selected by the \code k argument.
     This prohibits implementations that load, blend, and store the complete vector.
   }
-  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::aligned_tag} and the pointer value of \code y is not a multiple of \code{memory_alignment<\datapar[<T0, A0>], \type U>}, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value of \code y is not a multiple of \code{memory_alignment<\datapar[<T0, A0>], \type U>}, the behavior is undefined.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar binary operators}{datapar.binary}
