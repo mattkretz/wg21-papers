@@ -518,44 +518,12 @@ conditional_t<(T::size() == (U::size() + Us::size()...)), T,
 \end{itemdescr}
 
 \wgSubsubsection{\datapar math library}{datapar.math}
-\pnum \tab{math} summarizes the \code{<cmath>} and \code{<cstdlib>} functions that are overloaded with \datapar arguments.
-\begin{table}[h]
-  \rmfamily\smaller[1]
-  \caption{Overloads of \code{<cmath>} and \code{<cstdlib>} functions for \datapar}
-  \label{tab:math}
-  \begin{tabular}[h]{|lllll|}
-    \hline
-    \multicolumn{5}{|l|}{\textbf{Math Functions:}} \\
-    \code{abs} & \code{cbrt} & \code{ceil} & \code{copysign} & \code{fdim} \\
-    \code{floor} & \code{fma} & \code{fmax} & \code{fmin} & \code{fmod} \\
-    \code{frexp} & \code{hypot} & \code{ilogb} & \code{ldexp} & \code{logb} \\
-    \code{lrint} & \code{lround} & \code{modf} & \code{nan} & \code{nanf} \\
-    \code{nanl} & \code{nearbyint} & \code{nextafter} & \code{nexttoward} & \code{remainder} \\
-    \code{remquo} & \code{rint} & \code{round} & \code{scalbln} & \code{scalbn} \\
-    \code{sqrt} & \code{trunc} & & & \\
-    \hline
-    \multicolumn{5}{|l|}{\textbf{Classification/comparison Functions:}} \\
-    \code{fpclassify} & \code{isfinite} & \code{isgreater} & \code{isgreaterequal} & \code{isinf} \\
-    \code{isless} & \code{islessequal} & \code{islessgreater} & \code{isnan} & \code{isnormal} \\
-    \code{isunordered} & \code{signbit} & & & \\
-    \hline
-    \multicolumn{5}{|l|}{\textbf{Integer Functions:}} \\
-    \code{abs} & \code{div} & \code{labs} & \code{ldiv} & \code{llabs} \\
-    \code{lldiv} & & & & \\
-    \hline
-  \end{tabular}
-\end{table}
-\comment{
-  Is there any function missing that we want to see in the first round?
-  SG1 voted against trig functions (and I assume that includes \code{exp} and \code{log} as well).
-}
-
-\pnum Each of these functions is provided for arguments of types \datapar[<float, Abi>], \datapar[<double, Abi>], and \datapar[<long double, Abi>]\comment{I would not mind dropping \type{long double} support.}, where \type{Abi} is any of the \code{datapar_abi} types supported by the implementation.
-The detailed signatures are:
 \lstinputlisting[]{math.cpp}
 
-\pnum The signatures of the integer functions are:
-\lstinputlisting[]{imath.cpp}
+\pnum Each listed function concurrently applies the indicated mathematical function component-wise.
+The results per component are not required to be binary equal to the application of the function which is overloaded for the element type.
+\comment{Neither the C nor the \CC{} standard say anything about expected error/precision.
+It seems returning 0 from all functions is a conforming implementation --- just bad QoI.}
 
 \pnum If \code{abs()} is called with an argument of type \datapar[<X, Abi>] for which \code{is_unsigned<X>::value} is \true, the program is ill-formed.
 
