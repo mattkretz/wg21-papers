@@ -128,7 +128,7 @@ void store(const mask<T0, A0> &x, bool *y, const mask<T1, A1> &k, Flags);
     Masked stores only write to the bytes in memory selected by the \code k argument.
     This prohibits implementations that load, blend, and store the complete vector.
   }
-  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value of \code y is not a multiple of \code{memory_alignment<\datapar[<T0, A0>], \type U>}, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value of \code y is not a multiple of \code{memory_alignment<\mask[<T0, A0>], \type U>}, the behavior is undefined.
 \end{itemdescr}
 
 \wgSubsubsection{\mask binary operators}{mask.binary}
