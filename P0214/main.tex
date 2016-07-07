@@ -97,6 +97,15 @@ Previous revision: \citep{P0214R1}.
     \chck Added an \code{overaligned<N>} load / store flag.
     \chck Dropped the ampersand on \code{native_handle} (no strong preference).
     \chck Completed the set of math functions (i.e. add trig, log, and exp).
+  \color{black}\item[---] LEWG guidance:
+    \todo Drop \code{native_handle} and add non-normative wording for supporting \code{static_cast} to implementation-defined SIMD extensions.
+    \todo Drop non-member load and store functions.
+    Instead rely on the constructor for loads and maybe have a member load function.
+    Have a member store function.
+    Look for different names because of the unfortunate inconsistency with \std\type{atomic}.
+    \todo Drop member function reductions in favor of algorithm overloads.
+    See how \code{where} could be integrated properly to do masked reductions.
+    \todo Consider \code{cardinality} instead of \code{popcount} (or different bikeshed colors).
 \end{itemize}
 
 \input{intro}
