@@ -85,15 +85,16 @@ Previous revision: \citep{P0214R0}.
 \subsection{Changes from R1}
 Previous revision: \citep{P0214R1}.
 \begin{itemize}
-  \item Fixed converting constructor synopsis of \datapar and \mask to also allow varying Abi types.
-  \item Modified the wording of \code{\mask{}::native_handle()} to make the existence of the functions implementation-defined.
-  \item Updated the discussion of member types to reflect the changes in R1.
-  \item Added SG1 poll results from JAX
-  \item Fixed \code{\textit{commonabi}} to not invent native Abi that makes the operator ill-formed.
-  \item Dropped the default load / store flags.
-  \item Renamed the (un)aligned flags to \code{element_aligned} and \code{vector_aligned}.
-  \item Added an \code{overaligned<N>} load / store flag.
-  \item Dropped the ampersand on \code{native_handle}.
+    \chck Fixed converting constructor synopsis of \datapar and \mask to also allow varying Abi types.
+    \chck Modified the wording of \code{\mask{}::native_handle()} to make the existence of the functions implementation-defined.
+    \chck Updated the discussion of member types to reflect the changes in R1.
+    \chck Added SG1 poll results from JAX
+    \chck Fixed \code{\textit{commonabi}} to not invent native Abi that makes the operator ill-formed.
+  \color{black}\item[---] SG1 guidance:
+    \chck Dropped the default load / store flags.
+    \chck Renamed the (un)aligned flags to \code{element_aligned} and \code{vector_aligned}.
+    \chck Added an \code{overaligned<N>} load / store flag.
+    \chck Dropped the ampersand on \code{native_handle} (no strong preference).
 \end{itemize}
 
 \input{intro}
