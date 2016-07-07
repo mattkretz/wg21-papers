@@ -10,7 +10,7 @@ The header \code{<datapar>} defines two class templates (\datapar, and \mask), s
 namespace datapar_abi {
   struct scalar {};
   template <int N> struct fixed_size {};
-  // implementation-defined tag types, e.g. sse, avx, avx512, neon, ...
+  // implementation-defined tag types, e.g. sse, avx, neon, altivec, ...
   typedef implementation_defined compatible;
   typedef implementation_defined native;
 }
@@ -34,6 +34,7 @@ namespace datapar_abi {
 
   \pnum
   An implementation may choose to implement data-parallel execution for many different targets.
+  An additional implementation-defined tag type should be added to the \code{datapar_abi} namespace, for each target the implementation supports.
   \wgNote{There can certainly be more than one tag type per (micro-)architecture, e.g. to support different vector lengths or partial register usage.}
   All tag types an implementation supports shall be present independent of the target architecture determined at invocation of the compiler.
 
