@@ -25,6 +25,9 @@
 \newcommand\dataparEP{\code{execution\_policy::}\type{datapar}\xspace}
 \newcommand\seqEP{\code{execution\_policy::}\type{seq}\xspace}
 
+\newcommand\common[2]{\code{\textit{common}(\type{#1}, \type{#2})}}
+\newcommand\commonabi[3]{\code{\textit{commonabi}(\type{#1}, \type{#2}, \type{#3})}}
+
 \usepackage{pifont}
 
 \newcommand\foralli{for all $i \in [0\ldots \code{size()}[$\xspace}
@@ -88,10 +91,11 @@ Previous revision: \citep{P0214R1}.
     \chck Fixed converting constructor synopsis of \datapar and \mask to also allow varying Abi types.
     \chck Modified the wording of \code{\mask{}::native_handle()} to make the existence of the functions implementation-defined.
     \chck Updated the discussion of member types to reflect the changes in R1.
-    \chck Added SG1 poll results from JAX
+    \chck Added all previous SG1 straw poll results.
     \chck Fixed \code{\textit{commonabi}} to not invent native Abi that makes the operator ill-formed.
     \chck Dropped table of math functions.
     \chck Be more explicit about the implementation-defined Abi types.
+    \chck Discuss resolution of the \fixedsizeN design (\ref{sec:fixedsize progress}).
   \color{black}\item[---] SG1 guidance:
     \chck Dropped the default load / store flags.
     \chck Renamed the (un)aligned flags to \code{element_aligned} and \code{vector_aligned}.

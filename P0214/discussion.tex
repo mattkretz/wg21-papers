@@ -162,7 +162,7 @@ Typically, a developer will think no more of it if his code compiles on his mach
 If \code{arbitrary<float>() * arbitrary<int>()} just happens to compile (which is likely) then this is the code that will get checked in to the repository.
 Note that with the existence of the \type{fundamental} class template, the \code N parameter of the \type{arbitrary} class would not have a default value and thus force the user to think a second longer about portability.
 
-\subsubsection{Progress}
+\subsubsection{Progress}\label{sec:fixedsize progress}
 SG1 Guidance at JAX 2016:\\
 \wgPoll{Specify datapar width using ABI tag, with a special template tag for fixed size.}{3 & 7 & 0 & 0 & 1}
 \wgPoll{Specify datapar width using <T, N, abi>, where abi is not specified by the user.}{1 & 2 & 5 & 2 & 1}
@@ -194,12 +194,31 @@ using float_sized_abi = datapar_abi::fixed_size<floatv::size()>;
 using intv = datapar<int, float_sized_abi>;
 
 auto x = floatv() + intv();/*! \label{lstline:1} */
-floatv y = floatv() + intv();/*! \label{lstline:2} */
+intv y = floatv() + intv();/*! \label{lstline:2} */
 \end{lstlisting}
     Line \ref{lstline:1} is well-formed:
-    It states that $N$ (= \type{floatv}\code{::size()}) float elements are concurrently and component-wise added to $N$ \intt elements.
-    Effectively, the operands are converted to \datapar[<\float, \fixedsizeN{}>] and subsequently the type of \code x is the same.
-    Since implicit conversion from \datapar[<T, \fixedsizeN{}>] to \datapar[<\type U, \type{Abi}>] is allowed whenever \code{N == \datapar{}<\type U, \type{Abi}>::size()}, the construction of \code y on line \ref{lstline:2} is valid as well.
+    It states that $N$ (= \type{floatv}\code{::size()}) additions shall be executed concurrently.
+    The type of \code{x} is \datapar[<\float{}>], because it stores $N$ elements and both types \type{intv} and \type{floatv} are implicitly convertible to \datapar[<\float{}>].
+    Line \ref{lstline:2} is also well-formed because implicit conversion from \datapar[<\type T, \type{Abi}>] to \datapar[<\type U, \fixedsizeN{}>] is allowed whenever \code{N == \datapar{}<\type T, \type{Abi}>::size()}.
+
+  \item Native \intt vectors
+\smallskip\begin{lstlisting}[style=Vc]
+using intv = datapar<int>;  // native ABI
+using int_sized_abi = datapar_abi::fixed_size<intv::size()>;
+using floatv = datapar<float, int_sized_abi>;
+
+auto x = floatv() + intv();/*! \label{lstline:3} */
+intv y = floatv() + intv();/*! \label{lstline:4} */
+\end{lstlisting}
+    Line \ref{lstline:3} is well-formed:
+    It states that $N$ (= \type{intv}\code{::size()}) additions shall be executed concurrently.
+    The type of \code{x} is \datapar[<\floatv{}, \type{int_sized_abi}>] (i.e. \type{floatv}) and never \datapar[<\float{}>], because \ldots
+    \begin{enumerate}
+      \item[\ldots] the \type{Abi} types of \type{intv} and \type{floatv} are not equal.
+      \item[\ldots] either \code{\datapar[<\float{}>]::size() != N} or \type{intv} is not implicitly convertible to \datapar[<\float{}>].
+      \item[\ldots] the last rule for \commonabi{V0}{V1}{T} sets the \type{Abi} type to \type{int_sized_abi}.
+    \end{enumerate}
+    Line \ref{lstline:4} is also well-formed because implicit conversion from \datapar[<\type T, \fixedsizeN{}>] to \datapar[<\type U, \type{Abi}>] is allowed whenever \code{N == \datapar{}<\type U, \type{Abi}>::size()}.
 \end{enumerate}
 
 
