@@ -10,13 +10,7 @@ The type \bool is not allowed.
 
 \pnum The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
 
-\begin{itemdecl}
-typedef implementation_defined native_handle_type;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum The \type{native_handle_type} member type is an alias for the \code{native_handle()} member function return type.
-  It is used to expose an implementation-defined handle for implementation- and target-specific extensions.
-\end{itemdescr}
+\pnum\realnote Implementations are encouraged to enable \code{static_cast}ing from/to implementation-defined SIMD mask types.
 
 \begin{itemdecl}
 static constexpr size_type size();
@@ -80,15 +74,6 @@ mask operator!() const;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A mask object with the $i$-th element set to the logical negation \foralli.
-\end{itemdescr}
-
-\wgSubsubsection{\mask native handles}{mask.native}
-\begin{itemdecl}
-native_handle_type native_handle();
-const native_handle_type native_handle() const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\returns An implementation-defined reference or pointer to an object that may be usable with implementation-specific extensions.
 \end{itemdescr}
 
 \wgSubsection{\type{mask} non-member operations}{mask.nonmembers}

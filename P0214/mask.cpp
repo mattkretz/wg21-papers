@@ -2,9 +2,7 @@ namespace std {
   namespace experimental {
     template <class T, class Abi = datapar_abi::compatible> class mask {
     public:
-      typedef implementation_defined native_handle_type;
       typedef bool value_type;
-      typedef implementation_defined register_value_type;
       typedef implementation_defined reference;
       typedef datapar<T, Abi> datapar_type;
       typedef size_t size_type;
@@ -34,10 +32,6 @@ namespace std {
 
       // negation:
       mask operator!() const;
-
-      // access to the internals for implementation-specific extensions
-      native_handle_type native_handle();
-      const native_handle_type native_handle() const;
     };
   }
 }
