@@ -374,7 +374,7 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
       % datapar<float, fixed_size> + datapar<double, fixed_size> -> datapar<double, fixed_size> (i.e. never native)
       \begin{itemize}
         \item \type{V0::abi_type} if \type{V0::abi_type} equals \type{V1::abi_type}. % the remaining cases therefore only cover one native ABI and one fixed_size<N>
-        \item Otherwise, \code{abi_for_size_t<T, V0::size()>} if both \type{V0} and \type{V1} are implicitly convertible to it.
+        \item Otherwise, \code{abi_for_size_t<T, V0::size()>} if both \type{V0} and \type{V1} are implicitly convertible to \datapar[<\type T, abi_for_size_t<T, V0::size()>>].
         \item Otherwise, \fixedsizescoped{}\code{<\type{V0}::size()>}.
       \end{itemize}
     \item If \code{is_datapar_v<U> == true}
