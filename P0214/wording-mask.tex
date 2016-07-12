@@ -99,7 +99,7 @@ template <class T, class Flags> T load(const bool *, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace and \code{is_mask_v<T>}.
-  \pnum\returns A new \mask object with each element $i$ initialized to \code{x[i]} \foralli.
+  \pnum\returns A \mask object with each element $i$ initialized to \code{x[i]} \foralli.
   \pnum\remarks If \code{\type T::size()} returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
   \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
 \end{itemdescr}
@@ -153,7 +153,7 @@ mask_return_type<T0, A0, T1, A1> operator^ (const mask<T0, A0> &, const mask<T1,
 
   \pnum\remarks Each of these operators only participate in overload resolution if both arguments are implicitly convertible to \maskreturntype.
 
-  \pnum\returns A new \mask object initialized with the results of the component-wise application of the indicated operator.
+  \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator.
 \end{itemdescr}
 
 \wgSubsubsection{\mask compares}{mask.comparison}

@@ -153,7 +153,7 @@ datapar operator~() const;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\requires The first template argument \type T to \datapar must be an integral type.
-  \pnum\returns A new \datapar object where each bit is the inverse of the corresponding bit in \code{*this}.
+  \pnum\returns A \datapar object where each bit is the inverse of the corresponding bit in \code{*this}.
   \pnum\remarks \datapar{}\code{::operator\textasciitilde{}()} shall not participate in overload resolution if \type T is a floating-point type.
 \end{itemdescr}
 
@@ -168,7 +168,7 @@ datapar operator+() const;
 datapar operator-() const;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns A new \datapar object where the $i$-th element is initialized to \code{-operator[](i)} \foralli.
+  \pnum\returns A \datapar object where the $i$-th element is initialized to \code{-operator[](i)} \foralli.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar reductions}{datapar.redu}
@@ -266,7 +266,7 @@ conditional_t<is_same_v<T, void>, datapar<U>, conditional_t<is_datapar_v<T>, T, 
     \item or \code{is_datapar_v<T>} and \type U is implicitly or explicitly convertible\comment{sufficient to only say ”convertible”?} to \type{T::value_type},
     \item or \code{!is_datapar_v<T>} and \datapar[<T>] is a valid template instance and \type U is implicitly or explicitly convertible\comment{ditto.} to \type{T}.
   \end{itemize}
-  \pnum\returns A new \datapar object with each element $i$ initialized to \code{static_cast<T>(x[i])} \foralli.
+  \pnum\returns A \datapar object with each element $i$ initialized to \code{static_cast<T>(x[i])} \foralli.
   \pnum\remarks If the \code{size()} function of the return type returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
   \pnum\remarks If the third template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\textit{return type}, \type U>}, the behavior is undefined.
 \end{itemdescr}
@@ -418,7 +418,7 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
 
   \pnum\remarks The operators with \type{const U \&} as first parameter shall not participate in overload resolution if \code{is_datapar_v<U> == true}.
 
-  \pnum\returns A new \datapar object initialized with the results of the component-wise application of the indicated operator after both operands have been converted to the return type.
+  \pnum\returns A \datapar object initialized with the results of the component-wise application of the indicated operator after both operands have been converted to the return type.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar compound assignment}{datapar.cassign}
@@ -487,7 +487,7 @@ typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator< (const U &
 
   \pnum\remarks The operators with \type{const U \&} as first parameter shall not participate in overload resolution if \code{is_datapar_v<U> == true}.
 
-  \pnum\returns A new \mask object initialized with the results of the component-wise application of the indicated operator after both operands have been converted to \type{datapar_return_type<datapar<T, Abi>, U>}.
+  \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator after both operands have been converted to \type{datapar_return_type<datapar<T, Abi>, U>}.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar casts}{datapar.casts}
@@ -505,7 +505,7 @@ conditional_t<(T::size() == (U::size() + Us::size()...)), T,
     \item \code{U::size() + Us::size()...} is an integral multiple of \code{T::size()}.
   \end{itemize}
 
-  \pnum\returns A new \datapar object initialized with the converted values as one object of \type T or an array of \type T.
+  \pnum\returns A \datapar object initialized with the converted values as one object of \type T or an array of \type T.
   All scalar elements \code{x\textsubscript{i}} of the function argument(s) are converted as if
   \code{y\textsubscript{i} = static_cast<typename T::value_type>(x\textsubscript{i})} is executed.
   The resulting \code{y\textsubscript{i}} intialize the return object(s) of type \type T.
