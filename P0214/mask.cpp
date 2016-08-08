@@ -1,6 +1,6 @@
 namespace std {
   namespace experimental {
-    template <class T, class Abi = datapar_abi::compatible> class mask {
+    template <class T, class Abi> class mask {
     public:
       typedef bool value_type;
       typedef implementation_defined reference;

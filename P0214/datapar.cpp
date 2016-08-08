@@ -1,6 +1,6 @@
 namespace std {
   namespace experimental {
-    template <class T, class Abi = datapar_abi::compatible> class datapar {
+    template <class T, class Abi> class datapar {
     public:
       typedef T value_type;
       typedef implementation_defined reference;
