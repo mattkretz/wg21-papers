@@ -3,6 +3,7 @@ namespace std {
     namespace datapar_abi {
       struct scalar {};  // always present
       template <int N> struct fixed_size {};  // always present
+      constexpr int max_fixed_size = implementation_defined;
       // implementation-defined tag types, e.g. sse, avx, neon, altivec, ...
       template <typename T> using compatible = implementation_defined;  // always present
       template <typename T> using native = implementation_defined;  // always present

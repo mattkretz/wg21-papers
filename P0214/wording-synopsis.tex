@@ -10,6 +10,7 @@ The header \code{<datapar>} defines two class templates (\datapar, and \mask), s
 namespace datapar_abi {
   struct scalar {};  // always present
   template <int N> struct fixed_size {};  // always present
+  constexpr int max_fixed_size = implementation_defined;
   // implementation-defined tag types, e.g. sse, avx, neon, altivec, ...
   template <typename T> using compatible = implementation_defined;  // always present
   template <typename T> using native = implementation_defined;  // always present
@@ -25,7 +26,7 @@ namespace datapar_abi {
       \type{scalar} could be an alias for \type{fixed_size<1>}.
       However, I think it is better to have a different ABI tag to make implicit conversions behave as for all the other non-fixed-size ABIs.}
 
-  \pnum\label{datapar.fixedsize.def}
+  \pnum\label{datapar.fixedsize.def}%
   The \fixedsize tag is present in all implementations.
   Use of \fixedsizeN forces \datapar and \mask to store and manipulate \code N components (i.e. \datapar{}\type{<T, \fixedsizeN{}>::size()} returns \code N).
   An implementation must support at least any \code N $\in [1\ldots 32]$.
@@ -34,6 +35,10 @@ namespace datapar_abi {
     An implementation may choose to not ensure ABI compatibility for \datapar and \mask instantiations using the same \fixedsizeN tag.
     In case of ABI compatibilty between differently compiled translation units, the efficiency of \datapar[<T, Abi>] is likely to be better than for \datapar[<T, fixed_size<datapar_size_v<T, Abi>>>] (with \type{Abi} not a instance of \fixedsizescoped).
   }
+
+  \pnum\label{datapar.maxfixedsize.def}%
+  The value of \code{max_fixed_size} declares that an instance of \datapar[<T, fixed_size<N>>] with \code{N <= max_fixed_size} is supported by the implementation.
+  \wgNote{It is still possible for an implementation to support \datapar[<U, fixed_size<K>>] with \code{K > max_fixed_size}.}
 
   \pnum
   An implementation may choose to implement data-parallel execution for many different targets.
