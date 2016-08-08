@@ -301,7 +301,7 @@
     % subsections
       \renewcommand{\cftsubsecpresnum}{\relax}%
       \renewcommand{\cftsubsecfont}{\normalfont\spacedsmallcaps}%
-      \renewcommand{\cftsubsecpagefont}{\normalfont\scshape}%
+      \renewcommand{\cftsubsecpagefont}{\normalfont\scshape\addfontfeature{Numbers={Monospaced}}}%
       \ifthenelse{\boolean{@dottedtoc}}{\relax}%
       {%
         \renewcommand{\cftsubsecleader}{\hspace{1.5em}}%
@@ -311,13 +311,23 @@
     % subsubsections
       \renewcommand{\cftsubsubsecpresnum}{\relax}%
       \renewcommand{\cftsubsubsecfont}{\normalfont\spacedsmallcaps}%
-      \renewcommand{\cftsubsubsecpagefont}{\normalfont\scshape}%
+      \renewcommand{\cftsubsubsecpagefont}{\normalfont\scshape\addfontfeature{Numbers={Monospaced}}}%
       \ifthenelse{\boolean{@dottedtoc}}{\relax}%
       {%
         \renewcommand{\cftsubsubsecleader}{\hspace{1.5em}}%
         \renewcommand{\cftsubsubsecafterpnum}{\cftparfillskip}%
       }
       \ifthenelse{\boolean{@tocaligned}}{\renewcommand{\cftsubsubsecindent}{0em}}{\relax}
+    % paragraphs
+      \renewcommand{\cftparapresnum}{\relax}%
+      \renewcommand{\cftparafont}{\normalfont\spacedsmallcaps}%
+      \renewcommand{\cftparapagefont}{\normalfont\scshape\addfontfeature{Numbers={Monospaced}}}%
+      \ifthenelse{\boolean{@dottedtoc}}{\relax}%
+      {%
+        \renewcommand{\cftparaleader}{\hspace{1.5em}}%
+        \renewcommand{\cftparaafterpnum}{\cftparfillskip}%
+      }
+      \ifthenelse{\boolean{@tocaligned}}{\renewcommand{\cftparaindent}{0em}}{\relax}
     % figures
       \renewcommand{\cftfigpresnum}{\scshape\MakeLowercase}%
       \renewcommand{\cftfigfont}{\normalfont}%
@@ -351,7 +361,7 @@
       \renewcommand{\cftlistingspresnum}{\scshape\MakeLowercase}%
       \renewcommand{\cftlistingsfont}{\normalfont}%
       \renewcommand{\cftlistingspresnum}{\lstlistingname~}%
-      \renewcommand{\cftlistingspagefont}{\normalfont\scshape}%
+      \renewcommand{\cftlistingspagefont}{\normalfont\scshape\addfontfeature{Numbers={Monospaced}}}%
       \ifthenelse{\boolean{@dottedtoc}}{\relax}%
       {%
         \renewcommand{\cftlistingsleader}{\hspace{1.5em}}%
