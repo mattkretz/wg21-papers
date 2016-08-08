@@ -103,7 +103,7 @@
 % ****************************************************************************************************
 % Using PDFLaTeX
 % ********************************************************************
-\PassOptionsToPackage{pdftex,hyperfootnotes=false,pdfpagelabels}{hyperref}
+\PassOptionsToPackage{pdftex,hyperfootnotes=false,pdfpagelabels,bookmarksdepth=5}{hyperref}
   \RequirePackage{hyperref}  % backref linktocpage pagebackref
 \pdfcompresslevel=9
 \pdfadjustspacing=1
@@ -285,7 +285,7 @@
     \newlength{\beforebibskip}
     \setlength{\beforebibskip}{0em}
     % only show sections and subsections
-    \setcounter{tocdepth}{3}
+    \setcounter{tocdepth}{1}
     % sections
       \setlength{\cftbeforesecskip}{.1em}%
       \setlength{\beforebibskip}{.2em}%
