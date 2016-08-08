@@ -42,18 +42,6 @@ namespace std {
     // class template mask [mask]
     template <class T, class Abi = datapar_abi::compatible<T>> class mask;
 
-    // datapar load function [datapar.load]
-    template <class T = void, class U, class Flags>
-    conditional_t<is_same_v<T, void>, datapar<U>, conditional_t<is_datapar_v<T>, T, datapar<T>>> load(
-        const U *, Flags);
-
-    // datapar store functions [datapar.store]
-    template <class T, class Abi, class U, class Flags>
-    void store(const datapar<T, Abi> &, U *, Flags);
-
-    template <class T0, class A0, class U, class T1, class A1, class Flags>
-    void store(const datapar<T0, A0> &, U *, const mask<T1, A1> &, Flags);
-
     // compound assignment [datapar.cassign]
     template <class T, class Abi, class U> datapar<T, Abi> &operator+= (datapar<T, Abi> &, const U &);
     template <class T, class Abi, class U> datapar<T, Abi> &operator-= (datapar<T, Abi> &, const U &);
@@ -140,16 +128,6 @@ namespace std {
     template <class T, class U, class... Us>
     conditional_t<(T::size() == (U::size() + Us::size()...)), T,
                   array<T, (U::size() + Us::size()...) / T::size()>> datapar_cast(U, Us...);
-
-    // mask load function [mask.load]
-    template <class T, class Flags> T load(const bool *, Flags);
-
-    // mask store functions [mask.store]
-    template <class T, class Abi, class Flags>
-    void store(const mask<T, Abi> &, bool *, Flags);
-
-    template <class T0, class A0, class T1, class A1, class Flags>
-    void store(const mask<T0, A0> &, bool *, const mask<T1, A1> &, Flags);
 
     // mask binary operators [mask.binary]
     template <class T0, class A0, class T1, class A1> using mask_return_type = ...  // exposition only

@@ -24,7 +24,16 @@ namespace std {
       template <class U, class Abi2> mask(mask<U, Abi2>);
 
       // load constructor
-      template <class Flags> mask(const bool *mem, Flags);
+      template <class Flags> mask(const value_type *mem, Flags);
+      template <class Flags> mask(const value_type *mem, mask k, Flags);
+
+      // loads [mask.load]
+      template <class Flags> void copy_from(const value_type *mem, Flags);
+      template <class Flags> void copy_from(const value_type *mem, mask k, Flags);
+
+      // stores [mask.store]
+      template <class Flags> void copy_to(value_type *mem, Flags);
+      template <class Flags> void copy_to(value_type *mem, mask k, Flags);
 
       // scalar access:
       reference operator[](size_type);

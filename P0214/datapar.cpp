@@ -25,6 +25,15 @@ namespace std {
 
       // load constructor
       template <class U, class Flags> datapar(const U *mem, Flags);
+      template <class U, class Flags> datapar(const U *mem, mask_type k, Flags);
+
+      // loads [datapar.load]
+      template <class U, class Flags> void copy_from(const U *mem, Flags);
+      template <class U, class Flags> void copy_from(const U *mem, mask_type k, Flags);
+
+      // stores [datapar.store]
+      template <class U, class Flags> void copy_to(U *mem, Flags);
+      template <class U, class Flags> void copy_to(U *mem, mask_type k, Flags);
 
       // scalar access:
       reference operator[](size_type);

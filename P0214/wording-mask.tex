@@ -45,12 +45,63 @@ template <class U, class Abi2> mask(mask<U, Abi2> x);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class Flags> mask(const bool *mem, Flags);
+template <class Flags> mask(const value_type *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{mem[i]} \foralli.
   \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
-  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\mask>}, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\mask{}>}, the behavior is undefined.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class Flags> mask(const value_type *mem, mask k, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Constructs an object where the $i$-th element is initialized to \code{k[i] ? mem[i] : false} \foralli.
+  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\mask{}>}, the behavior is undefined.
+\end{itemdescr}
+
+\wgSubsubsection{\mask load function}{mask.load}
+\begin{itemdecl}
+template <class Flags> void copy_from(const value_type *mem, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Replaces the elements of the \mask object such that the $i$-th element is assigned with \code{mem[i]} \foralli.
+  \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\mask{}>}, the behavior is undefined.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class Flags> void copy_from(const value_type *mem, mask k, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Replaces all elements of the \mask object where $k[i]$ is \true such that the $i$-th element is assigned with \code{mem[i]} \foralli.
+  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\mask{}>}, the behavior is undefined.
+\end{itemdescr}
+
+\wgSubsubsection{\mask store functions}{mask.store}
+\begin{itemdecl}
+template <class Flags> void copy_to(value_type *mem, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Copies all \mask elements as if \code{mem[i] = operator[](i)} \foralli.
+  \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by \code{mem}, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\mask{}>}, the behavior is undefined.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class Flags> void copy_to(value_type *mem, mask k, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Copies each \mask element $i$ where \code{k[i]} is \true as if \code{mem[i] = operator[](i)} \foralli.
+  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by \code{mem}, the behavior is undefined.
+  \wgNote{
+    Masked stores only write to the bytes in memory selected by the \code k argument.
+    This prohibits implementations that load, blend, and store the complete vector.
+  }
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\mask{}>}, the behavior is undefined.
 \end{itemdescr}
 
 \wgSubsubsection{\mask{} subscript operators}{mask.subscr}
@@ -77,44 +128,6 @@ mask operator!() const;
 \end{itemdescr}
 
 \wgSubsection{\type{mask} non-member operations}{mask.nonmembers}
-
-\wgSubsubsection{\mask load function}{mask.load}
-\begin{itemdecl}
-template <class T, class Flags> T load(const bool *, Flags);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace and \code{is_mask_v<T>}.
-  \pnum\returns A \mask object with each element $i$ initialized to \code{x[i]} \foralli.
-  \pnum\remarks If \code{\type T::size()} returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
-  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\type T>}, the behavior is undefined.
-\end{itemdescr}
-
-\wgSubsubsection{\mask store functions}{mask.store}
-\begin{itemdecl}
-template <class T, class Abi, class Flags>
-void store(const mask<T, Abi> &x, bool *y, Flags);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace.
-  \pnum\effects Copies each element \code{x[i]} to \code{y[i]} \foralli.
-  \pnum\remarks If \mask[<T, Abi>]\code{::size()} is greater than the number of values pointed to by \code y, the behavior is undefined.
-  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value of \code y is not a multiple of \code{memory_alignment<\mask[<T, Abi>]>}, the behavior is undefined.
-\end{itemdescr}
-
-\begin{itemdecl}
-template <class T0, class A0, class T1, class A1, class Flags>
-void store(const mask<T0, A0> &x, bool *y, const mask<T1, A1> &k, Flags);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace and \mask[<T1, A1>] is implicitly convertible to \mask[<T0, A0>].
-  \pnum\effects Copies each element \code{x[i]} where \code{k[i]} is \true to \code{y[i]} \foralli.
-  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by \code y, the behavior is undefined.
-  \wgNote{
-    Masked stores only write to the bytes in memory selected by the \code k argument.
-    This prohibits implementations that load, blend, and store the complete vector.
-  }
-  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value of \code y is not a multiple of \code{memory_alignment<\mask[<T0, A0>], \type U>}, the behavior is undefined.
-\end{itemdescr}
 
 \wgSubsubsection{\mask binary operators}{mask.binary}
 \begin{itemdecl}
@@ -262,3 +275,5 @@ template <class T> implementation_defined where(bool, T &);
     \item The assignment and compound assignment operators return \void.
   \end{itemize}
 \end{itemdescr}
+
+% vim: tw=0 spell sw=2

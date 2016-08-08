@@ -98,6 +98,7 @@ Previous revision: \citep{P0214R1}.
     \chck Discussed resolution of the \fixedsizeN design (\ref{sec:fixedsize progress}).
     \chck Made the \type{compatible} and \type{native} ABI aliases depend on \type T (\ref{sec:datapar.abi}).
     \chck Added \code{max_fixed_size} constant (\ref{sec:datapar.maxfixedsize.def}).
+    \chck Added masked loads.
   \color{black}\item[---] SG1 guidance:
     \chck Dropped the default load / store flags.
     \chck Renamed the (un)aligned flags to \code{element_aligned} and \code{vector_aligned}.
@@ -105,11 +106,10 @@ Previous revision: \citep{P0214R1}.
     \chck Dropped the ampersand on \code{native_handle} (no strong preference).
     \chck Completed the set of math functions (i.e. add trig, log, and exp).
   \color{black}\item[---] LEWG guidance:
-    \chck Drop \code{native_handle} and add non-normative wording for supporting \code{static_cast} to implementation-defined SIMD extensions.
-    \todo Drop non-member load and store functions.
-    Instead rely on the constructor for loads and maybe have a member load function.
-    Have a member store function.
-    Look for different names because of the unfortunate inconsistency with \std\type{atomic}.
+    \chck Dropped \code{native_handle} and add non-normative wording for supporting \code{static_cast} to implementation-defined SIMD extensions.
+    \chck Dropped non-member load and store functions.
+    Instead have \code{copy_from} and \code{copy_to} member functions for loads and stores. (\ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store})
+    (Did not use the \code{load} and \code{store} names because of the unfortunate inconsistency with \std\type{atomic}.)
     \todo Drop member function reductions in favor of algorithm overloads.
     See how \code{where} could be integrated properly to do masked reductions.
     \todo Consider \code{cardinality} instead of \code{popcount} (or different bikeshed colors).

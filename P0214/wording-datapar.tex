@@ -64,6 +64,61 @@ template <class U, class Flags> datapar(const U *mem, Flags);
   \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\datapar, \type U>}, the behavior is undefined.
 \end{itemdescr}
 
+\begin{itemdecl}
+template <class U, class Flags> datapar(const U *mem, mask_type k, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Constructs an object where the $i$-th element is initialized to \code{k[i] ? static_cast<T>(mem[i]) : 0} \foralli.
+  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\datapar, \type U>}, the behavior is undefined.
+\end{itemdescr}
+
+\wgSubsubsection{\datapar load functions}{datapar.load}
+\begin{itemdecl}
+template <class U, class Flags> void copy_from(const U *mem, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Replaces the elements of the \datapar object such that the $i$-th element is assigned with \code{static_cast<T>(mem[i])} \foralli.
+  \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\datapar, \type U>}, the behavior is undefined.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class U, class Flags> void copy_from(const U *mem, mask_type k, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Replaces all elements of the \datapar object where $k[i]$ is \true such that the $i$-th element is assigned with \code{static_cast<T>(mem[i])} \foralli.
+  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \wgNote{
+    Masked loads only access the bytes in memory selected by the \code k argument.
+    This prohibits implementations that load the complete vector before blending with the previous values.
+  }
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\datapar, \type U>}, the behavior is undefined.
+\end{itemdescr}
+
+\wgSubsubsection{\datapar store functions}{datapar.store}
+\begin{itemdecl}
+template <class U, class Flags> void copy_to(U *mem, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Copies all \datapar elements as if \code{mem[i] = static_cast<U>(operator[](i))} \foralli.
+  \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by \code{mem}, the behavior is undefined.
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\datapar, \type U>}, the behavior is undefined.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class U, class Flags> void copy_to(U *mem, mask_type k, Flags);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Copies each \datapar element $i$ where \code{k[i]} is \true as if \code{mem[i] = static_cast<U>(operator[](i))} \foralli.
+  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by \code{mem}, the behavior is undefined.
+  \wgNote{
+    Masked stores only write to the bytes in memory selected by the \code k argument.
+    This prohibits implementations that load, blend, and store the complete vector.
+  }
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\datapar, \type U>}, the behavior is undefined.
+\end{itemdescr}
+
 \wgSubsubsection{\datapar subscript operators}{datapar.subscr}
 \newcommand{\dataparElementReference}{
   \pnum\returns A temporary object with the following properties:
@@ -227,55 +282,6 @@ value_type max(mask_type k) const;
 \end{itemdescr}
 
 \wgSubsection{\type{datapar} non-member operations}{datapar.nonmembers}
-
-\wgSubsubsection{\datapar load function}{datapar.load}
-\comment{
-  Need LEWG input: The load function could return a ”load expression” instead.
-  But we still don't have customized decay on template deduction \ldots
-}
-\begin{itemdecl}
-template <class T = void, class U, class Flags>
-conditional_t<is_same_v<T, void>, datapar<U>, conditional_t<is_datapar_v<T>, T, datapar<T>>> load(
-    const U *, Flags);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace and either
-  \begin{itemize}
-    \item \type T is \void and \datapar[<U>] is a valid template instance,
-    \item or \code{is_datapar_v<T>} and \type U is implicitly or explicitly convertible\comment{sufficient to only say ”convertible”?} to \type{T::value_type},
-    \item or \code{!is_datapar_v<T>} and \datapar[<T>] is a valid template instance and \type U is implicitly or explicitly convertible\comment{ditto.} to \type{T}.
-  \end{itemize}
-  \pnum\returns A \datapar object with each element $i$ initialized to \code{static_cast<T>(x[i])} \foralli.
-  \pnum\remarks If the \code{size()} function of the return type returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
-  \pnum\remarks If the third template parameter is of type \type{flags::vector_aligned_tag} and the pointer value is not a multiple of \code{memory_alignment<\textit{return type}, \type U>}, the behavior is undefined.
-\end{itemdescr}
-
-\wgSubsubsection{\datapar store functions}{datapar.store}
-\begin{itemdecl}
-template <class T, class Abi, class U, class Flags>
-void store(const datapar<T, Abi> &x, U *y, Flags);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace and \type T is implicitly or explicitly convertible\comment{ditto.} to \type U.
-  \pnum\effects Copies each element $i$ as if \code{y[i] = static_cast<U>(x[i])} \foralli.
-  \pnum\remarks If \datapar[<T, Abi>]\code{::size()} is greater than the number of values pointed to by \code y, the behavior is undefined.
-  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value of \code y is not a multiple of \code{memory_alignment<\datapar[<T, Abi>], \type U>}, the behavior is undefined.
-\end{itemdescr}
-
-\begin{itemdecl}
-template <class T0, class A0, class U, class T1, class A1, class Flags>
-void store(const datapar<T0, A0> &x, U *y, const mask<T1, A1> &k, Flags);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\remarks This function shall not participate in overload resolution unless \type{Flags} is one of the tag types in the \code{flags} namespace and \type T is implicitly or explicitly convertible\comment{ditto.} to \type U and \mask[<T1, A1>] is implicitly convertible to \mask[<T0, A0>].
-  \pnum\effects Copies each element $i$ where \code{k[i]} is \true as if \code{y[i] = static_cast<U>(x[i])} \foralli.
-  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by \code y, the behavior is undefined.
-  \wgNote{
-    Masked stores only write to the bytes in memory selected by the \code k argument.
-    This prohibits implementations that load, blend, and store the complete vector.
-  }
-  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector_aligned_tag} and the pointer value of \code y is not a multiple of \code{memory_alignment<\datapar[<T0, A0>], \type U>}, the behavior is undefined.
-\end{itemdescr}
 
 \wgSubsubsection{\datapar binary operators}{datapar.binary}
 \begin{itemdecl}
