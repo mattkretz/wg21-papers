@@ -11,8 +11,8 @@ namespace datapar_abi {
   struct scalar {};
   template <int N> struct fixed_size {};
   // implementation-defined tag types, e.g. sse, avx, neon, altivec, ...
-  typedef implementation_defined compatible;
-  typedef implementation_defined native;
+  template <typename T> using compatible = implementation_defined;  // always present
+  template <typename T> using native = implementation_defined;  // always present
 }
 \end{itemdecl}
 \begin{itemdescr}
@@ -39,10 +39,14 @@ namespace datapar_abi {
   All tag types an implementation supports shall be present independent of the target architecture determined at invocation of the compiler.
 
   \pnum
-  The \type{datapar_abi::compatible} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that ensures the highest compatibility on the target architecture.
+  The \type{datapar_abi::compatible<T>} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution for the element type \type T that ensures the highest compatibility on the target architecture.
 
   \pnum
-  The \type{datapar_abi::native} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution that is supported on the target system.
+  The \type{datapar_abi::native<T>} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution for the element type \type T that is supported on the target system.
+  \wgExample{
+      Consider a target with the implementation-defined ABI tags \type{simd128} and \type{simd256} where hardware support for \type{simd256} only exists for floating-point types.
+      In this case the \type{native<T>} alias equals \type{simd256} if \type T is a floating-point type and \type{simd128} otherwise.
+  }
 \end{itemdescr}
 
 \wgSubsubsection{\datapar type traits}{datapar.traits}
@@ -80,7 +84,7 @@ template <class T, size_t N> struct abi_for_size { typedef implementation_define
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi = datapar_abi::compatible>
+template <class T, class Abi = datapar_abi::compatible<T>>
 struct datapar_size : public integral_constant<size_t, implementation_defined> {};
 \end{itemdecl}
 \begin{itemdescr}
@@ -98,3 +102,5 @@ constexpr size_t memory_alignment = implementation_defined;
   \pnum\requires The template parameter \type U must be a type supported by the load and store functions for \type T.
   \pnum The value of \code{memory_alignment<T, U>} identifies the alignment restrictions on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U.
 \end{itemdescr}
+
+% vim: tw=0

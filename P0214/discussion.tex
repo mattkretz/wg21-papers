@@ -105,8 +105,8 @@ With regard to this proposal this second approach would add a third template par
 \begin{lstlisting}[style=Vc,numbers=left,float,label=lst:datapar N,caption={
   Possible declaration of the class template parameters of a \datapar class with arbitrary width.
 }]
-template <class T, size_t N = datapar_size_v<T, datapar_abi::compatible>,
-          class Abi = datapar_abi::compatible>
+template <class T, size_t N = datapar_size_v<T, datapar_abi::compatible<T>>,
+          class Abi = datapar_abi::compatible<T>>
 class datapar;
 \end{lstlisting}
 

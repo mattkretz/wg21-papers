@@ -4,8 +4,8 @@ namespace std {
       struct scalar {};  // always present
       template <int N> struct fixed_size {};  // always present
       // implementation-defined tag types, e.g. sse, avx, neon, altivec, ...
-      typedef implementation_defined compatible;  // always present
-      typedef implementation_defined native;  // always present
+      template <typename T> using compatible = implementation_defined;  // always present
+      template <typename T> using native = implementation_defined;  // always present
     }
 
     namespace flags {
@@ -27,19 +27,19 @@ namespace std {
     template <class T, size_t N> struct abi_for_size { typedef implementation_defined type; };
     template <class T, size_t N> using abi_for_size_t = typename abi_for_size<T, N>::type;
 
-    template <class T, class Abi = datapar_abi::compatible>
+    template <class T, class Abi = datapar_abi::compatible<T>>
     struct datapar_size : public integral_constant<size_t, implementation_defined> {};
-    template <class T, class Abi = datapar_abi::compatible>
+    template <class T, class Abi = datapar_abi::compatible<T>>
     constexpr size_t datapar_size_v = datapar_size<T, Abi>::value;
 
     template <class T, class U = typename T::value_type>
     constexpr size_t memory_alignment = implementation_defined;
 
     // class template datapar [datapar]
-    template <class T, class Abi = datapar_abi::compatible> class datapar;
+    template <class T, class Abi = datapar_abi::compatible<T>> class datapar;
 
     // class template mask [mask]
-    template <class T, class Abi = datapar_abi::compatible> class mask;
+    template <class T, class Abi = datapar_abi::compatible<T>> class mask;
 
     // datapar load function [datapar.load]
     template <class T = void, class U, class Flags>
