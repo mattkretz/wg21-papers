@@ -8,8 +8,8 @@ The header \code{<datapar>} defines two class templates (\datapar, and \mask), s
 
 \begin{itemdecl}
 namespace datapar_abi {
-  struct scalar {};
-  template <int N> struct fixed_size {};
+  struct scalar {};  // always present
+  template <int N> struct fixed_size {};  // always present
   // implementation-defined tag types, e.g. sse, avx, neon, altivec, ...
   template <typename T> using compatible = implementation_defined;  // always present
   template <typename T> using native = implementation_defined;  // always present
@@ -21,6 +21,9 @@ namespace datapar_abi {
 
   \pnum
   The \type{scalar} tag is present in all implementations and forces \datapar and \mask to store a single component (i.e. \datapar{}\type{<T, datapar_abi::scalar>::size()} returns \code 1).
+  \comment{
+      \type{scalar} could be an alias for \type{fixed_size<1>}.
+      However, I think it is better to have a different ABI tag to make implicit conversions behave as for all the other non-fixed-size ABIs.}
 
   \pnum\label{datapar.fixedsize.def}
   The \fixedsize tag is present in all implementations.
