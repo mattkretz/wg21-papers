@@ -248,6 +248,7 @@ constexpr int find_last_set(bool);
 template <class T0, class A0, class T1, class A1>
 implementation_defined where(const mask<T0, A0> &m, datapar<T1, A1> &v);
 \end{itemdecl}
+\comment{Since we have class template deduction, should I drop the function and have only a \type{where} class instead.}
 \begin{itemdescr}
   \pnum\remarks The function only participates in overload resolution if \mask[<T0, A0>] is implicitly convertible to \mask[<T1, A1>].
 
