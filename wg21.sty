@@ -230,48 +230,29 @@
 % layout of the chapter-, section-, subsection-, subsubsection-,
 % paragraph and description-headings
 % ********************************************************************
-\RequirePackage[explicit,nobottomtitles*]{titlesec}
-    \def\@myheadingrule{\nopagebreak\titleline{\color{HeadingRule}\titlerule}}
-    % sections \FloatBarrier
-    \newlength{\ct@labelwidth}%
-    \titleformat{\section}%
-      {\color{Headings}}%
-      {{\sectionNumberFont\thesection}}%
-      {-1em}%
-      {%
-        {\hfill\large\color{Headings}\spacedallcaps{#1}}%
-        \nopagebreak\vskip-0.05\baselineskip%
-        \@myheadingrule\nopagebreak%
-      }%
-    % subsections
-    \titleformat{\subsection}
-      {\color{Headings}}
-      {\spacedlowsmallcaps{\thesubsection}}%
-      {0pt}
-      {%
-        \hfill\spacedlowsmallcaps{#1}%
-        \nopagebreak\vskip-0.05\baselineskip%
-        \@myheadingrule\nopagebreak%
-      }
-    % subsubsections
-    \titleformat{\subsubsection}%
-      {\color{Headings}}%
-      {\spacedlowsmallcaps{\thesubsubsection}}%
-      {0pt}%
-      {\hfill\normalsize\spacedlowsmallcaps{#1}\nopagebreak}
-    % paragraphs
-    \titleformat{\paragraph}[runin]
-      {\normalfont\normalsize}
-      {\theparagraph}
-      {0pt}
-      {\spacedlowsmallcaps{#1}}
-    % descriptionlabels
-    \renewcommand{\descriptionlabel}[1]{\hspace*{\labelsep}\spacedsmallcaps{#1}}   % spacedlowsmallcaps textit textsc
-    % spacing
-    \titlespacing*{\section}{0pt}{1.25\baselineskip plus 1.5\baselineskip minus 0.25\baselineskip}{-.5\baselineskip plus 0.05\baselineskip}
-    \titlespacing*{\subsection}{0pt}{1.0\baselineskip plus 1.5\baselineskip minus 0.2\baselineskip}{-.5\baselineskip plus 0.05\baselineskip}
-    \titlespacing*{\subsubsection}{0pt}{0.75\baselineskip plus 1.5\baselineskip minus 0.15\baselineskip}{.1\baselineskip plus 0.05\baselineskip}
-    \titlespacing*{\paragraph}{0pt}{.4\baselineskip plus 0.2\baselineskip minus 0.10\baselineskip}{1em plus 1.0em minus 0.4em}
+%\def\@myheadingrule{\nopagebreak\titleline{\color{HeadingRule}\titlerule}}
+\def\@myheadingrule{\vspace{0.2\baselineskip}\nopagebreak{\textcolor{HeadingRule}{\hrule height .4pt}}\nopagebreak}
+
+\renewcommand{\sectionlinesformat}[4]{%
+  \@hangfrom{\hskip #2#3}{\hfill \ifstr{#1}{section}{\MakeUppercase{#4}}{\MakeLowercase{#4}}}\nopagebreak%
+  \ifstr{#1}{section}{\@myheadingrule}{}%
+  \ifstr{#1}{subsection}{\@myheadingrule}{}%
+}
+
+\renewcommand*{\sectionformat}{{\sectionNumberFont\thesection\autodot}\enskip}
+\setkomafont{section}{\large\color{Headings}\scshape\addfontfeature{LetterSpace=4}}
+
+\renewcommand*{\subsectionformat}{\spacedlowsmallcaps{\thesubsection\autodot}\enskip}
+\setkomafont{subsection}{\color{Headings}\scshape\addfontfeature{LetterSpace=7}}
+
+\renewcommand*{\subsubsectionformat}{\spacedlowsmallcaps{\thesubsubsection\autodot}\enskip}
+\setkomafont{subsubsection}{\color{Headings}\scshape\addfontfeature{LetterSpace=7}}
+
+\renewcommand*{\paragraphformat}{\theparagraph\autodot\enskip}
+\setkomafont{paragraph}{\scshape\addfontfeature{LetterSpace=7}}
+
+% descriptionlabels
+\renewcommand{\descriptionlabel}[1]{\hspace*{\labelsep}\spacedsmallcaps{#1}}
 
 % layout of the TOC, LOF and LOT (LOL-workaround see next section)
 % ********************************************************************
