@@ -10,14 +10,19 @@ The type \bool is not allowed.
 
 \pnum The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
 
-\pnum\realnote Implementations are encouraged to enable \code{static_cast}ing from/to implementation-defined SIMD mask types.
-
 \begin{itemdecl}
 static constexpr size_type size();
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns the number of boolean elements stored in objects of the given \mask[<T, Abi>] type.
 \end{itemdescr}
+
+\pnum\realnote Implementations are encouraged to enable \code{static_cast}ing from/to (an) implementation-defined SIMD mask type(s).
+This would add one or more of the following declarations to class \mask:
+\begin{itemdecl}
+explicit operator implementation_defined() const;
+explicit datapar(const implementation_defined &init);
+\end{itemdecl}
 
 \wgSubsubsection{\mask constructors}{mask.ctor}
 \begin{itemdecl}
@@ -146,7 +151,7 @@ mask_return_type<T0, A0, T1, A1> operator^ (const mask<T0, A0> &, const mask<T1,
 \comment{I think we need an additional \code{operator@(const mask<T, A> \&, const mask<T, A> \&)} overload to enable use of objects that are implicitly convertible to more than one \mask instantiation with equal priority.}
 \begin{itemdescr}
   \newcommand\maskreturntype{\type{mask_return_type<T, Abi, U>}\xspace}
-  \pnum\remarks The return type, \maskreturntype, shall be \mask[<\common{T0}{T1}, \commonabi{A0}{A1}{\common{T0}{T1}}>].
+  \pnum\remarks The return type, \maskreturntype, shall be \mask[<\common{T0}{T1}, \commonabi{\datapar[<T0, A0>]}{\datapar[<T1, A1>]}{\common{T0}{T1}}>].
     The functions \code{\textit{common}} and \code{\textit{commonabi}} identify the functions described in \ref{unusual conversions}.
 
   \pnum\remarks Each of these operators only participate in overload resolution if both arguments are implicitly convertible to \maskreturntype.

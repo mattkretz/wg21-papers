@@ -10,14 +10,19 @@ The type \bool is not allowed.
 
 \pnum The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
 
-\pnum\realnote Implementations are encouraged to enable \code{static_cast}ing from/to implementation-defined SIMD types.
-
 \begin{itemdecl}
 static constexpr size_type size();
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns the number of elements stored in objects of the given \datapar[<T, Abi>] type.
 \end{itemdescr}
+
+\pnum\realnote Implementations are encouraged to enable \code{static_cast}ing from/to (an) implementation-defined SIMD type(s).
+This would add one or more of the following declarations to class \datapar:
+\begin{itemdecl}
+explicit operator implementation_defined() const;
+explicit datapar(const implementation_defined &init);
+\end{itemdecl}
 
 \wgSubsubsection{\datapar constructors}{datapar.ctor}
 \begin{itemdecl}
@@ -215,6 +220,8 @@ datapar operator-() const;
 \end{itemdescr}
 
 \wgSubsubsection{\datapar reductions}{datapar.redu}
+\comment{These functions are now redundant because of non-member \code{reduce}.
+I prefer to keep these as shorthands, though.}
 \begin{itemdecl}
 value_type sum() const;
 \end{itemdecl}
@@ -330,7 +337,8 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
 \begin{itemdescr}
   \newcommand\dataparreturntype{\type{datapar_return_type<datapar<T, Abi>, U>}\xspace}
   \pnum\remarks\label{unusual conversions}
-  The return type of these operators (\dataparreturntype) shall be deduced according to the following rules:
+  The return type of these operators (\dataparreturntype) shall be deduced according to the following rules:%
+  \comment{See \url{https://github.com/VcDevel/Vc/blob/191e13b2268c630d8e146157903b97181f9a49bd/tests/datapar.cpp\#L435} for a test of an implementation of these rules.}
   \begin{itemize}
     \item Let \common{A}{B} identify the type:
       \comment{\textit{unusual arithmetic conversions} ;-)}
@@ -338,7 +346,7 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
         \item \type A if \type A equals \type B.
         \item Otherwise, \type A if \type B is not a fundamental arithmetic type.
         \item Otherwise, \type B if \type A is not a fundamental arithmetic type.
-        \item Otherwise, \code{decltype(A() + B())} if either one of the types \type A or \type B is a floating-point type.
+        \item Otherwise, \code{decltype(A() + B())} if any of the types \type A or \type B is a floating-point type.
         \item Otherwise, \type A if \code{sizeof(A) > sizeof(B)}.
         \item Otherwise, \type B if \code{sizeof(A) < sizeof(B)}.
         \item Otherwise, \type C shall identify the type with greater integer conversion rank of the types \type A and \type B and:
@@ -369,9 +377,11 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
         The overload resolution participation condition in the next paragraph discards the operator.
       }
     \item Otherwise, if \type T is integral and \type U is \intt
-      the return type shall be \datapar{}\type{<T, Abi>}.
+      the return type shall be \datapar{}\type{<T, Abi>}.%
+      \comment{i.e. \code{\datapar{}<signed char>() + int() -> \datapar{}<signed char>}, however \code{\datapar{}<signed char>() + short() -> \datapar{}<short, fixed_size<datapar_size_v<signed char>>>}}
     \item Otherwise, if \type T is integral and \type U is \uint
-      the return type shall be \datapar{}\code{<make_unsigned_t<T>, Abi>}.
+      the return type shall be \datapar{}\code{<make_unsigned_t<T>, Abi>}.%
+      \comment{i.e. \code{\datapar[<signed char>]() + uint() -> \datapar[<unsigned char>]}, however \code{\datapar[<signed char>]() + ushort() -> \datapar[<ushort, fixed_size<datapar_size_v<signed char>>>]}}
     \item Otherwise, if \type U is a fundamental arithmetic type
       then the return type shall be \datapar[<\common{T}{U}, \commonabi{datapar<T, Abi>}{datapar<U, \fixedsizescoped{}<datapar_size_v<T, Abi>>>}{\common{T}{U}}>].
     \item Otherwise, if \type U is convertible to \intt
@@ -471,6 +481,28 @@ typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator< (const U &
   \pnum\remarks The operators with \type{const U \&} as first parameter shall not participate in overload resolution if \code{is_datapar_v<U> == true}.
 
   \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator after both operands have been converted to \type{datapar_return_type<datapar<T, Abi>, U>}.
+\end{itemdescr}
+
+\wgSubsubsection{\datapar non-member reductions}{datapar.reductions}
+\begin{itemdecl}
+template <class BinaryOperation = std::plus<>, class T, class Abi>
+T reduce(const datapar<T, Abi> &x, BinaryOperation binary_op = BinaryOperation());
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \foralli.
+  \pnum\requires \code{binary_op} shall be callable on arguments of type \type T and arguments of type \datapar[<T, A1>], where \type{A1} may be different to \type{Abi}.
+  \pnum\realnote This overload of \code{reduce} does not require an initial value because \code x is guaranteed to be non-empty.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class BinaryOperation = std::plus<>, class M, class T, class Abi>
+U reduce(const where_expression<M, datapar<T, Abi>> &x, T init,
+         BinaryOperation binary_op = BinaryOperation());
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns \code{\textit{GENERALIZED_SUM}(binary_op, init, x.data[i], \ldots)} \forallmaskedi{x.mask}.
+  \pnum\requires \code{binary_op} shall be callable on arguments of type \type T and arguments of type \datapar[<T, A1>], where \type{A1} may be different to \type{Abi}.
+  \pnum\realnote This overload of \code{reduce} requires an initial value because \code x may be empty.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar casts}{datapar.casts}

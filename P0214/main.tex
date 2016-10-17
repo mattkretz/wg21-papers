@@ -1,7 +1,7 @@
 \newcommand\wgTitle{Data-Parallel Vector Types \& Operations}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D0214R2}
-\newcommand\wgGroup{LEWG / SG1}
+\newcommand\wgDocumentNumber{P0214R2}
+\newcommand\wgGroup{LEWG}
 \newcommand\wgAcknowledgements{
   This work was supported by GSI Helmholtzzentrum für Schwerionenforschung
   and the Hessian LOEWE initiative through the Helmholtz International Center
@@ -31,6 +31,11 @@
 \usepackage{pifont}
 
 \newcommand\foralli{for all \code i $\in$ \code{[0, size())}\xspace}
+\newcommand\forallmaskedi[1]{%
+  for all \code i
+  $\in \{j \in \mathbb{N}_0 | j < \code{size()} ⋀ \code{#1[}j\code{]}\}$%
+  \xspace%
+}
 \newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
 \newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
 
@@ -47,13 +52,13 @@
   \item This documents talks about “vector” types/objects.
     In general this will not refer to the \std\type{vector} class template.
     References to the container type will explicitly call out the \code{std} prefix to avoid confusion.
-  \item In the following \VSize{T} denotes the number of scalar values (width) in a vector of type \type T (sometimes also called the number of SIMD lanes)
+  \item In the following, \VSize{T} denotes the number of scalar values (width) in a vector of type \type T (sometimes also called the number of SIMD lanes)
   \item \citep{N4184}, \citep{N4185}, and \citep{N4395} provide more information on the rationale and design decisions.
     \citep{N4454} discusses a matrix multiplication example.
     My PhD thesis \citep{Kretz2015} contains a very thorough discussion of the topic.
   \item This paper is not supposed to specify a complete API for data-parallel types and operations.
-    It is meant as a starting point.
-    Once the foundation is settled on the API will be completed.
+    It is meant as a useful starting point.
+    Once the foundation is settled on, higher level APIs will be proposed.
 \end{itemize}
 
 \section{Changelog}
@@ -88,31 +93,32 @@ Previous revision: \citep{P0214R0}.
 \subsection{Changes from R1}
 Previous revision: \citep{P0214R1}.
 \begin{itemize}
-    \chck Fixed converting constructor synopsis of \datapar and \mask to also allow varying Abi types.
-    \chck Modified the wording of \code{\mask{}::native_handle()} to make the existence of the functions implementation-defined.
-    \chck Updated the discussion of member types to reflect the changes in R1.
-    \chck Added all previous SG1 straw poll results.
-    \chck Fixed \code{\textit{commonabi}} to not invent native Abi that makes the operator ill-formed.
-    \chck Dropped table of math functions.
-    \chck Be more explicit about the implementation-defined Abi types.
-    \chck Discussed resolution of the \fixedsizeN design (\ref{sec:fixedsize progress}).
-    \chck Made the \type{compatible} and \type{native} ABI aliases depend on \type T (\ref{sec:datapar.abi}).
-    \chck Added \code{max_fixed_size} constant (\ref{sec:datapar.maxfixedsize.def}).
-    \chck Added masked loads.
+    \item Fixed converting constructor synopsis of \datapar and \mask to also allow varying Abi types.
+    \item Modified the wording of \code{\mask{}::native_handle()} to make the existence of the functions implementation-defined.
+    \item Updated the discussion of member types to reflect the changes in R1.
+    \item Added all previous SG1 straw poll results.
+    \item Fixed \code{\textit{commonabi}} to not invent native Abi that makes the operator ill-formed.
+    \item Dropped table of math functions.
+    \item Be more explicit about the implementation-defined Abi types.
+    \item Discussed resolution of the \fixedsizeN design (\ref{sec:fixedsize progress}).
+    \item Made the \type{compatible} and \type{native} ABI aliases depend on \type T (\ref{sec:datapar.abi}).
+    \item Added \code{max_fixed_size} constant (\ref{datapar.maxfixedsize.def}).
+    \item Added masked loads.
+    \item Added rationale for return type of \datapar[::operator-()] (\ref{sec:unary minus}).
   \color{black}\item[---] SG1 guidance:
-    \chck Dropped the default load / store flags.
-    \chck Renamed the (un)aligned flags to \code{element_aligned} and \code{vector_aligned}.
-    \chck Added an \code{overaligned<N>} load / store flag.
-    \chck Dropped the ampersand on \code{native_handle} (no strong preference).
-    \chck Completed the set of math functions (i.e. add trig, log, and exp).
-  \color{black}\item[---] LEWG guidance:
-    \chck Dropped \code{native_handle} and add non-normative wording for supporting \code{static_cast} to implementation-defined SIMD extensions.
-    \chck Dropped non-member load and store functions.
+    \item Dropped the default load / store flags.
+    \item Renamed the (un)aligned flags to \code{element_aligned} and \code{vector_aligned}.
+    \item Added an \code{overaligned<N>} load / store flag.
+    \item Dropped the ampersand on \code{native_handle} (no strong preference).
+    \item Completed the set of math functions (i.e. add trig, log, and exp).
+  \color{black}\item[---] LEWG (small group) guidance:
+    \item Dropped \code{native_handle} and add non-normative wording for supporting \code{static_cast} to implementation-defined SIMD extensions.
+    \item Dropped non-member load and store functions.
     Instead have \code{copy_from} and \code{copy_to} member functions for loads and stores. (\ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store})
     (Did not use the \code{load} and \code{store} names because of the unfortunate inconsistency with \std\type{atomic}.)
-    \todo Drop member function reductions in favor of algorithm overloads.
-    See how \code{where} could be integrated properly to do masked reductions.
-    \todo Consider \code{cardinality} instead of \code{popcount} (or different bikeshed colors).
+    \item Added algorithm overloads for \datapar reductions.
+    Integrate with \code{where} to enable masked reductions. (\ref{sec:datapar.reductions})
+    This made it necessary to spell out the class \type{where_expression}.
 \end{itemize}
 
 \input{strawpolls}

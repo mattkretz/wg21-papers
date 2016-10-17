@@ -91,7 +91,7 @@ $(NAME).pdf: ../final.tex $(ALL_DEPS)
 	@$(CREATEMD5)
 	$(PDFLATEX) ../final
 	@test -s final.pdf && mv final.pdf $@
-	$(BIBER) final || true
+	#$(BIBER) final || true
 	@while ! $(CHECKMD5); do \
 		$(CREATEMD5); \
 		$(PDFLATEX) ../final; \

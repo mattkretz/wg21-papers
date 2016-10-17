@@ -32,8 +32,8 @@ namespace std {
       template <class Flags> void copy_from(const value_type *mem, mask k, Flags);
 
       // stores [mask.store]
-      template <class Flags> void copy_to(value_type *mem, Flags);
-      template <class Flags> void copy_to(value_type *mem, mask k, Flags);
+      template <class Flags> void copy_to(value_type *mem, Flags) const;
+      template <class Flags> void copy_to(value_type *mem, mask k, Flags) const;
 
       // scalar access:
       reference operator[](size_type);

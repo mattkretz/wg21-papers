@@ -64,20 +64,20 @@ It is easier to implement and possibly easier to specify these operators if the 
 template <class T, class U>
 datapar_return_type<T, U> operator+(const T &, const U &);
 \end{itemdecl}
-The motivation for using a variant where at least one function parameter is constrained to the \datapar class template is compilation speed.
-The compiler can drop the operator from the overload resolution set quicker.
+The motivation for using the variant where at least one function parameter is constrained to the \datapar class template is compilation speed and less diagnostics noise in error cases.
+The compiler can drop the operator from the overload resolution set without having to go through a substitution failure.
 With concepts it might be worthwhile to revisit this decision.
 
 \subsection{Compound Assignment}
 The semantics of compound assignment would allow less strict implicit conversion rules.
-Consider \code{datapar<int>() *= double()}: the corresponding multiplication operator would not compile because the implicit conversion to \datapar[<float>] is non-portable.
+Consider \code{datapar<int>() *= double()}: the corresponding binary multiplication operator would not compile because the implicit conversion to \datapar[<double>] is non-portable.
 Compound assignment, on the other hand, implies an implicit conversion back to the type of the expression on the left of the assignment operator.
 Thus, it is possible to define compound operators that execute the operation correctly on the promoted type without sacrificing portability.
 There are two arguments for not relaxing the rules for compound assignment, though:
 \begin{enumerate}
-  \item Consistency: The conversion of an expression with compound assignment to a binary operator suddenly would not compile anymore.
+  \item Consistency: The conversion of an expression with compound assignment to a binary operator might make it ill-formed.
   \item The implicit conversion in the \code{int * double} case could be expensive and unintended.
-    This is already a problem for builtin types where many developers multiply \float variables with \double prvalues.
+    This is already a problem for builtin types, where many developers multiply \float variables with \double prvalues, though.
 \end{enumerate}
 
 \subsection{Return Type of Masked Assignment Operators}
@@ -112,7 +112,7 @@ class datapar;
 
 \subsubsection{Standpoints}
 The controversy is about how the flexibility of a type with arbitrary \code N is presented to the users.
-Is there a (clear) distinction between a “fundamental” type with target-dependent (i.e. fixed) \code N and a higher-level abstraction with arbitrary \code N which can potentially compile to inefficient machine code.
+Is there a (clear) distinction between a “fundamental” type with target-dependent (i.e. fixed) \code N and a higher-level abstraction with arbitrary \code N which can potentially compile to inefficient machine code?
 Or should the \CC{} standard only define \type{arbitrary} and set it to a default \code N value that corresponds to the target-dependent \code N.
 Thus, the default \code N, of \type{arbitrary} would correspond to \type{fundamental}.
 
@@ -139,7 +139,7 @@ using floatvec = datapar<float>;
 using intvec = arbitrary<int, floatvec::size()>;
 using doublevec = arbitrary<int, floatvec::size()>;
 \end{lstlisting}
-Objects of types \type{floatvec}, \type{intvec}, and \type{doublevec} will work together independent of the target system.
+Objects of types \type{floatvec}, \type{intvec}, and \type{doublevec} will work together, independent of the target system.
 
 Obviously, these type aliases are basically the same if the \code N parameter of \type{arbitrary} has a default value:
 \smallskip\begin{lstlisting}[style=Vc]
@@ -179,7 +179,7 @@ Examples:
 
 \begin{enumerate}
   \item Mixed \intt--\float operations
-\smallskip\begin{lstlisting}[style=Vc]
+\smallskip\begin{lstlisting}[style=Vc,numbers=left]
 using floatv = datapar<float>;  // native ABI
 using float_sized_abi = datapar_abi::fixed_size<floatv::size()>;
 using intv = datapar<int, float_sized_abi>;
@@ -193,7 +193,7 @@ intv y = floatv() + intv();/*! \label{lstline:2} */
     Line \ref{lstline:2} is also well-formed because implicit conversion from \datapar[<\type T, \type{Abi}>] to \datapar[<\type U, \fixedsizeN{}>] is allowed whenever \code{N == \datapar{}<\type T, \type{Abi}>::size()}.
 
   \item Native \intt vectors
-\smallskip\begin{lstlisting}[style=Vc]
+\smallskip\begin{lstlisting}[style=Vc,numbers=left]
 using intv = datapar<int>;  // native ABI
 using int_sized_abi = datapar_abi::fixed_size<intv::size()>;
 using floatv = datapar<float, int_sized_abi>;
@@ -261,5 +261,21 @@ For \datapar I prefer no default:
 Guidance from SG1 at Oulu 2016:\\
 \wgPoll{Should the interface provide a way to specify a number for over-alignment?}{2 & 6 & 5 & 0 & 0}
 \wgPoll{Should loads and stores have a default load/store flag?}{0 & 0 & 7 & 4 & 1}
+The discussion made it clear that we only want to support alignment flags in the load and store operations.
+The other functionality is orthogonal.
+
+\subsection{Unary Minus Return Type}\label{sec:unary minus}
+The return type of \datapar[<\type T, \type{Abi}>::operator-()] is \datapar[<\type T, \type{Abi}>].
+This is slightly different to the behavior of the underlying element type \type T, if \type T is an integral type of lower integer conversion rank than \intt.
+In this case integral promotion promotes the type to \intt before applying unary minus.
+Thus, the expression \code{-T()} is of type \intt for all \type T with lower integer conversion rank than \intt.
+This is widening of the element size is likely unintended for SIMD vector types.
+
+Fundamental types with integer conversion rank greater than \intt are not promoted and thus a unary minus expression has unchanged type.
+This behavior is copied to element types of lower integer conversion rank for \datapar.
+
+There may be one interesting alternative to pursue here:
+We can make it ill-formed to apply unary minus to unsigned integral types.
+Anyone who wants to have the modulo behavior of a unary minus could still write \code{0u - x}.
 
 % vim: tw=0 sw=2 spell

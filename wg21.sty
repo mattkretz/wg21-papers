@@ -262,14 +262,10 @@
     \newlength{\newnumberwidth}
     \settowidth{\newnumberwidth}{99} % yields overfull hbox warnings for pages > 999
     \cftsetpnumwidth{\newnumberwidth}
-    % have the bib neatly positioned after the rest
-    \newlength{\beforebibskip}
-    \setlength{\beforebibskip}{0em}
     % only show sections and subsections
     \setcounter{tocdepth}{1}
     % sections
       \setlength{\cftbeforesecskip}{.1em}%
-      \setlength{\beforebibskip}{.2em}%
       \renewcommand{\cftsecpresnum}{\spacedsmallcaps}%
       \renewcommand{\cftsecfont}{\spacedsmallcaps}%
       \renewcommand{\cftsecpagefont}{\normalfont\scshape\addfontfeature{Numbers={Monospaced}}}%
@@ -466,7 +462,7 @@ frameround=ffff,
 rulesep=2pt,
 rulecolor=\color[cmyk]{0,0,0,0.1},
 floatplacement=btp,
-numberstyle=\scshape\addfontfeature{Numbers={Uppercase,Monospaced}}\tiny,
+%numberstyle=\scshape\addfontfeature{Numbers={Uppercase,Monospaced}}\tiny,
 basicstyle=\listingssize\ttfamily
 }
 \lstset{%

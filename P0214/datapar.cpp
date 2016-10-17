@@ -32,8 +32,8 @@ namespace std {
       template <class U, class Flags> void copy_from(const U *mem, mask_type k, Flags);
 
       // stores [datapar.store]
-      template <class U, class Flags> void copy_to(U *mem, Flags);
-      template <class U, class Flags> void copy_to(U *mem, mask_type k, Flags);
+      template <class U, class Flags> void copy_to(U *mem, Flags) const;
+      template <class U, class Flags> void copy_to(U *mem, mask_type k, Flags) const;
 
       // scalar access:
       reference operator[](size_type);
