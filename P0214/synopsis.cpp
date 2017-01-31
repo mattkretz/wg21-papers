@@ -202,5 +202,17 @@ namespace std {
     template <class BinaryOperation = std::plus<>, class M, class T, class Abi>
     T reduce(const where_expression<M, datapar<T, Abi>> &x, T init,
              BinaryOperation binary_op = BinaryOperation());
+
+    // algorithms [datapar.alg]
+    template <class T, class A>
+    datapar<T, A> min(const datapar<T, A> &, const datapar<T, A> &);
+    template <class T, class A>
+    datapar<T, A> max(const datapar<T, A> &, const datapar<T, A> &);
+    template <class T, class A>
+    std::pair<datapar<T, A>, datapar<T, A>> minmax(const datapar<T, A> &,
+                                                   const datapar<T, A> &);
+    template <class T, class A>
+    datapar<T, A> clamp(const datapar<T, A> &v, const datapar<T, A> &lo,
+                        const datapar<T, A> &hi);
   }
 }
