@@ -489,6 +489,9 @@ basicstyle=\listingssize\ttfamily
       Date: & \yyyymmdddate\today \\
       Reply-to: & \parbox[t]{\textwidth}{\wgName} \\
       Audience: & \wgGroup \\
+      \ifdefined\wgTarget
+      Target: & \wgTarget \\
+      \fi
     \end{tabular}
     \begin{center}
       \huge
