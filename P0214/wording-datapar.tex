@@ -379,7 +379,7 @@ datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
     \item Otherwise, if \type T is integral and \type U is \intt
       the return type shall be \datapar{}\type{<T, Abi>}.%
       \comment{i.e. \code{\datapar{}<signed char>() + int() -> \datapar{}<signed char>}, however \code{\datapar{}<signed char>() + short() -> \datapar{}<short, fixed_size<datapar_size_v<signed char>>>}}
-    \item Otherwise, if \type T is integral and \type U is \uint
+    \item\label{uint conversion} Otherwise, if \type T is integral, \type U is \uint, and \type T is of smaller integer conversion rank than \intt
       the return type shall be \datapar{}\code{<make_unsigned_t<T>, Abi>}.%
       \comment{i.e. \code{\datapar[<signed char>]() + uint() -> \datapar[<unsigned char>]}, however \code{\datapar[<signed char>]() + ushort() -> \datapar[<ushort, fixed_size<datapar_size_v<signed char>>>]}}
     \item Otherwise, if \type U is a fundamental arithmetic type
@@ -496,7 +496,7 @@ T reduce(const datapar<T, Abi> &x, BinaryOperation binary_op = BinaryOperation()
 
 \begin{itemdecl}
 template <class BinaryOperation = std::plus<>, class M, class T, class Abi>
-U reduce(const where_expression<M, datapar<T, Abi>> &x, T init,
+T reduce(const where_expression<M, datapar<T, Abi>> &x, T init,
          BinaryOperation binary_op = BinaryOperation());
 \end{itemdecl}
 \begin{itemdescr}

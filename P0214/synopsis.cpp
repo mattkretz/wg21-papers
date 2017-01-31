@@ -200,7 +200,7 @@ namespace std {
     template <class BinaryOperation = std::plus<>, class T, class Abi>
     T reduce(const datapar<T, Abi> &, BinaryOperation = BinaryOperation());
     template <class BinaryOperation = std::plus<>, class M, class T, class Abi>
-    U reduce(const where_expression<M, datapar<T, Abi>> &x, T init,
+    T reduce(const where_expression<M, datapar<T, Abi>> &x, T init,
              BinaryOperation binary_op = BinaryOperation());
   }
 }

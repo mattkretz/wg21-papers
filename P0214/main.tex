@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Data-Parallel Vector Types \& Operations}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P0214R2}
+\newcommand\wgDocumentNumber{D0214R3}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgAcknowledgements{
   This work was supported by GSI Helmholtzzentrum für Schwerionenforschung
@@ -119,6 +119,12 @@ Previous revision: \citep{P0214R1}.
     \item Added algorithm overloads for \datapar reductions.
     Integrate with \code{where} to enable masked reductions. (\ref{sec:datapar.reductions})
     This made it necessary to spell out the class \type{where_expression}.
+\end{itemize}
+\subsection{Changes from R2}
+Previous revision: \citep{P0214R2}.
+\begin{itemize}
+    \chck Fixed return type of masked \code{reduce}.
+    \chck Fixed return type of binary operators if the second type is \uint (\ref{uint conversion}).
 \end{itemize}
 
 \input{strawpolls}
