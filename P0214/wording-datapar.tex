@@ -268,8 +268,8 @@ value_type min(mask_type k) const;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The value of an element $j$ for which \code{k[j] == true} and \code{operator[](j) <= operator[](i) || !k[i]} \foralli.
-  \pnum\remarks If all elements in \code k are \false, the return value is unspecified.%
-  \comment{Alternatively, it could return \code{numeric_limits<value_type>::max()}. Seems like an implementation detail, though.}
+  \pnum\remarks If all elements in \code k are \false, the return value is \code{numeric_limits<value_type>::max()}.%
+  \comment{Alternatively, it could be unspecified. The value seems like an implementation detail.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -284,8 +284,8 @@ value_type max(mask_type k) const;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The value of an element $j$ for which \code{k[j] == true} and \code{operator[](j) >= operator[](i) || !k[i]} \foralli.
-  \pnum\remarks If all elements in \code k are \false, the return value is unspecified.%
-  \comment{Alternatively, it could return \code{numeric_limits<value_type>::min()}. Seems like an implementation detail, though.}
+  \pnum\remarks If all elements in \code k are \false, the return value is \code{numeric_limits<value_type>::min()}.%
+  \comment{Alternatively, it could be unspecified. The value seems like an implementation detail.}
 \end{itemdescr}
 
 \wgSubsection{\type{datapar} non-member operations}{datapar.nonmembers}
