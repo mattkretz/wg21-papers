@@ -135,6 +135,11 @@ Previous revision: \citep{P0214R2}.
     \chck Fixed return type of binary operators if the second type is \uint (\ref{uint conversion}).
     \chck Fixed neutral element of masked \code{min}/\code{max} and drop UB.
     \chck Added binary \code{min}, \code{max}, \code{minmax}, and \code{clamp}.
+    \chck Removed reduction member functions in favor of non-member \code{reduce} (as requested by LEWG).
+    \chck Added non-member \code{hmin} and \code{hmax}, which cannot easily be optimized from \code{reduce}, since no function object such as \code{std::plus} exists.
+
+    \todo Remove implicit conversions between datapar types.
+    \todo Remove implicit conversions between mask types.
 \end{itemize}
 
 \input{strawpolls}

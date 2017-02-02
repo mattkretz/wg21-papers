@@ -199,9 +199,14 @@ namespace std {
     // reductions [datapar.reductions]
     template <class BinaryOperation = std::plus<>, class T, class Abi>
     T reduce(const datapar<T, Abi> &, BinaryOperation = BinaryOperation());
-    template <class BinaryOperation = std::plus<>, class M, class T, class Abi>
-    T reduce(const where_expression<M, datapar<T, Abi>> &x, T init,
-             BinaryOperation binary_op = BinaryOperation());
+    template <class BinaryOperation = std::plus<>, class M, class V>
+    typename V::value_type reduce(const where_expression<M, V> &x,
+                                  typename V::value_type init,
+                                  BinaryOperation binary_op = BinaryOperation());
+    template <class T, class A> T hmin(const datapar<T, A> &);
+    template <class M, class V> T hmin(const where_expression<M, V> &);
+    template <class T, class A> T hmax(const datapar<T, A> &);
+    template <class M, class V> T hmax(const where_expression<M, V> &);
 
     // algorithms [datapar.alg]
     template <class T, class A>

@@ -219,75 +219,6 @@ datapar operator-() const;
   \pnum\returns A \datapar object where the $i$-th element is initialized to \code{-operator[](i)} \foralli.
 \end{itemdescr}
 
-\wgSubsubsection{\datapar reductions}{datapar.redu}
-\comment{These functions are now redundant because of non-member \code{reduce}.
-I prefer to keep these as shorthands, though.}
-\begin{itemdecl}
-value_type sum() const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\returns The sum of all the elements stored in the \datapar object.
-    The order of summation is arbitrary.
-\end{itemdescr}
-
-\begin{itemdecl}
-value_type sum(mask_type) const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\returns The sum of all the elements stored in the \datapar object where the corresponding element in the first argument is \true.
-  The order of summation is arbitrary.
-  If all elements in the first argument are \false, then the return value is 0.
-\end{itemdescr}
-
-\begin{itemdecl}
-value_type product() const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\returns The product of all the elements stored in the \datapar object.
-    The order of multiplication is arbitrary.
-\end{itemdescr}
-
-\begin{itemdecl}
-value_type product(mask_type) const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\returns The product of all the elements stored in the \datapar object where the corresponding element in the first argument is \true.
-  The order of multiplication is arbitrary.
-  If all elements in the first argument are \false, then the return value is 1.
-\end{itemdescr}
-
-\begin{itemdecl}
-value_type min() const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\returns The value of an element $j$ for which \code{operator[](j) <= operator[](i)} \foralli.
-\end{itemdescr}
-
-\begin{itemdecl}
-value_type min(mask_type k) const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\returns The value of an element $j$ for which \code{k[j] == true} and \code{operator[](j) <= operator[](i) || !k[i]} \foralli.
-  \pnum\remarks If all elements in \code k are \false, the return value is \code{numeric_limits<value_type>::max()}.%
-  \comment{Alternatively, it could be unspecified. The value seems like an implementation detail.}
-\end{itemdescr}
-
-\begin{itemdecl}
-value_type max() const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\returns The value of an element $j$ for which \code{operator[](j) >= operator[](i)} \foralli.
-\end{itemdescr}
-
-\begin{itemdecl}
-value_type max(mask_type k) const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\returns The value of an element $j$ for which \code{k[j] == true} and \code{operator[](j) >= operator[](i) || !k[i]} \foralli.
-  \pnum\remarks If all elements in \code k are \false, the return value is \code{numeric_limits<value_type>::min()}.%
-  \comment{Alternatively, it could be unspecified. The value seems like an implementation detail.}
-\end{itemdescr}
-
 \wgSubsection{\type{datapar} non-member operations}{datapar.nonmembers}
 
 \wgSubsubsection{\datapar binary operators}{datapar.binary}
@@ -483,7 +414,7 @@ typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator< (const U &
   \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator after both operands have been converted to \type{datapar_return_type<datapar<T, Abi>, U>}.
 \end{itemdescr}
 
-\wgSubsubsection{\datapar non-member reductions}{datapar.reductions}
+\wgSubsubsection{\datapar reductions}{datapar.reductions}
 \begin{itemdecl}
 template <class BinaryOperation = std::plus<>, class T, class Abi>
 T reduce(const datapar<T, Abi> &x, BinaryOperation binary_op = BinaryOperation());
@@ -504,6 +435,37 @@ T reduce(const where_expression<M, datapar<T, Abi>> &x, T init,
   \pnum\requires \code{binary_op} shall be callable on arguments of type \type T and arguments of type \datapar[<T, A1>], where \type{A1} may be different to \type{Abi}.
   \pnum\realnote This overload of \code{reduce} requires an initial value because \code x may be empty.
 \end{itemdescr}
+
+\begin{itemdecl}
+template <class T, class A> T hmin(const datapar<T, A> &x);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The value of an element \code{x[j]} for which \code{x[j] <= x[i]} \foralli.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class M, class V> T hmin(const where_expression<M, V> &x);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The value of an element \code{x.data[j]} for which \code{x.mask[j] == true} and \code{x.data[j] <= x.data[i]} \foralli.
+  \pnum\remarks If all elements in \code{x.mask} are \false, the return value is \code{numeric_limits<V::value_type>::max()}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class T, class A> T hmax(const datapar<T, A> &);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The value of an element \code{x[j]} for which \code{x[j] >= x[i]} \foralli.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class M, class V> T hmax(const where_expression<M, V> &x);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The value of an element \code{x.data[j]} for which \code{x.mask[j] == true} and \code{x.data[j] >= x.data[i]} \foralli.
+  \pnum\remarks If all elements in \code{x.mask} are \false, the return value is \code{numeric_limits<V::value_type>::min()}.
+\end{itemdescr}
+
 
 \wgSubsubsection{\datapar casts}{datapar.casts}
 \begin{itemdecl}
