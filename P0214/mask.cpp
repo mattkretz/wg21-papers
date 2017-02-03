@@ -17,8 +17,8 @@ namespace std {
       mask &operator=(const mask &) = default;
       mask &operator=(mask &&) = default;
 
-      // implicit broadcast constructor
-      mask(value_type);
+      // broadcast constructor
+      explicit mask(value_type);
 
       // implicit type conversion constructor
       template <class U, class Abi2> mask(mask<U, Abi2>);
