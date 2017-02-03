@@ -22,9 +22,7 @@ namespace datapar_abi {
 
   \pnum
   The \type{scalar} tag is present in all implementations and forces \datapar and \mask to store a single component (i.e. \datapar{}\type{<T, datapar_abi::scalar>::size()} returns \code 1).
-  \comment{
-      \type{scalar} could be an alias for \type{fixed_size<1>}.
-      However, I think it is better to have a different ABI tag to make implicit conversions behave as for all the other non-fixed-size ABIs.}
+  \wgNote{\type{scalar} shall not be an alias for \type{fixed_size<1>}.}
 
   \pnum\label{datapar.fixedsize.def}%
   The \fixedsize tag is present in all implementations.
