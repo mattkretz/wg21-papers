@@ -36,12 +36,17 @@ datapar() = default;
 \end{itemdescr}
 
 \begin{itemdecl}
-datapar(value_type);
+template <class U> datapar(const U &);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum
-  \effects
-  Constructs an object with each element initialized to the value of the argument.
+  \pnum\remarks This constructor shall not participate in overload resolution unless either:
+  \begin{itemize}
+    \item \type U is a fundamental arithmetic type and every possible value of type \type U can be represented with type \valuetype,
+    \item or \type U is not a fundamental arithmetic type and is implicitly convertible to \valuetype,
+    \item or \type U is \intt,
+    \item or \type U is \uint and \valuetype is an unsigned integral type.
+  \end{itemize}
+  \pnum\effects Constructs an object with each element initialized to the value of the argument.
 \end{itemdescr}
 
 \comment{Should I add a generator ctor, taking a lambda to initialize the elements?}

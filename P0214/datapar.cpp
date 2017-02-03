@@ -18,7 +18,7 @@ namespace std {
       datapar &operator=(datapar &&) = default;
 
       // implicit broadcast constructor
-      datapar(value_type);
+      template <class U> datapar(const U &);
 
       // implicit type conversion constructor
       template <class U, class Abi2> datapar(datapar<U, Abi2>);
