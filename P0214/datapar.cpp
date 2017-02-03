@@ -52,6 +52,38 @@ namespace std {
       // unary operators (for any T)
       datapar operator+() const;
       datapar operator-() const;
+
+      // compound assignment [datapar.cassign]
+      datapar &operator+= (const datapar &);
+      datapar &operator-= (const datapar &);
+      datapar &operator*= (const datapar &);
+      datapar &operator/= (const datapar &);
+      datapar &operator%= (const datapar &);
+      datapar &operator&= (const datapar &);
+      datapar &operator|= (const datapar &);
+      datapar &operator^= (const datapar &);
+      datapar &operator<<=(const datapar &);
+      datapar &operator>>=(const datapar &);
+
+      // binary operators [datapar.binary]
+      friend datapar operator+ (const datapar &, const datapar &);
+      friend datapar operator- (const datapar &, const datapar &);
+      friend datapar operator* (const datapar &, const datapar &);
+      friend datapar operator/ (const datapar &, const datapar &);
+      friend datapar operator% (const datapar &, const datapar &);
+      friend datapar operator& (const datapar &, const datapar &);
+      friend datapar operator| (const datapar &, const datapar &);
+      friend datapar operator^ (const datapar &, const datapar &);
+      friend datapar operator<<(const datapar &, const datapar &);
+      friend datapar operator>>(const datapar &, const datapar &);
+
+      // compares [datapar.comparison]
+      friend mask_type operator==(const datapar &, const datapar &);
+      friend mask_type operator!=(const datapar &, const datapar &);
+      friend mask_type operator>=(const datapar &, const datapar &);
+      friend mask_type operator<=(const datapar &, const datapar &);
+      friend mask_type operator> (const datapar &, const datapar &);
+      friend mask_type operator< (const datapar &, const datapar &);
     };
   }
 }

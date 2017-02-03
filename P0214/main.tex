@@ -141,6 +141,7 @@ Previous revision: \citep{P0214R2}.
     \chck Extend \type{where_expression} to support \const \datapar objects.
     \chck Fixed \code{where} wording to not ignore \type{where_expression}.
     \chck Made \code{mask(bool)} constructor explicit.
+    \chck Made binary operators for \datapar and \mask friend functions of \datapar and \mask, simplifying the SFINAE requirements considerably.
 
     \todo Remove implicit conversions between datapar types.
     \todo Remove implicit conversions between mask types.

@@ -136,49 +136,29 @@ mask operator!() const;
 
 \wgSubsubsection{\mask binary operators}{mask.binary}
 \begin{itemdecl}
-template <class T0, class A0, class T1, class A1> using mask_return_type = ...  // exposition only
-template <class T0, class A0, class T1, class A1>
-mask_return_type<T0, A0, T1, A1> operator&&(const mask<T0, A0> &, const mask<T1, A1> &);
-template <class T0, class A0, class T1, class A1>
-mask_return_type<T0, A0, T1, A1> operator||(const mask<T0, A0> &, const mask<T1, A1> &);
-template <class T0, class A0, class T1, class A1>
-mask_return_type<T0, A0, T1, A1> operator& (const mask<T0, A0> &, const mask<T1, A1> &);
-template <class T0, class A0, class T1, class A1>
-mask_return_type<T0, A0, T1, A1> operator| (const mask<T0, A0> &, const mask<T1, A1> &);
-template <class T0, class A0, class T1, class A1>
-mask_return_type<T0, A0, T1, A1> operator^ (const mask<T0, A0> &, const mask<T1, A1> &);
+friend mask operator&&(const mask &, const mask &);
+friend mask operator||(const mask &, const mask &);
+friend mask operator& (const mask &, const mask &);
+friend mask operator| (const mask &, const mask &);
+friend mask operator^ (const mask &, const mask &);
 \end{itemdecl}
-\comment{I think we need an additional \code{operator@(const mask<T, A> \&, const mask<T, A> \&)} overload to enable use of objects that are implicitly convertible to more than one \mask instantiation with equal priority.}
 \begin{itemdescr}
-  \newcommand\maskreturntype{\type{mask_return_type<T, Abi, U>}\xspace}
-  \pnum\remarks The return type, \maskreturntype, shall be \mask[<\common{T0}{T1}, \commonabi{\datapar[<T0, A0>]}{\datapar[<T1, A1>]}{\common{T0}{T1}}>].
-    The functions \code{\textit{common}} and \code{\textit{commonabi}} identify the functions described in \ref{unusual conversions}.
-
-  \pnum\remarks Each of these operators only participate in overload resolution if both arguments are implicitly convertible to \maskreturntype.
-
   \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator.
 \end{itemdescr}
 
 \wgSubsubsection{\mask compares}{mask.comparison}
 \begin{itemdecl}
-template <class T0, class A0, class T1, class A1>
-bool operator==(const mask<T0, A0> &, const mask<T1, A1> &);
+friend bool operator==(const mask &, const mask &);
 \end{itemdecl}
-\comment{ditto.}
-\newcommand\maskCompareRemark{\pnum\remarks This operator only participates in overload resolution if \mask[<T0, A0>] is implicitly convertible to \mask[<T1, A1>] or \mask[<T1, A1>] is implicitly convertible to \mask[<T0, A0>].}
 \begin{itemdescr}
-  \maskCompareRemark
   \pnum\returns \true if all boolean elements of the first argument equal the corresponding element of the second argument.
   It returns \false otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T0, class A0, class T1, class A1>
-bool operator!=(const mask<T0, A0> &a, const mask<T1, A1> &b);
+friend bool operator!=(const mask &, const mask &);
 \end{itemdecl}
-\comment{ditto.}
 \begin{itemdescr}
-  \maskCompareRemark
   \pnum\returns \code{!operator==(a, b)}.
 \end{itemdescr}
 

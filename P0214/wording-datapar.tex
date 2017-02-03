@@ -219,155 +219,44 @@ datapar operator-() const;
   \pnum\returns A \datapar object where the $i$-th element is initialized to \code{-operator[](i)} \foralli.
 \end{itemdescr}
 
+\wgSubsubsection{\datapar compound assignment}{datapar.cassign}
+\begin{itemdecl}
+datapar &operator+= (const datapar &);
+datapar &operator-= (const datapar &);
+datapar &operator*= (const datapar &);
+datapar &operator/= (const datapar &);
+datapar &operator%= (const datapar &);
+datapar &operator&= (const datapar &);
+datapar &operator|= (const datapar &);
+datapar &operator^= (const datapar &);
+datapar &operator<<=(const datapar &);
+datapar &operator>>=(const datapar &);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks Each of these operators only participates in overload resolution if the indicated operator can be applied to objects of type \type{value_type}.
+  \pnum\effects Each of these operators performs the indicated operation component-wise on each of the elements of this object and the corresponding element of the argument.
+  \pnum\returns A reference to this object.
+\end{itemdescr}
+
 \wgSubsection{\type{datapar} non-member operations}{datapar.nonmembers}
 
 \wgSubsubsection{\datapar binary operators}{datapar.binary}
 \begin{itemdecl}
-template <class L, class R> using datapar_return_type = ...;  // exposition only
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator+ (datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator- (datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator* (datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator/ (datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator% (datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator& (datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator| (datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator^ (datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator<<(datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator>>(datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator+ (const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator- (const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator* (const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator/ (const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator% (const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator& (const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator| (const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator^ (const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator<<(const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-datapar_return_type<datapar<T, Abi>, U> operator>>(const U &, datapar<T, Abi>);
+friend datapar operator+ (const datapar &, const datapar &);
+friend datapar operator- (const datapar &, const datapar &);
+friend datapar operator* (const datapar &, const datapar &);
+friend datapar operator/ (const datapar &, const datapar &);
+friend datapar operator% (const datapar &, const datapar &);
+friend datapar operator& (const datapar &, const datapar &);
+friend datapar operator| (const datapar &, const datapar &);
+friend datapar operator^ (const datapar &, const datapar &);
+friend datapar operator<<(const datapar &, const datapar &);
+friend datapar operator>>(const datapar &, const datapar &);
 \end{itemdecl}
 \begin{itemdescr}
-  \newcommand\dataparreturntype{\type{datapar_return_type<datapar<T, Abi>, U>}\xspace}
-  \pnum\remarks\label{unusual conversions}
-  The return type of these operators (\dataparreturntype) shall be deduced according to the following rules:%
-  \comment{See \url{https://github.com/VcDevel/Vc/blob/191e13b2268c630d8e146157903b97181f9a49bd/tests/datapar.cpp\#L435} for a test of an implementation of these rules.}
-  \begin{itemize}
-    \item Let \common{A}{B} identify the type:
-      \comment{\textit{unusual arithmetic conversions} ;-)}
-      \begin{itemize}
-        \item \type A if \type A equals \type B.
-        \item Otherwise, \type A if \type B is not a fundamental arithmetic type.
-        \item Otherwise, \type B if \type A is not a fundamental arithmetic type.
-        \item Otherwise, \code{decltype(A() + B())} if any of the types \type A or \type B is a floating-point type.
-        \item Otherwise, \type A if \code{sizeof(A) > sizeof(B)}.
-        \item Otherwise, \type B if \code{sizeof(A) < sizeof(B)}.
-        \item Otherwise, \type C shall identify the type with greater integer conversion rank of the types \type A and \type B and:
-          \begin{itemize}
-            \item \type C is used if \code{is_signed_v<A> == is_signed_v<B>}, and
-            \item \code{make_unsigned_t<C>} otherwise.
-          \end{itemize}
-      \end{itemize}
-    \item Let \commonabi{V0}{V1}{T} identify the type:
-      % Consider:
-      % if datapar<int>::size() == datapar<float>::size() then the following may not happen:
-      % datapar<int> + datapar<float, fixed_size> -> datapar<float>
-      % because datapar<int> is not convertible to datapar<float>
-      %
-      % OTOH, it would be nice to get:
-      % datapar<float> + datapar<int, fixed_size> -> datapar<float>, because that type was one of the input types
-      % datapar<long> + datapar<unsigned int, fixed_size> -> datapar<unsigned long
-      % datapar<float, fixed_size> + datapar<double, fixed_size> -> datapar<double, fixed_size> (i.e. never native)
-      \begin{itemize}
-        \item \type{V0::abi_type} if \type{V0::abi_type} equals \type{V1::abi_type}. % the remaining cases therefore only cover one native ABI and one fixed_size<N>
-        \item Otherwise, \code{abi_for_size_t<T, V0::size()>} if both \type{V0} and \type{V1} are implicitly convertible to \datapar[<\type T, abi_for_size_t<T, V0::size()>>].
-        \item Otherwise, \fixedsizescoped{}\code{<\type{V0}::size()>}.
-      \end{itemize}
-    \item If \code{is_datapar_v<U> == true}
-      then the return type is \datapar[<\common{T}{U::value_type}, \commonabi{datapar<T, Abi>}{U}{\common{T}{U::value_type}}>].
-      \wgNote{
-        This rule also matches if \code{datapar_size_v<T, Abi> != U::size()}.
-        The overload resolution participation condition in the next paragraph discards the operator.
-      }
-    \item Otherwise, if \type T is integral and \type U is \intt
-      the return type shall be \datapar{}\type{<T, Abi>}.%
-      \comment{i.e. \code{\datapar{}<signed char>() + int() -> \datapar{}<signed char>}, however \code{\datapar{}<signed char>() + short() -> \datapar{}<short, fixed_size<datapar_size_v<signed char>>>}}
-    \item\label{uint conversion} Otherwise, if \type T is integral, \type U is \uint, and \type T is of smaller integer conversion rank than \intt
-      the return type shall be \datapar{}\code{<make_unsigned_t<T>, Abi>}.%
-      \comment{i.e. \code{\datapar[<signed char>]() + uint() -> \datapar[<unsigned char>]}, however \code{\datapar[<signed char>]() + ushort() -> \datapar[<ushort, fixed_size<datapar_size_v<signed char>>>]}}
-    \item Otherwise, if \type U is a fundamental arithmetic type
-      then the return type shall be \datapar[<\common{T}{U}, \commonabi{datapar<T, Abi>}{datapar<U, \fixedsizescoped{}<datapar_size_v<T, Abi>>>}{\common{T}{U}}>].
-    \item Otherwise, if \type U is convertible to \intt
-      then the return type shall be \datapar[<\common{T}{U}, \commonabi{datapar<T, Abi>}{datapar<int, \fixedsizescoped{}<datapar_size_v<T, Abi>>>}{\common{T}{U}}>].
-    \item Otherwise, if \type U is implicitly convertible to \datapar{}\type{<V, A>}, where \type V and \type A are determined according to standard template type deduction,
-      then the return type shall be \datapar[<\common{T}{V}, \commonabi{datapar<T, Abi>}{datapar<V, A>}{\common{T}{V}}>].
-    \item Otherwise, if \type U is implicitly convertible to \datapar{}\type{<T, Abi>},
-      the return type shall be \datapar{}\type{<T, Abi>}.
-    \item Otherwise the operator does not participate in overload resolution.%
-      \comment{
-        This seems a strange place to put this.
-        Alternatively, modify the above rule to unconditionally use \datapar{}\type{<T, Abi>}.
-        The paragraph below would lead to the same effect.
-      }
-  \end{itemize}
+  \pnum\remarks Each of these operators only participate in overload resolution if the indicated operator can be applied to objects of type \type{value_type}.
 
-  \pnum\remarks Each of these operators only participate in overload resolution if all of the following hold:
-  \begin{itemize}
-    \item The indicated operator can be applied to objects of type \dataparreturntype{}\code{::}\type{value_type}.
-    \item \datapar{}\type{<T, Abi>} is implicitly convertible to \dataparreturntype.
-    \item \type U is implicitly convertible to \dataparreturntype.
-  \end{itemize}
-  \comment{
-    I think this allows \code{datapar<float, fixed_size<4>>() + double()} and returns \datapar[<double, fixed_size<4>>].
-    I also think that's what we want.
-  }
-
-  \pnum\remarks The operators with \type{const U \&} as first parameter shall not participate in overload resolution if \code{is_datapar_v<U> == true}.
-
-  \pnum\returns A \datapar object initialized with the results of the component-wise application of the indicated operator after both operands have been converted to the return type.
-\end{itemdescr}
-
-\wgSubsubsection{\datapar compound assignment}{datapar.cassign}
-\begin{itemdecl}
-template <class T, class Abi, class U> datapar<T, Abi> &operator+= (datapar<T, Abi> &, const U &);
-template <class T, class Abi, class U> datapar<T, Abi> &operator-= (datapar<T, Abi> &, const U &);
-template <class T, class Abi, class U> datapar<T, Abi> &operator*= (datapar<T, Abi> &, const U &);
-template <class T, class Abi, class U> datapar<T, Abi> &operator/= (datapar<T, Abi> &, const U &);
-template <class T, class Abi, class U> datapar<T, Abi> &operator%= (datapar<T, Abi> &, const U &);
-template <class T, class Abi, class U> datapar<T, Abi> &operator&= (datapar<T, Abi> &, const U &);
-template <class T, class Abi, class U> datapar<T, Abi> &operator|= (datapar<T, Abi> &, const U &);
-template <class T, class Abi, class U> datapar<T, Abi> &operator^= (datapar<T, Abi> &, const U &);
-template <class T, class Abi, class U> datapar<T, Abi> &operator<<=(datapar<T, Abi> &, const U &);
-template <class T, class Abi, class U> datapar<T, Abi> &operator>>=(datapar<T, Abi> &, const U &);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\remarks Each of these operators only participates in overload resolution if all of the following hold:
-  \begin{itemize}
-    \item The indicated operator can be applied to objects of type \type{datapar_return_type<datapar<T, Abi>, U>::value_type}.
-    \item \datapar{}\type{<T, Abi>} is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
-    \item \type U is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
-    \item \type{datapar_return_type<datapar<T, Abi>, U>} is implicitly convertible to \datapar{}\type{<T, Abi>}.
-  \end{itemize}
-  \pnum\effects Each of these operators performs the indicated operation component-wise on each of the elements of the first argument and the corresponding element of the second argument after conversion to \datapar{}\code{<T, Abi>}.
-  \pnum\returns A reference to the first argument.
+  \pnum\returns A \datapar object initialized with the results of the component-wise application of the indicated operator.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar logical operators}{datapar.logical}
@@ -375,43 +264,15 @@ template <class T, class Abi, class U> datapar<T, Abi> &operator>>=(datapar<T, A
 
 \wgSubsubsection{\datapar compare operators}{datapar.comparison}
 \begin{itemdecl}
-template <class T, class Abi, class U>
-typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator==(datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator!=(datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator>=(datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator<=(datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator> (datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator< (datapar<T, Abi>, const U &);
-template <class T, class Abi, class U>
-typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator==(const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator!=(const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator>=(const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator<=(const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator> (const U &, datapar<T, Abi>);
-template <class T, class Abi, class U>
-typename datapar_return_type<datapar<T, Abi>, U>::mask_type operator< (const U &, datapar<T, Abi>);
+friend mask_type operator==(const datapar &, const datapar &);
+friend mask_type operator!=(const datapar &, const datapar &);
+friend mask_type operator>=(const datapar &, const datapar &);
+friend mask_type operator<=(const datapar &, const datapar &);
+friend mask_type operator> (const datapar &, const datapar &);
+friend mask_type operator< (const datapar &, const datapar &);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks The return type of these operators shall be the \type{mask_type} member type of the type deduced according to the rules defined in [datapar.binary].
-
-  \pnum\remarks Each of these operators only participates in overload resolution if all of the following hold:
-  \begin{itemize}
-    \item \datapar{}\type{<T, Abi>} is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
-    \item \type U is implicitly convertible to \type{datapar_return_type<datapar<T, Abi>, U>}.
-  \end{itemize}
-
-  \pnum\remarks The operators with \type{const U \&} as first parameter shall not participate in overload resolution if \code{is_datapar_v<U> == true}.
-
-  \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator after both operands have been converted to \type{datapar_return_type<datapar<T, Abi>, U>}.
+  \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar reductions}{datapar.reductions}
