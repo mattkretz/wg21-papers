@@ -52,15 +52,13 @@ template <class U> datapar(const U &);
 \comment{Should I add a generator ctor, taking a lambda to initialize the elements?}
 
 \begin{itemdecl}
-template <class U, class Abi2> datapar(datapar<U, Abi2> x);
+template <class U> datapar(const datapar<U, datapar_abi::fixed_size<size()>> &x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks This constructor shall not participate in overload resolution unless either
+  \pnum\remarks This constructor shall not participate in overload resolution unless
   \begin{itemize}
-    \item \type{Abi} and \type{Abi2} are equal and
-      \type U and \type T are different integral types and
-      \code{make_signed<U>::type} equals \code{make_signed<T>::type}, or
-    \item at least one of \type{Abi} or \type{Abi2} is an instantiation of \fixedsizescoped and \code{size() == x.size()} and \type U is implicitly convertible to \type T.
+    \item \type{abi_type} equals \fixedsizescoped{}\code{<size()>}
+    \item and every possible value of \type U can be represented with type \valuetype.
   \end{itemize}
   \pnum\effects Constructs an object where the $i$-th element equals \code{static_cast<T>(x[i])} \foralli.
 \end{itemdescr}
