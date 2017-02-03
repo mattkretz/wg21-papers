@@ -136,7 +136,9 @@ Previous revision: \citep{P0214R2}.
     \chck Fixed neutral element of masked \code{min}/\code{max} and drop UB.
     \chck Added binary \code{min}, \code{max}, \code{minmax}, and \code{clamp}.
     \chck Removed reduction member functions in favor of non-member \code{reduce} (as requested by LEWG).
+    \chck Replaced \code{init} parameter of masked \code{reduce} with \code{neutral_element}.
     \chck Added non-member \code{hmin} and \code{hmax}, which cannot easily be optimized from \code{reduce}, since no function object such as \code{std::plus} exists.
+    \chck Extend \type{where_expression} to support \const \datapar objects.
 
     \todo Remove implicit conversions between datapar types.
     \todo Remove implicit conversions between mask types.

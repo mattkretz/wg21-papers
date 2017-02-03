@@ -169,7 +169,7 @@ namespace std {
     public:
       where_expression(const where_expression &) = delete;
       where_expression &operator=(const where_expression &) = delete;
-      where_expression(const M &k, T &d);
+      where_expression(const M k, T &d);
       template <class U> void operator=(U &&x);
       template <class U> void operator+=(U &&x);
       template <class U> void operator-=(U &&x);
@@ -189,20 +189,27 @@ namespace std {
       auto operator!() const;
 
     private:
-      const M &mask;  // exposition only
-      T &data;        // exposition only
+      const M mask;  // exposition only
+      T &data;       // exposition only
     };
-    template <class T0, class A0, class T1, class A1>
-    where_expression<mask<T1, A1>, datapar<T1, A1>> where(const mask<T0, A0> &, datapar<T1, A1> &);
-    template <class T> where_expression<bool, T> where(bool, T &);
+
+    template <class T, class A>
+    where_expression<const mask<T, A> &, datapar<T, A>> where(
+        const typename datapar<T, A>::mask_type &, datapar<T, A> &);
+    template <class T, class A>
+    const where_expression<const mask<T, A> &, const datapar<T, A>> where(
+        const typename datapar<T, A>::mask_type &k, const datapar<T, A> &d);
+    template <class T> where_expression<bool, T> where(bool k, T &d);
 
     // reductions [datapar.reductions]
     template <class BinaryOperation = std::plus<>, class T, class Abi>
     T reduce(const datapar<T, Abi> &, BinaryOperation = BinaryOperation());
     template <class BinaryOperation = std::plus<>, class M, class V>
-    typename V::value_type reduce(const where_expression<M, V> &x,
-                                  typename V::value_type init,
-                                  BinaryOperation binary_op = BinaryOperation());
+    typename V::value_type reduce(
+        const where_expression<M, V> &x,
+        typename V::value_type neutral_element = default_neutral_element,
+        BinaryOperation binary_op = BinaryOperation());
+
     template <class T, class A> T hmin(const datapar<T, A> &);
     template <class M, class V> T hmin(const where_expression<M, V> &);
     template <class T, class A> T hmax(const datapar<T, A> &);

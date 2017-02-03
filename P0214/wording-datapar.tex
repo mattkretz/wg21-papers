@@ -426,14 +426,18 @@ T reduce(const datapar<T, Abi> &x, BinaryOperation binary_op = BinaryOperation()
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class BinaryOperation = std::plus<>, class M, class T, class Abi>
-T reduce(const where_expression<M, datapar<T, Abi>> &x, T init,
-         BinaryOperation binary_op = BinaryOperation());
+template <class BinaryOperation = std::plus<>, class M, class V>
+typename V::value_type reduce(
+    const where_expression<M, V> &x,
+    typename V::value_type neutral_element = default_neutral_element,
+    BinaryOperation binary_op = BinaryOperation());
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns \code{\textit{GENERALIZED_SUM}(binary_op, init, x.data[i], \ldots)} \forallmaskedi{x.mask}.
+  \pnum\returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \forallmaskedi{x.mask}.
   \pnum\requires \code{binary_op} shall be callable on arguments of type \type T and arguments of type \datapar[<T, A1>], where \type{A1} may be different to \type{Abi}.
-  \pnum\realnote This overload of \code{reduce} requires an initial value because \code x may be empty.
+  \pnum\realnote This overload of \code{reduce} requires a neutral value to enable a parallelized implementation:
+  A temporary \datapar object initialized with \code{neutral_element} is conditionally assigned from \code{x.data} using \code{x.mask}.
+  Subsequently, the parallelized reduction (without mask) is applied to the temporary object.
 \end{itemdescr}
 
 \begin{itemdecl}
