@@ -49,6 +49,11 @@ namespace std {
       friend mask operator| (const mask &, const mask &);
       friend mask operator^ (const mask &, const mask &);
 
+      // mask compound assignment [mask.cassign]
+      friend mask &operator&=(mask &, const mask &);
+      friend mask &operator|=(mask &, const mask &);
+      friend mask &operator^=(mask &, const mask &);
+
       // mask compares [mask.comparison]
       friend bool operator==(const mask &, const mask &);
       friend bool operator!=(const mask &, const mask &);

@@ -146,6 +146,17 @@ friend mask operator^ (const mask &, const mask &);
   \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator.
 \end{itemdescr}
 
+\wgSubsubsection{\mask compound assignment}{mask.cassign}
+\begin{itemdecl}
+friend mask &operator&=(mask &, const mask &);
+friend mask &operator|=(mask &, const mask &);
+friend mask &operator^=(mask &, const mask &);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Each of these operators performs the indicated operator component-wise on each of the corresponding elements of the arguments.
+  \pnum\returns A reference to the first argument.
+\end{itemdescr}
+
 \wgSubsubsection{\mask compares}{mask.comparison}
 \begin{itemdecl}
 friend bool operator==(const mask &, const mask &);
