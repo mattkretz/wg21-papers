@@ -95,7 +95,7 @@ template <class U, class Flags> datapar(const U *mem, mask_type k, Flags);
 
 \wgSubsubsection{\datapar load functions}{datapar.load}
 \begin{itemdecl}
-template <class U, class Flags> void copy_from(const U *mem, Flags);
+template <class U, class Flags> void memload(const U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Replaces the elements of the \datapar object such that the $i$-th element is assigned with \code{static_cast<T>(mem[i])} \foralli.
@@ -104,7 +104,7 @@ template <class U, class Flags> void copy_from(const U *mem, Flags);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags> void copy_from(const U *mem, mask_type k, Flags);
+template <class U, class Flags> void memload(const U *mem, mask_type k, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Replaces all elements of the \datapar object where $k[i]$ is \true such that the $i$-th element is assigned with \code{static_cast<T>(mem[i])} \foralli.
@@ -118,7 +118,7 @@ template <class U, class Flags> void copy_from(const U *mem, mask_type k, Flags)
 
 \wgSubsubsection{\datapar store functions}{datapar.store}
 \begin{itemdecl}
-template <class U, class Flags> void copy_to(U *mem, Flags);
+template <class U, class Flags> void memstore(U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Copies all \datapar elements as if \code{mem[i] = static_cast<U>(operator[](i))} \foralli.
@@ -127,7 +127,7 @@ template <class U, class Flags> void copy_to(U *mem, Flags);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags> void copy_to(U *mem, mask_type k, Flags);
+template <class U, class Flags> void memstore(U *mem, mask_type k, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Copies each \datapar element $i$ where \code{k[i]} is \true as if \code{mem[i] = static_cast<U>(operator[](i))} \foralli.
