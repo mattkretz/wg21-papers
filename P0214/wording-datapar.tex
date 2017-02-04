@@ -297,7 +297,7 @@ T reduce(const datapar<T, Abi> &x, BinaryOperation binary_op = BinaryOperation()
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \foralli.
-  \pnum\requires \code{binary_op} shall be callable on arguments of type \type T and arguments of type \datapar[<T, A1>], where \type{A1} may be different to \type{Abi}.
+  \pnum\requires \code{binary_op} shall be callable with two arguments of type \type T or two arguments of type \datapar[<T, A1>], where \type{A1} may be different to \type{Abi}.
   \pnum\realnote This overload of \code{reduce} does not require an initial value because \code x is guaranteed to be non-empty.
 \end{itemdescr}
 
@@ -310,7 +310,7 @@ typename V::value_type reduce(
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \forallmaskedi{x.mask}.
-  \pnum\requires \code{binary_op} shall be callable on arguments of type \type T and arguments of type \datapar[<T, A1>], where \type{A1} may be different to \type{Abi}.
+  \pnum\requires \code{binary_op} shall be callable with two arguments of type \type T or two arguments of type \datapar[<T, A1>], where \type{A1} may be different to \type{Abi}.
   \pnum\realnote This overload of \code{reduce} requires a neutral value to enable a parallelized implementation:
   A temporary \datapar object initialized with \code{neutral_element} is conditionally assigned from \code{x.data} using \code{x.mask}.
   Subsequently, the parallelized reduction (without mask) is applied to the temporary object.
