@@ -49,8 +49,6 @@ template <class U> datapar(const U &);
   \pnum\effects Constructs an object with each element initialized to the value of the argument.
 \end{itemdescr}
 
-\comment{Should I add a generator ctor, taking a lambda to initialize the elements?}
-
 \begin{itemdecl}
 template <class U> datapar(const datapar<U, datapar_abi::fixed_size<size()>> &x);
 \end{itemdecl}
@@ -61,6 +59,20 @@ template <class U> datapar(const datapar<U, datapar_abi::fixed_size<size()>> &x)
     \item and every possible value of \type U can be represented with type \valuetype.
   \end{itemize}
   \pnum\effects Constructs an object where the $i$-th element equals \code{static_cast<T>(x[i])} \foralli.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class G> datapar(G &&gen);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks This constructor shall not participate in overload resolution unless either \code{gen()} or \code{gen(declval<integral_constant<size_t, 0>>())} are well-formed with a return type of \valuetype.
+  \pnum\effects Constructs an object where the $i$-th element is initialized to
+  \begin{itemize}
+    \item \code{gen()}, if \code{gen()} is well-formed,
+    \item otherwise \code{gen(integral_constant<size_t, i>())}.
+  \end{itemize}
+  \pnum\remarks The order of calls to \code{gen} is unspecified.%
+  \comment{Is there an implementation that can make use of this? For users a well-defined order can be useful.}
 \end{itemdescr}
 
 \begin{itemdecl}

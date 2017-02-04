@@ -23,6 +23,9 @@ namespace std {
       // implicit type conversion constructor
       template <class U> datapar(const datapar<U, datapar_abi::fixed_size<size()>> &);
 
+      // generator constructor
+      template <class G> datapar(G &&gen);
+
       // load constructor
       template <class U, class Flags> datapar(const U *mem, Flags);
       template <class U, class Flags> datapar(const U *mem, mask_type k, Flags);
