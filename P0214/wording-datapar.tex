@@ -234,25 +234,6 @@ datapar operator-() const;
   \pnum\returns A \datapar object where the $i$-th element is initialized to \code{-operator[](i)} \foralli.
 \end{itemdescr}
 
-\wgSubsubsection{\datapar compound assignment}{datapar.cassign}
-\begin{itemdecl}
-datapar &operator+= (const datapar &);
-datapar &operator-= (const datapar &);
-datapar &operator*= (const datapar &);
-datapar &operator/= (const datapar &);
-datapar &operator%= (const datapar &);
-datapar &operator&= (const datapar &);
-datapar &operator|= (const datapar &);
-datapar &operator^= (const datapar &);
-datapar &operator<<=(const datapar &);
-datapar &operator>>=(const datapar &);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\remarks Each of these operators only participates in overload resolution if the indicated operator can be applied to objects of type \type{value_type}.
-  \pnum\effects Each of these operators performs the indicated operation component-wise on each of the elements of this object and the corresponding element of the argument.
-  \pnum\returns A reference to this object.
-\end{itemdescr}
-
 \wgSubsection{\type{datapar} non-member operations}{datapar.nonmembers}
 
 \wgSubsubsection{\datapar binary operators}{datapar.binary}
@@ -272,6 +253,25 @@ friend datapar operator>>(const datapar &, const datapar &);
   \pnum\remarks Each of these operators only participate in overload resolution if the indicated operator can be applied to objects of type \type{value_type}.
 
   \pnum\returns A \datapar object initialized with the results of the component-wise application of the indicated operator.
+\end{itemdescr}
+
+\wgSubsubsection{\datapar compound assignment}{datapar.cassign}
+\begin{itemdecl}
+friend datapar &operator+= (datapar &, const datapar &);
+friend datapar &operator-= (datapar &, const datapar &);
+friend datapar &operator*= (datapar &, const datapar &);
+friend datapar &operator/= (datapar &, const datapar &);
+friend datapar &operator%= (datapar &, const datapar &);
+friend datapar &operator&= (datapar &, const datapar &);
+friend datapar &operator|= (datapar &, const datapar &);
+friend datapar &operator^= (datapar &, const datapar &);
+friend datapar &operator<<=(datapar &, const datapar &);
+friend datapar &operator>>=(datapar &, const datapar &);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks Each of these operators only participates in overload resolution if the indicated operator can be applied to objects of type \type{value_type}.
+  \pnum\effects Each of these operators performs the indicated operator component-wise on each of the corresponding elements of the arguments.
+  \pnum\returns A reference to the first argument.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar logical operators}{datapar.logical}
