@@ -12,7 +12,8 @@ The type \bool is not allowed.
 
 \pnum If any of the template arguments does not conform to the above requirements, the resulting class shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
 
-\pnum Default initialization should not perform any initialization on the elements; value-initialization shall initialize each element with \code{T()}.
+\pnum Default initialization performs no initialization of the elements; value-initialization initializes each element with \code{T()}.
+\wgNote{Thus, default initialization leaves the elements in an indeterminate state.}
 
 \begin{itemdecl}
 static constexpr size_type size();
