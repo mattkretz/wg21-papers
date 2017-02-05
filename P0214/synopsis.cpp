@@ -80,10 +80,10 @@ namespace std {
       template <class U> void operator^=(U &&x);
       template <class U> void operator<<=(U &&x);
       template <class U> void operator>>=(U &&x);
-      T &operator++();
-      T operator++(int);
-      T &operator--();
-      T operator--(int);
+      void operator++();
+      void operator++(int);
+      void operator--();
+      void operator--(int);
       T operator-() const;
       auto operator!() const;
 
