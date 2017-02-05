@@ -10,6 +10,8 @@ The type \bool is not allowed.
 
 \pnum The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
 
+\pnum If any of the template arguments does not conform to the above requirements, the resulting class shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
+
 \pnum Default initialization should not perform any initialization on the elements; value-initialization shall initialize each element with \code{bool()}.
 
 \begin{itemdecl}
