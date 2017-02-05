@@ -43,6 +43,9 @@ namespace std {
     template <class T, class Abi = datapar_abi::compatible<T>> class mask;
 
     // casts [datapar.casts]
+    template <class T, class U, class A>
+    datapar<T, /*see below*/> static_datapar_cast(const datapar<U, A> &);
+
     template <class T, class U, class... Us>
     conditional_t<(T::size() == (U::size() + Us::size()...)), T,
                   array<T, (U::size() + Us::size()...) / T::size()>> datapar_cast(U, Us...);

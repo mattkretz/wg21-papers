@@ -345,6 +345,16 @@ template <class M, class V> T hmax(const where_expression<M, V> &x);
 
 \wgSubsubsection{\datapar casts}{datapar.casts}
 \begin{itemdecl}
+template <class T, class U, class A>
+datapar<T, /*see below*/> static_datapar_cast(const datapar<U, A> &x);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks The return type is \datapar[<T, A>] if either \type U and \type T are equal or \type U and \type T are integral types that only differ in signedness.
+  Otherwise, the return type is \datapar[<T, \fixedsizescoped{}<\datapar<U, A>::size()>>].
+  \pnum\returns A \datapar object with the $i$-th element initialized to \code{static_cast<T>(x[i])}.
+\end{itemdescr}
+
+\begin{itemdecl}
 template <class T, class U, class... Us>
 conditional_t<(T::size() == (U::size() + Us::size()...)), T,
             array<T, (U::size() + Us::size()...) / T::size()>> datapar_cast(U, Us...);
