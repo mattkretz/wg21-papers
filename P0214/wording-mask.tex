@@ -41,11 +41,11 @@ explicit mask(value_type);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Abi2> mask(mask<U, Abi2> x);
+template <class U> mask(const mask<U, datapar_abi::fixed_size<size()>> &x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This constructor shall not participate in overload resolution unless
-    \datapar[<U, Abi2>] is implicitly convertible to \datapar[<T, Abi>].
+    \type{abi_type} equals \fixedsizescoped{}\code{<size()>}.
   \pnum\effects Constructs an object of type \mask where the $i$-th element equals \code{x[i]} \foralli.
 \end{itemdescr}
 

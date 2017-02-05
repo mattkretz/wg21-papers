@@ -21,7 +21,7 @@ namespace std {
       explicit mask(value_type);
 
       // implicit type conversion constructor
-      template <class U, class Abi2> mask(mask<U, Abi2>);
+      template <class U> mask(const mask<U, datapar_abi::fixed_size<size()>> &);
 
       // load constructor
       template <class Flags> mask(const value_type *mem, Flags);
