@@ -5,7 +5,7 @@
 \pnum The class template \mask[<T, Abi>] is a one-dimensional smart array of booleans.
 The number of elements in the array is determined at compile time, equal to the number of elements in \datapar[<T, Abi>].
 
-\pnum The first template argument \type T must be an integral or floating-point fundamental type.
+\pnum The first template argument \type T must be a cv-unqualified integral or floating-point type (3.9.1 [basic.fundamental]).
 The type \bool is not allowed.
 
 \pnum The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.

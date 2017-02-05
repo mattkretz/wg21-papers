@@ -5,7 +5,7 @@
 \pnum The class template \datapar{}\type{<T, Abi>} is a one-dimensional smart array.
 In contrast to \type{valarray} (26.6), the number of elements in the array is determined at compile time, according to the \type{Abi} template parameter.
 
-\pnum The first template argument \type T must be an integral or floating-point fundamental type.
+\pnum The first template argument \type T must be a cv-unqualified integral or floating-point type (3.9.1 [basic.fundamental]).
 The type \bool is not allowed.
 
 \pnum The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
