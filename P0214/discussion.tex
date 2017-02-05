@@ -154,6 +154,9 @@ If \code{arbitrary<float>() * arbitrary<int>()} just happens to compile (which i
 Note that with the existence of the \type{fundamental} class template, the \code N parameter of the \type{arbitrary} class would not have a default value and thus force the user to think a second longer about portability.
 
 \subsubsection{Progress}\label{sec:fixedsize progress}
+\newcommand\common[2]{\code{\textit{common}(\type{#1}, \type{#2})}}
+\newcommand\commonabi[3]{\code{\textit{commonabi}(\type{#1}, \type{#2}, \type{#3})}}
+
 SG1 Guidance at JAX 2016:\\
 \wgPoll{Specify datapar width using ABI tag, with a special template tag for fixed size.}{3 & 7 & 0 & 0 & 1}
 \wgPoll{Specify datapar width using <T, N, abi>, where abi is not specified by the user.}{1 & 2 & 5 & 2 & 1}

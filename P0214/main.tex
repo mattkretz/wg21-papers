@@ -33,8 +33,10 @@
 \newcommand\dataparEP{\code{execution\_policy::}\type{datapar}\xspace}
 \newcommand\seqEP{\code{execution\_policy::}\type{seq}\xspace}
 
-\newcommand\common[2]{\code{\textit{common}(\type{#1}, \type{#2})}}
-\newcommand\commonabi[3]{\code{\textit{commonabi}(\type{#1}, \type{#2}, \type{#3})}}
+\newcommand\flagsRemarks[1]{
+  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector\_aligned\_tag} and the pointer value is not a multiple of \code{memory\_alignment<#1>}, the behavior is undefined.
+  If the \type{Flags} template parameter is of type \type{flags::overaligned\_tag<N>} and the pointer value is not a multiple of \code N, the behavior is undefined.
+}
 
 \usepackage{pifont}
 
