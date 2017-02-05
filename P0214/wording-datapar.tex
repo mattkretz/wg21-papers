@@ -10,6 +10,8 @@ The type \bool is not allowed.
 
 \pnum The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
 
+\pnum Default initialization should not perform any initialization on the elements; value-initialization shall initialize each element with \code{T()}.
+
 \begin{itemdecl}
 static constexpr size_type size();
 \end{itemdecl}
@@ -25,16 +27,6 @@ explicit datapar(const implementation_defined &init);
 \end{itemdecl}
 
 \wgSubsubsection{\datapar constructors}{datapar.ctor}
-\begin{itemdecl}
-datapar() = default;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum
-  \effects
-  Constructs an object with all elements initialized to \code{T()}.
-  \wgNote{This zero-initializes the object.}
-\end{itemdescr}
-
 \begin{itemdecl}
 template <class U> datapar(const U &);
 \end{itemdecl}
