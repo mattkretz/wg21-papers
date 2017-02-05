@@ -35,11 +35,11 @@ namespace std {
       template <class Flags> void memstore(value_type *mem, Flags) const;
       template <class Flags> void memstore(value_type *mem, mask k, Flags) const;
 
-      // scalar access:
+      // scalar access [mask.subscr]
       reference operator[](size_type);
       value_type operator[](size_type) const;
 
-      // negation:
+      // unary operators [mask.unary]
       mask operator!() const;
 
       // mask binary operators [mask.binary]

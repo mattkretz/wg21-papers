@@ -38,21 +38,17 @@ namespace std {
       template <class U, class Flags> void memstore(U *mem, Flags) const;
       template <class U, class Flags> void memstore(U *mem, mask_type k, Flags) const;
 
-      // scalar access:
+      // scalar access [datapar.subscr]
       reference operator[](size_type);
       value_type operator[](size_type) const;
 
-      // increment and decrement:
+      // unary operators [datapar.unary]
       datapar &operator++();
       datapar operator++(int);
       datapar &operator--();
       datapar operator--(int);
-
-      // unary operators (for integral T)
       mask_type operator!() const;
       datapar operator~() const;
-
-      // unary operators (for any T)
       datapar operator+() const;
       datapar operator-() const;
 
