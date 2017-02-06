@@ -35,8 +35,11 @@ After more discussion on the LEWG reflector, in Issaquah, and between me and Jen
 No implicit conversion will ever allow a narrowing conversion of the element type (and signed - unsigned is narrowing in both directions).
 
 \subsection{Broadcast Constructor}
-The broadcast constructor is not declared as \code{explicit} to ease the use of scalar prvalues in expressions involving data-parallel operations.
+The \datapar broadcast constructor is not declared \code{explicit} to ease the use of scalar prvalues in expressions involving data-parallel operations.
 The operations where such a conversion should not be implicit consequently need to use SFINAE / concepts to inhibit the conversion.
+
+Experience from Vc shows that the situation is different for \mask, where an implicit conversion from \bool typically hides an error.
+(Since there is little use for broadcasting \true or \false.)
 
 \subsection{Aliasing of Subscript Operators}
 The subscript operators return an rvalue.
