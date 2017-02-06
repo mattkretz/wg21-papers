@@ -1,5 +1,7 @@
 namespace std {
   namespace experimental {
+    template <class Abi> using scharv = datapar<signed char, Abi>;  // exposition only
+    template <class Abi> using shortv = datapar<short, Abi>;  // exposition only
     template <class Abi> using intv = datapar<int, Abi>;  // exposition only
     template <class Abi> using longv = datapar<long int, Abi>;  // exposition only
     template <class Abi> using llongv = datapar<long long int, Abi>;  // exposition only
@@ -121,6 +123,8 @@ namespace std {
     template <class Abi> doublev<Abi> cbrt(doublev<Abi> x);
     template <class Abi> ldoublev<Abi> cbrt(ldoublev<Abi> x);
 
+    template <class Abi> scharv<Abi> abs(scharv<Abi> j);
+    template <class Abi> shortv<Abi> abs(shortv<Abi> j);
     template <class Abi> intv<Abi> abs(intv<Abi> j);
     template <class Abi> longv<Abi> abs(longv<Abi> j);
     template <class Abi> llongv<Abi> abs(llongv<Abi> j);
@@ -294,6 +298,8 @@ namespace std {
     template <class Abi> mask<long double, Abi> isunordered(ldoublev<Abi> x, ldoublev<Abi> y);
 
     template <class V> struct datapar_div_t { V quot, rem; };
+    template <class Abi> datapar_div_t<scharv<Abi>> div(scharv<Abi> numer, scharv<Abi> denom);
+    template <class Abi> datapar_div_t<shortv<Abi>> div(shortv<Abi> numer, shortv<Abi> denom);
     template <class Abi> datapar_div_t<intv<Abi>> div(intv<Abi> numer, intv<Abi> denom);
     template <class Abi> datapar_div_t<longv<Abi>> div(longv<Abi> numer, longv<Abi> denom);
     template <class Abi> datapar_div_t<llongv<Abi>> div(llongv<Abi> numer, llongv<Abi> denom);
