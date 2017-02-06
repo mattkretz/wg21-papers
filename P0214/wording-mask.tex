@@ -173,7 +173,6 @@ friend bool operator!=(const mask &, const mask &);
 \wgSubsubsection{\mask reductions}{mask.reductions}
 \begin{itemdecl}
 template <class T, class Abi> bool  all_of(mask<T, Abi>);
-constexpr bool  all_of(bool);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \true if all boolean elements in the function argument equal \true, \false otherwise.
@@ -181,7 +180,6 @@ constexpr bool  all_of(bool);
 
 \begin{itemdecl}
 template <class T, class Abi> bool  any_of(mask<T, Abi>);
-constexpr bool  any_of(bool);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \true if at least one boolean element in the function argument equals \true, \false otherwise.
@@ -189,7 +187,6 @@ constexpr bool  any_of(bool);
 
 \begin{itemdecl}
 template <class T, class Abi> bool none_of(mask<T, Abi>);
-constexpr bool none_of(bool);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \true if none of the boolean element in the function argument equals \true, \false otherwise.
@@ -197,16 +194,13 @@ constexpr bool none_of(bool);
 
 \begin{itemdecl}
 template <class T, class Abi> bool some_of(mask<T, Abi>);
-constexpr bool some_of(bool);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \true if at least one of the boolean elements in the function argument equals \true and at least one of the boolean elements in the function argument equals \false, \false otherwise.
-  \pnum\realnote \code{some_of(bool)} unconditionally returns \false.
 \end{itemdescr}
 
 \begin{itemdecl}
 template <class T, class Abi> int popcount(mask<T, Abi>);
-constexpr int popcount(bool);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The number of boolean elements that are \true.
@@ -226,14 +220,6 @@ template <class T, class Abi> int find_last_set(mask<T, Abi> m);
 \begin{itemdescr}
   \pnum\returns The highest element index \code i where \code{m[i] == true}.
   \pnum\remarks If \code{none_of(m) == true} the behavior is undefined.
-\end{itemdescr}
-
-\begin{itemdecl}
-constexpr int find_first_set(bool);
-constexpr int find_last_set(bool);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\returns 0 if the argument is \true.
 \end{itemdescr}
 
 \wgSubsubsection{Masked assigment}{mask.where}

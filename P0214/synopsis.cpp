@@ -58,19 +58,12 @@ namespace std {
 
     // reductions [mask.reductions]
     template <class T, class Abi> bool  all_of(mask<T, Abi>);
-    constexpr bool  all_of(bool);
     template <class T, class Abi> bool  any_of(mask<T, Abi>);
-    constexpr bool  any_of(bool);
     template <class T, class Abi> bool none_of(mask<T, Abi>);
-    constexpr bool none_of(bool);
     template <class T, class Abi> bool some_of(mask<T, Abi>);
-    constexpr bool some_of(bool);
     template <class T, class Abi> int popcount(mask<T, Abi>);
-    constexpr int popcount(bool);
     template <class T, class Abi> int find_first_set(mask<T, Abi>);
-    constexpr int find_first_set(bool);
     template <class T, class Abi> int find_last_set(mask<T, Abi>);
-    constexpr int find_last_set(bool);
 
     // masked assignment [mask.where]
     template <class M, class T> class where_expression {
