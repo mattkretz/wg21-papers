@@ -52,6 +52,25 @@ namespace std {
     template <class T, class U, class A>
     datapar<T, /*see below*/> static_datapar_cast(const datapar<U, A> &);
 
+    template <class T, class A>
+    datapar<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(
+        const datapar<T, A> &);
+    template <class T, class A>
+    mask<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(
+        const mask<T, A> &);
+    template <class T, size_t N>
+    datapar<T, datapar_abi::native<T>> to_native(
+        const datapar<T, datapar_abi::fixed_size<N>> &);
+    template <class T, size_t N>
+    mask<T, datapar_abi::native<T>> to_native(
+        const mask<T, datapar_abi::fixed_size<N>> &);
+    template <class T, size_t N>
+    datapar<T, datapar_abi::compatible<T>> to_compatible(
+        const datapar<T, datapar_abi::fixed_size<N>> &);
+    template <class T, size_t N>
+    mask<T, datapar_abi::compatible<T>> to_compatible(
+        const mask<T, datapar_abi::fixed_size<N>> &);
+
     template <class T, class U, class... Us>
     conditional_t<(T::size() == (U::size() + Us::size()...)), T,
                   array<T, (U::size() + Us::size()...) / T::size()>> datapar_cast(U, Us...);
