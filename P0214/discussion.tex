@@ -25,13 +25,6 @@ Rationales:
 
 \end{typelist*}
 
-\subsection{Default Construction}
-The default constructors of \datapar and \mask zero-initialize the object.
-This is important for compatibility with \code{\type T()}, which zero-initializes fundamental types.
-There may be a concern that unnecessary initialization could lead to unnecessary instructions.
-I consider this a QoI issue.
-Implementations are certainly able to recognize unnecessary initializations in many cases.
-
 \subsection{Conversions}
 The \datapar conversion constructor only allows implicit conversion from \datapar template instantiations with the same \type{Abi} type and compatible \valuetype.
 Discussion in SG1 showed clear preference for only allowing implicit conversion between integral types that only differ in signedness.
