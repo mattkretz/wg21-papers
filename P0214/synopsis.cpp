@@ -38,9 +38,15 @@ namespace std {
 
     // class template datapar [datapar]
     template <class T, class Abi = datapar_abi::compatible<T>> class datapar;
+    template <class T> using native_datapar = datapar<T, datapar_abi::native<T>>;
+    template <class T, int N>
+    using fixed_size_datapar = datapar<T, datapar_abi::fixed_size<N>>;
 
     // class template mask [mask]
     template <class T, class Abi = datapar_abi::compatible<T>> class mask;
+    template <class T> using native_mask = mask<T, datapar_abi::native<T>>;
+    template <class T, int N>
+    using fixed_size_mask = mask<T, datapar_abi::fixed_size<N>>;
 
     // casts [datapar.casts]
     template <class T, class U, class A>
