@@ -32,11 +32,9 @@ namespace std {
 
       // loads [datapar.load]
       template <class U, class Flags> void memload(const U *mem, Flags);
-      template <class U, class Flags> void memload(const U *mem, mask_type k, Flags);
 
       // stores [datapar.store]
       template <class U, class Flags> void memstore(U *mem, Flags) const;
-      template <class U, class Flags> void memstore(U *mem, mask_type k, Flags) const;
 
       // scalar access [datapar.subscr]
       reference operator[](size_type);

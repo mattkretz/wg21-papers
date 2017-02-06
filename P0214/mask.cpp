@@ -29,11 +29,9 @@ namespace std {
 
       // loads [mask.load]
       template <class Flags> void memload(const value_type *mem, Flags);
-      template <class Flags> void memload(const value_type *mem, mask k, Flags);
 
       // stores [mask.store]
       template <class Flags> void memstore(value_type *mem, Flags) const;
-      template <class Flags> void memstore(value_type *mem, mask k, Flags) const;
 
       // scalar access [mask.subscr]
       reference operator[](size_type);

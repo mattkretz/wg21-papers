@@ -40,7 +40,7 @@
 
 \usepackage{pifont}
 
-\newcommand\foralli{for all \code i $\in$ \code{[0, size())}\xspace}
+\newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
 \newcommand\forallmaskedi[1]{%
   for all \code i
   $\in \{j \in \mathbb{N}_0 | j < \code{size()} ⋀ \code{#1[}j\code{]}\}$%
@@ -155,6 +155,10 @@ Previous revision: \citep{P0214R2}.
     \chck Added \code{static_datapar_cast} for simple casts (\ref{sec:datapar.casts}).
     \chck Clarified default constructor (\ref{sec:datapar.overview}, \ref{sec:datapar.overview}).
     \chck Clarified \datapar and \mask with invalid template parameters to be complete types with deleted constructors, destructor, and assignment (\ref{sec:datapar.overview}, \ref{sec:datapar.overview}).
+    \chck Wrote a new subsection for a detailed description of \type{where_expression} (\ref{sec:datapar.whereexpr}).
+    \chck Moved masked loads and stores from \datapar and \mask to \type{where_expression} (\ref{sec:datapar.whereexpr}).
+          This required two more overloads of \code{where} to support value objects of type \mask (\ref{sec:mask.where}).
+    \chck Removed \type{where_expression}\code{::operator!} (\ref{sec:datapar.whereexpr}).
 \end{itemize}
 
 \input{strawpolls}

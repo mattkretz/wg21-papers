@@ -239,36 +239,30 @@ constexpr int find_last_set(bool);
 \wgSubsubsection{Masked assigment}{mask.where}
 \begin{itemdecl}
 template <class T, class A>
-where_expression<const mask<T, A> &, datapar<T, A>> where(
-    const typename datapar<T, A>::mask_type &m, datapar<T, A> &v);
+where_expression<mask<T, A>, datapar<T, A>> where(
+    const typename datapar<T, A>::mask_type &k, datapar<T, A> &v);
 template <class T, class A>
-const where_expression<const mask<T, A> &, const datapar<T, A>> where(
-    const typename datapar<T, A>::mask_type &m, const datapar<T, A> &v);
+const where_expression<mask<T, A>, const datapar<T, A>> where(
+    const typename datapar<T, A>::mask_type &k, const datapar<T, A> &v);
+
+template <class T, class A>
+where_expression<mask<T, A>, mask<T, A>> where(const remove_const_t<mask<T, A>> &k,
+                                               mask<T, A> &v);
+template <class T, class A>
+const where_expression<mask<T, A>, const mask<T, A>> where(
+    const remove_const_t<mask<T, A>> &k, const mask<T, A> &v);
 \end{itemdecl}
+\comment{\code{remove_const} is only used in place of a missing \code{template <class T> struct id \{ using type = T; \};} for inhibiting type deduction.}
 \begin{itemdescr}
-  \pnum\returns A temporary object with the following properties:
-  \begin{itemize}
-    \item The object is not \textit{CopyConstructible}.
-    \item Assignment and compound assignment operators only participate in overload resolution if the corresponding operator for \datapar[<T, A>] is usable.
-    \item \effects Assignment and compound assignment implement the same semantics as the corresponding operator for \datapar[<T, A>] with the exception that elements of \code v stay unmodified if the corresponding boolean element in \code m is \false.
-    \item The assignment and compound assignment operators return \void.
-  \end{itemize}
-  \pnum\realnote The \const overload is only useful for functions that should be applied to a masked \datapar input.
+  \pnum\returns An object of type \type{where_expression} (see \ref{sec:datapar.whereexpr}) initialized with the predicate \code k and the value reference \code v.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T> where_expression<bool, T> where(bool k, T &d);
+template <class T> where_expression<bool, T> where(bool k, T &v);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks The function only participates in overload resolution if \type T is not a \datapar instantiation.
-  \pnum\returns A temporary object with the following properties:
-  \begin{itemize}
-    \item The object is not \textit{CopyConstructible}.
-    \item Assignment and compound assignment operators only participate in overload resolution if the corresponding operator for \type T is usable.
-    \item \effects If the first argument is \false, the assignment operators do nothing.
-      If the first argument is \true, the assignment operators forward to the corresponding builtin assignment operator.
-    \item The assignment and compound assignment operators return \void.
-  \end{itemize}
+  \pnum\remarks The function only participates in overload resolution if \type T is neither a \datapar nor a \mask instantiation.
+  \pnum\returns An object of type \type{where_expression} (see \ref{sec:datapar.whereexpr}) initialized with the predicate \code k and the value reference \code v.
 \end{itemdescr}
 
 % vim: tw=0 spell sw=2

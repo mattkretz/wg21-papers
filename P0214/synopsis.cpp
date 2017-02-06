@@ -69,9 +69,13 @@ namespace std {
     // masked assignment [mask.where]
     template <class M, class T> class where_expression {
     public:
+      const M &mask;                     // exposition only
+      T &data;                           // exposition only
+      where_expression(const M &, T &);  // exposition only
+
       where_expression(const where_expression &) = delete;
       where_expression &operator=(const where_expression &) = delete;
-      where_expression(const M k, T &d);
+
       template <class U> void operator=(U &&x);
       template <class U> void operator+=(U &&x);
       template <class U> void operator-=(U &&x);
@@ -87,20 +91,26 @@ namespace std {
       void operator++(int);
       void operator--();
       void operator--(int);
-      T operator-() const;
-      auto operator!() const;
+      remove_const_t<T> operator-() const;
 
-    private:
-      const M mask;  // exposition only
-      T &data;       // exposition only
+      template <class U, class Flags> void memload(const U *mem, Flags);
+      template <class U, class Flags> void memstore(U *mem, Flags) const;
     };
 
     template <class T, class A>
-    where_expression<const mask<T, A> &, datapar<T, A>> where(
+    where_expression<mask<T, A>, datapar<T, A>> where(
         const typename datapar<T, A>::mask_type &, datapar<T, A> &);
     template <class T, class A>
-    const where_expression<const mask<T, A> &, const datapar<T, A>> where(
-        const typename datapar<T, A>::mask_type &k, const datapar<T, A> &d);
+    const where_expression<mask<T, A>, const datapar<T, A>> where(
+        const typename datapar<T, A>::mask_type &, const datapar<T, A> &);
+
+    template <class T, class A>
+    where_expression<mask<T, A>, mask<T, A>> where(const remove_const_t<mask<T, A>> &,
+                                                   mask<T, A> &);
+    template <class T, class A>
+    const where_expression<mask<T, A>, const mask<T, A>> where(
+        const remove_const_t<mask<T, A>> &, const mask<T, A> &);
+
     template <class T> where_expression<bool, T> where(bool k, T &d);
 
     // reductions [datapar.reductions]
