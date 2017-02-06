@@ -7,7 +7,7 @@ namespace std {
     template <class Abi> using doublev = datapar<double, Abi>;  // exposition only
     template <class Abi> using ldoublev = datapar<long double, Abi>;  // exposition only
     template <class T, class V>
-    using samesize = datapar<T, abi_for_size_t<V::size()>>;  // exposition only
+    using samesize = fixed_size_datapar<T, V::size()>;  // exposition only
 
     template <class Abi> floatv<Abi> acos(floatv<Abi> x);
     template <class Abi> doublev<Abi> acos(doublev<Abi> x);
