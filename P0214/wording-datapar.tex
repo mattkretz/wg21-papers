@@ -63,8 +63,7 @@ template <class G> datapar(G &&gen);
 \begin{itemdescr}
   \pnum\remarks This constructor shall not participate in overload resolution unless \code{gen(declval<integral_constant<size_t, 0>>())} is well-formed with a return type of \valuetype.
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{gen(integral_constant<size_t, i>())}.
-  \pnum\remarks The order of calls to \code{gen} is unspecified.%
-  \comment{Is there an implementation that can make use of this? For users a well-defined order can be useful.}
+  \pnum\remarks The order of calls to \code{gen} is unspecified.
 \end{itemdescr}
 
 \begin{itemdecl}
