@@ -50,8 +50,9 @@ template <class U> datapar(const datapar<U, datapar_abi::fixed_size<size()>> &x)
 \begin{itemdescr}
   \pnum\remarks This constructor shall not participate in overload resolution unless
   \begin{itemize}
-    \item \type{abi_type} equals \fixedsizescoped{}\code{<size()>}
-    \item and every possible value of \type U can be represented with type \valuetype.
+    \item \type{abi_type} equals \fixedsizescoped{}\code{<size()>},
+    \item and every possible value of \type U can be represented with type \valuetype,
+    \item and, if both \type U and \valuetype are integral, the integer conversion rank \citep[(4.15)]{N4618} of \valuetype is greater than the integer conversion rank of \type U.
   \end{itemize}
   \pnum\effects Constructs an object where the $i$-th element equals \code{static_cast<T>(x[i])} \foralli.
 \end{itemdescr}
