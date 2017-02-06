@@ -74,7 +74,7 @@ The assignment operators of the type returned by \code{where(mask, datapar)} cou
 \begin{itemize}
   \item A reference to the \datapar object that was modified.
   \item A temporary \datapar object that only contains the elements where the \mask is \true.
-  \item The object returned from the \code{where} function.
+  \item A reference to the \type{where_expression} object.
   \item Nothing (\ie \void).
 \end{itemize}
 My first choice was a reference to the modified \datapar object.
