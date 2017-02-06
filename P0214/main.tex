@@ -134,22 +134,20 @@ Previous revision: \citep{P0214R1}.
 Previous revision: \citep{P0214R2}.
 \begin{itemize}
     \chck Fixed return type of masked \code{reduce} (\ref{sec:datapar.reductions}).
-    \chck Fixed return type of binary operators if the second type is \uint (\ref{sec:uint conversion}).
-    \chck Fixed neutral element of masked \code{min}/\code{max} and drop UB (\ref{sec:datapar.ag}).
     \chck Added binary \code{min}, \code{max}, \code{minmax}, and \code{clamp} (\ref{sec:datapar.alg}).
-    \chck Removed reduction member functions in favor of non-member \code{reduce} (as requested by LEWG).
+    \chck Moved member \code{min} and \code{max} to non-member \code{hmin} and \code{hmax}, which cannot easily be optimized from \code{reduce}, since no function object such as \code{std::plus} exists (\ref{sec:datapar.reductions}).
+    \chck Fixed neutral element of masked \code{hmin}/\code{hmax} and drop UB (\ref{sec:datapar.reductions}).
+    \chck Removed remaining reduction member functions in favor of non-member \code{reduce} (as requested by LEWG).
     \chck Replaced \code{init} parameter of masked \code{reduce} with \code{neutral_element} (\ref{sec:datapar.reductions}).
-    \chck Added non-member \code{hmin} and \code{hmax}, which cannot easily be optimized from \code{reduce}, since no function object such as \code{std::plus} exists (\ref{sec:datapar.reductions}).
     \chck Extend \type{where_expression} to support \const \datapar objects (\ref{sec:mask.where}).
-    \chck Fixed \code{where} wording to not ignore \type{where_expression} (\ref{sec:mask.where}).
-    \chck Made \code{mask(bool)} constructor explicit (\ref{sec:mask.ctor}).
+    \chck Fixed missing \code{explicit} keyword on \code{mask(bool)} constructor (\ref{sec:mask.ctor}).
     \chck Made binary operators for \datapar and \mask friend functions of \datapar and \mask, simplifying the SFINAE requirements considerably (\ref{sec:datapar.binary}, \ref{sec:mask.binary}).
     \chck Restricted broadcasts to only allow non-narrowing conversions (\ref{sec:datapar.ctor}).
     \chck Restricted datapar to datapar conversions to only allow non-narrowing conversions with \type{fixed_size} ABI (\ref{sec:datapar.ctor}).
     \chck Added generator constructor (as discussed in LEWG in Issaquah) (\ref{sec:datapar.ctor}).
     \chck Renamed \code{copy_from} to \code{memload} and \code{copy_to} to \code{memstore}. (\ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store})
     \chck Documented effect of \type{overaligned_tag<N>} as \type{Flags} parameter to load/store. (\ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store})
-    \chck Clarified requirements on \type T parameter of \datapar and \mask.
+    \chck Clarified cv requirements on \type T parameter of \datapar and \mask.
     \chck Allowed all implicit \mask conversions with \fixedsize ABI and equal size (\ref{sec:mask.ctor}).
     \chck Made increment and decrement of \type{where_expression} return \type{void}.
     \chck Added \code{static_datapar_cast} for simple casts (\ref{sec:datapar.casts}).
