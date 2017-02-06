@@ -94,19 +94,6 @@ template <class U, class Flags> void memload(const U *mem, Flags);
   \flagsRemarks{\datapar, \type U}
 \end{itemdescr}
 
-\begin{itemdecl}
-template <class U, class Flags> void memload(const U *mem, mask_type k, Flags);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\effects Replaces all elements of the \datapar object where $k[i]$ is \true such that the $i$-th element is assigned with \code{static_cast<T>(mem[i])} \foralli.
-  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
-  \wgNote{
-    Masked loads only access the bytes in memory selected by the \code k argument.
-    This prohibits implementations that load the complete vector before blending with the previous values.
-  }
-  \flagsRemarks{\datapar, \type U}
-\end{itemdescr}
-
 \wgSubsubsection{\datapar store functions}{datapar.store}
 \begin{itemdecl}
 template <class U, class Flags> void memstore(U *mem, Flags);
@@ -114,19 +101,6 @@ template <class U, class Flags> void memstore(U *mem, Flags);
 \begin{itemdescr}
   \pnum\effects Copies all \datapar elements as if \code{mem[i] = static_cast<U>(operator[](i))} \foralli.
   \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by \code{mem}, the behavior is undefined.
-  \flagsRemarks{\datapar, \type U}
-\end{itemdescr}
-
-\begin{itemdecl}
-template <class U, class Flags> void memstore(U *mem, mask_type k, Flags);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\effects Copies each \datapar element $i$ where \code{k[i]} is \true as if \code{mem[i] = static_cast<U>(operator[](i))} \foralli.
-  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by \code{mem}, the behavior is undefined.
-  \wgNote{
-    Masked stores only write to the bytes in memory selected by the \code k argument.
-    This prohibits implementations that load, blend, and store the complete vector.
-  }
   \flagsRemarks{\datapar, \type U}
 \end{itemdescr}
 

@@ -74,15 +74,6 @@ template <class Flags> void memload(const value_type *mem, Flags);
   \flagsRemarks{\mask{}}
 \end{itemdescr}
 
-\begin{itemdecl}
-template <class Flags> void memload(const value_type *mem, mask k, Flags);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\effects Replaces all elements of the \mask object where $k[i]$ is \true such that the $i$-th element is assigned with \code{mem[i]} \foralli.
-  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
-  \flagsRemarks{\mask{}}
-\end{itemdescr}
-
 \wgSubsubsection{\mask store functions}{mask.store}
 \begin{itemdecl}
 template <class Flags> void memstore(value_type *mem, Flags);
@@ -90,19 +81,6 @@ template <class Flags> void memstore(value_type *mem, Flags);
 \begin{itemdescr}
   \pnum\effects Copies all \mask elements as if \code{mem[i] = operator[](i)} \foralli.
   \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by \code{mem}, the behavior is undefined.
-  \flagsRemarks{\mask{}}
-\end{itemdescr}
-
-\begin{itemdecl}
-template <class Flags> void memstore(value_type *mem, mask k, Flags);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\effects Copies each \mask element $i$ where \code{k[i]} is \true as if \code{mem[i] = operator[](i)} \foralli.
-  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by \code{mem}, the behavior is undefined.
-  \wgNote{
-    Masked stores only write to the bytes in memory selected by the \code k argument.
-    This prohibits implementations that load, blend, and store the complete vector.
-  }
   \flagsRemarks{\mask{}}
 \end{itemdescr}
 
