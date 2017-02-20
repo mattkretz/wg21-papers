@@ -216,6 +216,7 @@ friend datapar operator>>(const datapar &, const datapar &);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Each of these operators only participate in overload resolution if the indicated operator can be applied to objects of type \type{value_type}.
+  Additionally, \code{operator<<} and \code{operator>>} do not participate in overload resolution if \valuetype is a signed integral type.
 
   \pnum\returns A \datapar object initialized with the results of the component-wise application of the indicated operator.
 \end{itemdescr}
@@ -235,6 +236,7 @@ friend datapar &operator>>=(datapar &, const datapar &);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Each of these operators only participates in overload resolution if the indicated operator can be applied to objects of type \type{value_type}.
+  Additionally, \code{operator<<=} and \code{operator>>=} do not participate in overload resolution if \valuetype is a signed integral type.
   \pnum\effects Each of these operators performs the indicated operator component-wise on each of the corresponding elements of the arguments.
   \pnum\returns A reference to the first argument.
 \end{itemdescr}
