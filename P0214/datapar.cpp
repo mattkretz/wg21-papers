@@ -61,6 +61,8 @@ namespace std {
       friend datapar operator^ (const datapar &, const datapar &);
       friend datapar operator<<(const datapar &, const datapar &);
       friend datapar operator>>(const datapar &, const datapar &);
+      friend datapar operator<<(const datapar &, int);
+      friend datapar operator>>(const datapar &, int);
 
       // compound assignment [datapar.cassign]
       friend datapar &operator+= (datapar &, const datapar &);
@@ -73,6 +75,8 @@ namespace std {
       friend datapar &operator^= (datapar &, const datapar &);
       friend datapar &operator<<=(datapar &, const datapar &);
       friend datapar &operator>>=(datapar &, const datapar &);
+      friend datapar &operator<<=(datapar &, int);
+      friend datapar &operator>>=(datapar &, int);
 
       // compares [datapar.comparison]
       friend mask_type operator==(const datapar &, const datapar &);

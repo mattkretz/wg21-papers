@@ -221,6 +221,16 @@ friend datapar operator>>(const datapar &, const datapar &);
   \pnum\returns A \datapar object initialized with the results of the component-wise application of the indicated operator.
 \end{itemdescr}
 
+\begin{itemdecl}
+friend datapar operator<<(const datapar &v, int n);
+friend datapar operator>>(const datapar &v, int n);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks Both operators only participate in overload resolution if \valuetype is an unsigned integral type.
+
+  \pnum\returns A \datapar object where the $i$-th element is initialized to \code{v[i] \textit{op} n} \foralli.
+\end{itemdescr}
+
 \wgSubsubsection{\datapar compound assignment}{datapar.cassign}
 \begin{itemdecl}
 friend datapar &operator+= (datapar &, const datapar &);
@@ -238,6 +248,16 @@ friend datapar &operator>>=(datapar &, const datapar &);
   \pnum\remarks Each of these operators only participates in overload resolution if the indicated operator can be applied to objects of type \type{value_type}.
   Additionally, \code{operator<<=} and \code{operator>>=} do not participate in overload resolution if \valuetype is a signed integral type.
   \pnum\effects Each of these operators performs the indicated operator component-wise on each of the corresponding elements of the arguments.
+  \pnum\returns A reference to the first argument.
+\end{itemdescr}
+
+\begin{itemdecl}
+friend datapar &operator<<=(datapar &v, int n);
+friend datapar &operator>>=(datapar &v, int n);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks Both operators only participate in overload resolution if \valuetype is an unsigned integral type.
+  \pnum\effects Performs the indicated shift by \code n operation on the $i$-th element of \code v \foralli.
   \pnum\returns A reference to the first argument.
 \end{itemdescr}
 
