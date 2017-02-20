@@ -3,7 +3,7 @@ namespace std {
     template <class T, class Abi> class mask {
     public:
       using value_type = bool;
-      using reference = implementation_defined;
+      using reference = implementation_defined;  // see datapar::reference
       using datapar_type = datapar<T, Abi>;
       using size_type = size_t;
       using abi_type = Abi;

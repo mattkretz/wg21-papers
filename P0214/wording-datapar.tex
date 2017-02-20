@@ -15,6 +15,16 @@ The type \bool is not allowed.
 \pnum Default initialization performs no initialization of the elements; value-initialization initializes each element with \code{T()}.
 \wgNote{Thus, default initialization leaves the elements in an indeterminate state.}
 
+\pnum The member type \referencetype is an implementation-defined type with the following properties:
+\label{sec:reference type}
+\begin{itemize}
+  \item The type has a deleted default constructor, copy constructor, and copy assignment operator.
+
+  \item Assignment, compound assignment, increment, and decrement operators only participate in overload resolution if the \referencetype object is an rvalue and the corresponding operator of type \valuetype is usable.
+
+  \item Objects of type \referencetype are implicitly convertible to \valuetype.
+\end{itemize}
+
 \begin{itemdecl}
 static constexpr size_type size();
 \end{itemdecl}
@@ -105,24 +115,18 @@ template <class U, class Flags> void memstore(U *mem, Flags);
 \end{itemdescr}
 
 \wgSubsubsection{\datapar subscript operators}{datapar.subscr}
-\newcommand{\dataparElementReference}{
-  \pnum\returns A temporary object with the following properties:
-  \begin{itemize}
-    \item \remarks The object is neither \textit{DefaultConstructible}, \textit{CopyConstructible}, \textit{MoveConstructible}, \textit{CopyAssignable}, nor \textit{MoveAssignable}.
+\newcommand\dataparElementReference[1]{
+  \pnum\returns A temporary object of type \referencetype (see \ref{sec:reference type}) with the following effects:
 
-    \item \remarks Assignment, compound assignment, increment, and decrement operators only participate in overload resolution if
-      called in rvalue context and the corresponding operator of type \valuetype is usable.
+  \pnum\effects The assignment, compound assignment, increment, and decrement operators of \referencetype execute the indicated operation on the $i$-th element of the #1 object.
 
-    \item \effects The assignment, compound assignment, increment, and decrement operators execute the indicated operation on the $i$-th element in the \datapar object.
-
-    \item \effects Conversion to \valuetype returns a copy of the $i$-th element.
-  \end{itemize}
+  \pnum\effects Conversion to \valuetype returns a copy of the $i$-th element.
 }
 \begin{itemdecl}
 reference operator[](size_type i);
 \end{itemdecl}
 \begin{itemdescr}
-  \dataparElementReference
+  \dataparElementReference{\datapar{}}
 \end{itemdescr}
 
 \begin{itemdecl}
