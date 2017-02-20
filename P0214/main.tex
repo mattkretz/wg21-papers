@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Data-Parallel Vector Types \& Operations}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P0214R3}
+\newcommand\wgDocumentNumber{D0214R4}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{Parallelism TS 2}
 \newcommand\wgAcknowledgements{
@@ -133,35 +133,40 @@ Previous revision: \citep{P0214R1}.
 \subsection{Changes from R2}
 Previous revision: \citep{P0214R2}.
 \begin{itemize}
-    \chck Fixed return type of masked \code{reduce} (\ref{sec:datapar.reductions}).
-    \chck Added binary \code{min}, \code{max}, \code{minmax}, and \code{clamp} (\ref{sec:datapar.alg}).
-    \chck Moved member \code{min} and \code{max} to non-member \code{hmin} and \code{hmax}, which cannot easily be optimized from \code{reduce}, since no function object such as \code{std::plus} exists (\ref{sec:datapar.reductions}).
-    \chck Fixed neutral element of masked \code{hmin}/\code{hmax} and drop UB (\ref{sec:datapar.reductions}).
-    \chck Removed remaining reduction member functions in favor of non-member \code{reduce} (as requested by LEWG).
-    \chck Replaced \code{init} parameter of masked \code{reduce} with \code{neutral_element} (\ref{sec:datapar.reductions}).
-    \chck Extend \type{where_expression} to support \const \datapar objects (\ref{sec:mask.where}).
-    \chck Fixed missing \code{explicit} keyword on \code{mask(bool)} constructor (\ref{sec:mask.ctor}).
-    \chck Made binary operators for \datapar and \mask friend functions of \datapar and \mask, simplifying the SFINAE requirements considerably (\ref{sec:datapar.binary}, \ref{sec:mask.binary}).
-    \chck Restricted broadcasts to only allow non-narrowing conversions (\ref{sec:datapar.ctor}).
-    \chck Restricted datapar to datapar conversions to only allow non-narrowing conversions with \type{fixed_size} ABI (\ref{sec:datapar.ctor}).
-    \chck Added generator constructor (as discussed in LEWG in Issaquah) (\ref{sec:datapar.ctor}).
-    \chck Renamed \code{copy_from} to \code{memload} and \code{copy_to} to \code{memstore}. (\ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store})
-    \chck Documented effect of \type{overaligned_tag<N>} as \type{Flags} parameter to load/store. (\ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store})
-    \chck Clarified cv requirements on \type T parameter of \datapar and \mask.
-    \chck Allowed all implicit \mask conversions with \fixedsize ABI and equal size (\ref{sec:mask.ctor}).
-    \chck Made increment and decrement of \type{where_expression} return \type{void}.
-    \chck Added \code{static_datapar_cast} for simple casts (\ref{sec:datapar.casts}).
-    \chck Clarified default constructor (\ref{sec:datapar.overview}, \ref{sec:datapar.overview}).
-    \chck Clarified \datapar and \mask with invalid template parameters to be complete types with deleted constructors, destructor, and assignment (\ref{sec:datapar.overview}, \ref{sec:datapar.overview}).
-    \chck Wrote a new subsection for a detailed description of \type{where_expression} (\ref{sec:datapar.whereexpr}).
-    \chck Moved masked loads and stores from \datapar and \mask to \type{where_expression} (\ref{sec:datapar.whereexpr}).
+    \item Fixed return type of masked \code{reduce} (\ref{sec:datapar.reductions}).
+    \item Added binary \code{min}, \code{max}, \code{minmax}, and \code{clamp} (\ref{sec:datapar.alg}).
+    \item Moved member \code{min} and \code{max} to non-member \code{hmin} and \code{hmax}, which cannot easily be optimized from \code{reduce}, since no function object such as \code{std::plus} exists (\ref{sec:datapar.reductions}).
+    \item Fixed neutral element of masked \code{hmin}/\code{hmax} and drop UB (\ref{sec:datapar.reductions}).
+    \item Removed remaining reduction member functions in favor of non-member \code{reduce} (as requested by LEWG).
+    \item Replaced \code{init} parameter of masked \code{reduce} with \code{neutral_element} (\ref{sec:datapar.reductions}).
+    \item Extend \type{where_expression} to support \const \datapar objects (\ref{sec:mask.where}).
+    \item Fixed missing \code{explicit} keyword on \code{mask(bool)} constructor (\ref{sec:mask.ctor}).
+    \item Made binary operators for \datapar and \mask friend functions of \datapar and \mask, simplifying the SFINAE requirements considerably (\ref{sec:datapar.binary}, \ref{sec:mask.binary}).
+    \item Restricted broadcasts to only allow non-narrowing conversions (\ref{sec:datapar.ctor}).
+    \item Restricted datapar to datapar conversions to only allow non-narrowing conversions with \type{fixed_size} ABI (\ref{sec:datapar.ctor}).
+    \item Added generator constructor (as discussed in LEWG in Issaquah) (\ref{sec:datapar.ctor}).
+    \item Renamed \code{copy_from} to \code{memload} and \code{copy_to} to \code{memstore}. (\ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store})
+    \item Documented effect of \type{overaligned_tag<N>} as \type{Flags} parameter to load/store. (\ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store})
+    \item Clarified cv requirements on \type T parameter of \datapar and \mask.
+    \item Allowed all implicit \mask conversions with \fixedsize ABI and equal size (\ref{sec:mask.ctor}).
+    \item Made increment and decrement of \type{where_expression} return \type{void}.
+    \item Added \code{static_datapar_cast} for simple casts (\ref{sec:datapar.casts}).
+    \item Clarified default constructor (\ref{sec:datapar.overview}, \ref{sec:datapar.overview}).
+    \item Clarified \datapar and \mask with invalid template parameters to be complete types with deleted constructors, destructor, and assignment (\ref{sec:datapar.overview}, \ref{sec:datapar.overview}).
+    \item Wrote a new subsection for a detailed description of \type{where_expression} (\ref{sec:datapar.whereexpr}).
+    \item Moved masked loads and stores from \datapar and \mask to \type{where_expression} (\ref{sec:datapar.whereexpr}).
           This required two more overloads of \code{where} to support value objects of type \mask (\ref{sec:mask.where}).
-    \chck Removed \type{where_expression}\code{::operator!} (\ref{sec:datapar.whereexpr}).
-    \chck Added aliases \type{native_datapar}, \type{native_mask}, \type{fixed_size_datapar}, \type{fixed_size_mask} (\ref{sec:datapar.syn}).
-    \chck Removed \bool overloads of mask reductions awaiting a better solution (\ref{sec:mask.reductions}).
-    \chck Removed special math functions with \code f and \code l suffix and \code l and \code{ll} prefix (\ref{sec:datapar.math}).
-    \chck Modified special math functions with mixed types to use \type{fixed_size} instead of \code{abi_for_size} (\ref{sec:datapar.math}).
-    \chck Added simple ABI cast functions \code{to_fixed_size}, \code{to_native}, and \code{to_compatible} (\ref{sec:datapar.casts}).
+    \item Removed \type{where_expression}\code{::operator!} (\ref{sec:datapar.whereexpr}).
+    \item Added aliases \type{native_datapar}, \type{native_mask}, \type{fixed_size_datapar}, \type{fixed_size_mask} (\ref{sec:datapar.syn}).
+    \item Removed \bool overloads of mask reductions awaiting a better solution (\ref{sec:mask.reductions}).
+    \item Removed special math functions with \code f and \code l suffix and \code l and \code{ll} prefix (\ref{sec:datapar.math}).
+    \item Modified special math functions with mixed types to use \type{fixed_size} instead of \code{abi_for_size} (\ref{sec:datapar.math}).
+    \item Added simple ABI cast functions \code{to_fixed_size}, \code{to_native}, and \code{to_compatible} (\ref{sec:datapar.casts}).
+\end{itemize}
+
+\subsection{Changes from R3}
+Previous revision: \citep{P0214R3}.
+\begin{itemize}
 \end{itemize}
 
 \input{strawpolls}
