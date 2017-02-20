@@ -25,7 +25,7 @@ namespace std {
     template <class T> struct is_mask;
     template <class T> constexpr bool is_mask_v = is_mask<T>::value;
 
-    template <class T, size_t N> struct abi_for_size { typedef implementation_defined type; };
+    template <class T, size_t N> struct abi_for_size { using type = implementation_defined; };
     template <class T, size_t N> using abi_for_size_t = typename abi_for_size<T, N>::type;
 
     template <class T, class Abi = datapar_abi::compatible<T>>

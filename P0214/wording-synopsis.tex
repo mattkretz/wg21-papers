@@ -74,7 +74,7 @@ template <class T> struct is_mask;
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, size_t N> struct abi_for_size { typedef implementation_defined type; };
+template <class T, size_t N> struct abi_for_size { using type = implementation_defined; };
 \end{itemdecl}
 \begin{itemdescr}
   \pnum

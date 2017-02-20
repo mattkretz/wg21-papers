@@ -2,11 +2,11 @@ namespace std {
   namespace experimental {
     template <class T, class Abi> class datapar {
     public:
-      typedef T value_type;
-      typedef implementation_defined reference;
-      typedef mask<T, Abi> mask_type;
-      typedef size_t size_type;
-      typedef Abi abi_type;
+      using value_type = T;
+      using reference = implementation_defined;
+      using mask_type = mask<T, Abi>;
+      using size_type = size_t;
+      using abi_type = Abi;
 
       static constexpr size_type size();
 
