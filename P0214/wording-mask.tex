@@ -134,18 +134,11 @@ friend mask &operator^=(mask &, const mask &);
 
 \wgSubsubsection{\mask compares}{mask.comparison}
 \begin{itemdecl}
-friend bool operator==(const mask &, const mask &);
+friend mask operator==(const mask &, const mask &);
+friend mask operator!=(const mask &, const mask &);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns \true if all boolean elements of the first argument equal the corresponding element of the second argument.
-  It returns \false otherwise.
-\end{itemdescr}
-
-\begin{itemdecl}
-friend bool operator!=(const mask &, const mask &);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\returns \code{!operator==(a, b)}.
+  \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator.
 \end{itemdescr}
 
 \wgSubsubsection{\mask reductions}{mask.reductions}
