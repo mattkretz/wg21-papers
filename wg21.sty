@@ -233,23 +233,25 @@
 %\def\@myheadingrule{\nopagebreak\titleline{\color{HeadingRule}\titlerule}}
 \def\@myheadingrule{\vspace{0.2\baselineskip}\nopagebreak{\textcolor{HeadingRule}{\hrule height .4pt}}\nopagebreak}
 
-\renewcommand{\sectionlinesformat}[4]{%
-  \@hangfrom{\hskip #2#3}{\hfill \ifstr{#1}{section}{\MakeUppercase{#4}}{\MakeLowercase{#4}}}\nopagebreak%
-  \ifstr{#1}{section}{\@myheadingrule}{}%
-  \ifstr{#1}{subsection}{\@myheadingrule}{}%
-}
+\ifdefined\sectionlinesformat % On Travis VMs TeX Live is too old. KOMA Script doesn't have \sectionlinesformat yet.
+  \renewcommand{\sectionlinesformat}[4]{%
+    \@hangfrom{\hskip #2#3}{\hfill \ifstr{#1}{section}{\MakeUppercase{#4}}{\MakeLowercase{#4}}}\nopagebreak%
+    \ifstr{#1}{section}{\@myheadingrule}{}%
+    \ifstr{#1}{subsection}{\@myheadingrule}{}%
+  }
 
-\renewcommand*{\sectionformat}{{\sectionNumberFont\thesection\autodot}\enskip}
-\setkomafont{section}{\large\color{Headings}\scshape\addfontfeature{LetterSpace=4}}
+  \renewcommand*{\sectionformat}{{\sectionNumberFont\thesection\autodot}\enskip}
+  \setkomafont{section}{\large\color{Headings}\scshape\addfontfeature{LetterSpace=4}}
 
-\renewcommand*{\subsectionformat}{\spacedlowsmallcaps{\thesubsection\autodot}\enskip}
-\setkomafont{subsection}{\color{Headings}\scshape\addfontfeature{LetterSpace=7}}
+  \renewcommand*{\subsectionformat}{\spacedlowsmallcaps{\thesubsection\autodot}\enskip}
+  \setkomafont{subsection}{\color{Headings}\scshape\addfontfeature{LetterSpace=7}}
 
-\renewcommand*{\subsubsectionformat}{\spacedlowsmallcaps{\thesubsubsection\autodot}\enskip}
-\setkomafont{subsubsection}{\color{Headings}\scshape\addfontfeature{LetterSpace=7}}
+  \renewcommand*{\subsubsectionformat}{\spacedlowsmallcaps{\thesubsubsection\autodot}\enskip}
+  \setkomafont{subsubsection}{\color{Headings}\scshape\addfontfeature{LetterSpace=7}}
 
-\renewcommand*{\paragraphformat}{\theparagraph\autodot\enskip}
-\setkomafont{paragraph}{\scshape\addfontfeature{LetterSpace=7}}
+  \renewcommand*{\paragraphformat}{\theparagraph\autodot\enskip}
+  \setkomafont{paragraph}{\scshape\addfontfeature{LetterSpace=7}}
+\fi
 
 % descriptionlabels
 \renewcommand{\descriptionlabel}[1]{\hspace*{\labelsep}\spacedsmallcaps{#1}}
