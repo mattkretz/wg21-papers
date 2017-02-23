@@ -29,7 +29,7 @@ The type \bool is not allowed.
 \end{itemize}
 
 \begin{itemdecl}
-static constexpr size_type size();
+static constexpr size_type size() noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns the number of elements stored in objects of the given \datapar[<T, Abi>] type.
@@ -38,13 +38,13 @@ static constexpr size_type size();
 \pnum\realnote Implementations are encouraged to enable \code{static_cast}ing from/to (an) implementation-defined SIMD type(s).
 This would add one or more of the following declarations to class \datapar:
 \begin{itemdecl}
-explicit operator implementation_defined() const;
-explicit datapar(const implementation_defined &init);
+explicit operator implementation_defined() const noexcept;
+explicit datapar(const implementation_defined &init) noexcept;
 \end{itemdecl}
 
 \wgSubsubsection{\datapar constructors}{datapar.ctor}
 \begin{itemdecl}
-template <class U> datapar(const U &);
+template <class U> datapar(const U &) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This constructor shall not participate in overload resolution unless either:
@@ -58,7 +58,7 @@ template <class U> datapar(const U &);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U> datapar(const datapar<U, datapar_abi::fixed_size<size()>> &x);
+template <class U> datapar(const datapar<U, datapar_abi::fixed_size<size()>> &x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This constructor shall not participate in overload resolution unless
@@ -80,7 +80,7 @@ template <class G> datapar(G &&gen);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags> datapar(const U *mem, Flags);
+template <class U, class Flags> datapar(const U *mem, Flags) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{static_cast<T>(mem[i])} \foralli.
@@ -89,7 +89,7 @@ template <class U, class Flags> datapar(const U *mem, Flags);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags> datapar(const U *mem, mask_type k, Flags);
+template <class U, class Flags> datapar(const U *mem, mask_type k, Flags) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{k[i] ? static_cast<T>(mem[i]) : 0} \foralli.
@@ -99,7 +99,7 @@ template <class U, class Flags> datapar(const U *mem, mask_type k, Flags);
 
 \wgSubsubsection{\datapar load function}{datapar.load}
 \begin{itemdecl}
-template <class U, class Flags> void memload(const U *mem, Flags);
+template <class U, class Flags> void memload(const U *mem, Flags) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Replaces the elements of the \datapar object such that the $i$-th element is assigned with \code{static_cast<T>(mem[i])} \foralli.
@@ -109,7 +109,7 @@ template <class U, class Flags> void memload(const U *mem, Flags);
 
 \wgSubsubsection{\datapar store function}{datapar.store}
 \begin{itemdecl}
-template <class U, class Flags> void memstore(U *mem, Flags);
+template <class U, class Flags> void memstore(U *mem, Flags) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Copies all \datapar elements as if \code{mem[i] = static_cast<U>(operator[](i))} \foralli.
@@ -126,14 +126,14 @@ template <class U, class Flags> void memstore(U *mem, Flags);
   \pnum\effects Conversion to \valuetype returns a copy of the $i$-th element.
 }
 \begin{itemdecl}
-reference operator[](size_type i);
+reference operator[](size_type i) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \dataparElementReference{\datapar{}}
 \end{itemdescr}
 
 \begin{itemdecl}
-value_type operator[](size_type) const;
+value_type operator[](size_type) const noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A copy of the $i$-th element.
@@ -141,7 +141,7 @@ value_type operator[](size_type) const;
 
 \wgSubsubsection{\datapar unary operators}{datapar.unary}
 \begin{itemdecl}
-datapar &operator++();
+datapar &operator++() noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Increments every element of \code{*this} by one.
@@ -150,7 +150,7 @@ datapar &operator++();
 \end{itemdescr}
 
 \begin{itemdecl}
-datapar operator++(int);
+datapar operator++(int) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Increments every element of \code{*this} by one.
@@ -159,7 +159,7 @@ datapar operator++(int);
 \end{itemdescr}
 
 \begin{itemdecl}
-datapar &operator--();
+datapar &operator--() noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Decrements every element of \code{*this} by one.
@@ -168,7 +168,7 @@ datapar &operator--();
 \end{itemdescr}
 
 \begin{itemdecl}
-datapar operator--(int);
+datapar operator--(int) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Decrements every element of \code{*this} by one.
@@ -177,14 +177,14 @@ datapar operator--(int);
 \end{itemdescr}
 
 \begin{itemdecl}
-mask_type operator!() const;
+mask_type operator!() const noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A mask object with the $i$-th element set to \code{!operator[](i)} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-datapar operator~() const;
+datapar operator~() const noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\requires The first template argument \type T to \datapar must be an integral type.
@@ -193,14 +193,14 @@ datapar operator~() const;
 \end{itemdescr}
 
 \begin{itemdecl}
-datapar operator+() const;
+datapar operator+() const noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum \returns A copy of \code{*this}
 \end{itemdescr}
 
 \begin{itemdecl}
-datapar operator-() const;
+datapar operator-() const noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A \datapar object where the $i$-th element is initialized to \code{-operator[](i)} \foralli.
@@ -210,16 +210,16 @@ datapar operator-() const;
 
 \wgSubsubsection{\datapar binary operators}{datapar.binary}
 \begin{itemdecl}
-friend datapar operator+ (const datapar &, const datapar &);
-friend datapar operator- (const datapar &, const datapar &);
-friend datapar operator* (const datapar &, const datapar &);
-friend datapar operator/ (const datapar &, const datapar &);
-friend datapar operator% (const datapar &, const datapar &);
-friend datapar operator& (const datapar &, const datapar &);
-friend datapar operator| (const datapar &, const datapar &);
-friend datapar operator^ (const datapar &, const datapar &);
-friend datapar operator<<(const datapar &, const datapar &);
-friend datapar operator>>(const datapar &, const datapar &);
+friend datapar operator+ (const datapar &, const datapar &) noexcept;
+friend datapar operator- (const datapar &, const datapar &) noexcept;
+friend datapar operator* (const datapar &, const datapar &) noexcept;
+friend datapar operator/ (const datapar &, const datapar &) noexcept;
+friend datapar operator% (const datapar &, const datapar &) noexcept;
+friend datapar operator& (const datapar &, const datapar &) noexcept;
+friend datapar operator| (const datapar &, const datapar &) noexcept;
+friend datapar operator^ (const datapar &, const datapar &) noexcept;
+friend datapar operator<<(const datapar &, const datapar &) noexcept;
+friend datapar operator>>(const datapar &, const datapar &) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Each of these operators only participate in overload resolution if the indicated operator can be applied to objects of type \type{value_type}.
@@ -229,8 +229,8 @@ friend datapar operator>>(const datapar &, const datapar &);
 \end{itemdescr}
 
 \begin{itemdecl}
-friend datapar operator<<(const datapar &v, int n);
-friend datapar operator>>(const datapar &v, int n);
+friend datapar operator<<(const datapar &v, int n) noexcept;
+friend datapar operator>>(const datapar &v, int n) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Both operators only participate in overload resolution if \valuetype is an unsigned integral type.
@@ -240,16 +240,16 @@ friend datapar operator>>(const datapar &v, int n);
 
 \wgSubsubsection{\datapar compound assignment}{datapar.cassign}
 \begin{itemdecl}
-friend datapar &operator+= (datapar &, const datapar &);
-friend datapar &operator-= (datapar &, const datapar &);
-friend datapar &operator*= (datapar &, const datapar &);
-friend datapar &operator/= (datapar &, const datapar &);
-friend datapar &operator%= (datapar &, const datapar &);
-friend datapar &operator&= (datapar &, const datapar &);
-friend datapar &operator|= (datapar &, const datapar &);
-friend datapar &operator^= (datapar &, const datapar &);
-friend datapar &operator<<=(datapar &, const datapar &);
-friend datapar &operator>>=(datapar &, const datapar &);
+friend datapar &operator+= (datapar &, const datapar &) noexcept;
+friend datapar &operator-= (datapar &, const datapar &) noexcept;
+friend datapar &operator*= (datapar &, const datapar &) noexcept;
+friend datapar &operator/= (datapar &, const datapar &) noexcept;
+friend datapar &operator%= (datapar &, const datapar &) noexcept;
+friend datapar &operator&= (datapar &, const datapar &) noexcept;
+friend datapar &operator|= (datapar &, const datapar &) noexcept;
+friend datapar &operator^= (datapar &, const datapar &) noexcept;
+friend datapar &operator<<=(datapar &, const datapar &) noexcept;
+friend datapar &operator>>=(datapar &, const datapar &) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Each of these operators only participates in overload resolution if the indicated operator can be applied to objects of type \type{value_type}.
@@ -259,8 +259,8 @@ friend datapar &operator>>=(datapar &, const datapar &);
 \end{itemdescr}
 
 \begin{itemdecl}
-friend datapar &operator<<=(datapar &v, int n);
-friend datapar &operator>>=(datapar &v, int n);
+friend datapar &operator<<=(datapar &v, int n) noexcept;
+friend datapar &operator>>=(datapar &v, int n) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Both operators only participate in overload resolution if \valuetype is an unsigned integral type.
@@ -270,12 +270,12 @@ friend datapar &operator>>=(datapar &v, int n);
 
 \wgSubsubsection{\datapar compare operators}{datapar.comparison}
 \begin{itemdecl}
-friend mask_type operator==(const datapar &, const datapar &);
-friend mask_type operator!=(const datapar &, const datapar &);
-friend mask_type operator>=(const datapar &, const datapar &);
-friend mask_type operator<=(const datapar &, const datapar &);
-friend mask_type operator> (const datapar &, const datapar &);
-friend mask_type operator< (const datapar &, const datapar &);
+friend mask_type operator==(const datapar &, const datapar &) noexcept;
+friend mask_type operator!=(const datapar &, const datapar &) noexcept;
+friend mask_type operator>=(const datapar &, const datapar &) noexcept;
+friend mask_type operator<=(const datapar &, const datapar &) noexcept;
+friend mask_type operator> (const datapar &, const datapar &) noexcept;
+friend mask_type operator< (const datapar &, const datapar &) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator.
@@ -284,7 +284,7 @@ friend mask_type operator< (const datapar &, const datapar &);
 \wgSubsubsection{\datapar reductions}{datapar.reductions}
 \begin{itemdecl}
 template <class BinaryOperation = std::plus<>, class T, class Abi>
-T reduce(const datapar<T, Abi> &x, BinaryOperation binary_op = BinaryOperation());
+T reduce(const datapar<T, Abi> &x, BinaryOperation binary_op = BinaryOperation()) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \foralli.
@@ -297,7 +297,7 @@ template <class BinaryOperation = std::plus<>, class M, class V>
 typename V::value_type reduce(
     const where_expression<M, V> &x,
     typename V::value_type neutral_element = default_neutral_element,
-    BinaryOperation binary_op = BinaryOperation());
+    BinaryOperation binary_op = BinaryOperation()) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \forallmaskedi{x.mask}.
@@ -308,14 +308,14 @@ typename V::value_type reduce(
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class A> T hmin(const datapar<T, A> &x);
+template <class T, class A> T hmin(const datapar<T, A> &x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The value of an element \code{x[j]} for which \code{x[j] <= x[i]} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class M, class V> T hmin(const where_expression<M, V> &x);
+template <class M, class V> T hmin(const where_expression<M, V> &x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The value of an element \code{x.data[j]} for which \code{x.mask[j] == true} and \code{x.data[j] <= x.data[i]} \foralli.
@@ -323,14 +323,14 @@ template <class M, class V> T hmin(const where_expression<M, V> &x);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class A> T hmax(const datapar<T, A> &);
+template <class T, class A> T hmax(const datapar<T, A> &) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The value of an element \code{x[j]} for which \code{x[j] >= x[i]} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class M, class V> T hmax(const where_expression<M, V> &x);
+template <class M, class V> T hmax(const where_expression<M, V> &x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The value of an element \code{x.data[j]} for which \code{x.mask[j] == true} and \code{x.data[j] >= x.data[i]} \foralli.
@@ -341,7 +341,7 @@ template <class M, class V> T hmax(const where_expression<M, V> &x);
 \wgSubsubsection{\datapar casts}{datapar.casts}
 \begin{itemdecl}
 template <class T, class U, class A>
-datapar<T, /*see below*/> static_datapar_cast(const datapar<U, A> &x);
+datapar<T, /*see below*/> static_datapar_cast(const datapar<U, A> &x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks The return type is \datapar[<T, A>] if either \type U and \type T are equal or \type U and \type T are integral types that only differ in signedness.
@@ -352,10 +352,10 @@ datapar<T, /*see below*/> static_datapar_cast(const datapar<U, A> &x);
 \begin{itemdecl}
 template <class T, class A>
 datapar<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(
-    const datapar<T, A> &x);
+    const datapar<T, A> &x) noexcept;
 template <class T, class A>
 mask<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(
-    const mask<T, A> &x);
+    const mask<T, A> &x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \returns An object with the $i$-th element initialized to \code{x[i]}.
@@ -364,10 +364,10 @@ mask<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(
 \begin{itemdecl}
 template <class T, size_t N>
 datapar<T, datapar_abi::native<T>> to_native(
-    const datapar<T, datapar_abi::fixed_size<N>> &x);
+    const datapar<T, datapar_abi::fixed_size<N>> &x) noexcept;
 template <class T, size_t N>
 mask<T, datapar_abi::native<T>> to_native(
-    const mask<T, datapar_abi::fixed_size<N>> &x);
+    const mask<T, datapar_abi::fixed_size<N>> &x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \remarks These functions only participate in overload resolution if \code{datapar_size_v<T, datapar_abi::native<T>>} is equal to \code N.
@@ -377,10 +377,10 @@ mask<T, datapar_abi::native<T>> to_native(
 \begin{itemdecl}
 template <class T, size_t N>
 datapar<T, datapar_abi::compatible<T>> to_compatible(
-    const datapar<T, datapar_abi::fixed_size<N>> &x);
+    const datapar<T, datapar_abi::fixed_size<N>> &x) noexcept;
 template <class T, size_t N>
 mask<T, datapar_abi::compatible<T>> to_compatible(
-    const mask<T, datapar_abi::fixed_size<N>> &x);
+    const mask<T, datapar_abi::fixed_size<N>> &x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \remarks These functions only participate in overload resolution if \code{datapar_size_v<T, datapar_abi::compatible<T>>} is equal to \code N.
@@ -390,7 +390,7 @@ mask<T, datapar_abi::compatible<T>> to_compatible(
 \begin{itemdecl}
 template <class T, class U, class... Us>
 conditional_t<(T::size() == (U::size() + Us::size()...)), T,
-            array<T, (U::size() + Us::size()...) / T::size()>> datapar_cast(U, Us...);
+            array<T, (U::size() + Us::size()...) / T::size()>> datapar_cast(U, Us...) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks The \code{datapar_cast} function only participates in overload resolution if all of the following hold:
@@ -416,7 +416,7 @@ conditional_t<(T::size() == (U::size() + Us::size()...)), T,
 \wgSubsubsection{\datapar algorithms}{datapar.alg}
 \begin{itemdecl}
 template <class T, class A>
-datapar<T, A> min(const datapar<T, A> &a, const datapar<T, A> &b);
+datapar<T, A> min(const datapar<T, A> &a, const datapar<T, A> &b) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns An object with the $i$-th element initialized with the smaller value of \code{a[i]} and \code{b[i]} \foralli.
@@ -424,7 +424,7 @@ datapar<T, A> min(const datapar<T, A> &a, const datapar<T, A> &b);
 
 \begin{itemdecl}
 template <class T, class A>
-datapar<T, A> max(const datapar<T, A> &, const datapar<T, A> &);
+datapar<T, A> max(const datapar<T, A> &, const datapar<T, A> &) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns An object with the $i$-th element initialized with the larger value of \code{a[i]} and \code{b[i]} \foralli.
@@ -433,7 +433,7 @@ datapar<T, A> max(const datapar<T, A> &, const datapar<T, A> &);
 \begin{itemdecl}
 template <class T, class A>
 std::pair<datapar<T, A>, datapar<T, A>> minmax(const datapar<T, A> &,
-                                               const datapar<T, A> &);
+                                               const datapar<T, A> &) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns An object with the $i$-th element in the first \type{pair} member initialized with the smaller value of \code{a[i]} and \code{b[i]} \foralli.
@@ -443,7 +443,7 @@ std::pair<datapar<T, A>, datapar<T, A>> minmax(const datapar<T, A> &,
 \begin{itemdecl}
 template <class T, class A>
 datapar<T, A> clamp(const datapar<T, A> &v, const datapar<T, A> &lo,
-                    const datapar<T, A> &hi);
+                    const datapar<T, A> &hi) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\requires No element in \code{lo} shall be greater than the corresponding element in \code{hi}.

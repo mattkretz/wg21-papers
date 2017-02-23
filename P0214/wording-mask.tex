@@ -16,7 +16,7 @@ The type \bool is not allowed.
 \wgNote{Thus, default initialization leaves the elements in an indeterminate state.}
 
 \begin{itemdecl}
-static constexpr size_type size();
+static constexpr size_type size() noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns the number of boolean elements stored in objects of the given \mask[<T, Abi>] type.
@@ -25,20 +25,20 @@ static constexpr size_type size();
 \pnum\realnote Implementations are encouraged to enable \code{static_cast}ing from/to (an) implementation-defined SIMD mask type(s).
 This would add one or more of the following declarations to class \mask:
 \begin{itemdecl}
-explicit operator implementation_defined() const;
-explicit datapar(const implementation_defined &init);
+explicit operator implementation_defined() const noexcept;
+explicit datapar(const implementation_defined &init) noexcept;
 \end{itemdecl}
 
 \wgSubsubsection{\mask constructors}{mask.ctor}
 \begin{itemdecl}
-explicit mask(value_type);
+explicit mask(value_type) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Constructs an object with each element initialized to the value of the argument.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U> mask(const mask<U, datapar_abi::fixed_size<size()>> &x);
+template <class U> mask(const mask<U, datapar_abi::fixed_size<size()>> &x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This constructor shall not participate in overload resolution unless
@@ -47,7 +47,7 @@ template <class U> mask(const mask<U, datapar_abi::fixed_size<size()>> &x);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class Flags> mask(const value_type *mem, Flags);
+template <class Flags> mask(const value_type *mem, Flags) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{mem[i]} \foralli.
@@ -56,7 +56,7 @@ template <class Flags> mask(const value_type *mem, Flags);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class Flags> mask(const value_type *mem, mask k, Flags);
+template <class Flags> mask(const value_type *mem, mask k, Flags) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{k[i] ? mem[i] : false} \foralli.
@@ -66,7 +66,7 @@ template <class Flags> mask(const value_type *mem, mask k, Flags);
 
 \wgSubsubsection{\mask load function}{mask.load}
 \begin{itemdecl}
-template <class Flags> void memload(const value_type *mem, Flags);
+template <class Flags> void memload(const value_type *mem, Flags) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Replaces the elements of the \mask object such that the $i$-th element is assigned with \code{mem[i]} \foralli.
@@ -76,7 +76,7 @@ template <class Flags> void memload(const value_type *mem, Flags);
 
 \wgSubsubsection{\mask store function}{mask.store}
 \begin{itemdecl}
-template <class Flags> void memstore(value_type *mem, Flags);
+template <class Flags> void memstore(value_type *mem, Flags) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Copies all \mask elements as if \code{mem[i] = operator[](i)} \foralli.
@@ -86,14 +86,14 @@ template <class Flags> void memstore(value_type *mem, Flags);
 
 \wgSubsubsection{\mask{} subscript operators}{mask.subscr}
 \begin{itemdecl}
-reference operator[](size_type i);
+reference operator[](size_type i) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \dataparElementReference{\mask}
 \end{itemdescr}
 
 \begin{itemdecl}
-value_type operator[](size_type) const;
+value_type operator[](size_type) const noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A copy of the $i$-th element.
@@ -101,7 +101,7 @@ value_type operator[](size_type) const;
 
 \wgSubsubsection{\mask unary operators}{mask.unary}
 \begin{itemdecl}
-mask operator!() const;
+mask operator!() const noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A mask object with the $i$-th element set to the logical negation \foralli.
@@ -111,11 +111,11 @@ mask operator!() const;
 
 \wgSubsubsection{\mask binary operators}{mask.binary}
 \begin{itemdecl}
-friend mask operator&&(const mask &, const mask &);
-friend mask operator||(const mask &, const mask &);
-friend mask operator& (const mask &, const mask &);
-friend mask operator| (const mask &, const mask &);
-friend mask operator^ (const mask &, const mask &);
+friend mask operator&&(const mask &, const mask &) noexcept;
+friend mask operator||(const mask &, const mask &) noexcept;
+friend mask operator& (const mask &, const mask &) noexcept;
+friend mask operator| (const mask &, const mask &) noexcept;
+friend mask operator^ (const mask &, const mask &) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator.
@@ -123,9 +123,9 @@ friend mask operator^ (const mask &, const mask &);
 
 \wgSubsubsection{\mask compound assignment}{mask.cassign}
 \begin{itemdecl}
-friend mask &operator&=(mask &, const mask &);
-friend mask &operator|=(mask &, const mask &);
-friend mask &operator^=(mask &, const mask &);
+friend mask &operator&=(mask &, const mask &) noexcept;
+friend mask &operator|=(mask &, const mask &) noexcept;
+friend mask &operator^=(mask &, const mask &) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Each of these operators performs the indicated operator component-wise on each of the corresponding elements of the arguments.
@@ -134,8 +134,8 @@ friend mask &operator^=(mask &, const mask &);
 
 \wgSubsubsection{\mask compares}{mask.comparison}
 \begin{itemdecl}
-friend mask operator==(const mask &, const mask &);
-friend mask operator!=(const mask &, const mask &);
+friend mask operator==(const mask &, const mask &) noexcept;
+friend mask operator!=(const mask &, const mask &) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator.
@@ -143,42 +143,42 @@ friend mask operator!=(const mask &, const mask &);
 
 \wgSubsubsection{\mask reductions}{mask.reductions}
 \begin{itemdecl}
-template <class T, class Abi> bool  all_of(mask<T, Abi>);
+template <class T, class Abi> bool  all_of(mask<T, Abi>) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \true if all boolean elements in the function argument equal \true, \false otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> bool  any_of(mask<T, Abi>);
+template <class T, class Abi> bool  any_of(mask<T, Abi>) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \true if at least one boolean element in the function argument equals \true, \false otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> bool none_of(mask<T, Abi>);
+template <class T, class Abi> bool none_of(mask<T, Abi>) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \true if none of the boolean element in the function argument equals \true, \false otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> bool some_of(mask<T, Abi>);
+template <class T, class Abi> bool some_of(mask<T, Abi>) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \true if at least one of the boolean elements in the function argument equals \true and at least one of the boolean elements in the function argument equals \false, \false otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> int popcount(mask<T, Abi>);
+template <class T, class Abi> int popcount(mask<T, Abi>) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The number of boolean elements that are \true.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> int find_first_set(mask<T, Abi> m);
+template <class T, class Abi> int find_first_set(mask<T, Abi> m) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The lowest element index \code i where \code{m[i] == true}.
@@ -186,7 +186,7 @@ template <class T, class Abi> int find_first_set(mask<T, Abi> m);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> int find_last_set(mask<T, Abi> m);
+template <class T, class Abi> int find_last_set(mask<T, Abi> m) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The highest element index \code i where \code{m[i] == true}.
@@ -197,17 +197,17 @@ template <class T, class Abi> int find_last_set(mask<T, Abi> m);
 \begin{itemdecl}
 template <class T, class A>
 where_expression<mask<T, A>, datapar<T, A>> where(
-    const typename datapar<T, A>::mask_type &k, datapar<T, A> &v);
+    const typename datapar<T, A>::mask_type &k, datapar<T, A> &v) noexcept;
 template <class T, class A>
 const where_expression<mask<T, A>, const datapar<T, A>> where(
-    const typename datapar<T, A>::mask_type &k, const datapar<T, A> &v);
+    const typename datapar<T, A>::mask_type &k, const datapar<T, A> &v) noexcept;
 
 template <class T, class A>
 where_expression<mask<T, A>, mask<T, A>> where(const remove_const_t<mask<T, A>> &k,
-                                               mask<T, A> &v);
+                                               mask<T, A> &v) noexcept;
 template <class T, class A>
 const where_expression<mask<T, A>, const mask<T, A>> where(
-    const remove_const_t<mask<T, A>> &k, const mask<T, A> &v);
+    const remove_const_t<mask<T, A>> &k, const mask<T, A> &v) noexcept;
 \end{itemdecl}
 \comment{\code{remove_const} is only used in place of a missing \code{template <class T> struct id \{ using type = T; \};} for inhibiting type deduction.}
 \begin{itemdescr}
@@ -215,7 +215,7 @@ const where_expression<mask<T, A>, const mask<T, A>> where(
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T> where_expression<bool, T> where(bool k, T &v);
+template <class T> where_expression<bool, T> where(bool k, T &v) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks The function only participates in overload resolution if \type T is neither a \datapar nor a \mask instantiation.

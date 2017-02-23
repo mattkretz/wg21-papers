@@ -120,9 +120,9 @@ If \type M is \bool, \type{T'} must be an arithmetic type.
 Otherwise, \type{T'} must either be \type M or \type{M::datapar_type}.
 
 \begin{itemdecl}
-const M &mask;                     // exposition only
-T &data;                           // exposition only
-where_expression(const M &, T &);  // exposition only
+const M &mask;                              // exposition only
+T &data;                                    // exposition only
+where_expression(const M &, T &) noexcept;  // exposition only
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects
@@ -157,10 +157,10 @@ template <class U> void operator>>=(U &&x);
 \end{itemdescr}
 
 \begin{itemdecl}
-void operator++();
-void operator++(int);
-void operator--();
-void operator--(int);
+void operator++() noexcept;
+void operator++(int) noexcept;
+void operator--() noexcept;
+void operator--(int) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Each of these operators only participate in overload resolution if the indicated operator can be applied to objects of type \type T.
@@ -171,7 +171,7 @@ void operator--(int);
 \end{itemdescr}
 
 \begin{itemdecl}
-remove_const_t<T> operator-() const;
+remove_const_t<T> operator-() const noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This operator only participates in overload resolution if the indicated operator can be applied to objects of type \type T.
@@ -180,7 +180,7 @@ remove_const_t<T> operator-() const;
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags> void memload(const U *mem, Flags);
+template <class U, class Flags> void memload(const U *mem, Flags) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks If \type M is \bool, the function only participates in overload resolution if \type U is \bool.
@@ -193,7 +193,7 @@ template <class U, class Flags> void memload(const U *mem, Flags);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags> void memstore(U *mem, Flags) const;
+template <class U, class Flags> void memstore(U *mem, Flags) const noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects If \type M is \bool, assign \code{data} to \code{mem[0]} unless \code{mask} is \false.

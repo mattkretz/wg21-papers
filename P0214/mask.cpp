@@ -8,7 +8,7 @@ namespace std {
       using size_type = size_t;
       using abi_type = Abi;
 
-      static constexpr size_type size();
+      static constexpr size_type size() noexcept;
 
       mask() = default;
 
@@ -18,43 +18,43 @@ namespace std {
       mask &operator=(mask &&) = default;
 
       // broadcast constructor
-      explicit mask(value_type);
+      explicit mask(value_type) noexcept;
 
       // implicit type conversion constructor
-      template <class U> mask(const mask<U, datapar_abi::fixed_size<size()>> &);
+      template <class U> mask(const mask<U, datapar_abi::fixed_size<size()>> &) noexcept;
 
       // load constructor
-      template <class Flags> mask(const value_type *mem, Flags);
-      template <class Flags> mask(const value_type *mem, mask k, Flags);
+      template <class Flags> mask(const value_type *mem, Flags) noexcept;
+      template <class Flags> mask(const value_type *mem, mask k, Flags) noexcept;
 
       // loads [mask.load]
-      template <class Flags> void memload(const value_type *mem, Flags);
+      template <class Flags> void memload(const value_type *mem, Flags) noexcept;
 
       // stores [mask.store]
-      template <class Flags> void memstore(value_type *mem, Flags) const;
+      template <class Flags> void memstore(value_type *mem, Flags) const noexcept;
 
       // scalar access [mask.subscr]
-      reference operator[](size_type);
-      value_type operator[](size_type) const;
+      reference operator[](size_type) noexcept;
+      value_type operator[](size_type) const noexcept;
 
       // unary operators [mask.unary]
-      mask operator!() const;
+      mask operator!() const noexcept;
 
       // mask binary operators [mask.binary]
-      friend mask operator&&(const mask &, const mask &);
-      friend mask operator||(const mask &, const mask &);
-      friend mask operator& (const mask &, const mask &);
-      friend mask operator| (const mask &, const mask &);
-      friend mask operator^ (const mask &, const mask &);
+      friend mask operator&&(const mask &, const mask &) noexcept;
+      friend mask operator||(const mask &, const mask &) noexcept;
+      friend mask operator& (const mask &, const mask &) noexcept;
+      friend mask operator| (const mask &, const mask &) noexcept;
+      friend mask operator^ (const mask &, const mask &) noexcept;
 
       // mask compound assignment [mask.cassign]
-      friend mask &operator&=(mask &, const mask &);
-      friend mask &operator|=(mask &, const mask &);
-      friend mask &operator^=(mask &, const mask &);
+      friend mask &operator&=(mask &, const mask &) noexcept;
+      friend mask &operator|=(mask &, const mask &) noexcept;
+      friend mask &operator^=(mask &, const mask &) noexcept;
 
       // mask compares [mask.comparison]
-      friend mask operator==(const mask &, const mask &);
-      friend mask operator!=(const mask &, const mask &);
+      friend mask operator==(const mask &, const mask &) noexcept;
+      friend mask operator!=(const mask &, const mask &) noexcept;
     };
   }
 }
