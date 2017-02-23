@@ -235,7 +235,7 @@ friend datapar operator>>(const datapar &v, int n);
 \begin{itemdescr}
   \pnum\remarks Both operators only participate in overload resolution if \valuetype is an unsigned integral type.
 
-  \pnum\returns A \datapar object where the $i$-th element is initialized to \code{v[i] \textit{op} n} \foralli.
+  \pnum\returns A \datapar object where the $i$-th element is initialized to the result of applying the indicated operator to \code{v[i]} and \code n \foralli.
 \end{itemdescr}
 
 \wgSubsubsection{\datapar compound assignment}{datapar.cassign}
