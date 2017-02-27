@@ -51,7 +51,7 @@ template <class Flags> mask(const value_type *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{mem[i]} \foralli.
-  \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \pnum\requires \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
   \flagsRemarks{\mask{}}
 \end{itemdescr}
 
@@ -61,7 +61,7 @@ template <class Flags> void memload(const value_type *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Replaces the elements of the \mask object such that the $i$-th element is assigned with \code{mem[i]} \foralli.
-  \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by the first argument, the behavior is undefined.
+  \pnum\requires \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
   \flagsRemarks{\mask{}}
 \end{itemdescr}
 
@@ -71,7 +71,7 @@ template <class Flags> void memstore(value_type *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Copies all \mask elements as if \code{mem[i] = operator[](i)} \foralli.
-  \pnum\remarks If \code{size()} returns a value greater than the number of values pointed to by \code{mem}, the behavior is undefined.
+  \pnum\requires \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
   \flagsRemarks{\mask{}}
 \end{itemdescr}
 
