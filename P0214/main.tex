@@ -25,7 +25,7 @@
 
 \newcommand\datapar[1][]{\type{datapar#1}\xspace}
 \newcommand\valuetype{\type{value\_type}\xspace}
-\newcommand\referencetype{\type{reference\_type}\xspace}
+\newcommand\referencetype{\type{reference}\xspace}
 \newcommand\simdcast{\code{datapar\_cast}\xspace}
 \newcommand\mask[1][]{\type{mask#1}\xspace}
 \newcommand\fixedsizeN{\type{datapar\_abi::fixed\_size<N>}\xspace}
@@ -169,11 +169,19 @@ Previous revision: \citep{P0214R2}.
 Previous revision: \citep{P0214R3}.
 \begin{itemize}
   \chck Add special math overloads for signed char and short.
-  \chck Disallow shifts of signed types.
+  \chck Disallow shifts of signed types to avoid the UB issues of signed shifts.
   \chck Editorial: Prefer \code{using} over \code{typedef}.
   \chck Overload shift operators with \intt argument for the right hand side.
+        This enables more efficient implementations.
+        This signature is present in the Vc library, and was forgotten in the wording.
   \chck Remove empty section about the omission of logical operators.
   \chck Modify \mask compares to return a \mask instead of \bool (\ref{sec:mask.comparison}).
+        This resolves an inconsistency with all the other binary operators.
+  \chck Editorial: Improve \referencetype member specification (\ref{sec:datapar.overview}).
+  \chck Require \code{swap(v[0], v[1])} to be valid (\ref{sec:datapar.overview}).
+  \chck Fixed inconsisteny of masked load constructor after move of \code{memload} to \type{where_expression} (\ref{sec:datapar.whereexpr}).
+  \chck Editorial: Use Requires clause instead of Remarks to require the memory argument to loads and stores to be large enough (\ref{sec:datapar.whereexpr}, \ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store}).
+  \chck Add a note to special math functions that precondition violation is UB (\ref{sec:datapar.math}).
 \end{itemize}
 
 \input{strawpolls}
