@@ -24,6 +24,8 @@ The type \bool is not allowed.
 
   \item Objects of type \referencetype are implicitly convertible to \valuetype.
 
+  \item If a binary operator is applied to an object of type \referencetype, the operator is only applied after converting the \referencetype object to \valuetype.
+
   \item Calls to \code{swap(\referencetype \&\&, \valuetype \&)} and \code{swap(\valuetype \&, \referencetype \&\&)} exchange the values referred to by the \referencetype object and the \valuetype reference.
   Calls to \code{swap(\referencetype \&\&, \referencetype \&\&)} exchange the values referred to by the \referencetype objects.
 \end{itemize}
