@@ -169,6 +169,7 @@ Previous revision: \citep{P0214R2}.
 Previous revision: \citep{P0214R3}.
 \begin{itemize}
   \chck Add special math overloads for signed char and short.
+        They are important to avoid widening to multiple SIMD registers and since no integer promotion is applied for \datapar types.
   \chck Disallow shifts of signed types to avoid the UB issues of signed shifts.
   \chck Editorial: Prefer \code{using} over \code{typedef}.
   \chck Overload shift operators with \intt argument for the right hand side.
