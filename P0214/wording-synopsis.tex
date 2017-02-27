@@ -183,8 +183,7 @@ remove_const_t<T> operator-() const;
 template <class U, class Flags> void memload(const U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks If \type M is \bool, the function only participates in overload resolution if \type U is \bool.
-  \pnum\remarks If \type T is a \mask instantiation, the function only participates in overload resolution if \type U is \bool.
+  \pnum\remarks If \type T is \bool or a \mask instantiation, the function only participates in overload resolution if \type U is \bool.
   \pnum\effects If \type M is \bool, assign \code{mem[0]} to \code{data} unless \code{mask} is \false.
   If \type M is not \bool, replace the elements of \code{data} where \code{mask[i]} is \true such that the $i$-th element is assigned with \code{static_cast<typename T::value_type>(mem[i])} \foralli[M::].
 
