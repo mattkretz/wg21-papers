@@ -55,15 +55,6 @@ template <class Flags> mask(const value_type *mem, Flags);
   \flagsRemarks{\mask{}}
 \end{itemdescr}
 
-\begin{itemdecl}
-template <class Flags> mask(const value_type *mem, mask k, Flags);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\effects Constructs an object where the $i$-th element is initialized to \code{k[i] ? mem[i] : false} \foralli.
-  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
-  \flagsRemarks{\mask{}}
-\end{itemdescr}
-
 \wgSubsubsection{\mask load function}{mask.load}
 \begin{itemdecl}
 template <class Flags> void memload(const value_type *mem, Flags);

@@ -111,6 +111,8 @@ namespace std {
       void operator--(int);
       remove_const_t<T> operator-() const;
 
+      template <class U, class Flags>
+      [[nodiscard]] remove_const_t<T> memload(const U *mem, Flags) const;
       template <class U, class Flags> void memload(const U *mem, Flags);
       template <class U, class Flags> void memstore(U *mem, Flags) const;
     };

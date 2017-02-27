@@ -25,7 +25,6 @@ namespace std {
 
       // load constructor
       template <class Flags> mask(const value_type *mem, Flags);
-      template <class Flags> mask(const value_type *mem, mask k, Flags);
 
       // loads [mask.load]
       template <class Flags> void memload(const value_type *mem, Flags);

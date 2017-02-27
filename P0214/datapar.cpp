@@ -28,7 +28,6 @@ namespace std {
 
       // load constructor
       template <class U, class Flags> datapar(const U *mem, Flags);
-      template <class U, class Flags> datapar(const U *mem, mask_type k, Flags);
 
       // loads [datapar.load]
       template <class U, class Flags> void memload(const U *mem, Flags);

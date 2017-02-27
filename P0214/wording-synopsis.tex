@@ -180,12 +180,25 @@ remove_const_t<T> operator-() const;
 \end{itemdescr}
 
 \begin{itemdecl}
+template <class U, class Flags>
+[[nodiscard]] remove_const_t<T> memload(const U *mem, Flags) const;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks If \type T is \bool or a \mask instantiation, the function only participates in overload resolution if \type U is \bool.
+  \pnum\returns If \type M is \bool, return \code{mem[0]} if \code{mask} equals \true and return \code{data} otherwise.
+  If \type M is not \bool, return an object with the $i$-th element initialized to the $i$-th element of \code{data} if \code{mask[i]} is \false and \code{static_cast<T::value_type>(mem[i])} if \code{mask[i]} is \true \foralli[M::].
+
+  \pnum\remarks If \type M is not \bool and if the largest $i$ where \code{mask[i]} is \true is greater than the number of values pointed to by \code{mem}, the behavior is undefined.
+  \flagsRemarks{\type T, \type U}
+\end{itemdescr}
+
+\begin{itemdecl}
 template <class U, class Flags> void memload(const U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks If \type T is \bool or a \mask instantiation, the function only participates in overload resolution if \type U is \bool.
   \pnum\effects If \type M is \bool, assign \code{mem[0]} to \code{data} unless \code{mask} is \false.
-  If \type M is not \bool, replace the elements of \code{data} where \code{mask[i]} is \true such that the $i$-th element is assigned with \code{static_cast<typename T::value_type>(mem[i])} \foralli[M::].
+  If \type M is not \bool, replace the elements of \code{data} where \code{mask[i]} is \true such that the $i$-th element is assigned with \code{static_cast<T::value_type>(mem[i])} \foralli[M::].
 
   \pnum\remarks If \type M is not \bool and if the largest $i$ where \code{mask[i]} is \true is greater than the number of values pointed to by \code{mem}, the behavior is undefined.
   \flagsRemarks{\type T, \type U}

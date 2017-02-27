@@ -88,15 +88,6 @@ template <class U, class Flags> datapar(const U *mem, Flags);
   \flagsRemarks{\datapar, \type U}
 \end{itemdescr}
 
-\begin{itemdecl}
-template <class U, class Flags> datapar(const U *mem, mask_type k, Flags);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\effects Constructs an object where the $i$-th element is initialized to \code{k[i] ? static_cast<T>(mem[i]) : 0} \foralli.
-  \pnum\remarks If the largest $i$ where \code{k[i]} is \true is greater than the number of values pointed to by the first argument, the behavior is undefined.
-  \flagsRemarks{\datapar, \type U}
-\end{itemdescr}
-
 \wgSubsubsection{\datapar load function}{datapar.load}
 \begin{itemdecl}
 template <class U, class Flags> void memload(const U *mem, Flags);
