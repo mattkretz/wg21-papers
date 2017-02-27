@@ -448,6 +448,9 @@ datapar<T, A> clamp(const datapar<T, A> &v, const datapar<T, A> &lo,
 The results per component are not required to be binary equal to the application of the function which is overloaded for the element type.
 \comment{Neither the C nor the \CC{} standard say anything about expected error/precision.
 It seems returning 0 from all functions is a conforming implementation --- just bad QoI.}
+\wgNote{
+  If a precondition of the indicated mathematical function is violated, the behavior is undefined.
+}
 
 \pnum If \code{abs()} is called with an argument of type \datapar[<X, Abi>] for which \code{is_unsigned<X>::value} is \true, the program is ill-formed.
 
