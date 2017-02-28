@@ -36,7 +36,6 @@ namespace datapar_abi {
 
   \pnum\label{datapar.maxfixedsize.def}%
   The value of \code{max_fixed_size} declares that an instance of \datapar[<T, fixed_size<N>>] with \code{N <= max_fixed_size} is supported by the implementation.%
-  \comment{I'm afraid this makes changes to the maximum size an ABI break, no? Unfounded fear?}
   \wgNote{It is still possible for an implementation to support \datapar[<U, fixed_size<K>>] with \code{K > max_fixed_size}.}
 
   \pnum
