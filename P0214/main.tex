@@ -35,8 +35,9 @@
 \newcommand\seqEP{\code{execution\_policy::}\type{seq}\xspace}
 
 \newcommand\flagsRemarks[1]{
-  \pnum\remarks If the \type{Flags} template parameter is of type \type{flags::vector\_aligned\_tag} and the pointer value is not a multiple of \code{memory\_alignment<#1>}, the behavior is undefined.
-  If the \type{Flags} template parameter is of type \type{flags::overaligned\_tag<N>} and the pointer value is not a multiple of \code N, the behavior is undefined.
+  \pnum\requires
+  If the \type{Flags} template parameter is of type \type{flags::vector\_aligned\_tag}, the pointer value represents an address aligned to \code{memory\_alignment<#1>}.
+  If the \type{Flags} template parameter is of type \type{flags::overaligned\_tag<N>}, the pointer value represents an address aligned to \code N.
 }
 
 \usepackage{pifont}
@@ -185,6 +186,7 @@ Previous revision: \citep{P0214R3}.
   \chck Add a note to special math functions that precondition violation is UB (\ref{sec:datapar.math}).
   \chck Bugfix: Binary operators involving two \type{datapar::reference} objects must work (\ref{sec:datapar.overview}).
   \chck Editorial: Replace Note clauses in favor of \wgNote{}.
+  \chck Editorial: Replace UB Remarks on load/store alignment requirements with Requires clauses.
 \end{itemize}
 
 \input{strawpolls}
