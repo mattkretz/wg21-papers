@@ -43,6 +43,12 @@
 \newcommand\wgNote[1]{\mdseries[~\textit{Note:}
 #1
 —~\textit{end note}~]}
+\newenvironment{noteEnv}
+{
+\mdseries[~\textit{Note:}
+}{
+—~\textit{end note}~]
+}
 \newcommand\wgExample[1]{\mdseries[~\textit{Example:}
 #1
 —~\textit{end example}~]}
@@ -136,8 +142,8 @@
 \newcommand{\remarks}{\Fundesc{Remarks}}
 \newcommand{\note}{\remark}
 \newcommand{\notes}{\remarks}
-\newcommand{\realnote}{\Fundesc{Note}}
-\newcommand{\realnotes}{\Fundesc{Notes}}
+%\newcommand{\realnote}{\Fundesc{Note}}
+%\newcommand{\realnotes}{\Fundesc{Notes}}
 \newcommand{\errors}{\Fundesc{Error conditions}}
 \newcommand{\sync}{\Fundesc{Synchronization}}
 \newcommand{\implimits}{\Fundesc{Implementation limits}}

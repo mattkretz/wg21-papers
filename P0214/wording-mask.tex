@@ -22,12 +22,13 @@ static constexpr size_type size();
   \pnum\returns the number of boolean elements stored in objects of the given \mask[<T, Abi>] type.
 \end{itemdescr}
 
-\pnum\realnote Implementations are encouraged to enable \code{static_cast}ing from/to (an) implementation-defined SIMD mask type(s).
+\pnum\begin{noteEnv}Implementations are encouraged to enable \code{static_cast}ing from/to (an) implementation-defined SIMD mask type(s).
 This would add one or more of the following declarations to class \mask:
 \begin{itemdecl}
 explicit operator implementation_defined() const;
 explicit datapar(const implementation_defined &init);
 \end{itemdecl}
+\end{noteEnv}
 
 \wgSubsubsection{\mask constructors}{mask.ctor}
 \begin{itemdecl}

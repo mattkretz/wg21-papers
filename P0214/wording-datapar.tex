@@ -37,12 +37,13 @@ static constexpr size_type size();
   \pnum\returns the number of elements stored in objects of the given \datapar[<T, Abi>] type.
 \end{itemdescr}
 
-\pnum\realnote Implementations are encouraged to enable \code{static_cast}ing from/to (an) implementation-defined SIMD type(s).
+\pnum\begin{noteEnv} Implementations are encouraged to enable \code{static_cast}ing from/to (an) implementation-defined SIMD type(s).
 This would add one or more of the following declarations to class \datapar:
 \begin{itemdecl}
 explicit operator implementation_defined() const;
 explicit datapar(const implementation_defined &init);
 \end{itemdecl}
+\end{noteEnv}
 
 \wgSubsubsection{\datapar constructors}{datapar.ctor}
 \begin{itemdecl}
@@ -282,7 +283,7 @@ T reduce(const datapar<T, Abi> &x, BinaryOperation binary_op = BinaryOperation()
 \begin{itemdescr}
   \pnum\returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \foralli.
   \pnum\requires \code{binary_op} shall be callable with two arguments of type \type T or two arguments of type \datapar[<T, A1>], where \type{A1} may be different to \type{Abi}.
-  \pnum\realnote This overload of \code{reduce} does not require an initial value because \code x is guaranteed to be non-empty.
+  \pnum\wgNote{This overload of \code{reduce} does not require an initial value because \code x is guaranteed to be non-empty.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -295,9 +296,9 @@ typename V::value_type reduce(
 \begin{itemdescr}
   \pnum\returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \forallmaskedi{x.mask}.
   \pnum\requires \code{binary_op} shall be callable with two arguments of type \type T or two arguments of type \datapar[<T, A1>], where \type{A1} may be different to \type{Abi}.
-  \pnum\realnote This overload of \code{reduce} requires a neutral value to enable a parallelized implementation:
+  \pnum\wgNote{This overload of \code{reduce} requires a neutral value to enable a parallelized implementation:
   A temporary \datapar object initialized with \code{neutral_element} is conditionally assigned from \code{x.data} using \code{x.mask}.
-  Subsequently, the parallelized reduction (without mask) is applied to the temporary object.
+  Subsequently, the parallelized reduction (without mask) is applied to the temporary object.}
 \end{itemdescr}
 
 \begin{itemdecl}

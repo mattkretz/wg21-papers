@@ -128,11 +128,12 @@ where_expression(const M &, T &);  // exposition only
   \pnum\effects
   The implementation initializes a \type{where_expression<M, T>} object with a predicate of type \type M and a reference to a value object of type \type T.
 
-  \pnum\realnote The predicate object may be copied by the constructor implementation.
-  If \type T is const qualified the constructor may copy the value object.
+  \wgNote{The predicate object may be copied by the constructor implementation.
+  If \type T is const qualified the constructor may copy the value object.}
 
-  \pnum\realnote
+  \pnum\wgNote{
   The following declarations refer to the predicate as data member \code{mask} and to the value reference as data member \code{data}.
+  }
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -167,7 +168,7 @@ void operator--(int);
   \pnum\effects
   If \type M is \bool, applies the indicated operator on \code{data} unless \code{mask} is \false.
   If \type M is not \bool, applies the indicated operator on \code{data} without modifying the elements \code{data[i]} where \code{mask[i]} is \false \foralli[M::].
-  \pnum\realnote It is unspecified whether the inc-/decrement operation is executed on all elements or only on the ones written back.
+  \wgNote{It is unspecified whether the inc-/decrement operation is executed on all elements or only on the ones written back.}
 \end{itemdescr}
 
 \begin{itemdecl}
