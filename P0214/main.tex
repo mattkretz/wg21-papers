@@ -26,6 +26,7 @@
 \newcommand\datapar[1][]{\type{datapar#1}\xspace}
 \newcommand\valuetype{\type{value\_type}\xspace}
 \newcommand\referencetype{\type{reference}\xspace}
+\newcommand\whereexpression{\type{where\_expression}\xspace}
 \newcommand\simdcast{\code{datapar\_cast}\xspace}
 \newcommand\mask[1][]{\type{mask#1}\xspace}
 \newcommand\fixedsizeN{\type{datapar\_abi::fixed\_size<N>}\xspace}
@@ -188,6 +189,8 @@ Previous revision: \parencite{P0214R3}.
   \chck Editorial: Replace Note clauses in favor of \wgNote{}.
   \chck Editorial: Replace UB Remarks on load/store alignment requirements with Requires clauses.
   \chck Add an example section (\ref{sec:Examples}).
+
+  \todo Split \whereexpression into \const and non-\const class templates.
 \end{itemize}
 
 \input{strawpolls}
