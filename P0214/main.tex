@@ -65,9 +65,9 @@
     In general this will not refer to the \std\type{vector} class template.
     References to the container type will explicitly call out the \code{std} prefix to avoid confusion.
   \item In the following, \VSize{T} denotes the number of scalar values (width) in a vector of type \type T (sometimes also called the number of SIMD lanes)
-  \item \citep{N4184}, \citep{N4185}, and \citep{N4395} provide more information on the rationale and design decisions.
-    \citep{N4454} discusses a matrix multiplication example.
-    My PhD thesis \citep{Kretz2015} contains a very thorough discussion of the topic.
+  \item \parencite{N4184}, \parencite{N4185}, and \parencite{N4395} provide more information on the rationale and design decisions.
+    \parencite{N4454} discusses a matrix multiplication example.
+    My PhD thesis \parencite{Kretz2015} contains a very thorough discussion of the topic.
   \item This paper is not supposed to specify a complete API for data-parallel types and operations.
     It is meant as a useful starting point.
     Once the foundation is settled on, higher level APIs will be proposed.
@@ -75,7 +75,7 @@
 
 \section{Changelog}
 \subsection{Changes from R0}
-Previous revision: \citep{P0214R0}.
+Previous revision: \parencite{P0214R0}.
 \begin{itemize}
   \item Extended the \code{datapar_abi} tag types with a \code{fixed_size<N>} tag to handle arbitrarily sized vectors (\ref{sec:datapar.abi}).
   \item Converted \code{memory_alignment} into a non-member trait (\ref{sec:datapar.traits}).
@@ -103,7 +103,7 @@ Previous revision: \citep{P0214R0}.
   %\todo Added usage examples
 
 \subsection{Changes from R1}
-Previous revision: \citep{P0214R1}.
+Previous revision: \parencite{P0214R1}.
 \begin{itemize}
     \item Fixed converting constructor synopsis of \datapar and \mask to also allow varying Abi types.
     \item Modified the wording of \code{\mask{}::native_handle()} to make the existence of the functions implementation-defined.
@@ -133,7 +133,7 @@ Previous revision: \citep{P0214R1}.
     This made it necessary to spell out the class \type{where_expression}.
 \end{itemize}
 \subsection{Changes from R2}
-Previous revision: \citep{P0214R2}.
+Previous revision: \parencite{P0214R2}.
 \begin{itemize}
     \item Fixed return type of masked \code{reduce} (\ref{sec:datapar.reductions}).
     \item Added binary \code{min}, \code{max}, \code{minmax}, and \code{clamp} (\ref{sec:datapar.alg}).
@@ -167,7 +167,7 @@ Previous revision: \citep{P0214R2}.
 \end{itemize}
 
 \subsection{Changes from R3}
-Previous revision: \citep{P0214R3}.
+Previous revision: \parencite{P0214R3}.
 \begin{itemize}
   \chck Add special math overloads for signed char and short.
         They are important to avoid widening to multiple SIMD registers and since no integer promotion is applied for \datapar types.
