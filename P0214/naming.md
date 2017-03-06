@@ -5,6 +5,11 @@
 * `datapar`
 
   An array of target-specific size with elements of type T and data parallel operation semantics.
+  The number of elements is influenced via the second template parameter.
+  If the second template parameter is `fixed_size<N>` an exact number of `N` elements is used.
+  Operations on objects of the type execute the operation component-wise and concurrently.
+  This allows the user to communicate data parallelism inherent in the problem at hand.
+  An implementation may translate the data parallelism into SIMD instructions, GPU parallelism (which is very SIMD like), serial execution, synchronized multi-core execution, or any mix thereof.
 
   * `vector<T>`
   * `vec<T>`
@@ -20,6 +25,8 @@
 * `mask`
 
   An array of target-specific size with elements of boolean value.
+  This type is the equivalence of `bool` for the `datapar<T>` types.
+  It acts as the return type of `datapar` comparisons and can be used for write-masking, masked loads & stores, and reductions to `bool`.
 
   * `mask<T>`
   * `vecmask<T>`
@@ -27,6 +34,10 @@
   * `boolvec<T>`
   
 * `where`
+
+  This function wraps a `mask` object and a reference to a `datapar` or `mask` object to implement write-masking, and masked loads & stores.
+  The function acts as special syntax to express that e.g. assignment shall only happen at the element indexes where the mask object is `true`.
+
 * `memload`, `memstore`
 
 ## Renaming `datapar`
