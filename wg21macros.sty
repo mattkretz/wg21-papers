@@ -164,7 +164,7 @@
     \vskip1.0\baselineskip plus 1.5\baselineskip minus 0.2\baselineskip%
     \phantomsection%
     \refstepcounter{subsection}%
-    \addcontentsline{toc}{subsection}{#1}%
+    \addcontentsline{toc}{subsection}{\thesubsection{} #1}%
     {\larger[2]\noindent\thesubsection{} #1\label{sec:#2}\hfill[#2]}\\%
     \noindent%
 }
@@ -174,7 +174,7 @@
     \phantomsection%
     \refstepcounter{subsubsection}%
     \setcounter{Paras}{0}%
-    \addcontentsline{toc}{subsubsection}{#1}%
+    \addcontentsline{toc}{subsubsection}{\thesubsubsection{} #1}%
     {\larger[1]\noindent\thesubsubsection{} #1\label{sec:#2}\hfill[#2]}\\%
     \noindent%
 }
@@ -184,7 +184,7 @@
     \phantomsection%
     \refstepcounter{paragraph}%
     \setcounter{Paras}{0}%
-    \addcontentsline{toc}{paragraph}{#1}%
+    \addcontentsline{toc}{paragraph}{\theparagraph{} #1}%
     {\noindent\theparagraph{} #1\label{sec:#2}\hfill[#2]}\\%
     \noindent%
 }
