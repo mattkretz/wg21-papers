@@ -11,6 +11,7 @@
   Operations on objects of the type execute the operation component-wise and concurrently.
   This allows the user to communicate data parallelism inherent in the problem at hand.
   An implementation may translate the data parallelism into SIMD instructions, GPU parallelism (which is very SIMD like), serial execution, synchronized multi-core execution, or any mix thereof.
+  The implementation is expected to provide guarantees about the resulting code gen depending on compiler flags and ABI parameter (second template parameter), e.g. "`datapar<int, datapar_abi::sse>` uses `xmm` registers for storage and .
 
   * `vector<T>`
   * `vec<T>`
@@ -41,6 +42,12 @@
   This function wraps a `mask` object and a reference to a `datapar` or `mask` object to implement write-masking, and masked loads & stores.
   The function acts as special syntax to express that e.g. assignment shall only happen at the element indexes where the mask object is `true`.
   The where function returns a temporary object that implements the write-masked operations.
+
+  * `where`
+  * `masked`
+  * `withmask`
+  * `maskedval`
+  * `maskedref`
 
 * `memload`, `memstore`
 
