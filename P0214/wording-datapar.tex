@@ -47,10 +47,12 @@ explicit datapar(const implementation_defined &init);
 
 \wgSubsubsection{\datapar constructors}{datapar.ctor}
 \begin{itemdecl}
-template <class U> datapar(const U &);
+template <class U> datapar(U &&);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This constructor shall not participate in overload resolution unless either:
+  \comment[Q]{Mention forwarding on conversion to \valuetype?}%
+  \comment[Q]{\type U is cv- and ref-qualified, is the wording below OK?}
   \begin{itemize}
     \item \type U is a fundamental arithmetic type and every possible value of type \type U can be represented with type \valuetype,
     \item or \type U is not a fundamental arithmetic type and is implicitly convertible to \valuetype,
