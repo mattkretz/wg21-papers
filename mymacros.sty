@@ -182,7 +182,7 @@
 }
 
 \newcounter{Comment}
-\newcommand\comment[1]{%
+\newcommand\comment[2][Note]{%
   \addtocounter{Comment}{1}%
   \tikz[remember picture,overlay]{\coordinate (anchor) at (0,0);}%
   \marginpar{%
@@ -192,9 +192,9 @@
       \vspace*{-1.05\baselineskip}%
       \color{Maroon}%
       \raggedright%
-      \makebox[0pt][r]{\textsc{Note~\arabic{Comment}}\hspace*{.5em}}%
+      \makebox[0pt][r]{\textsc{#1~\arabic{Comment}}\hspace*{.5em}}%
       \noindent%
-      #1
+      #2
       \vspace*{1.7\baselineskip}
     \end{spacing}%
   }%
