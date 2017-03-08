@@ -3,7 +3,7 @@
 \lstinputlisting[]{mask.cpp}
 
 \pnum The class template \mask[<T, Abi>] is a one-dimensional smart array of booleans.
-The number of elements in the array is determined at compile time, equal to the number of elements in \datapar[<T, Abi>].
+The number of elements in the array is a constant expression, equal to the number of elements in \datapar[<T, Abi>].
 
 \pnum The first template argument \type T must be a cv-unqualified integral or floating-point type (3.9.1 [basic.fundamental]).
 The type \bool is not allowed.
