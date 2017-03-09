@@ -185,6 +185,20 @@ template <class T, class Abi> int find_last_set(mask<T, Abi> m);
   \pnum\remarks If \code{none_of(m) == true} the behavior is undefined.
 \end{itemdescr}
 
+\begin{itemdecl}
+template <class T, class Abi> bool  all_of(implementation_defined);
+template <class T, class Abi> bool  any_of(implementation_defined);
+template <class T, class Abi> bool none_of(implementation_defined);
+template <class T, class Abi> bool some_of(implementation_defined);
+template <class T, class Abi> int popcount(implementation_defined);
+template <class T, class Abi> int find_first_set(implementation_defined);
+template <class T, class Abi> int find_last_set(implementation_defined);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks The functions only participate in overload resolution if the argument is of type \bool.
+  \pnum\returns \code{all_of} and \code{any_of} return their arguments; \code{none_of} returns the negation of its argument; \code{some_of} returns \false; \code{popcount} returns the integral representation of its argument; \code{find_first_set} and \code{find_last_set} return 0.
+\end{itemdescr}
+
 \wgSubsubsection{Masked assigment}{mask.where}
 \begin{itemdecl}
 template <class T, class A>
@@ -207,10 +221,14 @@ const where_expression<mask<T, A>, const mask<T, A>> where(
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T> where_expression<bool, T> where(bool k, T &v);
+template <class T> where_expression<bool, T> where(implementation_defined k, T &v);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks The function only participates in overload resolution if \type T is neither a \datapar nor a \mask instantiation.
+  \pnum\remarks The function only participates in overload resolution if
+  \begin{itemize}
+    \item \type T is neither a \datapar nor a \mask instantiation, and
+    \item the first argument is of type \bool.
+  \end{itemize}
   \pnum\returns An object of type \type{where_expression} (see \ref{sec:datapar.whereexpr}) initialized with the predicate \code k and the value reference \code v.
 \end{itemdescr}
 

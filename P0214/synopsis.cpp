@@ -84,6 +84,14 @@ namespace std {
     template <class T, class Abi> int find_first_set(mask<T, Abi>);
     template <class T, class Abi> int find_last_set(mask<T, Abi>);
 
+    template <class T, class Abi> bool  all_of(implementation_defined);
+    template <class T, class Abi> bool  any_of(implementation_defined);
+    template <class T, class Abi> bool none_of(implementation_defined);
+    template <class T, class Abi> bool some_of(implementation_defined);
+    template <class T, class Abi> int popcount(implementation_defined);
+    template <class T, class Abi> int find_first_set(implementation_defined);
+    template <class T, class Abi> int find_last_set(implementation_defined);
+
     // masked assignment [mask.where]
     template <class M, class T> class where_expression {
     public:
@@ -131,7 +139,7 @@ namespace std {
     const where_expression<mask<T, A>, const mask<T, A>> where(
         const remove_const_t<mask<T, A>> &, const mask<T, A> &);
 
-    template <class T> where_expression<bool, T> where(bool k, T &d);
+    template <class T> where_expression<bool, T> where(implementation_defined k, T &d);
 
     // reductions [datapar.reductions]
     template <class BinaryOperation = std::plus<>, class T, class Abi>
