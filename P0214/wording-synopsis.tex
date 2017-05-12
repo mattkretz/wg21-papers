@@ -86,7 +86,7 @@ template <class T, size_t N> struct abi_for_size { using type = implementation_d
   \end{itemize} then the member type \type{type} is an alias for \type A.
   Otherwise \type{type} is an alias for \fixedsizeN.
 
-  \pnum \code{abi_for_size<T, N>::type} shall result in a substitution failure if \type T is not supported by \datapar or if \code N is not supported by the implementation (cf. [\ref{datapar.fixedsize.def}]).
+  \pnum \code{abi_for_size<T, N>::type} shall result in a substitution failure if \type T is not supported by \datapar or if \code N is not supported by the implementation (see \ref{datapar.fixedsize.def}).
 \end{itemdescr}
 
 \begin{itemdecl}
