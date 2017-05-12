@@ -192,6 +192,13 @@ Previous revision: \parencite{P0214R3}.
   \chck Clarify effects of using an ABI parameter that is not available on the target (\ref{datapar.deleted}, \ref{mask.deleted}, \ref{datapar_size}).
 
   \todo Split \whereexpression into \const and non-\const class templates.
+  \todo New section on design decisions; discuss decisions made by SG1, LEWG, and through discussion with Jens; especially discuss the ABI parameter:
+  \begin{itemize}
+    \item it provides the intended lowest level access to SIMD programming
+    \item it allows easy high-level abstraction
+    \item how the default was chosen, and why having a \emph{compatible} ABI be the default is the nicer default
+    \item an ABI parameter influences the choice of function parameter passing, not necessarily the choice of instructions or even number of elements (e.g. an implementation can provide an ABI that passes via 128-bit registers but otherwise works with 256-bit registers)
+  \end{itemize}
 \end{itemize}
 
 \input{strawpolls}
