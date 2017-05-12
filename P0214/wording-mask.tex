@@ -5,12 +5,14 @@
 \pnum The class template \mask[<T, Abi>] is a one-dimensional smart array of booleans.
 The number of elements in the array is a constant expression, equal to the number of elements in \datapar[<T, Abi>].
 
-\pnum The first template argument \type T must be a cv-unqualified integral or floating-point type (3.9.1 [basic.fundamental]).
+\pnum\label{mask.type requirements}%
+The first template argument \type T must be a cv-unqualified integral or floating-point type (3.9.1 [basic.fundamental]).
 The type \bool is not allowed.
+The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
 
-\pnum The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
+\pnum\label{mask.deleted}%
+If any of the template arguments does not conform to the above requirements, or if the combination of \type T and \type{Abi} is not supported for the current compilation target, the resulting class shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
 
-\pnum If any of the template arguments does not conform to the above requirements, the resulting class shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
 
 \pnum Default initialization performs no initialization of the elements; value-initialization initializes each element with \code{bool()}.
 \wgNote{Thus, default initialization leaves the elements in an indeterminate state.}

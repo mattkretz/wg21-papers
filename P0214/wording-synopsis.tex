@@ -94,9 +94,12 @@ template <class T, class Abi = datapar_abi::compatible<T>>
 struct datapar_size : public integral_constant<size_t, implementation_defined> {};
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum The \type{datapar_size} class template inherits from \type{integral_constant} with a value that equals \datapar{}\code{<T, Abi>::size()}.
+  \pnum\label{datapar_size}%
+  The \type{datapar_size} class template inherits from \type{integral_constant} with a value equal to the number of elements in a \datapar{}\code{<T, Abi>} object.
+  \wgNote{The value is independent from the compilation target.}
 
-  \pnum \code{datapar_size<T, Abi>::value} shall result in a substitution failure if any of the template arguments \type T or \type{Abi} are invalid template arguments to \datapar.
+  \pnum \code{datapar_size<T, Abi>::value} shall result in a substitution failure if any of the template arguments \type T or \type{Abi} are invalid template arguments to \datapar (see \ref{datapar.type requirements}).
+  \wgNote{The rules are different from \ref{datapar.deleted}}
 \end{itemdescr}
 
 \begin{itemdecl}
