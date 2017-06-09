@@ -40,7 +40,13 @@ namespace datapar_abi {
   An implementation may define additional ABI tag types in the datapar_abi namespace, to support other forms of data-parallel computation.
 
   \pnum
-  The \type{datapar_abi::compatible<T>} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution for the element type \type T that ensures the highest compatibility on the target architecture.
+  The \type{datapar_abi::compatible<T>} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution for the element type \type T that ensures ABI compatibility on the target architecture.
+  \wgExample{
+    Consider a target with the implementation-defined ABI tags \type{simd128} and \type{simd256} where the \type{simd256} type requires an optional ISA extension on said target architecture.
+    Also, the target does not support \type{long double} with either ABI tag.
+    In this case \type{compatible<T>} aliases \type{simd128} for all arithmetic \type T, except \type{long double}.
+    The implementation might therefore define \type{compatible<long double>} as an alias for \type{scalar}.
+  }
 
   \pnum
   The \type{datapar_abi::native<T>} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution for the element type \type T that is supported on the target system.
