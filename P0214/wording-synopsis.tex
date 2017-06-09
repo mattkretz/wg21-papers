@@ -8,12 +8,11 @@ The header \code{<datapar>} defines the class templates (\datapar, \mask, and \t
 
 \begin{itemdecl}
 namespace datapar_abi {
-  struct scalar {};  // always present
-  template <int N> struct fixed_size {};  // always present
+  struct scalar {};
+  template <int N> struct fixed_size {};
   constexpr int max_fixed_size = implementation_defined;
-  // implementation-defined tag types, e.g. sse, avx, neon, altivec, ...
-  template <typename T> using compatible = implementation_defined;  // always present
-  template <typename T> using native = implementation_defined;  // always present
+  template <typename T> using compatible = implementation_defined;
+  template <typename T> using native = implementation_defined;
 }
 \end{itemdecl}
 \begin{itemdescr}
@@ -21,12 +20,11 @@ namespace datapar_abi {
   The ABI types are tag types to be used as the second template argument to \datapar and \mask.
 
   \pnum
-  The \type{scalar} tag is present in all implementations and forces \datapar and \mask to store a single component (i.e. \datapar{}\type{<T, datapar_abi::scalar>::size()} returns \code 1).
+  Use of the \type{scalar} tag type forces \datapar and \mask to store a single component (i.e. \datapar{}\type{<T, datapar_abi::scalar>::size()} returns \code 1).
   \wgNote{\type{scalar} shall not be an alias for \type{fixed_size<1>}.}
 
   \pnum\label{datapar.fixedsize.def}%
-  The \fixedsize tag is present in all implementations.
-  Use of \fixedsizeN forces \datapar and \mask to store and manipulate \code N components (i.e. \datapar{}\type{<T, \fixedsizeN{}>::size()} returns \code N).
+  Use of the \fixedsizeN tag type forces \datapar and \mask to store and manipulate \code N components (i.e. \datapar{}\type{<T, \fixedsizeN{}>::size()} returns \code N).
   An implementation must support at least any \code N $\in [1\ldots 32]$.
   Additionally, an implementation must support any \code N $\in \left\{\code{\datapar[<U>]::size()}, \forall \type{U} \in \{\mathrm{arithmetic\ types}\} \right\}$.
   \wgNote{
