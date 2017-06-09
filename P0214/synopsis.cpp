@@ -93,10 +93,25 @@ namespace std {
     template <class T, class Abi> int find_last_set(implementation_defined);
 
     // masked assignment [mask.where]
-    template <class M, class T> class where_expression {
+    template <typename M, typename T> class const_where_expression {
     public:
-      const M &mask;                     // exposition only
-      T &data;                           // exposition only
+      const M &mask;                           // exposition only
+      T &data;                                 // exposition only
+      const_where_expression(const M &, T &);  // exposition only
+
+      const_where_expression(const const_where_expression &) = delete;
+      const_where_expression &operator=(const const_where_expression &) = delete;
+
+      remove_const_t<T> operator-() const &&;
+
+      template <class U, class Flags>
+      [[nodiscard]] V memload(const U *mem, Flags f) const &&;
+      template <class U, class Flags> void memstore(U *mem, Flags f) const &&;
+    };
+
+    template <class M, class T>
+    class where_expression : public const_where_expression<M, T> {
+    public:
       where_expression(const M &, T &);  // exposition only
 
       where_expression(const where_expression &) = delete;
@@ -117,26 +132,22 @@ namespace std {
       void operator++(int);
       void operator--();
       void operator--(int);
-      remove_const_t<T> operator-() const;
 
-      template <class U, class Flags>
-      [[nodiscard]] remove_const_t<T> memload(const U *mem, Flags) const;
       template <class U, class Flags> void memload(const U *mem, Flags);
-      template <class U, class Flags> void memstore(U *mem, Flags) const;
     };
 
     template <class T, class A>
     where_expression<mask<T, A>, datapar<T, A>> where(
         const typename datapar<T, A>::mask_type &, datapar<T, A> &);
     template <class T, class A>
-    const where_expression<mask<T, A>, const datapar<T, A>> where(
+    const const_where_expression<mask<T, A>, const datapar<T, A>> where(
         const typename datapar<T, A>::mask_type &, const datapar<T, A> &);
 
     template <class T, class A>
     where_expression<mask<T, A>, mask<T, A>> where(const remove_const_t<mask<T, A>> &,
                                                    mask<T, A> &);
     template <class T, class A>
-    const where_expression<mask<T, A>, const mask<T, A>> where(
+    const const_where_expression<mask<T, A>, const mask<T, A>> where(
         const remove_const_t<mask<T, A>> &, const mask<T, A> &);
 
     template <class T> where_expression<bool, T> where(implementation_defined k, T &d);
@@ -146,7 +157,7 @@ namespace std {
     T reduce(const datapar<T, Abi> &, BinaryOperation = BinaryOperation());
     template <class BinaryOperation = std::plus<>, class M, class V>
     typename V::value_type reduce(
-        const where_expression<M, V> &x,
+        const const_where_expression<M, V> &x,
         typename V::value_type neutral_element = default_neutral_element,
         BinaryOperation binary_op = BinaryOperation());
 

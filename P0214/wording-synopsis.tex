@@ -112,8 +112,8 @@ constexpr size_t memory_alignment = implementation_defined;
   \pnum The value of \code{memory_alignment<T, U>} identifies the alignment restrictions on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U.
 \end{itemdescr}
 
-\wgSubsubsection{Class template \code{where_expression}}{datapar.whereexpr}
-\pnum The class template \code{where_expression<M, T>} combines a predicate and a value object to implement an interface that restricts assignments and/or operations on the value object to the elements selected via the predicate.
+\wgSubsubsection{Class templates \code{const_where_expression} and \code{where_expression}}{datapar.whereexpr}
+\pnum The class templates \code{const_where_expression} and \code{where_expression<M, T>} combine a predicate and a value object to implement an interface that restricts assignments and/or operations on the value object to the elements selected via the predicate.
 
 \pnum The first template argument \type M must be cv-unqualified \bool or a cv-unqualified \mask instantiation.
 
@@ -122,21 +122,49 @@ If \type M is \bool, \type{T'} must be an arithmetic type.
 Otherwise, \type{T'} must either be \type M or \type{M::datapar_type}.
 
 \begin{itemdecl}
-const M &mask;                     // exposition only
-T &data;                           // exposition only
-where_expression(const M &, T &);  // exposition only
+const M &mask;                           // exposition only
+T &data;                                 // exposition only
+const_where_expression(const M &, T &);  // exposition only
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\effects
+  \pnum\wgNote{
   The implementation initializes a \type{where_expression<M, T>} object with a predicate of type \type M and a reference to a value object of type \type T.
-
-  \wgNote{The predicate object may be copied by the constructor implementation.
-  If \type T is const qualified the constructor may copy the value object.}
+  The predicate object and a const qualified value object may be copied by the constructor implementation.}
 
   \pnum\wgNote{
   The following declarations refer to the predicate as data member \code{mask} and to the value reference as data member \code{data}.
   }
 \end{itemdescr}
+
+\begin{itemdecl}
+remove_const_t<T> operator-() const &&;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns If \type M is \bool, \code{-data} if \code{mask} is \true, \code{data} otherwise.
+  If \type M is not \bool, returns an object with the $i$-th element initialized to \code{-data[i]} if \code{mask[i]} is \true and \code{data[i]} otherwise \foralli[M::].
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class U, class Flags>
+[[nodiscard]] remove_const_t<T> memload(const U *mem, Flags) const &&;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks If \type T is \bool or a \mask instantiation, the function only participates in overload resolution if \type U is \bool.
+  Otherwise, the function only participates in overload resolution if \type U is an arithmetic type but not \bool.
+  \pnum\returns If \type M is \bool, return \code{mem[0]} if \code{mask} equals \true and return \code{data} otherwise.
+  If \type M is not \bool, return an object with the $i$-th element initialized to the $i$-th element of \code{data} if \code{mask[i]} is \false and \code{static_cast<T::value_type>(mem[i])} if \code{mask[i]} is \true \foralli[M::].
+
+  \pnum\requires If \type M is not \bool, the largest $i$ where \code{mask[i]} is \true is less than the number of values pointed to by \code{mem}.
+  \flagsRemarks{\type T, \type U}
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class U, class Flags> void memstore(U *mem, Flags) const &&;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects If \type M is \bool, assign \code{data} to \code{mem[0]} unless \code{mask} is \false.
+  \pnum\remarks If \type T is a (const qualified) \mask instantiation, the function only participates in overload resolution if \type U is \bool.
+  If \type M is not \bool, copies the elements \code{data[i]} where \code{mask[i]} is \true as if \code{mem[i] = static_cast<U>(data[i])} \foralli[M::].
 
 \begin{itemdecl}
 template <class U> void operator=(U &&x);
@@ -174,28 +202,6 @@ void operator--(int);
 \end{itemdescr}
 
 \begin{itemdecl}
-remove_const_t<T> operator-() const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\remarks This operator only participates in overload resolution if the indicated operator can be applied to objects of type \type T.
-  \pnum\returns If \type M is \bool, \code{-data} if \code{mask} is \true, \code{data} otherwise.
-  If \type M is not \bool, returns an object with the $i$-th element initialized to \code{-data[i]} if \code{mask[i]} is \true and \code{data[i]} otherwise \foralli[M::].
-\end{itemdescr}
-
-\begin{itemdecl}
-template <class U, class Flags>
-[[nodiscard]] remove_const_t<T> memload(const U *mem, Flags) const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\remarks If \type T is \bool or a \mask instantiation, the function only participates in overload resolution if \type U is \bool.
-  \pnum\returns If \type M is \bool, return \code{mem[0]} if \code{mask} equals \true and return \code{data} otherwise.
-  If \type M is not \bool, return an object with the $i$-th element initialized to the $i$-th element of \code{data} if \code{mask[i]} is \false and \code{static_cast<T::value_type>(mem[i])} if \code{mask[i]} is \true \foralli[M::].
-
-  \pnum\requires If \type M is not \bool, the largest $i$ where \code{mask[i]} is \true is less than the number of values pointed to by \code{mem}.
-  \flagsRemarks{\type T, \type U}
-\end{itemdescr}
-
-\begin{itemdecl}
 template <class U, class Flags> void memload(const U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
@@ -206,14 +212,6 @@ template <class U, class Flags> void memload(const U *mem, Flags);
   \pnum\requires If \type M is not \bool, the largest $i$ where \code{mask[i]} is \true is less than the number of values pointed to by \code{mem}.
   \flagsRemarks{\type T, \type U}
 \end{itemdescr}
-
-\begin{itemdecl}
-template <class U, class Flags> void memstore(U *mem, Flags) const;
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\effects If \type M is \bool, assign \code{data} to \code{mem[0]} unless \code{mask} is \false.
-  \pnum\remarks If \type T is a (const qualified) \mask instantiation, the function only participates in overload resolution if \type U is \bool.
-  If \type M is not \bool, copies the elements \code{data[i]} where \code{mask[i]} is \true as if \code{mem[i] = static_cast<U>(data[i])} \foralli[M::].
 
   \pnum\requires If \type M is not \bool, the largest $i$ where \code{mask[i]} is \true is less than the number of values pointed to by \code{mem}.
   \flagsRemarks{\type remove_const_t<T>, \type U}
