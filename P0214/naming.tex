@@ -1,0 +1,405 @@
+\section{Naming}\label{sec:Naming}
+
+The name \datapar was chosen in SG1 after a short discussion, brainstorm session, and straw poll.
+Names can still be changed by LEWG.
+The following will present naming ideas and a bit of discussion of pros and cons and make
+recommendations.
+
+\subsection{datapar}
+
+The class in question is an array of target-specific size, with elements of type T, and data parallel operation semantics.
+The actual memory layout and storage size is unspecified.
+The number of elements is influenced via the second template parameter.
+If the second template parameter is \code{fixed_size<N>}, an exact number of N elements is used.
+Operations on objects of the type execute the operation component-wise and concurrently.
+This allows the user to communicate data parallelism inherent in the problem at hand.
+An implementation might translate the data parallelism into SIMD instructions, GPU parallelism, serial execution, synchronized multi-core execution, or any mix thereof.
+The implementation is expected to provide guarantees about the resulting code gen depending on compiler flags and the given ABI parameter (second template parameter), e.g. “\code{datapar<int, datapar_abi::sse>} uses \code{xmm} registers for storage and all ISA extensions enabled via compiler flags.
+
+\subsubsection{Naming Options}
+
+\begin{itemize}
+  \item \code{vector<T>}
+  \item \code{vec<T>}
+  \item \code{vecpar<T>}
+  \item \code{simd<T>}
+  \item \code{datapar<T>}
+  \item \code{pack<T>}
+  \item \code{simdarray<T>} / \code{simdvector<T>} / \code{vecarray<T>}
+  \item \code{vectorize<T>} / \code{simdize<T>} / \code{vectize<T>} / \code{vectorized<T>} / \code{simdized<T>} / \code{vectized<T>}
+\end{itemize}
+
+\subsubsection{Discussion}
+
+\begin{itemize}
+  \item \code{vector<T>}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item term-of-art in the industry. We talk about "vectorization", "vector unit", "vector registers", ...
+          \item does work as a mathematical vector, e.g. \code{std::reduce<std::plus>(x*y)} is the scalar product
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item \emph{[name collision]} \code{std::vector}: the name is taken. Using a different namespace won't help: Too much confusion/conflict with \code{std::vector}, which is not constant-size.
+          \item ambiguity with mathematically inclined people who may expect operators to behave differently (especially, I've heard feedback of users expecting \code{operator*} to be the dot-product)
+        \end{enumerate}
+    \end{description}
+
+  \item \code{vec<T>}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item short
+          \item pronounceable
+          \item usage is somewhat idiomatic: vec<T> is a vector-lookalike of T.
+          \item term-of-art in the industry. We talk about "vectorization", "vector unit", "vector registers", ...
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item abbreviation
+          \item close to \code{std::vector}
+          \item ambiguity with mathematically inclined people who may expect operators to behave differently (especially, I've heard feedback of users expecting \code{operator*} to be the dot-product)
+        \end{enumerate}
+    \end{description}
+
+  \item \code{vecpar<T>}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item short
+          \item pronounceable
+          \item term-of-art in the industry. We talk about "vectorization", "vector unit", "vector registers", ...
+          \item resolves ambiguity with math vector
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item abbreviation ("vector parallel")
+          \item (\code{par_vec} - it's \code{par_unseq} now, so we should be fine)
+        \end{enumerate}
+    \end{description}
+
+  \item \code{simd<T>}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item short
+          \item pronounceable
+          \item usage is idiomatic: simd<T> is the SIMD thing for T.
+          \item Known term in the industry
+          \item maybe even more to the point than "vector" (note variable-length vector units on traditional vector computers)
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item acronym
+          \item might suggest that the type is not usable for GPUs
+          \item one \code{simd<T>} object could drive multiple or partial SIMD registers, multiple partially synchronized threads, one or more non-SIMD registers, a mix of SIMD and non-SIMD registers.
+        \end{enumerate}
+    \end{description}
+
+  \item \code{datapar<T>}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item pronounceable
+          \item "data parallel" hints at the intended use: Code expresses inherent data parallelism (intent). Contrast that to "code that uses SIMD registers and operations" (implementation detail).
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item abbreviation
+          \item new term
+        \end{enumerate}
+    \end{description}
+
+  \item \code{pack<T>}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item short
+          \item pronounceable
+          \item usage is somewhat idiomatic (e.g. \code{addpd}: “add packed double-precision”)
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item \emph{[name collision]} Conflicts with "template parameter pack" usage in variadic templates.
+            These tend to appear in the same context: "You can have a [template parameter] pack of packs [types]." (what?)
+          \item no hint about concurrently executing operations in the name
+        \end{enumerate}
+    \end{description}
+
+  \item \code{simdarray<T>}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item matches constant-length \code{std:array} and math-style of \code{std::valarray}.
+          \item pronounceable
+          \item usage is idiomatic: SIMD operations on a fixed-size array
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item a bit long for daily use
+          \item acronym
+          \item might suggest that the type is not usable for GPUs
+        \end{enumerate}
+      \item[variations]\ 
+        \begin{enumerate}
+          \item \code{simdvector<T>}: "vector" suggests \code{std::vector} behavior - prefer \code{simdarray<T>}
+          \item \code{vecarray<T>}: abbreviation ("vectorized array", \emph{not} "vector array");\\
+            "vector array" misleading
+        \end{enumerate}
+    \end{description}
+
+  \item \code{vectorize<T>}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item pronounceable
+          \item clear meaning: produces a type that is a \emph{vectorized} \code{T}\\
+            i.e. action at compile time, so being a verb is fine
+          \item clear meaning if proposal is extended to support \code{std::tuple} for \code{T} (and structs/classes once we get enough reflection into the language)
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item it is a class, it should be a noun (\code{vectorization<T>}?)
+          \item a bit long for daily use
+        \end{enumerate}
+      \item[variations]\ 
+        \begin{enumerate}
+          \item \code{simdize<T>}: shorter; downsides of \code{simd} - see above
+          \item \code{vectize<T>}: shorter; abbreviation
+          \item \code{vectorized<T> simdized<T>}: adjective, still not a noun
+        \end{enumerate}
+    \end{description}
+\end{itemize}
+
+\subsubsection{Recommendation}
+I recommend to short-list to:
+\begin{itemize}
+  \item \code{vec<T>}
+  \item \code{vecpar<T>}
+  \item \code{simd<T>}
+  \item \code{datapar<T>}
+  \item \code{simdarray<T>}
+  \item \code{vectorize<T>}
+  \item \code{simdize<T>}
+\end{itemize}
+
+\subsection{mask}
+
+The class in question is an array of target-specific size with elements of boolean value.
+The actual memory layout and storage size is unspecified.
+This type is the equivalence of \code{bool} for the \code{datapar<T>} types.
+It acts as the return type of \code{datapar} comparisons and can be used for write-masking, masked loads \& stores, and reductions to \code{bool}.
+
+\subsubsection{Naming Options}
+
+\begin{itemize}
+  \item \code{mask<T>}
+  \item \code{vecmask<T>}
+  \item \code{boolvec<T>}
+  \item \code{simdmask<T>}
+  \item \code{simdbool<T>}
+  \item \code{parmask<T>}
+  \item \code{boolpack<T>}
+\end{itemize}
+
+\subsubsection{Discussion}
+
+Depending on the name chosen for the “datapar” class, there are some natural candidates for the \code{mask} class.
+In any case, the \code{mask} name is:
+\begin{enumerate}
+  \item a term-of-art,
+  \item short,
+  \item pronounceable,
+  \item idiomatic,
+  \item noun,
+  \item no name collision with existing types (as is the case for \code{vector}).
+\end{enumerate}
+So I do not see a need for choosing a different (longer) name.
+
+\subsection{where}
+The “where function” wraps a \code{mask} object and a reference to a \code{datapar} or \code{mask} object to implement write-masking, and masked loads \& stores.
+The function acts as special syntax to express that e.g. assignment shall only happen at the element indexes where the mask object is \code{true}.
+The where function returns a temporary object (type \code{where_expression}) that implements the write-masked operations.
+
+\subsubsection{Naming Options}
+\begin{itemize}
+  \item \code{where}
+  \item \code{masked}
+  \item \code{withmask}
+  \item \code{maskedval}
+  \item \code{maskedref}
+\end{itemize}
+
+\subsubsection{Discussion}
+
+\begin{itemize}
+  \item \code{where}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item short
+          \item pronounceable
+          \item turns code into prose: \code{where(x < y, z) += 2;} reads as “where x is less then y, modify z by adding 2”
+          \item naming reflects relation to \code{if} statements
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item less intuitive if extended and used in the middle of expressions, e.g. \code{fun(where(mask, v))}
+        \end{enumerate}
+    \end{description}
+
+  \item \code{masked}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item short
+          \item pronounceable
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item too close to \code{mask}: ambiguous when spoken
+        \end{enumerate}
+    \end{description}
+
+  \item \code{withmask}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item pronounceable
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item less intuitive to read: \code{withmask(x < y, z) += 2;}\\
+            does something \emph{with} a mask, what?
+        \end{enumerate}
+    \end{description}
+
+  \item \code{maskedval}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item pronounceable
+          \item communicates: produce a new object that is a \emph{masked value} of the given object
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item \emph{value} is not technically correct as it actually holds a reference to the given object
+          \item the object returned by \code{maskedval} may only exists as rvalue;
+            the name suggests otherwise
+        \end{enumerate}
+    \end{description}
+
+  \item \code{maskedref}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item pronounceable
+          \item communicates: produce a new object that is a \emph{masked reference} to the given object
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item the object returned by \code{maskedref} may only exists as rvalue;
+            the name suggests otherwise
+        \end{enumerate}
+    \end{description}
+
+\end{itemize}
+
+\subsubsection{Recommendation}
+My recommendation is to go with \code{where} for what is in the wording now.
+If we later want to produce lvalues that act as masked references, I believe we should use a different mechanism/name anyway.
+Pablo suggested in private communication that \code{where} could be extended to:
+\begin{lstlisting}[style=Vc]
+where (mask, v1, v2, [](auto v1_, auto v2_) {
+  // type of v1_ is a masked reference to v1
+  fun(v1_, v2_);  // all operations of fun on its parameters are masked
+});
+\end{lstlisting}
+This suggests that there might not even be a need for allowing \code{where} or a new function/type in the middle of expressions.
+
+\subsection{memload \& memstore}
+Loads and stores are the (low-level) conversions between arrays of \code{T} and objects of \code{datapar<T>}.
+Converting loads and stores additionally perform widening or narrowing conversions to/from arrays of \code{U}, which is convertible to/from \code{T}.
+
+\code{std::atomic} has member functions called \code{atomic::load} and \code{atomic::store}: \code{load} returns the value of the \code{atomic} with a given \code{memory_order}; \code{store} replaces the value of \code{atomic} with the given value using the given \code{memory_order}.
+\code{datapar::load} does the reverse of \code{atomic::load}: it loads \code{datapar::size()} consecutive values starting from the given pointer into the \code{datapar} object.
+\code{datapar::store} does the reverse of \code{atomic::store}: it stores \code{datapar::size()} values from the \code{datapar} object to the given pointer.
+
+\subsubsection{Naming Options}
+
+\begin{itemize}
+  \item \code{load(const U*, Flags), store(U*, Flags)}
+  \item \code{memload(const U*, Flags), memstore(U*, Flags)}
+  \item \code{load_from(const U*, Flags), store_to(U*, Flags)}
+  \item \code{copy_from(const U*, Flags), copy_to(U*, Flags)}
+\end{itemize}
+
+\subsubsection{Discussion}
+\begin{itemize}
+  \item \code{load(const U*, Flags), store(U*, Flags)}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item short
+          \item pronounceable
+          \item term-of-art
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item possibly confusing when compared with \code{load} and \code{store} functions of \code{std::atomic}
+        \end{enumerate}
+    \end{description}
+
+  \item \code{memload(const U*, Flags), memstore(U*, Flags)}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item pronounceable
+          \item \code{mem} prefix hints at array behind the pointer argument
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item abbreviation (pretty common, though)
+        \end{enumerate}
+    \end{description}
+
+  \item \code{load_from(const U*, Flags), store_to(U*, Flags)}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item pronounceable
+          \item reads as prose: \code{v.load_from(mem, vector_aligned)}
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+        \end{enumerate}
+    \end{description}
+
+  \item \code{copy_from(const U*, Flags), copy_to(U*, Flags)}
+    \begin{description}
+      \item[pro]
+        \begin{enumerate}
+          \item pronounceable
+          \item reads as prose: \code{v.copy_from(mem, vector_aligned)}
+          \item clarifies that values are copied
+            (user feedback implies that some people expect aliasing)
+        \end{enumerate}
+      \item[con]
+        \begin{enumerate}
+          \item avoids term-of-art (load/store)
+        \end{enumerate}
+    \end{description}
+
+\end{itemize}
+
+\subsubsection{Recommendation}
+My preference is to go with \code{load} and \code{store}.
+The \code{std::atomic} class is different enough.
+I have never received feedback that the copy direction of the load and store functions is confusing.
+
+My second choice is \code{copy_from/to}.
+Avoid the embarrassment of using the terms load and store but having to name them differently just because of \code{std::atomic}.
+I'm certain that if we choose \code{memload/memstore} or \code{load_from/store_to} the question why we didn't just use \code{load/store} will become a FAQ.
+
+% ft=tex tw=0 et sw=2 spell
