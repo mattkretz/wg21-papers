@@ -114,6 +114,8 @@ constexpr size_t memory_alignment = implementation_defined;
 \end{itemdescr}
 
 \wgSubsubsection{Class templates \code{const_where_expression} and \code{where_expression}}{datapar.whereexpr}
+\lstinputlisting[]{whereexpression.cpp}
+
 \pnum The class templates \code{const_where_expression} and \code{where_expression<M, T>} combine a predicate and a value object to implement an interface that restricts assignments and/or operations on the value object to the elements selected via the predicate.
 
 \pnum The first template argument \type M must be cv-unqualified \bool or a cv-unqualified \mask instantiation.
