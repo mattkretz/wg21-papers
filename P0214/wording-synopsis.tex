@@ -37,10 +37,7 @@ namespace datapar_abi {
   \wgNote{It is still possible for an implementation to support \datapar[<U, fixed_size<K>>] with \code{K > max_fixed_size}.}
 
   \pnum
-  An implementation may choose to implement data-parallel execution for many different targets.
-  An additional implementation-defined tag type should be added to the \code{datapar_abi} namespace, for each target the implementation supports.
-  \wgNote{There can certainly be more than one tag type per (micro-)architecture, e.g. to support different vector lengths or partial register usage.}
-  All tag types an implementation supports shall be present independent of the target architecture determined at invocation of the compiler.
+  An implementation may define additional ABI tag types in the datapar_abi namespace, to support other forms of data-parallel computation.
 
   \pnum
   The \type{datapar_abi::compatible<T>} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution for the element type \type T that ensures the highest compatibility on the target architecture.
