@@ -27,8 +27,8 @@ static constexpr size_type size();
 \pnum\begin{noteEnv}Implementations are encouraged to enable \code{static_cast}ing from/to (an) implementation-defined SIMD mask type(s).
 This would add one or more of the following declarations to class \mask:
 \begin{itemdecl}
-explicit operator implementation_defined() const;
-explicit datapar(const implementation_defined &init);
+explicit operator implementation-defined() const;
+explicit datapar(const implementation-defined &init);
 \end{itemdecl}
 \end{noteEnv}
 
@@ -188,13 +188,13 @@ template <class T, class Abi> int find_last_set(mask<T, Abi> m);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> bool  all_of(implementation_defined);
-template <class T, class Abi> bool  any_of(implementation_defined);
-template <class T, class Abi> bool none_of(implementation_defined);
-template <class T, class Abi> bool some_of(implementation_defined);
-template <class T, class Abi> int popcount(implementation_defined);
-template <class T, class Abi> int find_first_set(implementation_defined);
-template <class T, class Abi> int find_last_set(implementation_defined);
+template <class T, class Abi> bool  all_of(implementation-defined);
+template <class T, class Abi> bool  any_of(implementation-defined);
+template <class T, class Abi> bool none_of(implementation-defined);
+template <class T, class Abi> bool some_of(implementation-defined);
+template <class T, class Abi> int popcount(implementation-defined);
+template <class T, class Abi> int find_first_set(implementation-defined);
+template <class T, class Abi> int find_last_set(implementation-defined);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks The functions only participate in overload resolution if the argument is of type \bool.
@@ -223,7 +223,7 @@ const where_expression<mask<T, A>, const mask<T, A>> where(
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T> where_expression<bool, T> where(implementation_defined k, T &v);
+template <class T> where_expression<bool, T> where(implementation-defined k, T &v);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks The function only participates in overload resolution if

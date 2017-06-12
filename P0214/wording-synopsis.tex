@@ -10,9 +10,9 @@ The header \code{<datapar>} defines the class templates (\datapar, \mask, and \t
 namespace datapar_abi {
   struct scalar {};
   template <int N> struct fixed_size {};
-  constexpr int max_fixed_size = implementation_defined;
-  template <typename T> using compatible = implementation_defined;
-  template <typename T> using native = implementation_defined;
+  constexpr int max_fixed_size = implementation-defined;
+  template <typename T> using compatible = implementation-defined;
+  template <typename T> using native = implementation-defined;
 }
 \end{itemdecl}
 \begin{itemdescr}
@@ -74,7 +74,7 @@ template <class T> struct is_mask;
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, size_t N> struct abi_for_size { using type = implementation_defined; };
+template <class T, size_t N> struct abi_for_size { using type = implementation-defined; };
 \end{itemdecl}
 \begin{itemdescr}
   \pnum
@@ -92,7 +92,7 @@ template <class T, size_t N> struct abi_for_size { using type = implementation_d
 
 \begin{itemdecl}
 template <class T, class Abi = datapar_abi::compatible<T>>
-struct datapar_size : public integral_constant<size_t, implementation_defined> {};
+struct datapar_size : public integral_constant<size_t, implementation-defined> {};
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\label{datapar_size}%
@@ -105,7 +105,7 @@ struct datapar_size : public integral_constant<size_t, implementation_defined> {
 
 \begin{itemdecl}
 template <class T, class U = typename T::value_type>
-constexpr size_t memory_alignment = implementation_defined;
+constexpr size_t memory_alignment = implementation-defined;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\requires The template parameter \type T must be a valid instantiation of either the \datapar or the \mask class template.
