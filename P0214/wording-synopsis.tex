@@ -68,16 +68,14 @@ namespace datapar_abi {
 template <class T> struct is_datapar;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum The \type{is_datapar} type derives from \type{true_type} if \type T is an instance of the \datapar class template.
-  Otherwise it derives from \type{false_type}.
+  \pnum The \type{is_datapar} template is a \code{UnaryTypeTrait} with a base characteristic of \type{true_type} if \type T is an instance of the \datapar class template, and \type{false_type} otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
 template <class T> struct is_mask;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum The \type{is_mask} type derives from \type{true_type} if \type T is an instance of the \mask class template.
-  Otherwise it derives from \type{false_type}.
+  \pnum The \type{is_mask} template is a \code{UnaryTypeTrait} with a base characteristic of \type{true_type} if \type T is an instance of the \mask class template, and \type{false_type} otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
