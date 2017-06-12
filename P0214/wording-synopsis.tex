@@ -44,15 +44,22 @@ namespace datapar_abi {
   \wgExample{
     Consider a target with the implementation-defined ABI tags \type{simd128} and \type{simd256} where the \type{simd256} type requires an optional ISA extension on said target architecture.
     Also, the target does not support \type{long double} with either ABI tag.
-    In this case \type{compatible<T>} aliases \type{simd128} for all arithmetic \type T, except \type{long double}.
-    The implementation might therefore define \type{compatible<long double>} as an alias for \type{scalar}.
+    The implementation therefore defines
+    \begin{itemize}
+      \item \type{compatible<T>} as an alias for \type{simd128} for all arithmetic \type T, except \type{long double},
+      \item and \type{compatible<long double>} as an alias for \type{scalar}.
+    \end{itemize}
   }
 
   \pnum
   The \type{datapar_abi::native<T>} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution for the element type \type T that is supported on the target system.
   \wgExample{
       Consider a target with the implementation-defined ABI tags \type{simd128} and \type{simd256} where hardware support for \type{simd256} only exists for floating-point types.
-      In this case the \type{native<T>} alias equals \type{simd256} if \type T is a floating-point type and \type{simd128} otherwise.
+    The implementation therefore defines \type{native<T>} as an alias for
+    \begin{itemize}
+      \item \type{simd256} if \type T is a floating-point type,
+      \item and \type{simd128} otherwise.
+    \end{itemize}
   }
 \end{itemdescr}
 
