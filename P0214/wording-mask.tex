@@ -9,10 +9,11 @@ The number of elements in the array is a constant expression, equal to the numbe
 The first template argument \type T must be a cv-unqualified integral or floating-point type (3.9.1 [basic.fundamental]).
 The type \bool is not allowed.
 The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
+If the \type{Abi} type is \fixedsizeN, the value \code{N} must be supported by the implementation (see \ref{datapar.fixedsize.def} and \ref{datapar.maxfixedsize.def}).
+The combination of \type T and \type{Abi} must be supported for the current compilation target.
 
 \pnum\label{mask.deleted}%
-If any of the template arguments does not conform to the above requirements, or if the combination of \type T and \type{Abi} is not supported for the current compilation target, the resulting class shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
-
+If any of the template arguments does not conform to the above requirements, the resulting class shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
 
 \pnum Default initialization performs no initialization of the elements; value-initialization initializes each element with \code{bool()}.
 \wgNote{Thus, default initialization leaves the elements in an indeterminate state.}

@@ -10,7 +10,7 @@ The header \code{<datapar>} defines the class templates (\datapar, \mask, and \t
 namespace datapar_abi {
   struct scalar {};
   template <int N> struct fixed_size {};
-  constexpr int max_fixed_size = implementation-defined;
+  template <typename T> constexpr int max_fixed_size = implementation-defined;
   template <typename T> using compatible = implementation-defined;
   template <typename T> using native = implementation-defined;
 }
@@ -33,8 +33,8 @@ namespace datapar_abi {
   }
 
   \pnum\label{datapar.maxfixedsize.def}%
-  The value of \code{max_fixed_size} declares that an instance of \datapar[<T, fixed_size<N>>] with \code{N <= max_fixed_size} is supported by the implementation.
-  \wgNote{It is unspecified whether an implementation supports \datapar[<T, fixed_size<N>>] with \code{N > max_fixed_size}.}
+  The value of \code{max_fixed_size<T>} declares that an instance of \datapar[<T, fixed_size<N>>] with \code{N <= max_fixed_size<T>} is supported by the implementation.
+  \wgNote{It is unspecified whether an implementation supports \datapar[<T, fixed_size<N>>] with \code{N > max_fixed_size<T>}.}
 
   \pnum
   An implementation may define additional ABI tag types in the datapar_abi namespace, to support other forms of data-parallel computation.

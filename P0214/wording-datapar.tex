@@ -9,9 +9,22 @@ The number of elements in the array is a constant expression, according to the \
 The first template argument \type T must be a cv-unqualified integral or floating-point type (3.9.1 [basic.fundamental]).
 The type \bool is not allowed.
 The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
+If the \type{Abi} type is \fixedsizeN, the value \code{N} must be supported by the implementation (see \ref{datapar.fixedsize.def} and \ref{datapar.maxfixedsize.def}).
+The combination of \type T and \type{Abi} must be supported for the current compilation target.
+
+\wgExample{
+  Consider an implementation that defines the two additional ABI types \type{simd_x} and \type{gpu_y}.
+  When the compiler is invoked to translate to a machine that has support for the \type{simd_x} ABI for all arithmetic types except \type{long double} and no support for the \type{gpu_y} ABI, then:
+  \begin{itemize}
+    \item \datapar[<T, datapar_abi::gpu_y>] is not supported for any \type T and results in a type with deleted constructor (see below)
+    \item \datapar[<long double, datapar_abi::simd_x>] is not supported and results in a type with deleted constructor (see below)
+    \item \datapar[<double, datapar_abi::simd_x>] is supported
+    \item \datapar[<long double, datapar_abi::scalar>] is supported
+  \end{itemize}
+}
 
 \pnum\label{datapar.deleted}%
-If any of the template arguments does not conform to the above requirements, or if the combination of \type T and \type{Abi} is not supported for the current compilation target, the resulting class shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
+If any of the template arguments does not conform to the above requirements, the resulting class shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
 
 \pnum Default initialization performs no initialization of the elements; value-initialization initializes each element with \code{T()}.
 \wgNote{Thus, default initialization leaves the elements in an indeterminate state.}

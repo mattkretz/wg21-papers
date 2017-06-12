@@ -3,7 +3,7 @@ namespace std {
     namespace datapar_abi {
       struct scalar {};
       template <int N> struct fixed_size {};
-      constexpr int max_fixed_size = implementation-defined;
+      template <typename T> constexpr int max_fixed_size = implementation-defined;
       template <typename T> using compatible = implementation-defined;
       template <typename T> using native = implementation-defined;
     }
