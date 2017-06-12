@@ -26,15 +26,15 @@ namespace datapar_abi {
   \pnum\label{datapar.fixedsize.def}%
   Use of the \fixedsizeN tag type forces \datapar and \mask to store and manipulate \code N components (i.e. \datapar{}\type{<T, \fixedsizeN{}>::size()} returns \code N).
   An implementation must support at least any \code N $\in [1\ldots 32]$.
-  Additionally, an implementation must support any \code N $\in \left\{\code{\datapar[<U>]::size()}, \forall \type{U} \in \{\mathrm{arithmetic\ types}\} \right\}$.
+  Additionally, an implementation must support any \code N $\in \{\code{\datapar[<U>]::size()}, \forall \type{U} \in \{$arithmetic types$\}\}$.
   \wgNote{
     An implementation may choose to not ensure ABI compatibility for \datapar and \mask instantiations using the same \fixedsizeN tag.
     In case of ABI compatibilty between differently compiled translation units, the efficiency of \datapar[<T, Abi>] is likely to be better than for \datapar[<T, fixed_size<datapar_size_v<T, Abi>>>] (with \type{Abi} not a instance of \fixedsizescoped).
   }
 
   \pnum\label{datapar.maxfixedsize.def}%
-  The value of \code{max_fixed_size} declares that an instance of \datapar[<T, fixed_size<N>>] with \code{N <= max_fixed_size} is supported by the implementation.%
-  \wgNote{It is still possible for an implementation to support \datapar[<U, fixed_size<K>>] with \code{K > max_fixed_size}.}
+  The value of \code{max_fixed_size} declares that an instance of \datapar[<T, fixed_size<N>>] with \code{N <= max_fixed_size} is supported by the implementation.
+  \wgNote{It is unspecified whether an implementation supports \datapar[<T, fixed_size<N>>] with \code{N > max_fixed_size}.}
 
   \pnum
   An implementation may define additional ABI tag types in the datapar_abi namespace, to support other forms of data-parallel computation.
