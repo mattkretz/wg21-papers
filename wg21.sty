@@ -467,10 +467,7 @@ floatplacement=btp,
 %numberstyle=\scshape\addfontfeature{Numbers={Uppercase,Monospaced}}\tiny,
 basicstyle=\listingssize\ttfamily
 }
-\lstset{%
-  emph={implementation_defined,target_dependent,unspecified},
-  emphstyle={\itshape}
-}
+\lstset{moredelim=[s][\itshape]{implementation-def}{ined}}
 
 \definecolor{inlinetypes}{gray}{0.2}
 \DeclareRobustCommand{\code}[1]{\texorpdfstring{\texttt{#1}}{{#1}}}
