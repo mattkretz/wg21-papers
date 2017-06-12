@@ -172,35 +172,38 @@ Previous revision: \parencite{P0214R2}.
 \subsection{Changes from R3}
 Previous revision: \parencite{P0214R3}.
 \begin{itemize}
-  \chck Add special math overloads for signed char and short.
+  \color{black}\item[---] before Kona:
+  \item Add special math overloads for signed char and short.
         They are important to avoid widening to multiple SIMD registers and since no integer promotion is applied for \datapar types.
-  \chck Editorial: Prefer \code{using} over \code{typedef}.
-  \chck Overload shift operators with \intt argument for the right hand side.
+  \item Editorial: Prefer \code{using} over \code{typedef}.
+  \item Overload shift operators with \intt argument for the right hand side.
         This enables more efficient implementations.
         This signature is present in the Vc library, and was forgotten in the wording.
-  \chck Remove empty section about the omission of logical operators.
-  \chck Modify \mask compares to return a \mask instead of \bool (\ref{sec:mask.comparison}).
+  \item Remove empty section about the omission of logical operators.
+  \item Modify \mask compares to return a \mask instead of \bool (\ref{sec:mask.comparison}).
         This resolves an inconsistency with all the other binary operators.
-  \chck Editorial: Improve \referencetype member specification (\ref{sec:datapar.overview}).
-  \chck Require \code{swap(v[0], v[1])} to be valid (\ref{sec:datapar.overview}).
-  \chck Fixed inconsisteny of masked load constructor after move of \code{memload} to \type{where_expression} (\ref{sec:datapar.whereexpr}).
-  \chck Editorial: Use Requires clause instead of Remarks to require the memory argument to loads and stores to be large enough (\ref{sec:datapar.whereexpr}, \ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store}).
-  \chck Add a note to special math functions that precondition violation is UB (\ref{sec:datapar.math}).
-  \chck Bugfix: Binary operators involving two \type{datapar::reference} objects must work (\ref{sec:datapar.overview}).
-  \chck Editorial: Replace Note clauses in favor of \wgNote{}.
-  \chck Editorial: Replace UB Remarks on load/store alignment requirements with Requires clauses.
-  \chck Add an example section (\ref{sec:Examples}).
-  \chck Readd \bool overloads of mask reductions and ensure that implicit conversions to \bool are ill-formed.
-  \chck Clarify effects of using an ABI parameter that is not available on the target (\ref{datapar.deleted}, \ref{mask.deleted}, \ref{datapar_size}).
-  \chck Split \whereexpression into \const and non-\const class templates.
-  \chck Add section on naming (\ref{sec:Naming}).
-  \chck Remove non-normative noise about ABI tag types (\ref{sec:datapar.abi}).
-  \chck Remove most of the text about vendor-extensions for ABI tag types, since it's QoI (\ref{sec:datapar.abi}).
-  \chck Clarify the differences and intent of \type{compatible<T>} vs. \type{native<T>} (\ref{sec:datapar.abi}).
-  \chck Move definition of \whereexpression out of the synopsis (\ref{sec:datapar.whereexpr}).
-  \chck Change “implementation_defined” to “implementation-defined”.
-  \chck Discuss the questions/issues raised on \code{max_fixed_size} in Kona (\ref{sec:maxfixedsize}).
-  \chck Make \code{max_fixed_size} dependent on \type{T}.
+  \item Editorial: Improve \referencetype member specification (\ref{sec:datapar.overview}).
+  \item Require \code{swap(v[0], v[1])} to be valid (\ref{sec:datapar.overview}).
+  \item Fixed inconsisteny of masked load constructor after move of \code{memload} to \type{where_expression} (\ref{sec:datapar.whereexpr}).
+  \item Editorial: Use Requires clause instead of Remarks to require the memory argument to loads and stores to be large enough (\ref{sec:datapar.whereexpr}, \ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store}).
+  \item Add a note to special math functions that precondition violation is UB (\ref{sec:datapar.math}).
+  \item Bugfix: Binary operators involving two \type{datapar::reference} objects must work (\ref{sec:datapar.overview}).
+  \item Editorial: Replace Note clauses in favor of \wgNote{}.
+  \item Editorial: Replace UB Remarks on load/store alignment requirements with Requires clauses.
+  \item Add an example section (\ref{sec:Examples}).
+
+  \color{black}\item[---] after Kona:
+  \item Readd \bool overloads of mask reductions and ensure that implicit conversions to \bool are ill-formed.
+  \item Clarify effects of using an ABI parameter that is not available on the target (\ref{datapar.deleted}, \ref{mask.deleted}, \ref{datapar_size}).
+  \item Split \whereexpression into \const and non-\const class templates.
+  \item Add section on naming (\ref{sec:Naming}).
+  \item Remove non-normative noise about ABI tag types (\ref{sec:datapar.abi}).
+  \item Remove most of the text about vendor-extensions for ABI tag types, since it's QoI (\ref{sec:datapar.abi}).
+  \item Clarify the differences and intent of \type{compatible<T>} vs. \type{native<T>} (\ref{sec:datapar.abi}).
+  \item Move definition of \whereexpression out of the synopsis (\ref{sec:datapar.whereexpr}).
+  \item Change “implementation_defined” to “implementation-defined”.
+  \item Discuss the questions/issues raised on \code{max_fixed_size} in Kona (\ref{sec:maxfixedsize}).
+  \item Make \code{max_fixed_size} dependent on \type{T}.
 
   \todo New section on design decisions; discuss decisions made by SG1, LEWG, and through discussion with Jens; especially discuss the ABI parameter:
   \begin{itemize}
