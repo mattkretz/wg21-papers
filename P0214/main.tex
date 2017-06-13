@@ -39,7 +39,7 @@
 
 \newcommand\flagsRemarks[1]{
   \pnum\requires
-  If the \type{Flags} template parameter is of type \type{flags::vector\_aligned\_tag}, the pointer value represents an address aligned to \code{memory\_alignment<#1>}.
+  If the \type{Flags} template parameter is of type \type{flags::vector\_aligned\_tag}, the pointer value represents an address aligned to \code{memory\_alignment\_v<#1>}.
   If the \type{Flags} template parameter is of type \type{flags::overaligned\_tag<N>}, the pointer value represents an address aligned to \code N.
 }
 
@@ -208,6 +208,7 @@ Previous revision: \parencite{P0214R3}.
   \item Make \emph{ABI tag} a consistent term and add \code{is_abi_tag} trait (\ref{sec:datapar.traits}, \ref{sec:datapar.abi}).
   \item Clarify that \fixedsizeN must support all \code{N} matching all possible implementation-defined ABI tags (\ref{sec:datapar.abi}).
   \item Clarify \code{abi_for_size} wording (\ref{sec:datapar.traits}).
+  \item Turn \code{memory_alignment} into a trait with a corresponding \code{memory_alignment_v} variable template.
 
   \todo New section on design decisions; discuss decisions made by SG1, LEWG, and through discussion with Jens; especially discuss the ABI parameter:
   \begin{itemize}

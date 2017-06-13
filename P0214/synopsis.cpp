@@ -36,7 +36,9 @@ namespace std {
     constexpr size_t datapar_size_v = datapar_size<T, Abi>::value;
 
     template <class T, class U = typename T::value_type>
-    constexpr size_t memory_alignment = implementation-defined;
+    struct memory_alignment : public integral_constant<size_t, implementation-defined> {};
+    template <class T, class U = typename T::value_type>
+    constexpr size_t memory_alignment_v = memory_alignment<T, U>::value;
 
     // class template datapar [datapar]
     template <class T, class Abi = datapar_abi::compatible<T>> class datapar;

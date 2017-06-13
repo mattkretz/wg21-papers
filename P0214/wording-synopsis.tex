@@ -143,7 +143,7 @@ struct datapar_size : public integral_constant<size_t, implementation-defined> {
 
 \begin{itemdecl}
 template <class T, class U = typename T::value_type>
-constexpr size_t memory_alignment = implementation-defined;
+struct memory_alignment : public integral_constant<size_t, implementation-defined> {};
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\requires The template parameter \type T must be a valid instantiation of either the \datapar or the \mask class template.
