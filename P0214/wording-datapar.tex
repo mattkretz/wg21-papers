@@ -102,6 +102,7 @@ template <class G> datapar(G &&gen);
 template <class U, class Flags> datapar(const U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
+  \pnum\remarks This constructor shall not participate in overload resolution unless \type U is an arithmetic type except \bool.
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{static_cast<T>(mem[i])} \foralli.
   \pnum\requires \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
   \flagsRemarks{\datapar, \type U}
@@ -112,6 +113,7 @@ template <class U, class Flags> datapar(const U *mem, Flags);
 template <class U, class Flags> void memload(const U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
+  \pnum\remarks This function shall not participate in overload resolution unless \type U is an arithmetic type except \bool.
   \pnum\effects Replaces the elements of the \datapar object such that the $i$-th element is assigned with \code{static_cast<T>(mem[i])} \foralli.
   \pnum\requires \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
   \flagsRemarks{\datapar, \type U}
@@ -122,6 +124,7 @@ template <class U, class Flags> void memload(const U *mem, Flags);
 template <class U, class Flags> void memstore(U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
+  \pnum\remarks This function shall not participate in overload resolution unless \type U is an arithmetic type except \bool.
   \pnum\effects Copies all \datapar elements as if \code{mem[i] = static_cast<U>(operator[](i))} \foralli.
   \pnum\requires \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
   \flagsRemarks{\datapar, \type U}
