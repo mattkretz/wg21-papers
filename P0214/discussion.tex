@@ -295,7 +295,7 @@ Making the \code{max_fixed_size} dependent on \type T makes sense because most h
 Thus, if an implementation wants to restrict $N$ to some sensible multiple of the hardware capabilities, the number must be dependent on \type T.
 
 In Kona, LEWG also asked whether there should be a provision in the standard to ensure that a native \datapar of 8-bit element type is convertible to a fixed-size \datapar of 64-bit element type.
-It was already there (\ref{datapar.fixedsize.def}: “an implementation must support any \code N $\in \{\code{\datapar[<U>]::size()}, \forall \type{U} \in \{$arithmetic types$\}\}$”).
+It was already there (\ref{datapar.fixedsize.def}: “for every supported \datapar[<T, A>] (see \ref{sec:datapar.type requirements}), where \type A is an implementation-defined ABI tag, \code N $=$ \datapar[<T, A>::size()] must be supported”).
 Note that this does not place a lower bound on \code{max_fixed_size}.
 The wording allows implementations to support values for fixed-size \datapar that are larger than \code{max_fixed_size}.
 I.e. $N \leq $ \code{max_fixed_size} works; whether $N > $ \code{max_fixed_size} works is unspecified.
