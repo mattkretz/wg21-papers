@@ -97,17 +97,19 @@ template <class T> struct is_mask;
 template <class T, size_t N> struct abi_for_size { using type = implementation-defined; };
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum
-  The \type{abi_for_size} class template defines the member type \type{type} to one of the tag types in \code{datapar_abi}.
-  If a tag type \type A exists that satisfies
+  \pnum The member \type{type} shall be omitted if
   \begin{itemize}
-    \item \code{datapar_size_v<T, A> == N},
-    \item \type A is a supported \type{Abi} parameter to \datapar[<T, Abi>] for the current compilation target, and
-    \item \type A is not \fixedsizeN,
-  \end{itemize} then the member type \type{type} is an alias for \type A.
-  Otherwise \type{type} is an alias for \fixedsizeN.
+    \item \type T is not supported by \datapar (see \ref{datapar.type requirements}),
+    \item or if \fixedsizeN is not supported (see \ref{datapar.fixedsize.def}).
+  \end{itemize}
 
-  \pnum \code{abi_for_size<T, N>::type} shall result in a substitution failure if \type T is not supported by \datapar or if \code N is not supported by the implementation (see \ref{datapar.fixedsize.def}).
+  \pnum Otherwise, the member typedef \type{type} shall name an ABI tag type that satisfies
+  \begin{itemize}
+    \item \code{datapar_size_v<T, type> == N},
+    \item \datapar[<T, type>] is supported for the current compilation target (see \ref{datapar.type requirements}),
+    \item and \type{type} is not \fixedsizeN.
+  \end{itemize}
+  If such an ABI tag does not exist then \type{type} shall name \fixedsizeN.
 \end{itemdescr}
 
 \begin{itemdecl}
