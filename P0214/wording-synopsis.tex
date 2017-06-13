@@ -48,7 +48,8 @@ namespace datapar_abi {
   An implementation may define additional ABI tag types in the datapar_abi namespace, to support other forms of data-parallel computation.
 
   \pnum
-  The \type{datapar_abi::compatible<T>} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution for the element type \type T that ensures ABI compatibility on the target architecture.
+  \type{datapar_abi::compatible<T>} is an alias for the ABI tag with the most efficient data parallel execution for the element type \type T that ensures ABI compatibility on the target architecture.
+
   \wgExample{
     Consider a target with the implementation-defined ABI tags \type{simd128} and \type{simd256} where the \type{simd256} type requires an optional ISA extension on said target architecture.
     Also, the target does not support \type{long double} with either ABI tag.
@@ -60,7 +61,12 @@ namespace datapar_abi {
   }
 
   \pnum
-  The \type{datapar_abi::native<T>} tag is defined by the implementation to alias the tag type with the most efficient data parallel execution for the element type \type T that is supported on the target system.
+  \type{datapar_abi::native<T>} is an alias for the ABI tag with the most efficient data parallel execution for the element type \type T that is supported on the target system.
+  \wgNote{
+    For target systems without ISA extensions, the \type{native<T>} and \type{compatible<T>} aliases will likely be the same.
+    For target systems with ISA extensions, compiler flags may influence the \type{native<T>} alias while \type{compatible<T>} will be the same independent of such flags.
+  }
+
   \wgExample{
       Consider a target with the implementation-defined ABI tags \type{simd128} and \type{simd256} where hardware support for \type{simd256} only exists for floating-point types.
     The implementation therefore defines \type{native<T>} as an alias for
