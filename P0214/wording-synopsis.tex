@@ -127,8 +127,7 @@ struct datapar_size : public integral_constant<size_t, implementation-defined> {
   \type{datapar_size<T, Abi>} shall have no member \code{value} if either
   \begin{itemize}
     \item \type T is cv-qualified,
-    \item or \type T is \bool,
-    \item or \type T is neither an integral nor floating-point type \parencite[(3.9.1)]{N4618},
+    \item or \type T is \bool or not an arithmetic type,
     \item or \code{is_abi_tag_v<Abi>} is \false.
   \end{itemize}
   \wgNote{The rules are different from \ref{datapar.deleted}}
