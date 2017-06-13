@@ -124,11 +124,21 @@ struct datapar_size : public integral_constant<size_t, implementation-defined> {
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\label{datapar_size}%
-  The \type{datapar_size} class template inherits from \type{integral_constant} with a value equal to the number of elements in a \datapar{}\code{<T, Abi>} object.
-  \wgNote{The value is independent from the compilation target.}
-
-  \pnum \code{datapar_size<T, Abi>::value} shall result in a substitution failure if any of the template arguments \type T or \type{Abi} are invalid template arguments to \datapar (see \ref{datapar.type requirements}).
+  \type{datapar_size<T, Abi>} shall have no member \code{value} if either
+  \begin{itemize}
+    \item \type T is cv-qualified,
+    \item or \type T is \bool,
+    \item or \type T is neither an integral nor floating-point type \parencite[(3.9.1)]{N4618},
+    \item or \code{is_abi_tag_v<Abi>} is \false.
+  \end{itemize}
   \wgNote{The rules are different from \ref{datapar.deleted}}
+
+  \pnum
+  Otherwise, the type \type{datapar_size<T, Abi>} is a \BinaryTypeTrait with a \BaseCharacteristic of \type{integral_constant<size_t, N>} with \code{N} equal to the number of elements in a \datapar[<T, Abi>] object.
+  \wgNote{
+    If \datapar[<T, Abi>] is not supported for the current compilation target, \type{datapar_size<T, Abi>::value} produces the value \datapar[<T, Abi>::size()] returns on a compilation target where it is supported.
+  }
+
 \end{itemdescr}
 
 \begin{itemdecl}
