@@ -33,7 +33,7 @@ namespace datapar_abi {
   \pnum\label{datapar.fixedsize.def}%
   Use of the \fixedsizeN tag type forces \datapar and \mask to store and manipulate \code N components (i.e. \datapar{}\type{<T, \fixedsizeN{}>::size()} returns \code N).
   An implementation must support at least any \code N $\in [1\ldots 32]$.
-  Additionally, for every supported \datapar[<T, A>] (see \ref{sec:datapar.type requirements}), where \type A is an implementation-defined ABI tag, \code N $=$ \datapar[<T, A>::size()] must be supported.
+  Additionally, for every supported \datapar[<T, A>] (see \ref{datapar.type requirements}), where \type A is an implementation-defined ABI tag, \code N $=$ \datapar[<T, A>::size()] must be supported.
 
   \wgNote{
     An implementation may choose to forego ABI compatibility between differently compiled translation units for \datapar and \mask instantiations using the same \fixedsizeN tag.
