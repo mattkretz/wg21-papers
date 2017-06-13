@@ -145,9 +145,21 @@ template <class T, class U = typename T::value_type>
 struct memory_alignment : public integral_constant<size_t, implementation-defined> {};
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\requires The template parameter \type T must be a valid instantiation of either the \datapar or the \mask class template.
-  \pnum\requires The template parameter \type U must be a type supported by the load and store functions for \type T.
-  \pnum The value of \code{memory_alignment<T, U>} identifies the alignment restrictions on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U.
+  \pnum
+  \type{memory_alignment<T, U>} shall have no member \code{value} if either
+  \begin{itemize}
+    \item \type T is cv-qualified,
+    \item or \type U is cv-qualified,
+    \item or \code{!is_datapar_v<T> \&\& !is_mask_v<T>},
+    \item or \code{is_datapar_v<T>} and \type U is not an arithmetic type or \type U is \bool,
+    \item or \code{is_mask_v<T>} and \type U is not \bool.
+  \end{itemize}
+
+  \pnum
+  Otherwise, the type \type{memory_alignment<T, U>} is a \BinaryTypeTrait with a \BaseCharacteristic of \type{integral_constant<size_t, N>} for some implementation-defined \code{N}.
+  \wgNote{
+    \code{value} identifies the alignment restrictions on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U (see \ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store}).
+  }
 \end{itemdescr}
 
 \wgSubsubsection{Class templates \code{const_where_expression} and \code{where_expression}}{datapar.whereexpr}
