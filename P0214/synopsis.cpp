@@ -18,6 +18,9 @@ namespace std {
     }
 
     // traits [datapar.traits]
+    template <class T> struct is_abi_tag;
+    template <class T> constexpr bool is_abi_tag_v = is_abi_tag<T>::value;
+
     template <class T> struct is_datapar;
     template <class T> constexpr bool is_datapar_v = is_datapar<T>::value;
 

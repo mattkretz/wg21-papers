@@ -17,7 +17,14 @@ namespace datapar_abi {
 \end{itemdecl}
 \begin{itemdescr}
   \pnum
-  The ABI types are tag types to be used as the second template argument to \datapar and \mask.
+  An \emph{ABI tag} type indicates a choice of target-architecture dependent size and binary representation for \datapar and \mask objects.
+  The ABI tag, together with a given element type implies a number of elements.
+  ABI tag types are used as the second template argument to \datapar and \mask.
+  \wgNote{
+    The ABI tag is orthogonal to selecting the machine instruction set.
+    The selected machine instruction set limits the usable ABI tag types, though (see \ref{datapar.type requirements}).
+    The ABI tags enable users to safely pass \datapar and \mask objects between translation unit boundaries (e.g. function calls or I/O).
+  }
 
   \pnum
   Use of the \type{scalar} tag type forces \datapar and \mask to store a single component (i.e. \datapar{}\type{<T, datapar_abi::scalar>::size()} returns \code 1).
@@ -64,6 +71,13 @@ namespace datapar_abi {
 \end{itemdescr}
 
 \wgSubsubsection{\datapar type traits}{datapar.traits}
+\begin{itemdecl}
+template <class T> struct is_abi_tag;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum The type \type{is_abi_tag<T>} is a \code{UnaryTypeTrait} with a BaseCharacteristic of \type{true_type} if \type T is the type of a standard or implementation-defined ABI tag, and \type{false_type} otherwise.
+\end{itemdescr}
+
 \begin{itemdecl}
 template <class T> struct is_datapar;
 \end{itemdecl}

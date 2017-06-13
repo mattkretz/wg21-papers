@@ -8,13 +8,13 @@ The number of elements in the array is a constant expression, according to the \
 \pnum\label{datapar.type requirements}%
 The first template argument \type T must be a cv-unqualified integral or floating-point type (3.9.1 [basic.fundamental]).
 The type \bool is not allowed.
-The second template argument \type{Abi} must be a tag type from the \code{datapar_abi} namespace.
+The second template argument \type{Abi} must be an ABI tag so that \code{is_abi_tag_v<Abi>} is \true.
 If the \type{Abi} type is \fixedsizeN, the value \code{N} must be supported by the implementation (see \ref{datapar.fixedsize.def} and \ref{datapar.maxfixedsize.def}).
 The combination of \type T and \type{Abi} must be supported for the current compilation target.
 
 \wgExample{
-  Consider an implementation that defines the two additional ABI types \type{simd_x} and \type{gpu_y}.
-  When the compiler is invoked to translate to a machine that has support for the \type{simd_x} ABI for all arithmetic types except \type{long double} and no support for the \type{gpu_y} ABI, then:
+  Consider an implementation that defines the implementation-defined ABI tags \type{simd_x} and \type{gpu_y}.
+  When the compiler is invoked to translate to a machine that has support for the \type{simd_x} ABI tag for all arithmetic types except \type{long double} and no support for the \type{gpu_y} ABI tag, then:
   \begin{itemize}
     \item \datapar[<T, datapar_abi::gpu_y>] is not supported for any \type T and results in a type with deleted constructor (see below)
     \item \datapar[<long double, datapar_abi::simd_x>] is not supported and results in a type with deleted constructor (see below)
