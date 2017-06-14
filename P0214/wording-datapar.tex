@@ -73,7 +73,7 @@ explicit datapar(const implementation-defined& init);
 
 \wgSubsubsection{\datapar constructors}{datapar.ctor}
 \begin{itemdecl}
-template <class U> datapar(U&& );
+template <class U> datapar(U&&);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This constructor shall not participate in overload resolution unless either:
@@ -105,7 +105,10 @@ template <class U> datapar(const datapar<U, datapar_abi::fixed_size<size()>>& x)
 template <class G> datapar(G&& gen);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks This constructor shall not participate in overload resolution unless \code{gen(declval<integral_constant<size_t, 0>>())} is well-formed with a return type of \valuetype.
+  \pnum\remarks This constructor shall not participate in overload resolution unless \code{datapar(gen(integral_constant<size_t, 0>()))} is well-formed.%
+  \comment{
+    To be 100\% correct this needs \code{<size_t, i>} \foralli.
+  }
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{gen(integral_constant<size_t, i>())}.
   \pnum\remarks The order of calls to \code{gen} is unspecified.
 \end{itemdescr}
