@@ -211,6 +211,7 @@ Previous revision: \parencite{P0214R3}.
   \item Clarify that converting loads and stores only work with arrays of non-bool arithmetic type (\ref{sec:datapar.load}, \ref{sec:datapar.store}).
   \item Turn \code{memory_alignment} into a trait with a corresponding \code{memory_alignment_v} variable template.
   \item Clarify \code{memory_alignment} wording; when it has no \code{value} member; and imply its value through a reference to the load and store functions (\ref{sec:datapar.traits}).
+  \item Remove exposition-only \type{where_expression} constructor and make exposition-only data members private (\ref{sec:datapar.whereexpr}).
 
   \todo New section on design decisions; discuss decisions made by SG1, LEWG, and through discussion with Jens; especially discuss the ABI parameter:
   \begin{itemize}

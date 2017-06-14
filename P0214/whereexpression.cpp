@@ -1,11 +1,10 @@
 namespace std {
   namespace experimental {
     template <class M, class T> class const_where_expression {
-    public:
-      const M& mask;                         // exposition only
-      T& data;                               // exposition only
-      const_where_expression(const M&, T&);  // exposition only
+      const M& mask;  // exposition only
+      T& data;        // exposition only
 
+    public:
       const_where_expression(const const_where_expression&) = delete;
       const_where_expression& operator=(const const_where_expression&) = delete;
 
@@ -19,8 +18,6 @@ namespace std {
     template <class M, class T>
     class where_expression : public const_where_expression<M, T> {
     public:
-      where_expression(const M&, T&);  // exposition only
-
       where_expression(const where_expression&) = delete;
       where_expression& operator=(const where_expression&) = delete;
 
