@@ -11,7 +11,13 @@ The first template argument \type T must be a cv-unqualified integral or floatin
 The type \bool is not allowed.
 The second template argument \type{Abi} must be an ABI tag so that \code{is_abi_tag_v<Abi>} is \true.
 If the \type{Abi} type is \fixedsizeN, the value \code{N} must be supported by the implementation (see \ref{datapar.fixedsize.def} and \ref{datapar.maxfixedsize.def}).
-The combination of \type T and \type{Abi} must be supported for the \currentTarget.
+The combination of \type T and \type{Abi} must be supported for the \currentTarget.%
+\comment[Alternative]{
+  It is implementation-defined whether a combination of \type T and \type{Abi} is supported.
+  \wgNote{
+    The intent is for implementations to decide on the basis of the \currentTarget.
+  }
+}
 }
 \dataparTypeRequirements{datapar}
 

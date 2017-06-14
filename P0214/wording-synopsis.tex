@@ -51,7 +51,13 @@ namespace datapar_abi {
   An implementation may define additional ABI tag types in the datapar_abi namespace, to support other forms of data-parallel computation.
 
   \pnum
-  \type{datapar_abi::compatible<T>} is an alias for the ABI tag with the most efficient data parallel execution for the element type \type T that ensures ABI compatibility on the \targetArch.
+  \type{datapar_abi::compatible<T>} is an alias for the ABI tag with the most efficient data parallel execution for the element type \type T that ensures ABI compatibility on the \targetArch.%
+  \comment[Alternative]{
+    \type{compatible<T>} is an implementation-defined alias for an ABI tag.
+    \wgNote{
+      The intent is to use ABI tag producing the most efficient data parallel execution for the element type \type T that ensures ABI compatibility between translation units on the \targetArch.
+    }
+  }
 
   \wgExample{
     Consider a \targetArch supporting the implementation-defined ABI tags \type{simd128} and \type{simd256}, where the \type{simd256} type requires an optional ISA extension on said \targetArch.
@@ -64,7 +70,13 @@ namespace datapar_abi {
   }
 
   \pnum
-  \type{datapar_abi::native<T>} is an alias for the ABI tag with the most efficient data parallel execution for the element type \type T that is supported on the \currentTarget.
+  \type{datapar_abi::native<T>} is an alias for the ABI tag with the most efficient data parallel execution for the element type \type T that is supported on the \currentTarget.%
+  \comment[Alternative]{
+    \type{native<T>} is an implementation-defined alias for an ABI tag.
+    \wgNote{
+      The intent is to use an ABI tag producing the most efficient data parallel execution for the element type \type T that is supported on the \currentTarget.
+    }
+  }
   \wgNote{
     For \targetArchs without ISA extensions, the \type{native<T>} and \type{compatible<T>} aliases will likely be the same.
     For \targetArchs with ISA extensions, compiler flags may influence the \type{native<T>} alias while \type{compatible<T>} will be the same independent of such flags.
