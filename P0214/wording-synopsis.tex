@@ -127,7 +127,7 @@ template <class T, size_t N> struct abi_for_size { using type = implementation-d
   \pnum Otherwise, the member typedef \type{type} shall name an ABI tag type that satisfies
   \begin{itemize}
     \item \code{datapar_size_v<T, type> == N},
-    \item \datapar[<T, type>] is supported for the \currentTarget (see \ref{datapar.type requirements}),
+    \item \datapar[<T, type>] is supported (see \ref{datapar.type requirements}),
     \item and \type{type} is not \fixedsizeN.
   \end{itemize}
   If such an ABI tag does not exist then \type{type} shall name \fixedsizeN.
