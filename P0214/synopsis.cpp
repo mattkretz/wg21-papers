@@ -9,12 +9,12 @@ namespace std {
     }
 
     namespace flags {
-        struct element_aligned_tag {};
-        struct vector_aligned_tag {};
-        template <std::align_val_t> struct overaligned_tag {};
-        constexpr element_aligned_tag element_aligned{};
-        constexpr vector_aligned_tag vector_aligned{};
-        template <std::align_val_t N> constexpr overaligned_tag<N> overaligned = {};
+      struct element_aligned_tag {};
+      struct vector_aligned_tag {};
+      template <std::align_val_t> struct overaligned_tag {};
+      constexpr element_aligned_tag element_aligned{};
+      constexpr vector_aligned_tag vector_aligned{};
+      template <std::align_val_t N> constexpr overaligned_tag<N> overaligned = {};
     }
 
     // traits [datapar.traits]
@@ -43,41 +43,34 @@ namespace std {
     // class template datapar [datapar]
     template <class T, class Abi = datapar_abi::compatible<T>> class datapar;
     template <class T> using native_datapar = datapar<T, datapar_abi::native<T>>;
-    template <class T, int N>
-    using fixed_size_datapar = datapar<T, datapar_abi::fixed_size<N>>;
+    template <class T, int N> using fixed_size_datapar = datapar<T, datapar_abi::fixed_size<N>>;
 
     // class template mask [mask]
     template <class T, class Abi = datapar_abi::compatible<T>> class mask;
     template <class T> using native_mask = mask<T, datapar_abi::native<T>>;
-    template <class T, int N>
-    using fixed_size_mask = mask<T, datapar_abi::fixed_size<N>>;
+    template <class T, int N> using fixed_size_mask = mask<T, datapar_abi::fixed_size<N>>;
 
     // casts [datapar.casts]
     template <class T, class U, class A>
-    datapar<T, /*see below*/> static_datapar_cast(const datapar<U, A> &);
+    datapar<T, /*see below*/> static_datapar_cast(const datapar<U, A>&);
 
     template <class T, class A>
-    datapar<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(
-        const datapar<T, A> &);
+    datapar<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(const datapar<T, A>&);
     template <class T, class A>
-    mask<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(
-        const mask<T, A> &);
+    mask<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(const mask<T, A>&);
     template <class T, size_t N>
-    datapar<T, datapar_abi::native<T>> to_native(
-        const datapar<T, datapar_abi::fixed_size<N>> &);
+    datapar<T, datapar_abi::native<T>> to_native(const datapar<T, datapar_abi::fixed_size<N>>&);
     template <class T, size_t N>
-    mask<T, datapar_abi::native<T>> to_native(
-        const mask<T, datapar_abi::fixed_size<N>> &);
+    mask<T, datapar_abi::native<T>> to_native(const mask<T, datapar_abi::fixed_size<N>>&);
     template <class T, size_t N>
-    datapar<T, datapar_abi::compatible<T>> to_compatible(
-        const datapar<T, datapar_abi::fixed_size<N>> &);
+    datapar<T, datapar_abi::compatible<T>> to_compatible(const datapar<T, datapar_abi::fixed_size<N>>&);
     template <class T, size_t N>
-    mask<T, datapar_abi::compatible<T>> to_compatible(
-        const mask<T, datapar_abi::fixed_size<N>> &);
+    mask<T, datapar_abi::compatible<T>> to_compatible(const mask<T, datapar_abi::fixed_size<N>>&);
 
     template <class T, class U, class... Us>
     conditional_t<(T::size() == (U::size() + Us::size()...)), T,
-                  array<T, (U::size() + Us::size()...) / T::size()>> datapar_cast(U, Us...);
+                  array<T, (U::size() + Us::size()...) / T::size()>>
+    datapar_cast(U, Us...);
 
     // reductions [mask.reductions]
     template <class T, class Abi> bool  all_of(mask<T, Abi>);
@@ -101,45 +94,39 @@ namespace std {
     template <class M, class T> class where_expression;
 
     template <class T, class A>
-    where_expression<mask<T, A>, datapar<T, A>> where(
-        const typename datapar<T, A>::mask_type &, datapar<T, A> &);
+    where_expression<mask<T, A>, datapar<T, A>> where(const typename datapar<T, A>::mask_type&,
+                                                      datapar<T, A>&);
     template <class T, class A>
     const const_where_expression<mask<T, A>, const datapar<T, A>> where(
-        const typename datapar<T, A>::mask_type &, const datapar<T, A> &);
+        const typename datapar<T, A>::mask_type&, const datapar<T, A>&);
 
     template <class T, class A>
-    where_expression<mask<T, A>, mask<T, A>> where(const remove_const_t<mask<T, A>> &,
-                                                   mask<T, A> &);
+    where_expression<mask<T, A>, mask<T, A>> where(const remove_const_t<mask<T, A>>&, mask<T, A>&);
     template <class T, class A>
-    const const_where_expression<mask<T, A>, const mask<T, A>> where(
-        const remove_const_t<mask<T, A>> &, const mask<T, A> &);
+    const const_where_expression<mask<T, A>, const mask<T, A>> where(const remove_const_t<mask<T, A>>&,
+                                                                     const mask<T, A>&);
 
-    template <class T> where_expression<bool, T> where(implementation-defined k, T &d);
+    template <class T> where_expression<bool, T> where(implementation-defined k, T& d);
 
     // reductions [datapar.reductions]
     template <class BinaryOperation = std::plus<>, class T, class Abi>
-    T reduce(const datapar<T, Abi> &, BinaryOperation = BinaryOperation());
+    T reduce(const datapar<T, Abi>&, BinaryOperation = BinaryOperation());
     template <class BinaryOperation = std::plus<>, class M, class V>
-    typename V::value_type reduce(
-        const const_where_expression<M, V> &x,
-        typename V::value_type neutral_element = default_neutral_element,
-        BinaryOperation binary_op = BinaryOperation());
+    typename V::value_type reduce(const const_where_expression<M, V>& x,
+                                  typename V::value_type neutral_element = default_neutral_element,
+                                  BinaryOperation binary_op = BinaryOperation());
 
-    template <class T, class A> T hmin(const datapar<T, A> &);
-    template <class M, class V> T hmin(const where_expression<M, V> &);
-    template <class T, class A> T hmax(const datapar<T, A> &);
-    template <class M, class V> T hmax(const where_expression<M, V> &);
+    template <class T, class A> T hmin(const datapar<T, A>&);
+    template <class M, class V> T hmin(const where_expression<M, V>&);
+    template <class T, class A> T hmax(const datapar<T, A>&);
+    template <class M, class V> T hmax(const where_expression<M, V>&);
 
     // algorithms [datapar.alg]
+    template <class T, class A> datapar<T, A> min(const datapar<T, A>&, const datapar<T, A>&);
+    template <class T, class A> datapar<T, A> max(const datapar<T, A>&, const datapar<T, A>&);
     template <class T, class A>
-    datapar<T, A> min(const datapar<T, A> &, const datapar<T, A> &);
+    std::pair<datapar<T, A>, datapar<T, A>> minmax(const datapar<T, A>&, const datapar<T, A>&);
     template <class T, class A>
-    datapar<T, A> max(const datapar<T, A> &, const datapar<T, A> &);
-    template <class T, class A>
-    std::pair<datapar<T, A>, datapar<T, A>> minmax(const datapar<T, A> &,
-                                                   const datapar<T, A> &);
-    template <class T, class A>
-    datapar<T, A> clamp(const datapar<T, A> &v, const datapar<T, A> &lo,
-                        const datapar<T, A> &hi);
+    datapar<T, A> clamp(const datapar<T, A>& v, const datapar<T, A>& lo, const datapar<T, A>& hi);
   }
 }
