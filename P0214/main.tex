@@ -43,6 +43,10 @@
   If the \type{Flags} template parameter is of type \type{flags::overaligned\_tag<N>}, the pointer value represents an address aligned to \code N.
 }
 
+\newcommand\targetArch{target architecture\xspace}
+\newcommand\targetArchs{target architectures\xspace}
+\newcommand\currentTarget{currently targeted system\xspace}
+
 \usepackage{pifont}
 
 \newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
@@ -214,6 +218,7 @@ Previous revision: \parencite{P0214R3}.
   \item Remove exposition-only \type{where_expression} constructor and make exposition-only data members private (\ref{sec:datapar.whereexpr}).
   \item Editorial: use “shall not participate in overload resolution unless” consistently.
   \item Add a note about variability of \code{max_fixed_size} (\ref{sec:datapar.abi}).
+  \item Editorial: use “\targetArch{}” and “\currentTarget{}” consistently.
 
   \todo New section on design decisions; discuss decisions made by SG1, LEWG, and through discussion with Jens; especially discuss the ABI parameter:
   \begin{itemize}
