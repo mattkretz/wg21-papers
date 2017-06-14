@@ -34,7 +34,7 @@ If any of the template arguments does not conform to the above requirements, the
 \begin{itemize}
   \item The type has a deleted default constructor, copy constructor, and copy assignment operator.
 
-  \item Assignment, compound assignment, increment, and decrement operators only participate in overload resolution if the \referencetype object is an rvalue and the corresponding operator of type \valuetype is usable.
+  \item Assignment, compound assignment, increment, and decrement operators shall not participate in overload resolution unless the \referencetype object is an rvalue and the corresponding operator of type \valuetype is usable.
 
   \item Objects of type \referencetype are implicitly convertible to \valuetype.
 
@@ -235,7 +235,7 @@ friend datapar operator<<(const datapar&, const datapar&);
 friend datapar operator>>(const datapar&, const datapar&);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks Each of these operators only participate in overload resolution if the indicated operator can be applied to objects of type \type{value_type}.
+  \pnum\remarks Each of these operators shall not participate in overload resolution unless the indicated operator can be applied to objects of type \type{value_type}.
 
   \pnum\returns A \datapar object initialized with the results of the component-wise application of the indicated operator.
 \end{itemdescr}
@@ -245,7 +245,7 @@ friend datapar operator<<(const datapar& v, int n);
 friend datapar operator>>(const datapar& v, int n);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks Both operators only participate in overload resolution if \valuetype is an unsigned integral type.
+  \pnum\remarks Both operators shall not participate in overload resolution unless \valuetype is an unsigned integral type.
 
   \pnum\returns A \datapar object where the $i$-th element is initialized to the result of applying the indicated operator to \code{v[i]} and \code n \foralli.
 \end{itemdescr}
@@ -264,7 +264,7 @@ friend datapar& operator<<=(datapar&, const datapar&);
 friend datapar& operator>>=(datapar&, const datapar&);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks Each of these operators only participates in overload resolution if the indicated operator can be applied to objects of type \type{value_type}.
+  \pnum\remarks Each of these operators shall not participate in overload resolution unless the indicated operator can be applied to objects of type \type{value_type}.
   \pnum\effects Each of these operators performs the indicated operator component-wise on each of the corresponding elements of the arguments.
   \pnum\returns A reference to the first argument.
 \end{itemdescr}
@@ -274,7 +274,7 @@ friend datapar& operator<<=(datapar& v, int n);
 friend datapar& operator>>=(datapar& v, int n);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks Both operators only participate in overload resolution if \valuetype is an unsigned integral type.
+  \pnum\remarks Both operators shall not participate in overload resolution unless \valuetype is an unsigned integral type.
   \pnum\effects Performs the indicated shift by \code n operation on the $i$-th element of \code v \foralli.
   \pnum\returns A reference to the first argument.
 \end{itemdescr}
@@ -381,7 +381,7 @@ mask<T, datapar_abi::native<T>> to_native(
     const mask<T, datapar_abi::fixed_size<N>>& x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks These functions only participate in overload resolution if \code{datapar_size_v<T, datapar_abi::native<T>>} is equal to \code N.
+  \pnum\remarks These functions shall not participate in overload resolution unless \code{datapar_size_v<T, datapar_abi::native<T>>} is equal to \code N.
   \pnum\returns An object with the $i$-th element initialized to \code{x[i]}.
 \end{itemdescr}
 
@@ -394,7 +394,7 @@ mask<T, datapar_abi::compatible<T>> to_compatible(
     const mask<T, datapar_abi::fixed_size<N>>& x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks These functions only participate in overload resolution if \code{datapar_size_v<T, datapar_abi::compatible<T>>} is equal to \code N.
+  \pnum\remarks These functions shall not participate in overload resolution unless \code{datapar_size_v<T, datapar_abi::compatible<T>>} is equal to \code N.
   \pnum\returns An object with the $i$-th element initialized to \code{x[i]}.
 \end{itemdescr}
 
@@ -404,7 +404,7 @@ conditional_t<(T::size() == (U::size() + Us::size()...)), T,
             array<T, (U::size() + Us::size()...) / T::size()>> datapar_cast(U, Us...);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks The \code{datapar_cast} function only participates in overload resolution if all of the following hold:
+  \pnum\remarks The \code{datapar_cast} function shall not participate in overload resolution unless all of the following hold:
   \begin{itemize}
     \item \code{is_datapar_v<T>}
     \item \code{is_datapar_v<U>}

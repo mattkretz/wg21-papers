@@ -200,8 +200,8 @@ template <class U, class Flags>
 [[nodiscard]] remove_const_t<T> memload(const U *mem, Flags) const &&;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks If \type T is \bool or a \mask instantiation, the function only participates in overload resolution if \type U is \bool.
-  Otherwise, the function only participates in overload resolution if \type U is an arithmetic type but not \bool.
+  \pnum\remarks If \type T is \bool or a \mask instantiation, the function shall not participate in overload resolution unless \type U is \bool.
+  Otherwise, the function shall not participate in overload resolution unless \type U is an arithmetic type but not \bool.
   \pnum\returns If \type M is \bool, return \code{mem[0]} if \code{mask} equals \true and return \code{data} otherwise.
   If \type M is not \bool, return an object with the $i$-th element initialized to the $i$-th element of \code{data} if \code{mask[i]} is \false and \code{static_cast<T::value_type>(mem[i])} if \code{mask[i]} is \true \foralli[M::].
 
@@ -214,7 +214,7 @@ template <class U, class Flags> void memstore(U *mem, Flags) const &&;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects If \type M is \bool, assign \code{data} to \code{mem[0]} unless \code{mask} is \false.
-  \pnum\remarks If \type T is a (const qualified) \mask instantiation, the function only participates in overload resolution if \type U is \bool.
+  \pnum\remarks If \type T is a (const qualified) \mask instantiation, the function shall not participate in overload resolution unless \type U is \bool.
   If \type M is not \bool, copies the elements \code{data[i]} where \code{mask[i]} is \true as if \code{mem[i] = static_cast<U>(data[i])} \foralli[M::].
 
 \begin{itemdecl}
@@ -231,7 +231,7 @@ template <class U> void operator<<=(U&& x);
 template <class U> void operator>>=(U&& x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks Each of these operators only participate in overload resolution if the indicated operator can be applied to objects of type \type T.
+  \pnum\remarks Each of these operators shall not participate in overload resolution unless the indicated operator can be applied to objects of type \type T.
   \pnum\effects
   If \type M is \bool, applies the indicated operator on \code{data} and \code{forward<U>(x)} unless \code{mask} is \false.
   If \type M is not \bool, applies the indicated operator on \code{data} and \code{forward<U>(x)} without modifying the elements \code{data[i]} where \code{mask[i]} is \false \foralli[M::].
@@ -245,7 +245,7 @@ void operator--();
 void operator--(int);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks Each of these operators only participate in overload resolution if the indicated operator can be applied to objects of type \type T.
+  \pnum\remarks Each of these operators shall not participate in overload resolution unless the indicated operator can be applied to objects of type \type T.
   \pnum\effects
   If \type M is \bool, applies the indicated operator on \code{data} unless \code{mask} is \false.
   If \type M is not \bool, applies the indicated operator on \code{data} without modifying the elements \code{data[i]} where \code{mask[i]} is \false \foralli[M::].
@@ -256,7 +256,7 @@ void operator--(int);
 template <class U, class Flags> void memload(const U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks If \type T is \bool or a \mask instantiation, the function only participates in overload resolution if \type U is \bool.
+  \pnum\remarks If \type T is \bool or a \mask instantiation, the function shall not participate in overload resolution unless \type U is \bool.
   \pnum\effects If \type M is \bool, assign \code{mem[0]} to \code{data} unless \code{mask} is \false.
   If \type M is not \bool, replace the elements of \code{data} where \code{mask[i]} is \true such that the $i$-th element is assigned with \code{static_cast<T::value_type>(mem[i])} \foralli[M::].
 
