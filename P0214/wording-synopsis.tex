@@ -169,9 +169,9 @@ struct memory_alignment : public integral_constant<size_t, implementation-define
 
 \pnum The first template argument \type M must be cv-unqualified \bool or a cv-unqualified \mask instantiation.
 
-\pnum The second template argument \type T must be a cv-unqualified or \const qualified type \type{T'}.
-If \type M is \bool, \type{T'} must be an arithmetic type.
-Otherwise, \type{T'} must either be \type M or \type{M::datapar_type}.
+\pnum The second template argument \type T must be a cv-unqualified or \const qualified type \type{U}.
+If \type M is \bool, \type{U} must be an arithmetic type.
+Otherwise, \type{U} must either be \type M or \type{M::datapar_type}.
 
 \begin{itemdecl}
 const M& mask;                         // exposition only
