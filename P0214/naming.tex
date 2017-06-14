@@ -402,4 +402,12 @@ My second choice is \code{copy_from/to}.
 Avoid the embarrassment of using the terms load and store but having to name them differently just because of \code{std::atomic}.
 I'm certain that if we choose \code{memload/memstore} or \code{load_from/store_to} the question why we didn't just use \code{load/store} will become a FAQ.
 
+\subsection{Mask Queries}\label{sec:mask queries}
+The free functions \code{all_of}, \code{any_of}, \code{none_of}, \code{some_of}, \code{popcount}, \code{find_first_set}, \code{find_last_set} could alternatively be member functions of \mask.
+Having them as member functions would be consistent with \type{bitset}, which has the member functions \code{all}, \code{any}, \code{none}, and \code{count}.
+
+\subsubsection{Recommendation}
+I believe the current interface of \mask (free functions) is preferable over the interface of \type{bitset}.
+If anything, I believe there should be additional free functions overloaded on \type{bitset}, if consistency between \mask and \type{bitset} is desirable.
+
 % ft=tex tw=0 et sw=2 spell
