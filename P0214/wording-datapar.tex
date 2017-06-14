@@ -5,12 +5,15 @@
 \pnum The class template \datapar{}\type{<T, Abi>} is a one-dimensional smart array.
 The number of elements in the array is a constant expression, according to the \type{Abi} template parameter.
 
-\pnum\label{datapar.type requirements}%
+\newcommand\dataparTypeRequirements[1]{
+\pnum\label{#1.type requirements}%
 The first template argument \type T must be a cv-unqualified integral or floating-point type (3.9.1 [basic.fundamental]).
 The type \bool is not allowed.
 The second template argument \type{Abi} must be an ABI tag so that \code{is_abi_tag_v<Abi>} is \true.
 If the \type{Abi} type is \fixedsizeN, the value \code{N} must be supported by the implementation (see \ref{datapar.fixedsize.def} and \ref{datapar.maxfixedsize.def}).
 The combination of \type T and \type{Abi} must be supported for the current compilation target.
+}
+\dataparTypeRequirements{datapar}
 
 \wgExample{
   Consider an implementation that defines the implementation-defined ABI tags \type{simd_x} and \type{gpu_y}.
@@ -23,8 +26,11 @@ The combination of \type T and \type{Abi} must be supported for the current comp
   \end{itemize}
 }
 
-\pnum\label{datapar.deleted}%
+\newcommand\dataparDeleted[1]{
+\pnum\label{#1.deleted}%
 If any of the template arguments does not conform to the above requirements, the resulting class shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
+}
+\dataparDeleted{datapar}
 
 \pnum Default initialization performs no initialization of the elements; value-initialization initializes each element with \code{T()}.
 \wgNote{Thus, default initialization leaves the elements in an indeterminate state.}
