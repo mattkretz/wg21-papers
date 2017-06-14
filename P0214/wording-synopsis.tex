@@ -174,9 +174,9 @@ If \type M is \bool, \type{T'} must be an arithmetic type.
 Otherwise, \type{T'} must either be \type M or \type{M::datapar_type}.
 
 \begin{itemdecl}
-const M &mask;                           // exposition only
-T &data;                                 // exposition only
-const_where_expression(const M &, T &);  // exposition only
+const M& mask;                         // exposition only
+T& data;                               // exposition only
+const_where_expression(const M&, T&);  // exposition only
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\wgNote{
@@ -219,17 +219,17 @@ template <class U, class Flags> void memstore(U *mem, Flags) const &&;
   If \type M is not \bool, copies the elements \code{data[i]} where \code{mask[i]} is \true as if \code{mem[i] = static_cast<U>(data[i])} \foralli[M::].
 
 \begin{itemdecl}
-template <class U> void operator=(U &&x);
-template <class U> void operator+=(U &&x);
-template <class U> void operator-=(U &&x);
-template <class U> void operator*=(U &&x);
-template <class U> void operator/=(U &&x);
-template <class U> void operator%=(U &&x);
-template <class U> void operator&=(U &&x);
-template <class U> void operator|=(U &&x);
-template <class U> void operator^=(U &&x);
-template <class U> void operator<<=(U &&x);
-template <class U> void operator>>=(U &&x);
+template <class U> void operator=(U&& x);
+template <class U> void operator+=(U&& x);
+template <class U> void operator-=(U&& x);
+template <class U> void operator*=(U&& x);
+template <class U> void operator/=(U&& x);
+template <class U> void operator%=(U&& x);
+template <class U> void operator&=(U&& x);
+template <class U> void operator|=(U&& x);
+template <class U> void operator^=(U&& x);
+template <class U> void operator<<=(U&& x);
+template <class U> void operator>>=(U&& x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Each of these operators only participate in overload resolution if the indicated operator can be applied to objects of type \type T.

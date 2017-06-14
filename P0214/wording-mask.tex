@@ -29,7 +29,7 @@ static constexpr size_type size();
 This would add one or more of the following declarations to class \mask:
 \begin{itemdecl}
 explicit operator implementation-defined() const;
-explicit datapar(const implementation-defined &init);
+explicit datapar(const implementation-defined& init);
 \end{itemdecl}
 \end{noteEnv}
 
@@ -42,7 +42,7 @@ explicit mask(value_type);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U> mask(const mask<U, datapar_abi::fixed_size<size()>> &x);
+template <class U> mask(const mask<U, datapar_abi::fixed_size<size()>>& x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This constructor shall not participate in overload resolution unless
@@ -106,11 +106,11 @@ mask operator!() const;
 
 \wgSubsubsection{\mask binary operators}{mask.binary}
 \begin{itemdecl}
-friend mask operator&&(const mask &, const mask &);
-friend mask operator||(const mask &, const mask &);
-friend mask operator& (const mask &, const mask &);
-friend mask operator| (const mask &, const mask &);
-friend mask operator^ (const mask &, const mask &);
+friend mask operator&&(const mask&, const mask&);
+friend mask operator||(const mask&, const mask&);
+friend mask operator& (const mask&, const mask&);
+friend mask operator| (const mask&, const mask&);
+friend mask operator^ (const mask&, const mask&);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator.
@@ -118,9 +118,9 @@ friend mask operator^ (const mask &, const mask &);
 
 \wgSubsubsection{\mask compound assignment}{mask.cassign}
 \begin{itemdecl}
-friend mask &operator&=(mask &, const mask &);
-friend mask &operator|=(mask &, const mask &);
-friend mask &operator^=(mask &, const mask &);
+friend mask& operator&=(mask&, const mask&);
+friend mask& operator|=(mask&, const mask&);
+friend mask& operator^=(mask&, const mask&);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Each of these operators performs the indicated operator component-wise on each of the corresponding elements of the arguments.
@@ -129,8 +129,8 @@ friend mask &operator^=(mask &, const mask &);
 
 \wgSubsubsection{\mask compares}{mask.comparison}
 \begin{itemdecl}
-friend mask operator==(const mask &, const mask &);
-friend mask operator!=(const mask &, const mask &);
+friend mask operator==(const mask&, const mask&);
+friend mask operator!=(const mask&, const mask&);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator.
@@ -206,17 +206,17 @@ template <class T, class Abi> int find_last_set(implementation-defined);
 \begin{itemdecl}
 template <class T, class A>
 where_expression<mask<T, A>, datapar<T, A>> where(
-    const typename datapar<T, A>::mask_type &k, datapar<T, A> &v);
+    const typename datapar<T, A>::mask_type& k, datapar<T, A>& v);
 template <class T, class A>
 const where_expression<mask<T, A>, const datapar<T, A>> where(
-    const typename datapar<T, A>::mask_type &k, const datapar<T, A> &v);
+    const typename datapar<T, A>::mask_type& k, const datapar<T, A>& v);
 
 template <class T, class A>
-where_expression<mask<T, A>, mask<T, A>> where(const remove_const_t<mask<T, A>> &k,
-                                               mask<T, A> &v);
+where_expression<mask<T, A>, mask<T, A>> where(const remove_const_t<mask<T, A>>& k,
+                                               mask<T, A>& v);
 template <class T, class A>
 const where_expression<mask<T, A>, const mask<T, A>> where(
-    const remove_const_t<mask<T, A>> &k, const mask<T, A> &v);
+    const remove_const_t<mask<T, A>>& k, const mask<T, A>& v);
 \end{itemdecl}
 \comment{\code{remove_const} is only used in place of a missing \code{template <class T> struct id \{ using type = T; \};} for inhibiting type deduction.}
 \begin{itemdescr}
@@ -224,7 +224,7 @@ const where_expression<mask<T, A>, const mask<T, A>> where(
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T> where_expression<bool, T> where(implementation-defined k, T &v);
+template <class T> where_expression<bool, T> where(implementation-defined k, T& v);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks The function only participates in overload resolution if
