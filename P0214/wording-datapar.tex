@@ -413,32 +413,6 @@ mask<T, datapar_abi::compatible<T>> to_compatible(
   \pnum\returns An object with the $i$-th element initialized to \code{x[i]}.
 \end{itemdescr}
 
-\begin{itemdecl}
-template <class T, class U, class... Us>
-conditional_t<(T::size() == (U::size() + Us::size()...)), T,
-            array<T, (U::size() + Us::size()...) / T::size()>> datapar_cast(U, Us...);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\remarks The \code{datapar_cast} function shall not participate in overload resolution unless all of the following hold:
-  \begin{itemize}
-    \item \code{is_datapar_v<T>}
-    \item \code{is_datapar_v<U>}
-    \item All types in the template parameter pack \type{Us} are equal to \type U.
-    \item \code{U::size() + Us::size()...} is an integral multiple of \code{T::size()}.
-  \end{itemize}
-
-  \pnum\returns A \datapar object initialized with the converted values as one object of \type T or an array of \type T.
-  All scalar elements \code{x\textsubscript{i}} of the function argument(s) are converted as if
-  \code{y\textsubscript{i} = static_cast<typename T::value_type>(x\textsubscript{i})} is executed.
-  The resulting \code{y\textsubscript{i}} intialize the return object(s) of type \type T.
-  \wgNote{%
-    For \code{T::size() == 2 * U::size()} the following holds:
-    \code{datapar_cast<T>(x0, x1)[i] == static_cast<typename T::value_type>(array<U, 2>\{x0, x1\}[i / U::size()][i \% U::size()])}.
-    For \code{2 * T::size() == U::size()} the following holds:
-    \code{datapar_cast<T>(x)[i][j] == static_cast<typename T::value_type>(x[i * T\MayBreak::size() + j])}.
-  }
-\end{itemdescr}
-
 \wgSubsubsection{\datapar algorithms}{datapar.alg}
 \begin{itemdecl}
 template <class T, class A>

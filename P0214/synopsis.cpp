@@ -67,11 +67,6 @@ namespace std {
     template <class T, size_t N>
     mask<T, datapar_abi::compatible<T>> to_compatible(const mask<T, datapar_abi::fixed_size<N>>&);
 
-    template <class T, class U, class... Us>
-    conditional_t<(T::size() == (U::size() + Us::size()...)), T,
-                  array<T, (U::size() + Us::size()...) / T::size()>>
-    datapar_cast(U, Us...);
-
     // reductions [mask.reductions]
     template <class T, class Abi> bool  all_of(mask<T, Abi>);
     template <class T, class Abi> bool  any_of(mask<T, Abi>);
