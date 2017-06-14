@@ -1,0 +1,26 @@
+\section{Widening Cast}\label{sec:widen}
+The following is an option for extending the above wording with a cast function that only allows
+"lossless" conversions of the element type.
+
+Add to the synopsis in \ref{sec:datapar.syn}:
+\begin{wgText}
+  \begin{lstlisting}[style=Vc]
+    template <class V, class T, class A> V datapar_cast(const datapar<T, A>&);
+  \end{lstlisting}
+\end{wgText}
+
+Append to \ref{sec:datapar.casts}:
+\begin{wgText}
+  \begin{itemdecl}
+    template <class V, class T, class A> V datapar_cast(const datapar<T, A>& x);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum\remarks The function shall not participate in overload resolution unless
+    \begin{itemize}
+      \item \code{is_datapar_v<V>},
+      \item and \code{V::size()} is equal to \code{datapar<T, A>::size()},
+      \item and every possible value of type \type T can be represented with type \datapar\code{::}\valuetype.
+    \end{itemize}
+    \pnum\returns A \datapar object with the $i$-th element initialized to \code{static_cast<V::\valuetype>(x[i])}.
+  \end{itemdescr}
+\end{wgText}
