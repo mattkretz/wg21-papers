@@ -42,7 +42,7 @@ The implementation is expected to provide guarantees about the resulting code ge
       \item[con]
         \begin{enumerate}
           \item \emph{[name collision]} \code{std::vector}: the name is taken. Using a different namespace won't help: Too much confusion/conflict with \code{std::vector}, which is not constant-size.
-          \item ambiguity with mathematically inclined people who may expect operators to behave differently (especially, I've heard feedback of users expecting \code{operator*} to be the dot-product)
+          \item ambiguity with mathematically inclined people who may expect operators to behave differently (e.g. I've had feedback of users expecting \code{operator*} to be the dot-product)
         \end{enumerate}
     \end{description}
 
@@ -57,9 +57,9 @@ The implementation is expected to provide guarantees about the resulting code ge
         \end{enumerate}
       \item[con]
         \begin{enumerate}
-          \item abbreviation
+          \item abbreviation (though rather common)
           \item close to \code{std::vector}
-          \item ambiguity with mathematically inclined people who may expect operators to behave differently (especially, I've heard feedback of users expecting \code{operator*} to be the dot-product)
+          \item ambiguity with mathematically inclined people who may expect operators to behave differently (e.g. I've had feedback of users expecting \code{operator*} to be the dot-product)
         \end{enumerate}
     \end{description}
 
@@ -162,6 +162,7 @@ The implementation is expected to provide guarantees about the resulting code ge
         \begin{enumerate}
           \item it is a class, it should be a noun (\code{vectorization<T>}?)
           \item a bit long for daily use
+          \item if data structure vectorization (future extension, cf. \cite{Kretz2015}) should use a different type/mechanism it would be better to reserve this name for said extension
         \end{enumerate}
       \item[variations]\ 
         \begin{enumerate}
@@ -176,12 +177,10 @@ The implementation is expected to provide guarantees about the resulting code ge
 I recommend to short-list to:
 \begin{itemize}
   \item \code{vec<T>}
-  \item \code{vecpar<T>}
-  \item \code{simd<T>}
   \item \code{datapar<T>}
+  \item \code{simd<T>}
+  \item \code{vecpar<T>}
   \item \code{simdarray<T>}
-  \item \code{vectorize<T>}
-  \item \code{simdize<T>}
 \end{itemize}
 
 \subsection{mask}
