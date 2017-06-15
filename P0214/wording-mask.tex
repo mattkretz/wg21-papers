@@ -170,16 +170,16 @@ template <class T, class Abi> int popcount(mask<T, Abi>);
 template <class T, class Abi> int find_first_set(mask<T, Abi> m);
 \end{itemdecl}
 \begin{itemdescr}
+  \pnum\requires \code{any_of(m)} returns \true
   \pnum\returns The lowest element index \code i where \code{m[i] == true}.
-  \pnum\remarks If \code{none_of(m) == true} the behavior is undefined.
 \end{itemdescr}
 
 \begin{itemdecl}
 template <class T, class Abi> int find_last_set(mask<T, Abi> m);
 \end{itemdecl}
 \begin{itemdescr}
+  \pnum\requires \code{any_of(m)} returns \true
   \pnum\returns The highest element index \code i where \code{m[i] == true}.
-  \pnum\remarks If \code{none_of(m) == true} the behavior is undefined.
 \end{itemdescr}
 
 \begin{itemdecl}
