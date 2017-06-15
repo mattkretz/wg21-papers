@@ -80,8 +80,8 @@ template <class U> datapar(U&&);
   \comment[Q]{Mention forwarding on conversion to \valuetype?}%
   \comment[Q]{\type U is cv- and ref-qualified, is the wording below OK?}
   \begin{itemize}
-    \item \type U is a fundamental arithmetic type and every possible value of type \type U can be represented with type \valuetype,
-    \item or \type U is not a fundamental arithmetic type and is implicitly convertible to \valuetype,
+    \item \type U is an \realArithmeticType and every possible value of type \type U can be represented with type \valuetype,
+    \item or \type U is not an arithmetic type and is implicitly convertible to \valuetype,
     \item or \type U is \intt,
     \item or \type U is \uint and \valuetype is an unsigned integral type.
   \end{itemize}
@@ -117,7 +117,7 @@ template <class G> datapar(G&& gen);
 template <class U, class Flags> datapar(const U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks This constructor shall not participate in overload resolution unless \type U is an arithmetic type except \bool.
+  \pnum\remarks This constructor shall not participate in overload resolution unless \type U is an \realArithmeticType.
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{static_cast<T>(mem[i])} \foralli.
   \pnum\requires \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
   \flagsRemarks{\datapar, \type U}
@@ -128,7 +128,7 @@ template <class U, class Flags> datapar(const U *mem, Flags);
 template <class U, class Flags> void memload(const U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks This function shall not participate in overload resolution unless \type U is an arithmetic type except \bool.
+  \pnum\remarks This function shall not participate in overload resolution unless \type U is an \realArithmeticType.
   \pnum\effects Replaces the elements of the \datapar object such that the $i$-th element is assigned with \code{static_cast<T>(mem[i])} \foralli.
   \pnum\requires \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
   \flagsRemarks{\datapar, \type U}
@@ -139,7 +139,7 @@ template <class U, class Flags> void memload(const U *mem, Flags);
 template <class U, class Flags> void memstore(U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks This function shall not participate in overload resolution unless \type U is an arithmetic type except \bool.
+  \pnum\remarks This function shall not participate in overload resolution unless \type U is an \realArithmeticType.
   \pnum\effects Copies all \datapar elements as if \code{mem[i] = static_cast<U>(operator[](i))} \foralli.
   \pnum\requires \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
   \flagsRemarks{\datapar, \type U}
