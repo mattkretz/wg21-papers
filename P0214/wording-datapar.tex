@@ -215,9 +215,8 @@ mask_type operator!() const;
 datapar operator~() const;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\requires The first template argument \type T to \datapar must be an integral type.
   \pnum\returns A \datapar object where each bit is the inverse of the corresponding bit in \code{*this}.
-  \pnum\remarks \datapar{}\code{::operator\textasciitilde{}()} shall not participate in overload resolution if \type T is a floating-point type.
+  \pnum\remarks \datapar{}\code{::operator\textasciitilde{}()} shall not participate in overload resolution unless \type T is an integral type.
 \end{itemdescr}
 
 \begin{itemdecl}
