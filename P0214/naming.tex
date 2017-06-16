@@ -244,7 +244,7 @@ The where function returns a temporary object (type \code{where_expression}) tha
         \end{enumerate}
       \item[con]
         \begin{enumerate}
-          \item less intuitive if extended and used in the middle of expressions, e.g. \code{fun(where(mask, v))}
+          \item maybe less intuitive if used in the middle of expressions, e.g. \code{reduce(where(mask, v))}
         \end{enumerate}
     \end{description}
 
@@ -315,7 +315,8 @@ where (mask, v1, v2, [](auto v1_, auto v2_) {
   fun(v1_, v2_);  // all operations of fun on its parameters are masked
 });
 \end{lstlisting}
-This suggests that there might not even be a need for allowing \code{where} or a new function/type in the middle of expressions.
+This suggests that there might not even be a need for allowing \code{where} or a similar function in the middle of expressions.
+If we want to follow that path, we might want to revisit masked reductions, which currently use a \code{const const_where_expression\&} parameter.
 
 \subsection{memload \& memstore}
 Loads and stores are the (low-level) conversions between arrays of \code{T} and objects of \code{datapar<T>}.
