@@ -13,6 +13,13 @@ auto [a, b] = split<8, 4>(x);
 x = concat(a + 1, b + 2);
 \end{lstlisting}
 
+The \type{abi_for_size_t} choice below could also be changed to use the \fixedsize ABI tag unconditionally.
+Since a \fixedsize \datapar is implicitly convertible to a non-\fixedsize \datapar type with equal \code{size()}, this may be the more generic solution.
+I have a slight preference for \type{abi_for_size_t}, since it more naturally supports the pattern of splitting a \fixedsize object into several native \datapar objects.
+That pattern is not fully covered by the second \code{split} variant (e.g. consider the example above).
+
+The same discussion of \type{abi_for_size_t} vs. \fixedsize is valid for the return type of \code{concat}.
+
 Add to the synopsis in \ref{sec:datapar.syn}:
 \begin{wgText}
   \begin{lstlisting}[style=Vc]
