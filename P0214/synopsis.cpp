@@ -30,13 +30,11 @@ namespace std {
     template <class T, size_t N> struct abi_for_size { using type = implementation-defined; };
     template <class T, size_t N> using abi_for_size_t = typename abi_for_size<T, N>::type;
 
-    template <class T, class Abi = datapar_abi::compatible<T>>
-    struct datapar_size : public integral_constant<size_t, implementation-defined> {};
+    template <class T, class Abi = datapar_abi::compatible<T>> struct datapar_size;
     template <class T, class Abi = datapar_abi::compatible<T>>
     constexpr size_t datapar_size_v = datapar_size<T, Abi>::value;
 
-    template <class T, class U = typename T::value_type>
-    struct memory_alignment : public integral_constant<size_t, implementation-defined> {};
+    template <class T, class U = typename T::value_type> struct memory_alignment;
     template <class T, class U = typename T::value_type>
     constexpr size_t memory_alignment_v = memory_alignment<T, U>::value;
 

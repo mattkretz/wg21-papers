@@ -134,8 +134,7 @@ template <class T, size_t N> struct abi_for_size { using type = implementation-d
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi = datapar_abi::compatible<T>>
-struct datapar_size : public integral_constant<size_t, implementation-defined> {};
+template <class T, class Abi = datapar_abi::compatible<T>> struct datapar_size;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\label{datapar_size}%
@@ -156,8 +155,7 @@ struct datapar_size : public integral_constant<size_t, implementation-defined> {
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class U = typename T::value_type>
-struct memory_alignment : public integral_constant<size_t, implementation-defined> {};
+template <class T, class U = typename T::value_type> struct memory_alignment;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum
