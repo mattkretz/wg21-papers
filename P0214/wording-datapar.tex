@@ -325,7 +325,10 @@ typename V::value_type reduce(
     BinaryOperation binary_op = BinaryOperation());
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \forallmaskedi{x.mask}.
+  \pnum\returns
+  If \code{none_of(x.mask)}, returns \code{neutral_element}.
+  Otherwise, returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \forallmaskedi{x.mask}.
+
   \pnum\requires \code{binary_op} shall be callable with two arguments of type \type T or two arguments of type \datapar[<T, A1>], where \type{A1} may be different to \type{Abi}.
   \pnum\wgNote{This overload of \code{reduce} requires a neutral value to enable a parallelized implementation:
   A temporary \datapar object initialized with \code{neutral_element} is conditionally assigned from \code{x.data} using \code{x.mask}.
@@ -343,8 +346,8 @@ template <class T, class A> T hmin(const datapar<T, A>& x);
 template <class M, class V> T hmin(const where_expression<M, V>& x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns The value of an element \code{x.data[j]} for which \code{x.mask[j] == true} and \code{x.data[j] <= x.data[i]} \foralli.
-  \pnum\remarks If all elements in \code{x.mask} are \false, the return value is \code{numeric_limits<V::value_type>::max()}.
+  \pnum\returns If \code{none_of(x.mask)}, the return value is \code{numeric_limits<V::value_type>::max()}.
+  Otherwise, returns the value of an element \code{x.data[j]} for which \code{x.mask[j] == true} and \code{x.data[j] <= x.data[i]} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -358,8 +361,8 @@ template <class T, class A> T hmax(const datapar<T, A>& );
 template <class M, class V> T hmax(const where_expression<M, V>& x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns The value of an element \code{x.data[j]} for which \code{x.mask[j] == true} and \code{x.data[j] >= x.data[i]} \foralli.
-  \pnum\remarks If all elements in \code{x.mask} are \false, the return value is \code{numeric_limits<V::value_type>::min()}.
+  \pnum\returns If \code{none_of(x.mask)}, the return value is \code{numeric_limits<V::value_type>::min()}.
+  Otherwise, returns the value of an element \code{x.data[j]} for which \code{x.mask[j] == true} and \code{x.data[j] >= x.data[i]} \foralli.
 \end{itemdescr}
 
 
