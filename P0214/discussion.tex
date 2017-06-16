@@ -139,7 +139,7 @@ using doublevec = arbitrary<int, floatvec::size()>;
 The ability to create these aliases is not the issue.
 Seeing the need for using such a pattern is the issue.
 Typically, a developer will think no more of it if his code compiles on his machine.
-If \code{arbitrary<float>() * arbitrary<int>()} just happens to compile (which is likely) then this is the code that will get checked in to the repository.
+If \code{arbitrary<float>() * arbitrary<int>()} just happens to compile (which is likely), then this is the code that will get checked in to the repository.
 Note that with the existence of the \type{fundamental} class template, the \code N parameter of the \type{arbitrary} class would not have a default value and thus force the user to think a second longer about portability.
 
 \subsubsection{Progress}\label{sec:fixedsize progress}
