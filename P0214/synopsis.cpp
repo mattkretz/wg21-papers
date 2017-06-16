@@ -55,34 +55,35 @@ namespace std {
     datapar<T, /*see below*/> static_datapar_cast(const datapar<U, A>&);
 
     template <class T, class A>
-    datapar<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(const datapar<T, A>&);
+    datapar<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(const datapar<T, A>&) noexcept;
     template <class T, class A>
-    mask<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(const mask<T, A>&);
+    mask<T, datapar_abi::fixed_size<datapar_size_v<T, A>>> to_fixed_size(const mask<T, A>&) noexcept;
     template <class T, size_t N>
-    datapar<T, datapar_abi::native<T>> to_native(const datapar<T, datapar_abi::fixed_size<N>>&);
+    datapar<T, datapar_abi::native<T>> to_native(const datapar<T, datapar_abi::fixed_size<N>>&) noexcept;
     template <class T, size_t N>
-    mask<T, datapar_abi::native<T>> to_native(const mask<T, datapar_abi::fixed_size<N>>&);
+    mask<T, datapar_abi::native<T>> to_native(const mask<T, datapar_abi::fixed_size<N>>&) noexcept;
     template <class T, size_t N>
-    datapar<T, datapar_abi::compatible<T>> to_compatible(const datapar<T, datapar_abi::fixed_size<N>>&);
+    datapar<T, datapar_abi::compatible<T>> to_compatible(
+        const datapar<T, datapar_abi::fixed_size<N>>&) noexcept;
     template <class T, size_t N>
-    mask<T, datapar_abi::compatible<T>> to_compatible(const mask<T, datapar_abi::fixed_size<N>>&);
+    mask<T, datapar_abi::compatible<T>> to_compatible(const mask<T, datapar_abi::fixed_size<N>>&) noexcept;
 
     // reductions [mask.reductions]
-    template <class T, class Abi> bool  all_of(mask<T, Abi>);
-    template <class T, class Abi> bool  any_of(mask<T, Abi>);
-    template <class T, class Abi> bool none_of(mask<T, Abi>);
-    template <class T, class Abi> bool some_of(mask<T, Abi>);
-    template <class T, class Abi> int popcount(mask<T, Abi>);
+    template <class T, class Abi> bool  all_of(mask<T, Abi>) noexcept;
+    template <class T, class Abi> bool  any_of(mask<T, Abi>) noexcept;
+    template <class T, class Abi> bool none_of(mask<T, Abi>) noexcept;
+    template <class T, class Abi> bool some_of(mask<T, Abi>) noexcept;
+    template <class T, class Abi> int popcount(mask<T, Abi>) noexcept;
     template <class T, class Abi> int find_first_set(mask<T, Abi>);
     template <class T, class Abi> int find_last_set(mask<T, Abi>);
 
-    template <class T, class Abi> bool  all_of(implementation-defined);
-    template <class T, class Abi> bool  any_of(implementation-defined);
-    template <class T, class Abi> bool none_of(implementation-defined);
-    template <class T, class Abi> bool some_of(implementation-defined);
-    template <class T, class Abi> int popcount(implementation-defined);
-    template <class T, class Abi> int find_first_set(implementation-defined);
-    template <class T, class Abi> int find_last_set(implementation-defined);
+    template <class T, class Abi> bool  all_of(implementation-defined) noexcept;
+    template <class T, class Abi> bool  any_of(implementation-defined) noexcept;
+    template <class T, class Abi> bool none_of(implementation-defined) noexcept;
+    template <class T, class Abi> bool some_of(implementation-defined) noexcept;
+    template <class T, class Abi> int popcount(implementation-defined) noexcept;
+    template <class T, class Abi> int find_first_set(implementation-defined) noexcept;
+    template <class T, class Abi> int find_last_set(implementation-defined) noexcept;
 
     // masked assignment [mask.where]
     template <class M, class T> class const_where_expression;
@@ -90,18 +91,18 @@ namespace std {
 
     template <class T, class A>
     where_expression<mask<T, A>, datapar<T, A>> where(const typename datapar<T, A>::mask_type&,
-                                                      datapar<T, A>&);
+                                                      datapar<T, A>&) noexcept;
     template <class T, class A>
     const const_where_expression<mask<T, A>, const datapar<T, A>> where(
-        const typename datapar<T, A>::mask_type&, const datapar<T, A>&);
+        const typename datapar<T, A>::mask_type&, const datapar<T, A>&) noexcept;
 
     template <class T, class A>
-    where_expression<mask<T, A>, mask<T, A>> where(const remove_const_t<mask<T, A>>&, mask<T, A>&);
+    where_expression<mask<T, A>, mask<T, A>> where(const remove_const_t<mask<T, A>>&, mask<T, A>&) noexcept;
     template <class T, class A>
     const const_where_expression<mask<T, A>, const mask<T, A>> where(const remove_const_t<mask<T, A>>&,
-                                                                     const mask<T, A>&);
+                                                                     const mask<T, A>&) noexcept;
 
-    template <class T> where_expression<bool, T> where(implementation-defined k, T& d);
+    template <class T> where_expression<bool, T> where(implementation-defined k, T& d) noexcept;
 
     // reductions [datapar.reductions]
     template <class BinaryOperation = std::plus<>, class T, class Abi>
@@ -111,16 +112,16 @@ namespace std {
                                   typename V::value_type neutral_element = default_neutral_element,
                                   BinaryOperation binary_op = BinaryOperation());
 
-    template <class T, class A> T hmin(const datapar<T, A>&);
-    template <class M, class V> T hmin(const const_where_expression<M, V>&);
-    template <class T, class A> T hmax(const datapar<T, A>&);
-    template <class M, class V> T hmax(const const_where_expression<M, V>&);
+    template <class T, class A> T hmin(const datapar<T, A>&) noexcept;
+    template <class M, class V> T hmin(const const_where_expression<M, V>&) noexcept;
+    template <class T, class A> T hmax(const datapar<T, A>&) noexcept;
+    template <class M, class V> T hmax(const const_where_expression<M, V>&) noexcept;
 
     // algorithms [datapar.alg]
-    template <class T, class A> datapar<T, A> min(const datapar<T, A>&, const datapar<T, A>&);
-    template <class T, class A> datapar<T, A> max(const datapar<T, A>&, const datapar<T, A>&);
+    template <class T, class A> datapar<T, A> min(const datapar<T, A>&, const datapar<T, A>&) noexcept;
+    template <class T, class A> datapar<T, A> max(const datapar<T, A>&, const datapar<T, A>&) noexcept;
     template <class T, class A>
-    std::pair<datapar<T, A>, datapar<T, A>> minmax(const datapar<T, A>&, const datapar<T, A>&);
+    std::pair<datapar<T, A>, datapar<T, A>> minmax(const datapar<T, A>&, const datapar<T, A>&) noexcept;
     template <class T, class A>
     datapar<T, A> clamp(const datapar<T, A>& v, const datapar<T, A>& lo, const datapar<T, A>& hi);
   }

@@ -8,7 +8,7 @@ namespace std {
       using size_type = size_t;
       using abi_type = Abi;
 
-      static constexpr size_type size();
+      static constexpr size_type size() noexcept;
 
       datapar() = default;
 
