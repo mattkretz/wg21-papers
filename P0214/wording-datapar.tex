@@ -319,10 +319,9 @@ T reduce(const datapar<T, Abi>& x, BinaryOperation binary_op = BinaryOperation()
 
 \begin{itemdecl}
 template <class BinaryOperation = std::plus<>, class M, class V>
-typename V::value_type reduce(
-    const where_expression<M, V>& x,
-    typename V::value_type neutral_element = default_neutral_element,
-    BinaryOperation binary_op = BinaryOperation());
+typename V::value_type reduce(const const_where_expression<M, V>& x,
+                              typename V::value_type neutral_element = default_neutral_element,
+                              BinaryOperation binary_op = BinaryOperation());
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns
@@ -343,7 +342,7 @@ template <class T, class A> T hmin(const datapar<T, A>& x);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class M, class V> T hmin(const where_expression<M, V>& x);
+template <class M, class V> T hmin(const const_where_expression<M, V>& x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns If \code{none_of(x.mask)}, the return value is \code{numeric_limits<V::value_type>::max()}.
@@ -351,14 +350,14 @@ template <class M, class V> T hmin(const where_expression<M, V>& x);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class A> T hmax(const datapar<T, A>& );
+template <class T, class A> T hmax(const datapar<T, A>& x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The value of an element \code{x[j]} for which \code{x[j] >= x[i]} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class M, class V> T hmax(const where_expression<M, V>& x);
+template <class M, class V> T hmax(const const_where_expression<M, V>& x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns If \code{none_of(x.mask)}, the return value is \code{numeric_limits<V::value_type>::min()}.

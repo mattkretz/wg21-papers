@@ -112,9 +112,9 @@ namespace std {
                                   BinaryOperation binary_op = BinaryOperation());
 
     template <class T, class A> T hmin(const datapar<T, A>&);
-    template <class M, class V> T hmin(const where_expression<M, V>&);
+    template <class M, class V> T hmin(const const_where_expression<M, V>&);
     template <class T, class A> T hmax(const datapar<T, A>&);
-    template <class M, class V> T hmax(const where_expression<M, V>&);
+    template <class M, class V> T hmax(const const_where_expression<M, V>&);
 
     // algorithms [datapar.alg]
     template <class T, class A> datapar<T, A> min(const datapar<T, A>&, const datapar<T, A>&);
