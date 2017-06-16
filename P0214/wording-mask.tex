@@ -78,13 +78,15 @@ template <class Flags> void memstore(value_type *mem, Flags);
 reference operator[](size_type i);
 \end{itemdecl}
 \begin{itemdescr}
-  \dataparElementReference{\mask}
+  \dataparElementReference{\mask{}}
 \end{itemdescr}
 
 \begin{itemdecl}
-value_type operator[](size_type) const;
+value_type operator[](size_type i) const;
 \end{itemdecl}
 \begin{itemdescr}
+  \pnum\requires The value of \code{i} is less than \code{size()}.
+
   \pnum\returns A copy of the $i$-th element.
 \end{itemdescr}
 

@@ -85,7 +85,7 @@ template <class U> datapar(U&&);
     \item or \type U is \intt,
     \item or \type U is \uint and \valuetype is an unsigned integral type.
   \end{itemize}
-  \pnum\effects Constructs an object with each element initialized to the value of the argument.
+  \pnum\effects Constructs an object with each element initialized to the value of the argument after conversion to \valuetype.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -147,6 +147,8 @@ template <class U, class Flags> void memstore(U *mem, Flags);
 
 \wgSubsubsection{\datapar subscript operators}{datapar.subscr}
 \newcommand\dataparElementReference[1]{
+  \pnum\requires The value of \code{i} is less than \code{size()}.
+
   \pnum\returns A temporary object of type \referencetype (see \ref{sec:reference type}) with the following effects:
 
   \pnum\effects The assignment, compound assignment, increment, and decrement operators of \referencetype execute the indicated operation on the $i$-th element of the #1 object.
@@ -161,9 +163,11 @@ reference operator[](size_type i);
 \end{itemdescr}
 
 \begin{itemdecl}
-value_type operator[](size_type) const;
+value_type operator[](size_type i) const;
 \end{itemdecl}
 \begin{itemdescr}
+  \pnum\requires The value of \code{i} is less than \code{size()}.
+
   \pnum\returns A copy of the $i$-th element.
 \end{itemdescr}
 
