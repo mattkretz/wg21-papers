@@ -120,17 +120,20 @@ template <class T, size_t N> struct abi_for_size { using type = implementation-d
 \begin{itemdescr}
   \pnum The member \type{type} shall be omitted if
   \begin{itemize}
-    \item \type T is not supported by \datapar (see \ref{datapar.type requirements}),
+    \item \type T is not a cv-unqualified floating-point or integral type except \bool.
     \item or if \fixedsizeN is not supported (see \ref{datapar.fixedsize.def}).
   \end{itemize}
 
   \pnum Otherwise, the member typedef \type{type} shall name an ABI tag type that satisfies
   \begin{itemize}
     \item \code{datapar_size_v<T, type> == N},
-    \item \datapar[<T, type>] is supported (see \ref{datapar.type requirements}),
-    \item and \type{type} is not \fixedsizeN.
+    \item \datapar[<T, type>] is default constructible (see \ref{datapar.type requirements}),
   \end{itemize}
-  If such an ABI tag does not exist, then \type{type} shall name \fixedsizeN.
+  \code{datapar_abi::scalar} takes precedence over \fixedsize[<1>].
+  The precedence of implementation-defined ABI tags over \fixedsizeN is implementation-defined.
+  \wgNote{
+    It is expected that implementation-defined ABI tags can produce better optimizations and thus take precedence over \fixedsizeN.
+  }
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -140,8 +143,7 @@ template <class T, class Abi = datapar_abi::compatible<T>> struct datapar_size;
   \pnum\label{datapar_size}%
   \type{datapar_size<T, Abi>} shall have no member \code{value} if either
   \begin{itemize}
-    \item \type T is cv-qualified,
-    \item or \type T is \bool or not an arithmetic type,
+    \item \type T is not a cv-unqualified floating-point or integral type except \bool,
     \item or \code{is_abi_tag_v<Abi>} is \false.
   \end{itemize}
   \wgNote{The rules are different from \ref{datapar.deleted}}

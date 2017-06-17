@@ -6,18 +6,20 @@
 The number of elements in the array is a constant expression, according to the \type{Abi} template parameter.
 
 \newcommand\dataparTypeRequirements[1]{
-\pnum\label{#1.type requirements}%
-The first template argument \type T must be a cv-unqualified integral or floating-point type (3.9.1 [basic.fundamental]).
-The type \bool is not allowed.
-The second template argument \type{Abi} must be an ABI tag so that \code{is_abi_tag_v<Abi>} is \true.
-If the \type{Abi} type is \fixedsizeN, the value \code{N} must be supported by the implementation (see \ref{datapar.fixedsize.def} and \ref{datapar.maxfixedsize.def}).
-The combination of \type T and \type{Abi} must be supported for the \currentTarget.%
-\comment[Alternative]{
-  It is implementation-defined whether a combination of \type T and \type{Abi} is supported.
-  \wgNote{
-    The intent is for implementations to decide on the basis of the \currentTarget.
-  }
-}
+\pnum\label{#1.type requirements}\label{#1.deleted}%
+The resulting class shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment unless all of the following hold:
+\begin{itemize}
+  \item The first template argument \type T is a cv-unqualified integral or floating-point type except \bool (3.9.1 [basic.fundamental]).
+  \item The second template argument \type{Abi} is an ABI tag so that \code{is_abi_tag_v<Abi>} is \true.
+  \item The \type{Abi} type is a supported ABI tag.
+    It is supported if
+    \begin{itemize}
+      \item \type{Abi} is \type{datapar_abi::scalar}, or
+      \item \type{Abi} is \fixedsizeN with \code N $\le 32$ or implementation-defined additional valid values for \code N (see \ref{datapar.fixedsize.def}).
+    \end{itemize}
+    It is implementation-defined whether a given combination of \type T and an implementation-defined ABI tag is supported.
+    \wgNote{The intent is for implementations to decide on the basis of the \currentTarget.}
+\end{itemize}
 }
 \dataparTypeRequirements{datapar}
 
@@ -25,18 +27,12 @@ The combination of \type T and \type{Abi} must be supported for the \currentTarg
   Consider an implementation that defines the implementation-defined ABI tags \type{simd_x} and \type{gpu_y}.
   When the compiler is invoked to translate to a machine that has support for the \type{simd_x} ABI tag for all arithmetic types except \type{long double} and no support for the \type{gpu_y} ABI tag, then:
   \begin{itemize}
-    \item \datapar[<T, datapar_abi::gpu_y>] is not supported for any \type T and results in a type with deleted constructor (see below)
-    \item \datapar[<long double, datapar_abi::simd_x>] is not supported and results in a type with deleted constructor (see below)
+    \item \datapar[<T, datapar_abi::gpu_y>] is not supported for any \type T and results in a type with deleted constructor
+    \item \datapar[<long double, datapar_abi::simd_x>] is not supported and results in a type with deleted constructor
     \item \datapar[<double, datapar_abi::simd_x>] is supported
     \item \datapar[<long double, datapar_abi::scalar>] is supported
   \end{itemize}
 }
-
-\newcommand\dataparDeleted[1]{
-\pnum\label{#1.deleted}%
-If any of the template arguments does not conform to the above requirements, the resulting class shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
-}
-\dataparDeleted{datapar}
 
 \pnum Default initialization performs no initialization of the elements; value-initialization initializes each element with \code{T()}.
 \wgNote{Thus, default initialization leaves the elements in an indeterminate state.}
