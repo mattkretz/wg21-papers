@@ -1,5 +1,30 @@
 \section{Widening Cast}\label{sec:widen}
 The following presents an option for extending the above wording with a cast function that only allows "lossless" conversions of the element type.
+I present three options:
+The first option requires a \datapar type as cast type argument. This choice provides control over the returned ABI tag.
+The second option requires an element type as cast type argument. This choice uses the typically much simpler cast argument.
+The third option works with either.
+
+Note that \code{static_datapar_cast}, which is defined in \ref{sec:datapar.casts}, uses an element type as cast type argument.
+Thus, “Option 2” is equivalent to the \code{static_datapar_cast} function, differing only in the requirement that the conversion must be “lossless”.
+
+Examples:
+\begin{lstlisting}[style=Vc]
+using floatv = native_datapar<float>;
+floatv x = ...;
+
+// Option 1:
+auto a = datapar_cast<fixed_size_datapar<double, floatv::size()>>(x);
+
+// Option 2:
+auto b = datapar_cast<double>(x);
+
+// Option 3:
+auto c = datapar_cast<fixed_size_datapar<double, floatv::size()>>(x);
+auto d = datapar_cast<double>(x);
+\end{lstlisting}
+
+\subsection{Option 1: datapar template argument}
 
 Add to the synopsis in \ref{sec:datapar.syn}:
 \begin{wgText}
@@ -21,5 +46,66 @@ Append to \ref{sec:datapar.casts}:
       \item and every possible value of type \type T can be represented with type \datapar\code{::}\valuetype.
     \end{itemize}
     \pnum\returns A \datapar object with the $i$-th element initialized to \code{static_cast<V::\valuetype>(x[i])}.
+
+    \pnum\throws Nothing.
   \end{itemdescr}
 \end{wgText}
+
+\subsection{Option 2: element type template argument}
+Add to the synopsis in \ref{sec:datapar.syn}:
+\begin{wgText}
+  \begin{lstlisting}[style=Vc]
+    template <class T, class U, class A>
+    datapar<T, /*see below*/> datapar_cast(const datapar<U, A>&);
+  \end{lstlisting}
+\end{wgText}
+
+Append to \ref{sec:datapar.casts}:
+\begin{wgText}
+  \begin{itemdecl}
+    template <class T, class U, class A>
+    datapar<T, /*see below*/> datapar_cast(const datapar<U, A>& x);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum\remarks The function shall not participate in overload resolution unless every possible value of type \type U can be represented with type \type T.
+
+    \pnum\remarks The return type is \datapar[<T, A>] if either \type U and \type T are equal or \type U and \type T are integral types that only differ in signedness.
+    Otherwise, the return type is \datapar[<T, \fixedsizescoped{}<\datapar<U, A>::size()>>].
+
+    \pnum\returns A \datapar object with the $i$-th element initialized to \code{static_cast<T>(x[i])}.
+
+    \pnum\throws Nothing.
+  \end{itemdescr}
+\end{wgText}
+
+\subsection{Option 3: both}
+Add to the synopsis in \ref{sec:datapar.syn}:
+\begin{wgText}
+  \begin{lstlisting}[style=Vc]
+    template <class T, class U, class A>
+    /*see below*/ datapar_cast(const datapar<U, A>&);
+  \end{lstlisting}
+\end{wgText}
+
+Append to \ref{sec:datapar.casts}:
+\begin{wgText}
+  \begin{itemdecl}
+    template <class T, class U, class A>
+    /*see below*/ datapar_cast(const datapar<U, A>&);
+  \end{itemdecl}
+  \begin{itemdescr}
+    \pnum\remarks Let \type{To} identify \type{T::\valuetype} if \code{is_datapar_v<T>} or \type T otherwise.
+
+    \pnum\remarks The function shall not participate in overload resolution unless every possible value of type \type U can be represented with type \type{To}.
+
+    \pnum\remarks If \code{is_datapar_v<T>}, the return type is \type T.
+    Otherwise, if either \type U and \type T are equal or \type U and \type T are integral types that only differ in signedness, the return type is \datapar[<T, A>].
+    Otherwise, the return type is \datapar[<T, \fixedsizescoped{}<\datapar<U, A>::size()>>].
+
+    \pnum\returns A \datapar object with the $i$-th element initialized to \code{static_cast<To>(x[i])}.
+
+    \pnum\throws Nothing.
+  \end{itemdescr}
+\end{wgText}
+
+% vim: sw=2 tw=0
