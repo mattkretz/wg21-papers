@@ -3,47 +3,62 @@
 \wgPoll{Pursue SIMD/data parallel programming via types?}{1 & 8 & 5 & 0 & 0}
 
 \subsection{SG1 at Urbana 2014}
-\wgPoll{SF = ABI via namespace, SA = ABI as template parameter}{0 & 0 & 6 & 11 & 2}
-\wgPoll{Apply size promotion to vector operations? SF = \type{shortv} + \type{shortv} = \type{intv}}{1 & 2 & 0 & 6 & 11}
-\wgPoll{Apply “sign promotion” to vector operations? SF = \type{ushortv} + \type{shortv} = \type{ushortv}; SA = no mixed signed/unsigned arithmetic}{1 & 5 & 5 & 7 & 2}
+\begin{itemize}
+  \item \wgPoll{SF = ABI via namespace, SA = ABI as template parameter}{0 & 0 & 6 & 11 & 2}
+  \item \wgPoll{Apply size promotion to vector operations? SF = \type{shortv} + \type{shortv} = \type{intv}}{1 & 2 & 0 & 6 & 11}
+  \item \wgPoll{Apply “sign promotion” to vector operations? SF = \type{ushortv} + \type{shortv} = \type{ushortv}; SA = no mixed signed/unsigned arithmetic}{1 & 5 & 5 & 7 & 2}
+\end{itemize}
 
 \subsection{SG1 at Lenexa 2015}
 \wgPoll{Make vector types ready for LEWG with arithmetic, compares, write-masking, and math?}{10 & 6 & 2 & 0 & 0}
 
 \subsection{SG1 at JAX 2016}
-\wgPoll{Should subscript operator return an lvalue reference?}{0  & 6 & 10 & 2 & 1}
-\wgPoll{Should subscript operator return a “smart reference”?}{1  & 7 & 10 & 0 & 0}
-\wgPoll{Specify datapar width using ABI tag, with a special template tag for fixed size.}{3 & 7 & 0 & 0 & 1}
-\wgPoll{Specify datapar width using <T, N, abi>, where abi is not specified by the user.}{1 & 2 & 5 & 2 & 1}
+\begin{itemize}
+  \item \wgPoll{Should subscript operator return an lvalue reference?}{0  & 6 & 10 & 2 & 1}
+  \item \wgPoll{Should subscript operator return a “smart reference”?}{1  & 7 & 10 & 0 & 0}
+  \item \wgPoll{Specify datapar width using ABI tag, with a special template tag for fixed size.}{3 & 7 & 0 & 0 & 1}
+  \item \wgPoll{Specify datapar width using <T, N, abi>, where abi is not specified by the user.}{1 & 2 & 5 & 2 & 1}
+\end{itemize}
 
 \subsection{SG1 at Oulu 2016}
-\wgPoll{Keep \code{native_handle} in the wording (dropping the ampersand in the return type)?}{0 & 6 & 3 & 3 & 0}
-\wgPoll{Should the interface provide a way to specify a number for over-alignment?}{2 & 6 & 5 & 0 & 0}
-\wgPoll{Should loads and stores have a default load/store flag?}{0 & 0 & 7 & 4 & 1}
+\begin{itemize}
+  \item \wgPoll{Keep \code{native_handle} in the wording (dropping the ampersand in the return type)?}{0 & 6 & 3 & 3 & 0}
+  \item \wgPoll{Should the interface provide a way to specify a number for over-alignment?}{2 & 6 & 5 & 0 & 0}
+  \item \wgPoll{Should loads and stores have a default load/store flag?}{0 & 0 & 7 & 4 & 1}
+\end{itemize}
 
 \subsection{LEWG at Issaquah 2016}
-\wgPoll{Unary minus on unsigned datapar should be ill formed}{0 & 5 & 6 & 0 & 3}
-\wgUnanimous{Reductions only as free functions}
-\wgUnanimous{Jens should work with the author and return with an updated paper}
+\begin{itemize}
+  \item \wgPoll{Unary minus on unsigned datapar should be ill formed}{0 & 5 & 6 & 0 & 3}
+  \item \wgUnanimous{Reductions only as free functions}
+  \item \wgUnanimous{Jens should work with the author and return with an updated paper}
+\end{itemize}
 
 \subsection{LEWG at Kona 2017}
-\wgUnanimous{Want \code{operator<<(signed)} to work except where it's undefined for the underlying integer?}
-\wgPoll{Should there be overloads for \code{where} and (\mask and \datapar) reductions with \bool/builtin types in place of \mask/\datapar?}
-       {1&5&6&1&0}
-       \wgUnanimous{Should there be a named “widen” function that widens the element type \type T from (e.g.) \intt to \type{long}, but rejects \intt to \short?
-The number of elements is not changed.}
-\wgUnanimous{Should there be a named “concat” functions that concatenates several \datapar{}s with the same element type, but potentially different length?
+\begin{itemize}
+  \item \wgUnanimous{Want \code{operator<<(signed)} to work except where it's undefined for the underlying integer?}
 
-The latter two operations are currently lumped together in \code{datapar_cast}.
+  \item \wgPoll{Should there be overloads for \code{where} and (\mask and \datapar) reductions with \bool/builtin types in place of \mask/\datapar?}{1&5&6&1&0}
 
-The widen / concat questions, I think, comes down to whether we want the current \code{datapar_cast} or not.}
-\wgUnanimous{We still have a few open ends on implicit conversions (\url{https://github.com/mattkretz/wg21-papers/issues/26}, \url{https://github.com/mattkretz/wg21-papers/issues/3}).
-The current paper is rather strict, there may be room for more implicit conversions without introducing safety problems.
+  \item \wgUnanimous{Should there be a named “widen” function that widens the element type \type T from (e.g.) \intt to \type{long}, but rejects \intt to \short?
+  The number of elements is not changed.}
+  cf. \autoref{sec:widen}
+
+\item \wgUnanimous{Should there be a named “concat” functions that concatenates several \datapar{}s with the same element type, but potentially different length?\\
+  The latter two operations are currently lumped together in \code{datapar_cast}.\\
+  The widen / concat questions, I think, comes down to whether we want the current \code{datapar_cast} or not.}
+  cf. \autoref{sec:split and concat}
+
+\item \wgUnanimous{We still have a few open ends on implicit conversions (\url{https://github.com/mattkretz/wg21-papers/issues/26}, \url{https://github.com/mattkretz/wg21-papers/issues/3}).
+  The current paper is rather strict, there may be room for more implicit conversions without introducing safety problems.
 Should we postpone any changes in this area to after TS feedback?}
-\noindent Poll: Keep or drop \code{datapar_abi::max_fixed_size}? (cf. \url{https://github.com/mattkretz/wg21-papers/issues/38})\\
-\hspace*{2em} Authors will come back with a proposal\par\medskip
-\wgUnanimous{Add a list of possible names for “datapar” and “where” to the paper.}
 
+\item \noindent Poll: Keep or drop \code{datapar_abi::max_fixed_size}? (cf. \url{https://github.com/mattkretz/wg21-papers/issues/38})\\
+  \hspace*{2em} Authors will come back with a proposal\par\medskip
+  cf. \autoref{sec:maxfixedsize}
 
+\item \wgUnanimous{Add a list of possible names for “datapar” and “where” to the paper.}
+  cf. \autoref{sec:Naming}
+\end{itemize}
 
 % vim: sw=2 sts=2 ai et tw=0

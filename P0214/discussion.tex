@@ -287,15 +287,15 @@ However, why should the user be able to query the maximum $N$ supported by the i
 \begin{itemize}
   \item In principle, a user can always determine the number using SFINAE to find the maximum $N$ that he can still instantiate without substitution failure.
     Not providing the number thus provides no “safety” against “bad usage”.
-  \item Code may want to use the value to document assumptions / requirements about the implementation, e.g. with a static assertion.
-  \item Code may want to use the value to make code portable between implementations that use a different \code{max_fixed_size}.
+  \item A developer may want to use the value to document assumptions / requirements about the implementation, e.g. with a static assertion.
+  \item A developer may want to use the value to make code portable between implementations that use a different \code{max_fixed_size}.
 \end{itemize}
 
 Making the \code{max_fixed_size} dependent on \type T makes sense because most hardware can process a different number of elements in parallel depending on \type T.
 Thus, if an implementation wants to restrict $N$ to some sensible multiple of the hardware capabilities, the number must be dependent on \type T.
 
 In Kona, LEWG also asked whether there should be a provision in the standard to ensure that a native \datapar of 8-bit element type is convertible to a fixed-size \datapar of 64-bit element type.
-It was already there (\ref{datapar.fixedsize.def}: “for every supported \datapar[<T, A>] (see \ref{sec:datapar.type requirements}), where \type A is an implementation-defined ABI tag, \code N $=$ \datapar[<T, A>::size()] must be supported”).
+It was already there (\ref{datapar.fixedsize.def}: “for every supported \datapar[<T, A>] (see \ref{datapar.type requirements}), where \type A is an implementation-defined ABI tag, \code N $=$ \datapar[<T, A>::size()] must be supported”).
 Note that this does not place a lower bound on \code{max_fixed_size}.
 The wording allows implementations to support values for fixed-size \datapar that are larger than \code{max_fixed_size}.
 I.e. $N \leq $ \code{max_fixed_size} works; whether $N > $ \code{max_fixed_size} works is unspecified.

@@ -1,6 +1,6 @@
 using floatv = native_datapar<float>;
 void f() {
-  alignas(memory_alignment<floatv>)float data[N];
+  alignas(memory_alignment_v<floatv>) float data[N];
   fill_data(data);
   size_t i = 0;
   for (; i + floatv::size() <= N; i += floatv::size()) {
