@@ -406,8 +406,28 @@ I'm certain that if we choose \code{memload/memstore} or \code{load_from/store_t
 The free functions \code{all_of}, \code{any_of}, \code{none_of}, \code{some_of}, \code{popcount}, \code{find_first_set}, \code{find_last_set} could alternatively be member functions of \mask.
 Having them as member functions would be consistent with \type{bitset}, which has the member functions \code{all}, \code{any}, \code{none}, and \code{count}.
 
+\textcite{P0161R0} proposes the \type{bitset} member functions \code{low_bit_position} and \code{high_bit_position} for the same operations as \code{find_first_set(mask)} and \code{find_last_set(mask)}.
+\textcite{N3864} proposes similar free functions for integral types:
+The functions \code{cntt0} and \code{cntl0} do the same operation while avoiding the undefined behavior on all-zero arguments.
+\textcite{P0553R1} proposes \code{count[lr]_zero} and \code{popcount} for unsigned integral types (i.e. free functions).
+
 \subsubsection{Recommendation}
 I believe the current interface of \mask (free functions) is preferable over the interface of \type{bitset}.
 If anything, I believe there should be additional free functions overloaded on \type{bitset} if consistency between \mask and \type{bitset} is desirable.
+
+The operations are generic, in the sense that they are not bound to a single type but to a set of similar types.
+This makes them perfect candidates for free functions.
+
+The name “low bit position” is easier to read (to me) than “find first set (bit)”.
+On the other hand,
+\begin{itemize}
+    \item a web search of the two function names currently produces more (relevant) results for \code{find_first_set}, and
+    \item stating that the function looks for a \emph{set} bit is clearer than just stating that the function returns a bit position; the latter only implies that it does not consider 0-bits for a “bit position”.
+\end{itemize}
+
+If we rather want to follow the naming convention used by \textcite{P0553R1}, then \code{findl_one} and \code{findt_one} seem to be consistent names.
+They replace “count” by “find” in the name to indicate the precondition that \code{any_of} must return \true.
+
+Alternatively, the “find” functions could be replaced in favor of “count” functions in this proposal, to streamline with \textcite{P0553R1}.
 
 % ft=tex tw=0 et sw=2 spell
