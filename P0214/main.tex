@@ -59,6 +59,7 @@
 }
 \newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
 \newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
+\newcommand\itemheader[1]{\item[] \hfill \textcolor{gray}{\textsc{#1}}}
 
 \begin{document}
 \selectlanguage{american}
@@ -178,7 +179,7 @@ Previous revision: \parencite{P0214R2}.
 \subsection{Changes from R3}
 Previous revision: \parencite{P0214R3}.
 \begin{itemize}
-  \color{black}\item[---] before Kona:
+  \itemheader{changes before Kona}
   \item Add special math overloads for signed char and short.
         They are important to avoid widening to multiple SIMD registers and since no integer promotion is applied for \datapar types.
   \item Editorial: Prefer \code{using} over \code{typedef}.
@@ -197,24 +198,31 @@ Previous revision: \parencite{P0214R3}.
   \item Editorial: Replace Note clauses in favor of \wgNote{}.
   \item Editorial: Replace UB Remarks on load/store alignment requirements with Requires clauses.
   \item Add an example section (\ref{sec:Examples}).
-
-  \color{black}\item[---] after Kona:
+  \itemheader{changes after Kona}
+  \item[---] design related:
   \item Readd \bool overloads of mask reductions and ensure that implicit conversions to \bool are ill-formed.
   \item Clarify effects of using an ABI parameter that is not available on the target (\ref{datapar.deleted}, \ref{mask.deleted}, \ref{datapar_size}).
   \item Split \whereexpression into \const and non-\const class templates.
-  \item Add section on naming (\ref{sec:Naming}).
+  \item Add section on naming (\autoref{sec:Naming}).
+  \item Discuss the questions/issues raised on \code{max_fixed_size} in Kona (\autoref{sec:maxfixedsize}).
+  \item Make \code{max_fixed_size} dependent on \type{T}.
+  \item Clarify that converting loads and stores only work with arrays of non-bool arithmetic type (\ref{sec:datapar.load}, \ref{sec:datapar.store}).
+  \item Discuss \mask and \type{bitset} reduction interface differences (\autoref{sec:mask queries}).
+  \item Relax requirements on return type of generator function for the generator constructor (\ref{sec:datapar.ctor}).
+  \item Remove overly generic \code{datapar_cast} function.
+  \item Add proposal for a widening cast function (\autoref{sec:widen}).
+  \item Add proposal for \code{split} and \code{concat} cast functions (\autoref{sec:split and concat}).
+  \item Add \code{noexcept} or “Throws: Nothing.” to most functions.
+
+  \item[---] wording fixes \& improvements:
   \item Remove non-normative noise about ABI tag types (\ref{sec:datapar.abi}).
   \item Remove most of the text about vendor-extensions for ABI tag types, since it's QoI (\ref{sec:datapar.abi}).
   \item Clarify the differences and intent of \type{compatible<T>} vs. \type{native<T>} (\ref{sec:datapar.abi}).
   \item Move definition of \whereexpression out of the synopsis (\ref{sec:datapar.whereexpr}).
-  \item Change “implementation_defined” to “implementation-defined”.
-  \item Discuss the questions/issues raised on \code{max_fixed_size} in Kona (\ref{sec:maxfixedsize}).
-  \item Make \code{max_fixed_size} dependent on \type{T}.
   \item Editorial: Improve \code{is_datapar} and \code{is_mask} wording (\ref{sec:datapar.traits}).
   \item Make \emph{ABI tag} a consistent term and add \code{is_abi_tag} trait (\ref{sec:datapar.traits}, \ref{sec:datapar.abi}).
   \item Clarify that \fixedsizeN must support all \code{N} matching all possible implementation-defined ABI tags (\ref{sec:datapar.abi}).
   \item Clarify \code{abi_for_size} wording (\ref{sec:datapar.traits}).
-  \item Clarify that converting loads and stores only work with arrays of non-bool arithmetic type (\ref{sec:datapar.load}, \ref{sec:datapar.store}).
   \item Turn \code{memory_alignment} into a trait with a corresponding \code{memory_alignment_v} variable template.
   \item Clarify \code{memory_alignment} wording; when it has no \code{value} member; and imply its value through a reference to the load and store functions (\ref{sec:datapar.traits}).
   \item Remove exposition-only \type{where_expression} constructor and make exposition-only data members private (\ref{sec:datapar.whereexpr}).
@@ -222,22 +230,16 @@ Previous revision: \parencite{P0214R3}.
   \item Add a note about variability of \code{max_fixed_size} (\ref{sec:datapar.abi}).
   \item Editorial: use “\targetArch{}” and “\currentTarget{}” consistently.
   \item Add margin notes presenting a wording alternative that avoids “target system” and “target architecture” in normative text.
-  \item Discuss \mask and \type{bitset} reduction interface differences (\ref{sec:mask queries}).
-  \item Relax requirements on return type of generator function for the generator constructor (\ref{sec:datapar.ctor}).
-  \item Remove overly generic \code{datapar_cast} function.
-  \item Add proposal for a widening cast function (\ref{sec:widen}).
-  \item Add proposal for \code{split} and \code{concat} cast functions (\ref{sec:split and concat}).
   \item Specify result of masked reduce with empty mask (\ref{sec:datapar.reductions}).
-  \item Add \code{noexcept} or “Throws: Nothing.” to most functions.
   \item Editorial: clean up the use of “supported” and resolve contradictions resulting from incorrect use of conventions in the rest of the standard text (\ref{datapar.type requirements}, \ref{mask.type requirements}, \ref{sec:datapar.traits}).
 
-  \todo New section on design decisions; discuss decisions made by SG1, LEWG, and through discussion with Jens; especially discuss the ABI parameter:
-  \begin{itemize}
-    \item it provides the intended lowest level access to SIMD programming
-    \item it allows easy high-level abstraction
-    \item how the default was chosen, and why having a \emph{compatible} ABI be the default is the nicer default
-    \item an ABI parameter influences the choice of function parameter passing, not necessarily the choice of instructions or even number of elements (e.g. an implementation can provide an ABI that passes via 128-bit registers but otherwise works with 256-bit registers)
-  \end{itemize}
+  %\todo New section on design decisions; discuss decisions made by SG1, LEWG, and through discussion with Jens; especially discuss the ABI parameter:
+  %\begin{itemize}
+  %  \item it provides the intended lowest level access to SIMD programming
+  %  \item it allows easy high-level abstraction
+  %  \item how the default was chosen, and why having a \emph{compatible} ABI be the default is the nicer default
+  %  \item an ABI parameter influences the choice of function parameter passing, not necessarily the choice of instructions or even number of elements (e.g. an implementation can provide an ABI that passes via 128-bit registers but otherwise works with 256-bit registers)
+  %\end{itemize}
 \end{itemize}
 
 \input{strawpolls}
