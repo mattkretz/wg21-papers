@@ -11,10 +11,10 @@ namespace std {
     namespace flags {
       struct element_aligned_tag {};
       struct vector_aligned_tag {};
-      template <std::align_val_t> struct overaligned_tag {};
+      template <size_t> struct overaligned_tag {};
       constexpr element_aligned_tag element_aligned{};
       constexpr vector_aligned_tag vector_aligned{};
-      template <std::align_val_t N> constexpr overaligned_tag<N> overaligned = {};
+      template <size_t N> constexpr overaligned_tag<N> overaligned = {};
     }
 
     // traits [datapar.traits]
