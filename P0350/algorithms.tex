@@ -5,7 +5,7 @@ Consider the example in \lst{datapar foreach}.
 \begin{lstlisting}[style=Vc,numbers=left,float,label=lst:datapar foreach,caption={
   Example using \dataparEP with \code{iota} and \code{for_each}.
 }]
-vector<float> data;
+std::vector<float> data;
 data.resize(99);
 iota(/*!\dataparEP{}*/, data.begin(), data.end(), 0.f);
 for_each(/*!\dataparEP{}*/, data.begin(), data.end(), [](auto &x) {
@@ -28,7 +28,7 @@ The implementation uses a compile-time trait to determine whether the function \
 Otherwise, the store is optimized away.
 
 \fig{datapar iota} shows a visualization how the \code{iota} implementation works.
-The \code{init} \datapar object is stored via vector stores to 4 (native \datapar[::size()]) elements in the \std\type{vector}.
+The \code{init} \datapar object is stored via vector stores to 4 (assuming native \datapar[::size() == 4]) elements in the \std\type{vector}.
 In each iteration the \code{init} object is incremented by \datapar[::size()] and stored to the following elements in the \std\type{vector}.
 Since the \std\type{vector} has 99 elements, the last three elements cannot be initialized with a vector store of four elements.
 Instead the \code{epilogue} recursion generates a new \code{init} \datapar object for size 2 and subsequently for size 1.
@@ -143,49 +143,50 @@ For both algorithms it would be perfectly valid to implement the epilogue as a s
 
 \subsection{Wording for the policy}
 
-Add a new execution policy to \citep[§20.18.2]{N4582}:
-\begin{wgText}[{§20.18.2 [execpol.syn]}]
+Add a new execution policy to \citep[§23.19.2]{N4659}:
+\begin{wgText}[{§23.19.2 [execution.syn]}]
   \begingroup
   \ttfamily
-  // 20.18.6, parallel+vector execution policy:\\
-  class parallel_vector_execution_policy;\\
+  // 23.19.6, parallel and unsequenced execution policy\\
+  class parallel_unsequenced_policy;\\
   \\
-  \wgAdd{// 20.18.7, \datapar execution policy:}\\
-  \wgAdd{class \dataparEPT{};}\\
+  \wgAdd{// 23.19.7, \datapar execution policy}\\
+  \wgAdd{class \datapar{}_policy;}\\
   \\
-  // 20.18.\wgRemove{7}\wgAdd{8}, execution policy objects:\\
-  constexpr sequential_execution_policy sequential\{ \textit{unspecified} \};\\
-  constexpr parallel_execution_policy par\{ \textit{unspecified} \};\\
-  constexpr parallel_vector_execution_policy par_vec\{ \textit{unspecified} \};\\
-  \wgAdd{constexpr \dataparEPT{} \dataparEP{}\{ \textit{unspecified} \};}
+  // 23.19.\wgRemove{7}\wgAdd{8}, execution policy objects:\\
+  inline constexpr sequenced_policy seq\{ \textit{unspecified} \};\\
+  inline constexpr parallel_policy par\{ \textit{unspecified} \};\\
+  inline constexpr parallel_unsequenced_policy par_unseq\{ \textit{unspecified} \};\\
+  \wgAdd{inline constexpr \datapar{}_policy \datapar\{ \textit{unspecified} \};}
   \endgroup
 \end{wgText}
 
-Renumber §20.18.7 to §20.18.8 and add §20.18.7 [execpol.datapar]:
+Renumber §23.19.7 to §23.19.8 and add §23.19.7 [execpol.datapar]:
 \begin{wgText}
   \color{WgAdd}
   \begin{itemdecl}
-class @\dataparEPT{}@ { unspecified };
+class @\datapar{}_policy \{ \textit{unspecified} \}@;
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum The class \dataparEPT is an execution policy type used as a unique type to disambiguate parallel algorithm overloading and indicate that a parallel algorithm's execution may be vectorized using \datapar for interfacing with user-provided functionality.
+    \pnum The class \datapar[_policy] is an execution policy type used as a unique type to disambiguate parallel algorithm overloading and indicate that a parallel algorithm's execution may be vectorized using \datapar for interfacing with user-provided functionality.
+    \pnum During the execution of a parallel algorithm with the \dataparEPT policy, if the invocation of an element access function exits via an uncaught exception, \code{terminate()} shall be called.
   \end{itemdescr}
 \end{wgText}
 
-Add to §20.18.8 [parallel.execpol.objects]:
+Add to §23.19.8 [execpol.objects]:
 \begin{wgText}
-  \ttfamily\wgAdd{constexpr \dataparEPT{} \dataparEP{}\{ \textit{unspecified} \};}
+  \ttfamily\wgAdd{inline constexpr \dataparEPT{} \dataparEP{}\{ \textit{unspecified} \};}
 \end{wgText}
 
-\citep[§25.2.2]{N4582} defines requirements on user-provided function objects.
+\citep[§28.4.2]{N4659} defines requirements on user-provided function objects.
 This might be the right place to add:
-\begin{wgText}[{§25.2.2 [algorithms.parallel.user]}]
+\begin{wgText}[{§28.4.2 [algorithms.parallel.user]}]
   \addtocounter{Paras}{1}
   \color{WgAdd}
   \pnum Function objects passed into parallel algorithms instantiated with the \dataparEP execution policy shall be callable with any argument of type \datapar[<T, Abi>], where \type T is the type obtained from dereferencing the iterator.
 \end{wgText}
 
-The following subsection in \citep[§25.2.3]{N4582} defines the semantics of the execution policies.
+The following subsection in \citep[§28.4.3]{N4659} defines the semantics of the execution policies.
 A new paragraph for \dataparEP is needed.
 The intent is to
 \begin{enumerate}
@@ -193,8 +194,8 @@ The intent is to
   \item allow implementations to assume unordered access for all internal element access functions (most importantly loads and stores),
   \item apply user-provided function objects in the order the \datapar chunks are created from sequential iteration over the iterator(s).
 \end{enumerate}
-\begin{wgText}[{§25.2.3 [algorithms.parallel.exec]}]
-  \addtocounter{Paras}{5}%
+\begin{wgText}[{§28.4.3 [algorithms.parallel.exec]}]
+  \addtocounter{Paras}{7}%
   \color{WgAdd}%
   \uline{%
   \pnum
@@ -208,16 +209,12 @@ The intent is to
 }
 \end{wgText}
 
-\citep[§25.2.4 (2.2)]{N4582} needs to add \dataparEPT.
-\begin{wgText}[{§25.2.4 (2.2) [algorithms.parallel.exceptions]}]
-  If the execution policy object is of type \type{sequential_execution_policy}\wgAdd{, \dataparEPT,} or \type{parallel_execution_policy}, the execution of the algorithm exits via an exception.
-\end{wgText}
-There is no need for multiple exceptions when applying user-provided function objects.
-The need for exception lists only arises in the vector-parallel execution of iterator operations.
+\newcommand\tmp{[algorithms.parallel.exceptions]}
+It is my understanding that we do not want to add anything to \citep[§28.4.4 \tmp{}]{N4659} at this point.
+The situation is simpler for the \dataparEP policy.
+It is almost equivalent to the \code{seq} policy.
 
 \subsection{Wording for individual algorithms}
 I have not identified the need for any additional wording in the subsections on the individual algorithms for the \dataparEPT at this point.
-
-It might be useful to only require \texttt{MoveConstructible} user-provided functions instead of the stricter requirement of \texttt{CopyConstructible}.
 
 % vim: sw=2 et ft=tex spell tw=0

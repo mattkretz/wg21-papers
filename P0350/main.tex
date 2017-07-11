@@ -1,7 +1,7 @@
 \newcommand\wgTitle{Integrating datapar with parallel algorithms and executors}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
 \newcommand\wgDocumentNumber{D0350R1}
-\newcommand\wgGroup{SG1}
+\newcommand\wgGroup{LEWG}
 \newcommand\wgAcknowledgements{
   This work was supported by GSI Helmholtzzentrum für Schwerionenforschung
   and the Hessian LOEWE initiative through the Helmholtz International Center
@@ -24,11 +24,11 @@
 \newcommand\fixedsizeN{\type{datapar\textunderscore{}abi::fixed\textunderscore{}size<N>}\xspace}
 \newcommand\fixedsizescoped{\type{datapar\textunderscore{}abi::fixed\textunderscore{}size}\xspace}
 \newcommand\fixedsize{\type{fixed\textunderscore{}size}\xspace}
-\newcommand\dataparEP{\type{datapar\textunderscore{}execution}\xspace}
-\DeclareRobustCommand\dataparEPT{\type{datapar\textunderscore{}execution\textunderscore{}policy}\xspace}
-\newcommand\seqEP{\code{std::}\type{sequential}\xspace}
+\newcommand\dataparEP{\code{execution::}\type{datapar}\xspace}
+\DeclareRobustCommand\dataparEPT{\code{execution::}\type{datapar\textunderscore{}policy}\xspace}
+\newcommand\seqEP{\code{std::execution::}\type{seq}\xspace}
 
-\newcommand\foralli{for all $i \in [0\ldots \code{size()}[$\xspace}
+\newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
 
 \begin{document}
 \selectlanguage{american}
@@ -43,14 +43,24 @@
   \item This documents talks about “vector” types/objects.
     In general this will not refer to the \std\type{vector} class template.
     References to the container type will explicitly call out the \code{std} prefix to avoid confusion.
-  \item \citep{P0214R1} is the last paper on \datapar.
+  \item \citep{P0214R4} is the last paper on \datapar.
 \end{itemize}
 
 \section{Changelog}
+\subsection{Changes from R0}
+Previous revision: \parencite{P0350R0}.
+\begin{itemize}
+  \item Update to apply against \CC{}17 wording.
+  \item Removed executors discussion because the design has not left SG1 yet.
+  \item Updated example code to reflect changes in P0214.
+\end{itemize}
+
+\section{Straw Polls}
+\subsection{SG1 at Oulu}
 \wgPoll{Ship it to LEWG?}{6 & 6 & 2 & 0 & 0}
 
 \input{intro}
 \input{algorithms}
-\input{executors}
+
 \end{document}
 % vim: sw=2 sts=2 ai et tw=0 spell
