@@ -11,22 +11,22 @@ Rationales:
     Used as the return type of the non-const scalar subscript operator.
 
   \item[mask_type]
-    The natural \mask type for this \datapar instantiation.
+    The natural \mask type for this \simd instantiation.
     This type is used as return type of compares and write-mask on assignments.
 
-  \item[datapar_type]
-    The natural \datapar type for this \mask instantiation.
+  \item[simd_type]
+    The natural \simd type for this \mask instantiation.
 
   \item[size_type]
     Standard member type used for \code{size()} and \code{operator[]}.
 
   \item[abi_type]
-    The \type{Abi} template parameter to \datapar.
+    The \type{Abi} template parameter to \simd.
 
 \end{typelist*}
 
 \subsection{Conversions}
-The \datapar conversion constructor only allows implicit conversion from \datapar template instantiations with the same \type{Abi} type and compatible \valuetype.
+The \simd conversion constructor only allows implicit conversion from \simd template instantiations with the same \type{Abi} type and compatible \valuetype.
 Discussion in SG1 showed clear preference for only allowing implicit conversion between integral types that only differ in signedness.
 All other conversions could be implemented via an explicit conversion constructor.
 The alternative (preferred) is to use \simdcast consistently for all other conversions.
@@ -35,7 +35,7 @@ After more discussion on the LEWG reflector, in Issaquah, and between me and Jen
 No implicit conversion will ever allow a narrowing conversion of the element type (and signed - unsigned is narrowing in both directions).
 
 \subsection{Broadcast Constructor}
-The \datapar broadcast constructor is not declared \code{explicit} to ease the use of scalar prvalues in expressions involving data-parallel operations.
+The \simd broadcast constructor is not declared \code{explicit} to ease the use of scalar prvalues in expressions involving data-parallel operations.
 The operations where such a conversion should not be implicit consequently need to use SFINAE / concepts to inhibit the conversion.
 
 Experience from Vc shows that the situation is different for \mask, where an implicit conversion from \bool typically hides an error.
@@ -50,7 +50,7 @@ At this point the specification of the smart reference is very conservative / re
 The reference type is neither copyable nor movable.
 The intention is to avoid users to program like the operator returned an lvalue reference.
 The return type is significantly larger than an lvalue reference and harder to optimize when passed around.
-The restriction thus forces users to do element modification directly on the \datapar / \mask objects.
+The restriction thus forces users to do element modification directly on the \simd / \mask objects.
 
 Guidance from SG1 at JAX 2016:\\
 \wgPoll{Should subscript operator return an lvalue reference?}{0  & 6 & 10 & 2 & 1}
@@ -59,7 +59,7 @@ Guidance from SG1 at JAX 2016:\\
 
 \subsection{Compound Assignment}
 The semantics of compound assignment would allow less strict implicit conversion rules.
-Consider \code{datapar<int>() *= double()}: the corresponding binary multiplication operator would not compile because the implicit conversion to \datapar[<double>] is non-portable.
+Consider \code{simd<int>() *= double()}: the corresponding binary multiplication operator would not compile because the implicit conversion to \simd[<double>] is non-portable.
 Compound assignment, on the other hand, implies an implicit conversion back to the type of the expression on the left of the assignment operator.
 Thus, it is possible to define compound operators that execute the operation correctly on the promoted type without sacrificing portability.
 There are two arguments for not relaxing the rules for compound assignment, though:
@@ -70,14 +70,14 @@ There are two arguments for not relaxing the rules for compound assignment, thou
 \end{enumerate}
 
 \subsection{Return Type of Masked Assignment Operators}
-The assignment operators of the type returned by \code{where(mask, datapar)} could return one of:
+The assignment operators of the type returned by \code{where(mask, simd)} could return one of:
 \begin{itemize}
-  \item A reference to the \datapar object that was modified.
-  \item A temporary \datapar object that only contains the elements where the \mask is \true.
+  \item A reference to the \simd object that was modified.
+  \item A temporary \simd object that only contains the elements where the \mask is \true.
   \item A reference to the \type{where_expression} object.
   \item Nothing (\ie \void).
 \end{itemize}
-My first choice was a reference to the modified \datapar object.
+My first choice was a reference to the modified \simd object.
 However, then the statement \code{(where(x < 0, x) *= -1) += 2} may be surprising: it adds \code 2 to all vector entries, independent of the mask.
 Likewise, \code{y += (where(x < 0, x) *= -1)} has a possibly confusing interpretation because of the \mask in the middle of the expression.
 
@@ -90,13 +90,13 @@ By declaring the return type as \void the above expressions become ill-formed, w
 There was substantial discussion on the reflectors and SG1 meetings over the question whether \CC{} should define a fundamental, native SIMD type (let us call it \type{fundamental<T>}) and additionally a generic data-parallel type which supports an arbitrary number of elements (call it \type{arbitrary<T, N>}).
 The alternative to defining both types is to only define \type{arbitrary<T, N = default_size<T>>}, since it encompasses the \type{fundamental<T>} type.
 
-With regard to this proposal this second approach would add a third template parameter to \datapar and \mask as shown in \lst{datapar N}.
-\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:datapar N,caption={
-  Possible declaration of the class template parameters of a \datapar class with arbitrary width.
+With regard to this proposal this second approach would add a third template parameter to \simd and \mask as shown in \lst{simd N}.
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:simd N,caption={
+  Possible declaration of the class template parameters of a \simd class with arbitrary width.
 }]
-template <class T, size_t N = datapar_size_v<T, datapar_abi::compatible<T>>,
-          class Abi = datapar_abi::compatible<T>>
-class datapar;
+template <class T, size_t N = simd_size_v<T, simd_abi::compatible<T>>,
+          class Abi = simd_abi::compatible<T>>
+class simd;
 \end{lstlisting}
 
 \subsubsection{Standpoints}
@@ -119,12 +119,12 @@ Consider the simplest example of a multiplication of an \intt vector with a \flo
 arbitrary<float>() * arbitrary<int>();  // compiles for some targets, fails for others
 fundamental<float>() * fundamental<int>();  // never compiles, requires explicit cast
 \end{lstlisting}
-The \datapar[<T>] operators are specified in such a way that source compatibility is ensured.
+The \simd[<T>] operators are specified in such a way that source compatibility is ensured.
 For a type with user definable \code N, the binary operators should work slightly different with regard to implicit conversions.
 Most importantly, \type{arbitrary<T, N>} solves the issue of portable code containing mixed integral and floating-point values.
 A user would typically create aliases such as:
 \smallskip\begin{lstlisting}[style=Vc]
-using floatvec = datapar<float>;
+using floatvec = simd<float>;
 using intvec = arbitrary<int, floatvec::size()>;
 using doublevec = arbitrary<int, floatvec::size()>;
 \end{lstlisting}
@@ -147,14 +147,14 @@ Note that with the existence of the \type{fundamental} class template, the \code
 \newcommand\commonabi[3]{\code{\textit{commonabi}(\type{#1}, \type{#2}, \type{#3})}}
 
 SG1 Guidance at JAX 2016:\\
-\wgPoll{Specify datapar width using ABI tag, with a special template tag for fixed size.}{3 & 7 & 0 & 0 & 1}
-\wgPoll{Specify datapar width using <T, N, abi>, where abi is not specified by the user.}{1 & 2 & 5 & 2 & 1}
+\wgPoll{Specify simd width using ABI tag, with a special template tag for fixed size.}{3 & 7 & 0 & 0 & 1}
+\wgPoll{Specify simd width using <T, N, abi>, where abi is not specified by the user.}{1 & 2 & 5 & 2 & 1}
 
-At the Jacksonville meeting, SG1 decided to continue with the \datapar[<T, Abi>] class template, with the addition of a new Abi type that denotes a user-requested number of elements in the vector (\fixedsizeN).
+At the Jacksonville meeting, SG1 decided to continue with the \simd[<T, Abi>] class template, with the addition of a new Abi type that denotes a user-requested number of elements in the vector (\fixedsizeN).
 This has the following implications:
 \begin{itemize}
   \item There is only one class template with a common interface for \textit{fundamental} and \textit{arbitrary} (\fixedsize) vector types.
-  \item There are slight differences in the conversion semantics for \datapar types with the \fixedsize Abi type.
+  \item There are slight differences in the conversion semantics for \simd types with the \fixedsize Abi type.
     This may look like the \code{vector<bool>} mistake all over again.
     I'll argue below why I believe this is not the case.
   \item The \textit{fundamental} class instances could be implemented in such a way that they do not guarantee ABI compatibility on a given architecture where translation units are compiled with different compiler flags (for micro-architectural differences).
@@ -165,43 +165,43 @@ This has the following implications:
 
 The conversion differences between the \textit{fundamental} and \fixedsize class template instances are the main motivation for having a distinction (cf. discussion above).
 The differences are chosen such that, in general, \textit{fundamental} types are more restrictive and do not turn into \fixedsize types on any operation that involves no \fixedsize types.
-Operations of \fixedsize types allow easier use of mixed precision code as long as no elements need to be dropped / generated (i.e. the number of elements of all involved \datapar objects is equal or a builtin arithmetic type is broadcast).
+Operations of \fixedsize types allow easier use of mixed precision code as long as no elements need to be dropped / generated (i.e. the number of elements of all involved \simd objects is equal or a builtin arithmetic type is broadcast).
 
 Examples:
 
 \begin{enumerate}
   \item Mixed \intt--\float operations
 \smallskip\begin{lstlisting}[style=Vc,numbers=left]
-using floatv = datapar<float>;  // native ABI
-using float_sized_abi = datapar_abi::fixed_size<floatv::size()>;
-using intv = datapar<int, float_sized_abi>;
+using floatv = simd<float>;  // native ABI
+using float_sized_abi = simd_abi::fixed_size<floatv::size()>;
+using intv = simd<int, float_sized_abi>;
 
 auto x = floatv() + intv();/*! \label{lstline:1} */
 intv y = floatv() + intv();/*! \label{lstline:2} */
 \end{lstlisting}
     Line \ref{lstline:1} is well-formed:
     It states that $N$ (= \type{floatv}\code{::size()}) additions shall be executed concurrently.
-    The type of \code{x} is \datapar[<\float{}>], because it stores $N$ elements and both types \type{intv} and \type{floatv} are implicitly convertible to \datapar[<\float{}>].
-    Line \ref{lstline:2} is also well-formed because implicit conversion from \datapar[<\type T, \type{Abi}>] to \datapar[<\type U, \fixedsizeN{}>] is allowed whenever \code{N == \datapar{}<\type T, \type{Abi}>::size()}.
+    The type of \code{x} is \simd[<\float{}>], because it stores $N$ elements and both types \type{intv} and \type{floatv} are implicitly convertible to \simd[<\float{}>].
+    Line \ref{lstline:2} is also well-formed because implicit conversion from \simd[<\type T, \type{Abi}>] to \simd[<\type U, \fixedsizeN{}>] is allowed whenever \code{N == \simd{}<\type T, \type{Abi}>::size()}.
 
   \item Native \intt vectors
 \smallskip\begin{lstlisting}[style=Vc,numbers=left]
-using intv = datapar<int>;  // native ABI
-using int_sized_abi = datapar_abi::fixed_size<intv::size()>;
-using floatv = datapar<float, int_sized_abi>;
+using intv = simd<int>;  // native ABI
+using int_sized_abi = simd_abi::fixed_size<intv::size()>;
+using floatv = simd<float, int_sized_abi>;
 
 auto x = floatv() + intv();/*! \label{lstline:3} */
 intv y = floatv() + intv();/*! \label{lstline:4} */
 \end{lstlisting}
     Line \ref{lstline:3} is well-formed:
     It states that $N$ (= \type{intv}\code{::size()}) additions shall be executed concurrently.
-    The type of \code{x} is \datapar[<\floatv{}, \type{int_sized_abi}>] (i.e. \type{floatv}) and never \datapar[<\float{}>], because \ldots
+    The type of \code{x} is \simd[<\floatv{}, \type{int_sized_abi}>] (i.e. \type{floatv}) and never \simd[<\float{}>], because \ldots
     \begin{enumerate}
       \item[\ldots] the \type{Abi} types of \type{intv} and \type{floatv} are not equal.
-      \item[\ldots] either \code{\datapar[<\float{}>]::size() != N} or \type{intv} is not implicitly convertible to \datapar[<\float{}>].
+      \item[\ldots] either \code{\simd[<\float{}>]::size() != N} or \type{intv} is not implicitly convertible to \simd[<\float{}>].
       \item[\ldots] the last rule for \commonabi{V0}{V1}{T} sets the \type{Abi} type to \type{int_sized_abi}.
     \end{enumerate}
-    Line \ref{lstline:4} is also well-formed because implicit conversion from \datapar[<\type T, \fixedsizeN{}>] to \datapar[<\type U, \type{Abi}>] is allowed whenever \code{N == \datapar{}<\type U, \type{Abi}>::size()}.
+    Line \ref{lstline:4} is also well-formed because implicit conversion from \simd[<\type T, \fixedsizeN{}>] to \simd[<\type U, \type{Abi}>] is allowed whenever \code{N == \simd{}<\type U, \type{Abi}>::size()}.
 \end{enumerate}
 
 
@@ -209,14 +209,14 @@ intv y = floatv() + intv();/*! \label{lstline:4} */
 The presence of a \code{native_handle} function for accessing an internal data member such as e.g. a vector builtin or SIMD intrinsic type is seen as an important feature for adoption in the target communities.
 Without such a handle the user is constrained to work within the (limited) API defined by the standard.
 Many SIMD instruction sets have domain-specific instructions that will not easily be usable (if at all) via the standardized interface.
-A user considering whether to use \datapar or a SIMD extension such as vector builtins or SIMD intrinsics might decide against \datapar just for fear of not being able to access all functionality.\footnote{
+A user considering whether to use \simd or a SIMD extension such as vector builtins or SIMD intrinsics might decide against \simd just for fear of not being able to access all functionality.\footnote{
   Whether that's a reasonable fear is a different discussion.
 }
 
 I would be happy to settle on an alternative to exposing an lvalue reference to a data member.
-Consider implementation-defined support casting (\code{static_cast}?) between \datapar and non-standard SIMD extension types.
+Consider implementation-defined support casting (\code{static_cast}?) between \simd and non-standard SIMD extension types.
 My understanding is that there could not be any normative wording about such a feature.
-However, I think it could be useful to add a non-normative note about making \code{static_cast}(?) able to convert between such non-standard extensions and \datapar.
+However, I think it could be useful to add a non-normative note about making \code{static_cast}(?) able to convert between such non-standard extensions and \simd.
 
 Guidance from SG1 at Oulu 2016:\\
 \wgPoll{Keep \code{native_handle} in the wording?}{0 & 6 & 3 & 3 & 0}
@@ -231,7 +231,7 @@ Many SIMD instruction sets allow more options, though:
 \end{itemize}
 In the Vc library I have added these as options in the load store flag parameter of the \code{load} and \code{store} functions.
 However, non-temporal loads \& stores and prefetching are also useful for the existing builtin types.
-I would like guidance on this question: should the general direction be to stick to \emph{only} alignment options for \datapar loads and stores?
+I would like guidance on this question: should the general direction be to stick to \emph{only} alignment options for \simd loads and stores?
 
 The other question is on the default of the load and store flags.
 Some argue for setting the default to \code{aligned}, as that's what the user should always aim for and is most efficient.
@@ -241,7 +241,7 @@ After the guidance from SG1 I changed the default to unaligned loads and stores 
 Changing the default is probably the worst that could be done, though.\footnote{As I realized too late.}
 For Vc 2.0 I will drop the default.
 
-For \datapar I prefer no default:
+For \simd I prefer no default:
 \begin{itemize}
   \item This makes it obvious that the API has the alignment option.
     Users should not just take the default and think no more of it.
@@ -257,14 +257,14 @@ The discussion made it clear that we only want to support alignment flags in the
 The other functionality is orthogonal.
 
 \subsection{Unary Minus Return Type}\label{sec:unary minus}
-The return type of \datapar[<\type T, \type{Abi}>::operator-()] is \datapar[<\type T, \type{Abi}>].
+The return type of \simd[<\type T, \type{Abi}>::operator-()] is \simd[<\type T, \type{Abi}>].
 This is slightly different to the behavior of the underlying element type \type T, if \type T is an integral type of lower integer conversion rank than \intt.
 In this case integral promotion promotes the type to \intt before applying unary minus.
 Thus, the expression \code{-T()} is of type \intt for all \type T with lower integer conversion rank than \intt.
 This is widening of the element size is likely unintended for SIMD vector types.
 
 Fundamental types with integer conversion rank greater than \intt are not promoted and thus a unary minus expression has unchanged type.
-This behavior is copied to element types of lower integer conversion rank for \datapar.
+This behavior is copied to element types of lower integer conversion rank for \simd.
 
 There may be one interesting alternative to pursue here:
 We can make it ill-formed to apply unary minus to unsigned integral types.
@@ -274,12 +274,12 @@ Anyone who wants to have the modulo behavior of a unary minus could still write 
 In Kona, LEWG asked why \code{max_fixed_size} is not dependent on \type T.
 After some consideration I am convinced that the correct solution is to make \code{max_fixed_size} a variable template, dependent on \type T.
 
-The reason to restrict the number of elements $N$ in a fixed-size \datapar type at all, is to inhibit misuse of the feature.
+The reason to restrict the number of elements $N$ in a fixed-size \simd type at all, is to inhibit misuse of the feature.
 The intended use of the fixed-size ABI, is to work with a number of elements that is somewhere in the region of the number of elements that can be processed efficiently concurrently in hardware.
 Implementations may want to use recursion to implement the fixed-size ABI.
 While such an implementation can, in theory, scale to any $N$, experience shows that compiler memory usage and compile times grow significantly for “too large” $N$.
 The optimizer also has a hard time to optimize register / stack allocation optimally if $N$ becomes “too large”.
-Unsuspecting users might not think of such issues and try to map their complete problem to a single \datapar object.
+Unsuspecting users might not think of such issues and try to map their complete problem to a single \simd object.
 Allowing implementations to restrict $N$ to a value that they can and want to support thus is useful for users and implementations.
 The value itself should not be prescribed by the standard as it is really just a QoI issue.
 
@@ -294,10 +294,10 @@ However, why should the user be able to query the maximum $N$ supported by the i
 Making the \code{max_fixed_size} dependent on \type T makes sense because most hardware can process a different number of elements in parallel depending on \type T.
 Thus, if an implementation wants to restrict $N$ to some sensible multiple of the hardware capabilities, the number must be dependent on \type T.
 
-In Kona, LEWG also asked whether there should be a provision in the standard to ensure that a native \datapar of 8-bit element type is convertible to a fixed-size \datapar of 64-bit element type.
-It was already there (\ref{datapar.fixedsize.def}: “for every supported \datapar[<T, A>] (see \ref{datapar.type requirements}), where \type A is an implementation-defined ABI tag, \code N $=$ \datapar[<T, A>::size()] must be supported”).
+In Kona, LEWG also asked whether there should be a provision in the standard to ensure that a native \simd of 8-bit element type is convertible to a fixed-size \simd of 64-bit element type.
+It was already there (\ref{simd.fixedsize.def}: “for every supported \simd[<T, A>] (see \ref{simd.type requirements}), where \type A is an implementation-defined ABI tag, \code N $=$ \simd[<T, A>::size()] must be supported”).
 Note that this does not place a lower bound on \code{max_fixed_size}.
-The wording allows implementations to support values for fixed-size \datapar that are larger than \code{max_fixed_size}.
+The wording allows implementations to support values for fixed-size \simd that are larger than \code{max_fixed_size}.
 I.e. $N \leq $ \code{max_fixed_size} works; whether $N > $ \code{max_fixed_size} works is unspecified.
 
 % vim: tw=0 sw=2 spell

@@ -1,7 +1,7 @@
 namespace std {
   namespace experimental {
     template <class M, class T> class const_where_expression {
-      const M& mask;  // exposition only
+      const M& simd_mask;  // exposition only
       T& data;        // exposition only
 
     public:

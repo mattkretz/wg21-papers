@@ -1,13 +1,13 @@
-\wgSubsection{Header \code{<datapar>} synopsis}{datapar.syn}
+\wgSubsection{Header \code{<simd>} synopsis}{simd.syn}
 \lstinputlisting[]{synopsis.cpp}
 
 \pnum
-The header \code{<datapar>} defines the class templates (\datapar, \mask, \type{const_where_expression}, and \type{where_expression}), several tag types and trait types, and a series of related function templates for concurrent manipulation of the values in \datapar and \mask objects.
+The header \code{<simd>} defines the class templates (\simd, \mask, \type{const_where_expression}, and \type{where_expression}), several tag types and trait types, and a series of related function templates for concurrent manipulation of the values in \simd and \mask objects.
 
-\wgSubsubsection{\datapar ABI tags}{datapar.abi}
+\wgSubsubsection{\simd ABI tags}{simd.abi}
 
 \begin{itemdecl}
-namespace datapar_abi {
+namespace simd_abi {
   struct scalar {};
   template <int N> struct fixed_size {};
   template <typename T> constexpr int max_fixed_size = implementation-defined;
@@ -17,41 +17,41 @@ namespace datapar_abi {
 \end{itemdecl}
 \begin{itemdescr}
   \pnum
-  An \emph{ABI tag} type indicates a choice of \targetArch dependent size and binary representation for \datapar and \mask objects.
+  An \emph{ABI tag} type indicates a choice of \targetArch dependent size and binary representation for \simd and \mask objects.
   The ABI tag, together with a given element type implies a number of elements.
-  ABI tag types are used as the second template argument to \datapar and \mask.
+  ABI tag types are used as the second template argument to \simd and \mask.
   \wgNote{
     The ABI tag is orthogonal to selecting the machine instruction set.
-    The selected machine instruction set limits the usable ABI tag types, though (see \ref{datapar.type requirements}).
-    The ABI tags enable users to safely pass \datapar and \mask objects between translation unit boundaries (e.g. function calls or I/O).
+    The selected machine instruction set limits the usable ABI tag types, though (see \ref{simd.type requirements}).
+    The ABI tags enable users to safely pass \simd and \mask objects between translation unit boundaries (e.g. function calls or I/O).
   }
 
   \pnum
-  Use of the \type{scalar} tag type forces \datapar and \mask to store a single component (i.e. \datapar{}\type{<T, datapar_abi::scalar>::size()} returns \code 1).
+  Use of the \type{scalar} tag type forces \simd and \mask to store a single component (i.e. \simd{}\type{<T, simd_abi::scalar>::size()} returns \code 1).
   \wgNote{\type{scalar} shall not be an alias for \type{fixed_size<1>}.}
 
-  \pnum\label{datapar.fixedsize.def}%
-  Use of the \fixedsizeN tag type forces \datapar and \mask to store and manipulate \code N components (i.e. \datapar{}\type{<T, \fixedsizeN{}>::size()} returns \code N).
+  \pnum\label{simd.fixedsize.def}%
+  Use of the \fixedsizeN tag type forces \simd and \mask to store and manipulate \code N components (i.e. \simd{}\type{<T, \fixedsizeN{}>::size()} returns \code N).
   An implementation must support at least any \code N $\in [1\ldots 32]$.
-  Additionally, for every supported \datapar[<T, A>] (see \ref{datapar.type requirements}), where \type A is an implementation-defined ABI tag, \code N $=$ \datapar[<T, A>::size()] must be supported.
+  Additionally, for every supported \simd[<T, A>] (see \ref{simd.type requirements}), where \type A is an implementation-defined ABI tag, \code N $=$ \simd[<T, A>::size()] must be supported.
 
   \wgNote{
-    An implementation may choose to forego ABI compatibility between differently compiled translation units for \datapar and \mask instantiations using the same \fixedsizeN tag.
-    Otherwise, the efficiency of \datapar[<T, Abi>] is likely to be better than for \datapar[<T, fixed_size<datapar_size_v<T, Abi>>>] (with \type{Abi} not a instance of \fixedsizescoped).
+    An implementation may choose to forego ABI compatibility between differently compiled translation units for \simd and \mask instantiations using the same \fixedsizeN tag.
+    Otherwise, the efficiency of \simd[<T, Abi>] is likely to be better than for \simd[<T, fixed_size<simd_size_v<T, Abi>>>] (with \type{Abi} not a instance of \fixedsizescoped).
   }
 
-  \pnum\label{datapar.maxfixedsize.def}%
-  The value of \code{max_fixed_size<T>} declares that an instance of \datapar[<T, fixed_size<N>>] with \code{N <= max_fixed_size<T>} is supported by the implementation.
+  \pnum\label{simd.maxfixedsize.def}%
+  The value of \code{max_fixed_size<T>} declares that an instance of \simd[<T, fixed_size<N>>] with \code{N <= max_fixed_size<T>} is supported by the implementation.
   \wgNote{
-    It is unspecified whether an implementation supports \datapar[<T, fixed_size<N>>] with \code{N > max_fixed_size<T>}.
+    It is unspecified whether an implementation supports \simd[<T, fixed_size<N>>] with \code{N > max_fixed_size<T>}.
     The value of \code{max_fixed_size<T>} may depend on compiler flags and may change between different compiler versions.
   }
 
   \pnum
-  An implementation may define additional ABI tag types in the datapar_abi namespace, to support other forms of data-parallel computation.
+  An implementation may define additional ABI tag types in the simd_abi namespace, to support other forms of data-parallel computation.
 
   \pnum
-  \type{datapar_abi::compatible<T>} is an alias for the ABI tag with the most efficient data parallel execution for the element type \type T that ensures ABI compatibility on the \targetArch.%
+  \type{simd_abi::compatible<T>} is an alias for the ABI tag with the most efficient data parallel execution for the element type \type T that ensures ABI compatibility on the \targetArch.%
   \comment[Alternative]{
     \type{compatible<T>} is an implementation-defined alias for an ABI tag.
     \wgNote{
@@ -70,7 +70,7 @@ namespace datapar_abi {
   }
 
   \pnum
-  \type{datapar_abi::native<T>} is an alias for the ABI tag with the most efficient data parallel execution for the element type \type T that is supported on the \currentTarget.%
+  \type{simd_abi::native<T>} is an alias for the ABI tag with the most efficient data parallel execution for the element type \type T that is supported on the \currentTarget.%
   \comment[Alternative]{
     \type{native<T>} is an implementation-defined alias for an ABI tag.
     \wgNote{
@@ -92,7 +92,7 @@ namespace datapar_abi {
   }
 \end{itemdescr}
 
-\wgSubsubsection{\datapar type traits}{datapar.traits}
+\wgSubsubsection{\simd type traits}{simd.traits}
 \begin{itemdecl}
 template <class T> struct is_abi_tag;
 \end{itemdecl}
@@ -101,10 +101,10 @@ template <class T> struct is_abi_tag;
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T> struct is_datapar;
+template <class T> struct is_simd;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum The type \type{is_datapar<T>} is a \UnaryTypeTrait with a \BaseCharacteristic of \type{true_type} if \type T is an instance of the \datapar class template, and \type{false_type} otherwise.
+  \pnum The type \type{is_simd<T>} is a \UnaryTypeTrait with a \BaseCharacteristic of \type{true_type} if \type T is an instance of the \simd class template, and \type{false_type} otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -121,15 +121,15 @@ template <class T, size_t N> struct abi_for_size { using type = implementation-d
   \pnum The member \type{type} shall be omitted if
   \begin{itemize}
     \item \type T is not a cv-unqualified floating-point or integral type except \bool.
-    \item or if \fixedsizeN is not supported (see \ref{datapar.fixedsize.def}).
+    \item or if \fixedsizeN is not supported (see \ref{simd.fixedsize.def}).
   \end{itemize}
 
   \pnum Otherwise, the member typedef \type{type} shall name an ABI tag type that satisfies
   \begin{itemize}
-    \item \code{datapar_size_v<T, type> == N},
-    \item \datapar[<T, type>] is default constructible (see \ref{datapar.type requirements}),
+    \item \code{simd_size_v<T, type> == N},
+    \item \simd[<T, type>] is default constructible (see \ref{simd.type requirements}),
   \end{itemize}
-  \code{datapar_abi::scalar} takes precedence over \fixedsize[<1>].
+  \code{simd_abi::scalar} takes precedence over \fixedsize[<1>].
   The precedence of implementation-defined ABI tags over \fixedsizeN is implementation-defined.
   \wgNote{
     It is expected that implementation-defined ABI tags can produce better optimizations and thus take precedence over \fixedsizeN.
@@ -137,21 +137,21 @@ template <class T, size_t N> struct abi_for_size { using type = implementation-d
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi = datapar_abi::compatible<T>> struct datapar_size;
+template <class T, class Abi = simd_abi::compatible<T>> struct simd_size;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\label{datapar_size}%
-  \type{datapar_size<T, Abi>} shall have no member \code{value} if either
+  \pnum\label{simd_size}%
+  \type{simd_size<T, Abi>} shall have no member \code{value} if either
   \begin{itemize}
     \item \type T is not a cv-unqualified floating-point or integral type except \bool,
     \item or \code{is_abi_tag_v<Abi>} is \false.
   \end{itemize}
-  \wgNote{The rules are different from \ref{datapar.deleted}}
+  \wgNote{The rules are different from \ref{simd.deleted}}
 
   \pnum
-  Otherwise, the type \type{datapar_size<T, Abi>} is a \BinaryTypeTrait with a \BaseCharacteristic of \type{integral_constant<size_t, N>} with \code{N} equal to the number of elements in a \datapar[<T, Abi>] object.
+  Otherwise, the type \type{simd_size<T, Abi>} is a \BinaryTypeTrait with a \BaseCharacteristic of \type{integral_constant<size_t, N>} with \code{N} equal to the number of elements in a \simd[<T, Abi>] object.
   \wgNote{
-    If \datapar[<T, Abi>] is not supported for the \currentTarget, \type{datapar_size<T, Abi>::value} produces the value \datapar[<T, Abi>::size()] would return if it were supported.
+    If \simd[<T, Abi>] is not supported for the \currentTarget, \type{simd_size<T, Abi>::value} produces the value \simd[<T, Abi>::size()] would return if it were supported.
   }
 
 \end{itemdescr}
@@ -165,19 +165,19 @@ template <class T, class U = typename T::value_type> struct memory_alignment;
   \begin{itemize}
     \item \type T is cv-qualified,
     \item or \type U is cv-qualified,
-    \item or \code{!is_datapar_v<T> \&\& !is_mask_v<T>},
-    \item or \code{is_datapar_v<T>} and \type U is not an arithmetic type or \type U is \bool,
+    \item or \code{!is_simd_v<T> \&\& !is_mask_v<T>},
+    \item or \code{is_simd_v<T>} and \type U is not an arithmetic type or \type U is \bool,
     \item or \code{is_mask_v<T>} and \type U is not \bool.
   \end{itemize}
 
   \pnum
   Otherwise, the type \type{memory_alignment<T, U>} is a \BinaryTypeTrait with a \BaseCharacteristic of \type{integral_constant<size_t, N>} for some implementation-defined \code{N}.
   \wgNote{
-    \code{value} identifies the alignment restrictions on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U (see \ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store}).
+    \code{value} identifies the alignment restrictions on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U (see \ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store}).
   }
 \end{itemdescr}
 
-\wgSubsubsection{Class templates \code{const_where_expression} and \code{where_expression}}{datapar.whereexpr}
+\wgSubsubsection{Class templates \code{const_where_expression} and \code{where_expression}}{simd.whereexpr}
 \lstinputlisting[]{whereexpression.cpp}
 
 \pnum The class templates \code{const_where_expression} and \code{where_expression<M, T>} combine a predicate and a value object to implement an interface that restricts assignments and/or operations on the value object to the elements selected via the predicate.
@@ -186,7 +186,7 @@ template <class T, class U = typename T::value_type> struct memory_alignment;
 
 \pnum The second template argument \type T must be a cv-unqualified or \const qualified type \type{U}.
 If \type M is \bool, \type{U} must be an arithmetic type.
-Otherwise, \type{U} must either be \type M or \type{M::datapar_type}.
+Otherwise, \type{U} must either be \type M or \type{M::simd_type}.
 
 \begin{itemdecl}
 const M& mask;  // exposition only

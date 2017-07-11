@@ -1,10 +1,10 @@
 \section{Naming}\label{sec:Naming}
 
-The name \datapar was chosen in SG1 after a short discussion, brainstorm session, and straw poll.
+The name \simd was chosen in SG1 after a short discussion, brainstorm session, and straw poll.
 The following will present naming ideas and a bit of discussion of pros and cons and make
 recommendations.
 
-\subsection{datapar}
+\subsection{simd}
 
 The class in question is an array of target-specific size, with elements of type T, and data parallel operation semantics.
 The actual memory layout and storage size is unspecified.
@@ -13,7 +13,7 @@ If the second template parameter is \code{fixed_size<N>}, an exact number of N e
 Operations on objects of the type execute the operation component-wise and concurrently.
 This allows the user to communicate data parallelism inherent in the problem at hand.
 An implementation might translate the data parallelism into SIMD instructions, GPU parallelism, serial execution, synchronized multi-core execution, or any mix thereof.
-The implementation is expected to provide guarantees about the resulting code gen depending on compiler flags and the given ABI parameter (second template parameter), e.g. “\code{datapar<int, datapar_abi::sse>} uses \code{xmm} registers for storage and all ISA extensions enabled via compiler flags.
+The implementation is expected to provide guarantees about the resulting code gen depending on compiler flags and the given ABI parameter (second template parameter), e.g. “\code{simd<int, simd_abi::sse>} uses \code{xmm} registers for storage and all ISA extensions enabled via compiler flags.
 
 \subsubsection{Naming Options}
 
@@ -22,7 +22,7 @@ The implementation is expected to provide guarantees about the resulting code ge
   \item \code{vec<T>}
   \item \code{vecpar<T>}
   \item \code{simd<T>}
-  \item \code{datapar<T>}
+  \item \code{simd<T>}
   \item \code{pack<T>}
   \item \code{simdarray<T>} / \code{simdvector<T>} / \code{vecarray<T>}
   \item \code{vectorize<T>} / \code{simdize<T>} / \code{vectize<T>} / \code{vectorized<T>} / \code{simdized<T>} / \code{vectized<T>}
@@ -96,7 +96,7 @@ The implementation is expected to provide guarantees about the resulting code ge
         \end{enumerate}
     \end{description}
 
-  \item \code{datapar<T>}
+  \item \code{simd<T>}
     \begin{description}
       \item[pro]
         \begin{enumerate}
@@ -176,7 +176,7 @@ The implementation is expected to provide guarantees about the resulting code ge
 I recommend to short-list to:
 \begin{itemize}
   \item \code{vec<T>}
-  \item \code{datapar<T>}
+  \item \code{simd<T>}
   \item \code{simd<T>}
   \item \code{vecpar<T>}
   \item \code{simdarray<T>}
@@ -186,8 +186,8 @@ I recommend to short-list to:
 
 The class in question is an array of target-specific size with elements of boolean value.
 The actual memory layout and storage size is unspecified.
-This type is the equivalence of \code{bool} for the \code{datapar<T>} types.
-It acts as the return type of \code{datapar} comparisons and can be used for write-masking, masked loads \& stores, and reductions to \code{bool}.
+This type is the equivalence of \code{bool} for the \code{simd<T>} types.
+It acts as the return type of \code{simd} comparisons and can be used for write-masking, masked loads \& stores, and reductions to \code{bool}.
 
 \subsubsection{Naming Options}
 
@@ -203,7 +203,7 @@ It acts as the return type of \code{datapar} comparisons and can be used for wri
 
 \subsubsection{Discussion}
 
-Depending on the name chosen for the “datapar” class, there are some natural candidates for the \code{mask} class.
+Depending on the name chosen for the “simd” class, there are some natural candidates for the \code{mask} class.
 In any case, the \code{mask} name is:
 \begin{enumerate}
   \item a term-of-art,
@@ -216,7 +216,7 @@ In any case, the \code{mask} name is:
 So I do not see a need for choosing a different (longer) name.
 
 \subsection{where}
-The “where function” wraps a \code{mask} object and a reference to a \code{datapar} or \code{mask} object to implement write-masking, and masked loads \& stores.
+The “where function” wraps a \code{mask} object and a reference to a \code{simd} or \code{mask} object to implement write-masking, and masked loads \& stores.
 The function acts as special syntax to express that e.g. assignment shall only happen at the element indexes where the mask object is \code{true}.
 The where function returns a temporary object (type \code{where_expression}) that implements the write-masked operations.
 
@@ -318,12 +318,12 @@ This suggests that there might not even be a need for allowing \code{where} or a
 If we want to follow that path, we might want to revisit masked reductions, which currently use a \code{const const_where_expression\&} parameter.
 
 \subsection{memload \& memstore}
-Loads and stores are the (low-level) conversions between arrays of \code{T} and objects of \code{datapar<T>}.
+Loads and stores are the (low-level) conversions between arrays of \code{T} and objects of \code{simd<T>}.
 Converting loads and stores additionally perform widening or narrowing conversions to/from arrays of \code{U}, which is convertible to/from \code{T}.
 
 \code{std::atomic} has member functions called \code{atomic::load} and \code{atomic::store}: \code{load} returns the value of the \code{atomic} with a given \code{memory_order}; \code{store} replaces the value of \code{atomic} with the given value using the given \code{memory_order}.
-\code{datapar::load} does the reverse of \code{atomic::load}: it loads \code{datapar::size()} consecutive values starting from the given pointer into the \code{datapar} object.
-\code{datapar::store} does the reverse of \code{atomic::store}: it stores \code{datapar::size()} values from the \code{datapar} object to the given pointer.
+\code{simd::load} does the reverse of \code{atomic::load}: it loads \code{simd::size()} consecutive values starting from the given pointer into the \code{simd} object.
+\code{simd::store} does the reverse of \code{atomic::store}: it stores \code{simd::size()} values from the \code{simd} object to the given pointer.
 
 \subsubsection{Naming Options}
 

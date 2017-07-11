@@ -1,59 +1,59 @@
 namespace std {
   namespace experimental {
-    template <class T, class Abi> class mask {
+    template <class T, class Abi> class simd_mask {
     public:
       using value_type = bool;
-      using reference = implementation-defined;  // see datapar::reference
-      using datapar_type = datapar<T, Abi>;
+      using reference = implementation-defined;  // see simd::reference
+      using simd_type = simd<T, Abi>;
       using size_type = size_t;
       using abi_type = Abi;
 
       static constexpr size_type size() noexcept;
 
-      mask() = default;
+      simd_mask() = default;
 
-      mask(const mask&) = default;
-      mask(mask&&) = default;
-      mask& operator=(const mask&) = default;
-      mask& operator=(mask&&) = default;
+      simd_mask(const simd_mask&) = default;
+      simd_mask(simd_mask&&) = default;
+      simd_mask& operator=(const simd_mask&) = default;
+      simd_mask& operator=(simd_mask&&) = default;
 
       // broadcast constructor
-      explicit mask(value_type) noexcept;
+      explicit simd_mask(value_type) noexcept;
 
       // implicit type conversion constructor
-      template <class U> mask(const mask<U, datapar_abi::fixed_size<size()>>&) noexcept;
+      template <class U> simd_mask(const simd_mask<U, simd_abi::fixed_size<size()>>&) noexcept;
 
       // load constructor
-      template <class Flags> mask(const value_type* mem, Flags);
+      template <class Flags> simd_mask(const value_type* mem, Flags);
 
-      // loads [mask.load]
+      // loads [simd_mask.load]
       template <class Flags> void memload(const value_type* mem, Flags);
 
-      // stores [mask.store]
+      // stores [simd_mask.store]
       template <class Flags> void memstore(value_type* mem, Flags) const;
 
-      // scalar access [mask.subscr]
+      // scalar access [simd_mask.subscr]
       reference operator[](size_type);
       value_type operator[](size_type) const;
 
-      // unary operators [mask.unary]
-      mask operator!() const noexcept;
+      // unary operators [simd_mask.unary]
+      simd_mask operator!() const noexcept;
 
-      // mask binary operators [mask.binary]
-      friend mask operator&&(const mask&, const mask&) noexcept;
-      friend mask operator||(const mask&, const mask&) noexcept;
-      friend mask operator& (const mask&, const mask&) noexcept;
-      friend mask operator| (const mask&, const mask&) noexcept;
-      friend mask operator^ (const mask&, const mask&) noexcept;
+      // simd_mask binary operators [simd_mask.binary]
+      friend simd_mask operator&&(const simd_mask&, const simd_mask&) noexcept;
+      friend simd_mask operator||(const simd_mask&, const simd_mask&) noexcept;
+      friend simd_mask operator& (const simd_mask&, const simd_mask&) noexcept;
+      friend simd_mask operator| (const simd_mask&, const simd_mask&) noexcept;
+      friend simd_mask operator^ (const simd_mask&, const simd_mask&) noexcept;
 
-      // mask compound assignment [mask.cassign]
-      friend mask& operator&=(mask&, const mask&) noexcept;
-      friend mask& operator|=(mask&, const mask&) noexcept;
-      friend mask& operator^=(mask&, const mask&) noexcept;
+      // simd_mask compound assignment [simd_mask.cassign]
+      friend simd_mask& operator&=(simd_mask&, const simd_mask&) noexcept;
+      friend simd_mask& operator|=(simd_mask&, const simd_mask&) noexcept;
+      friend simd_mask& operator^=(simd_mask&, const simd_mask&) noexcept;
 
-      // mask compares [mask.comparison]
-      friend mask operator==(const mask&, const mask&) noexcept;
-      friend mask operator!=(const mask&, const mask&) noexcept;
+      // simd_mask compares [simd_mask.comparison]
+      friend simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
+      friend simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
     };
   }
 }

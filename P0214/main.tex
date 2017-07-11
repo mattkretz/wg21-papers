@@ -18,24 +18,23 @@
   \end{itemize}
 }
 
-\usepackage{typenames}
 \usepackage{mymacros}
 \usepackage{wg21}
 \usepackage{underscore}
 
 \addbibresource{extra.bib}
 
-\newcommand\datapar[1][]{\type{datapar#1}\xspace}
+\newcommand\simd[1][]{\type{simd#1}\xspace}
 \newcommand\valuetype{\type{value\_type}\xspace}
 \newcommand\referencetype{\type{reference}\xspace}
 \newcommand\whereexpression{\type{where\_expression}\xspace}
-\newcommand\simdcast{\code{datapar\_cast}\xspace}
-\newcommand\mask[1][]{\type{mask#1}\xspace}
-\newcommand\fixedsizeN{\type{datapar\_abi::fixed\_size<N>}\xspace}
-\newcommand\fixedsizescoped{\type{datapar\_abi::fixed\_size}\xspace}
+\newcommand\simdcast{\code{simd\_cast}\xspace}
+\newcommand\mask[1][]{\type{simd\_mask#1}\xspace}
+\newcommand\fixedsizeN{\type{simd\_abi::fixed\_size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{simd\_abi::fixed\_size}\xspace}
 \newcommand\fixedsize{\type{fixed\_size}\xspace}
-\newcommand\dataparEP{\code{execution\_policy::}\type{datapar}\xspace}
-\newcommand\seqEP{\code{execution\_policy::}\type{seq}\xspace}
+\newcommand\simdEP{\code{execution::}\type{simd}\xspace}
+\newcommand\seqEP{\code{execution::}\type{seq}\xspace}
 
 \newcommand\flagsRemarks[1]{
   \pnum\requires
@@ -87,23 +86,23 @@
 \subsection{Changes from R0}
 Previous revision: \parencite{P0214R0}.
 \begin{itemize}
-  \item Extended the \code{datapar_abi} tag types with a \code{fixed_size<N>} tag to handle arbitrarily sized vectors (\ref{sec:datapar.abi}).
-  \item Converted \code{memory_alignment} into a non-member trait (\ref{sec:datapar.traits}).
-  \item Extended implicit conversions to handle \fixedsizeN (\ref{sec:datapar.ctor}).
-  \item Extended binary operators to convert correctly with \fixedsizeN (\ref{sec:datapar.binary}).
-  \item Dropped the section on “\datapar logical operators”. Added a note that the omission is deliberate (\ref{sec:datapar.logical}).
-  \item Added logical and bitwise operators to \mask (\ref{sec:mask.binary}).
-  \item Modified \mask compares to work better with implicit conversions (\ref{sec:mask.comparison}).
-  \item Modified \code{where} to support different Abi tags on the \mask and \datapar arguments (\ref{sec:mask.where}).
+  \item Extended the \code{simd_abi} tag types with a \code{fixed_size<N>} tag to handle arbitrarily sized vectors (\ref{sec:simd.abi}).
+  \item Converted \code{memory_alignment} into a non-member trait (\ref{sec:simd.traits}).
+  \item Extended implicit conversions to handle \fixedsizeN (\ref{sec:simd.ctor}).
+  \item Extended binary operators to convert correctly with \fixedsizeN (\ref{sec:simd.binary}).
+  \item Dropped the section on “\simd logical operators”. Added a note that the omission is deliberate (\ref{sec:simd.logical}).
+  \item Added logical and bitwise operators to \mask (\ref{sec:simd_mask.binary}).
+  \item Modified \mask compares to work better with implicit conversions (\ref{sec:simd_mask.comparison}).
+  \item Modified \code{where} to support different Abi tags on the \mask and \simd arguments (\ref{sec:simd_mask.where}).
   \item Converted the load functions to non-member functions.
     SG1 asked for guidance from LEWG whether a load-expression or a template parameter to load is more appropriate.
   \item Converted the store functions to non-member functions to be consistent with the load functions.
   \item Added a note about masked stores not invoking out-of-bounds accesses for masked-off elements of the vector.
-  \item Converted the return type of \datapar{}\code{::operator[]} to return a smart reference instead of an lvalue reference.
-  \item Modified the wording of \mask{}\code{::operator[]} to match the reference type returned from \datapar{}\code{::operator[]}.
-  \item Added non-trig/pow/exp/log math functions on \datapar.
+  \item Converted the return type of \simd{}\code{::operator[]} to return a smart reference instead of an lvalue reference.
+  \item Modified the wording of \mask{}\code{::operator[]} to match the reference type returned from \simd{}\code{::operator[]}.
+  \item Added non-trig/pow/exp/log math functions on \simd.
   \item Added discussion on defaulting load/store flags.
-  \item Added sum, product, min, and max reductions for \datapar.
+  \item Added sum, product, min, and max reductions for \simd.
   \item Added load constructor.
   \item Modified the wording of \code{native_handle()} to make the existence of the functions implementation-defined, instead of only the return type.
     Added a section in the discussion (cf. Section \ref{sec:native}).
@@ -115,7 +114,7 @@ Previous revision: \parencite{P0214R0}.
 \subsection{Changes from R1}
 Previous revision: \parencite{P0214R1}.
 \begin{itemize}
-    \item Fixed converting constructor synopsis of \datapar and \mask to also allow varying Abi types.
+    \item Fixed converting constructor synopsis of \simd and \mask to also allow varying Abi types.
     \item Modified the wording of \code{\mask{}::native_handle()} to make the existence of the functions implementation-defined.
     \item Updated the discussion of member types to reflect the changes in R1.
     \item Added all previous SG1 straw poll results.
@@ -123,10 +122,10 @@ Previous revision: \parencite{P0214R1}.
     \item Dropped table of math functions.
     \item Be more explicit about the implementation-defined Abi types.
     \item Discussed resolution of the \fixedsizeN design (\ref{sec:fixedsize progress}).
-    \item Made the \type{compatible} and \type{native} ABI aliases depend on \type T (\ref{sec:datapar.abi}).
-    \item Added \code{max_fixed_size} constant (\ref{datapar.maxfixedsize.def}).
+    \item Made the \type{compatible} and \type{native} ABI aliases depend on \type T (\ref{sec:simd.abi}).
+    \item Added \code{max_fixed_size} constant (\ref{simd.maxfixedsize.def}).
     \item Added masked loads.
-    \item Added rationale for return type of \datapar[::operator-()] (\ref{sec:unary minus}).
+    \item Added rationale for return type of \simd[::operator-()] (\ref{sec:unary minus}).
   \color{black}\item[---] SG1 guidance:
     \item Dropped the default load / store flags.
     \item Renamed the (un)aligned flags to \code{element_aligned} and \code{vector_aligned}.
@@ -136,44 +135,44 @@ Previous revision: \parencite{P0214R1}.
   \color{black}\item[---] LEWG (small group) guidance:
     \item Dropped \code{native_handle} and add non-normative wording for supporting \code{static_cast} to implementation-defined SIMD extensions.
     \item Dropped non-member load and store functions.
-    Instead have \code{copy_from} and \code{copy_to} member functions for loads and stores. (\ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store})
+    Instead have \code{copy_from} and \code{copy_to} member functions for loads and stores. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
     (Did not use the \code{load} and \code{store} names because of the unfortunate inconsistency with \std\type{atomic}.)
-    \item Added algorithm overloads for \datapar reductions.
-    Integrate with \code{where} to enable masked reductions. (\ref{sec:datapar.reductions})
+    \item Added algorithm overloads for \simd reductions.
+    Integrate with \code{where} to enable masked reductions. (\ref{sec:simd.reductions})
     This made it necessary to spell out the class \type{where_expression}.
 \end{itemize}
 \subsection{Changes from R2}
 Previous revision: \parencite{P0214R2}.
 \begin{itemize}
-    \item Fixed return type of masked \code{reduce} (\ref{sec:datapar.reductions}).
-    \item Added binary \code{min}, \code{max}, \code{minmax}, and \code{clamp} (\ref{sec:datapar.alg}).
-    \item Moved member \code{min} and \code{max} to non-member \code{hmin} and \code{hmax}, which cannot easily be optimized from \code{reduce}, since no function object such as \code{std::plus} exists (\ref{sec:datapar.reductions}).
-    \item Fixed neutral element of masked \code{hmin}/\code{hmax} and drop UB (\ref{sec:datapar.reductions}).
+    \item Fixed return type of masked \code{reduce} (\ref{sec:simd.reductions}).
+    \item Added binary \code{min}, \code{max}, \code{minmax}, and \code{clamp} (\ref{sec:simd.alg}).
+    \item Moved member \code{min} and \code{max} to non-member \code{hmin} and \code{hmax}, which cannot easily be optimized from \code{reduce}, since no function object such as \code{std::plus} exists (\ref{sec:simd.reductions}).
+    \item Fixed neutral element of masked \code{hmin}/\code{hmax} and drop UB (\ref{sec:simd.reductions}).
     \item Removed remaining reduction member functions in favor of non-member \code{reduce} (as requested by LEWG).
-    \item Replaced \code{init} parameter of masked \code{reduce} with \code{neutral_element} (\ref{sec:datapar.reductions}).
-    \item Extend \type{where_expression} to support \const \datapar objects (\ref{sec:mask.where}).
-    \item Fixed missing \code{explicit} keyword on \code{mask(bool)} constructor (\ref{sec:mask.ctor}).
-    \item Made binary operators for \datapar and \mask friend functions of \datapar and \mask, simplifying the SFINAE requirements considerably (\ref{sec:datapar.binary}, \ref{sec:mask.binary}).
-    \item Restricted broadcasts to only allow non-narrowing conversions (\ref{sec:datapar.ctor}).
-    \item Restricted datapar to datapar conversions to only allow non-narrowing conversions with \type{fixed_size} ABI (\ref{sec:datapar.ctor}).
-    \item Added generator constructor (as discussed in LEWG in Issaquah) (\ref{sec:datapar.ctor}).
-    \item Renamed \code{copy_from} to \code{memload} and \code{copy_to} to \code{memstore}. (\ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store})
-    \item Documented effect of \type{overaligned_tag<N>} as \type{Flags} parameter to load/store. (\ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store})
-    \item Clarified cv requirements on \type T parameter of \datapar and \mask.
-    \item Allowed all implicit \mask conversions with \fixedsize ABI and equal size (\ref{sec:mask.ctor}).
+    \item Replaced \code{init} parameter of masked \code{reduce} with \code{neutral_element} (\ref{sec:simd.reductions}).
+    \item Extend \type{where_expression} to support \const \simd objects (\ref{sec:simd_mask.where}).
+    \item Fixed missing \code{explicit} keyword on \code{simd_mask(bool)} constructor (\ref{sec:simd_mask.ctor}).
+    \item Made binary operators for \simd and \mask friend functions of \simd and \mask, simplifying the SFINAE requirements considerably (\ref{sec:simd.binary}, \ref{sec:simd_mask.binary}).
+    \item Restricted broadcasts to only allow non-narrowing conversions (\ref{sec:simd.ctor}).
+    \item Restricted simd to simd conversions to only allow non-narrowing conversions with \type{fixed_size} ABI (\ref{sec:simd.ctor}).
+    \item Added generator constructor (as discussed in LEWG in Issaquah) (\ref{sec:simd.ctor}).
+    \item Renamed \code{copy_from} to \code{memload} and \code{copy_to} to \code{memstore}. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
+    \item Documented effect of \type{overaligned_tag<N>} as \type{Flags} parameter to load/store. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
+    \item Clarified cv requirements on \type T parameter of \simd and \mask.
+    \item Allowed all implicit \mask conversions with \fixedsize ABI and equal size (\ref{sec:simd_mask.ctor}).
     \item Made increment and decrement of \type{where_expression} return \type{void}.
-    \item Added \code{static_datapar_cast} for simple casts (\ref{sec:datapar.casts}).
-    \item Clarified default constructor (\ref{sec:datapar.overview}, \ref{sec:datapar.overview}).
-    \item Clarified \datapar and \mask with invalid template parameters to be complete types with deleted constructors, destructor, and assignment (\ref{sec:datapar.overview}, \ref{sec:datapar.overview}).
-    \item Wrote a new subsection for a detailed description of \type{where_expression} (\ref{sec:datapar.whereexpr}).
-    \item Moved masked loads and stores from \datapar and \mask to \type{where_expression} (\ref{sec:datapar.whereexpr}).
-          This required two more overloads of \code{where} to support value objects of type \mask (\ref{sec:mask.where}).
-    \item Removed \type{where_expression}\code{::operator!} (\ref{sec:datapar.whereexpr}).
-    \item Added aliases \type{native_datapar}, \type{native_mask}, \type{fixed_size_datapar}, \type{fixed_size_mask} (\ref{sec:datapar.syn}).
-    \item Removed \bool overloads of mask reductions awaiting a better solution (\ref{sec:mask.reductions}).
-    \item Removed special math functions with \code f and \code l suffix and \code l and \code{ll} prefix (\ref{sec:datapar.math}).
-    \item Modified special math functions with mixed types to use \type{fixed_size} instead of \code{abi_for_size} (\ref{sec:datapar.math}).
-    \item Added simple ABI cast functions \code{to_fixed_size}, \code{to_native}, and \code{to_compatible} (\ref{sec:datapar.casts}).
+    \item Added \code{static_simd_cast} for simple casts (\ref{sec:simd.casts}).
+    \item Clarified default constructor (\ref{sec:simd.overview}, \ref{sec:simd.overview}).
+    \item Clarified \simd and \mask with invalid template parameters to be complete types with deleted constructors, destructor, and assignment (\ref{sec:simd.overview}, \ref{sec:simd.overview}).
+    \item Wrote a new subsection for a detailed description of \type{where_expression} (\ref{sec:simd.whereexpr}).
+    \item Moved masked loads and stores from \simd and \mask to \type{where_expression} (\ref{sec:simd.whereexpr}).
+          This required two more overloads of \code{where} to support value objects of type \mask (\ref{sec:simd_mask.where}).
+    \item Removed \type{where_expression}\code{::operator!} (\ref{sec:simd.whereexpr}).
+    \item Added aliases \type{native_simd}, \type{native_mask}, \type{fixed_size_simd}, \type{fixed_size_mask} (\ref{sec:simd.syn}).
+    \item Removed \bool overloads of mask reductions awaiting a better solution (\ref{sec:simd_mask.reductions}).
+    \item Removed special math functions with \code f and \code l suffix and \code l and \code{ll} prefix (\ref{sec:simd.math}).
+    \item Modified special math functions with mixed types to use \type{fixed_size} instead of \code{abi_for_size} (\ref{sec:simd.math}).
+    \item Added simple ABI cast functions \code{to_fixed_size}, \code{to_native}, and \code{to_compatible} (\ref{sec:simd.casts}).
 \end{itemize}
 
 \subsection{Changes from R3}
@@ -181,57 +180,57 @@ Previous revision: \parencite{P0214R3}.
 \begin{itemize}
   \itemheader{changes before Kona}
   \item Add special math overloads for signed char and short.
-        They are important to avoid widening to multiple SIMD registers and since no integer promotion is applied for \datapar types.
+        They are important to avoid widening to multiple SIMD registers and since no integer promotion is applied for \simd types.
   \item Editorial: Prefer \code{using} over \code{typedef}.
   \item Overload shift operators with \intt argument for the right hand side.
         This enables more efficient implementations.
         This signature is present in the Vc library, and was forgotten in the wording.
   \item Remove empty section about the omission of logical operators.
-  \item Modify \mask compares to return a \mask instead of \bool (\ref{sec:mask.comparison}).
+  \item Modify \mask compares to return a \mask instead of \bool (\ref{sec:simd_mask.comparison}).
         This resolves an inconsistency with all the other binary operators.
-  \item Editorial: Improve \referencetype member specification (\ref{sec:datapar.overview}).
-  \item Require \code{swap(v[0], v[1])} to be valid (\ref{sec:datapar.overview}).
-  \item Fixed inconsisteny of masked load constructor after move of \code{memload} to \type{where_expression} (\ref{sec:datapar.whereexpr}).
-  \item Editorial: Use Requires clause instead of Remarks to require the memory argument to loads and stores to be large enough (\ref{sec:datapar.whereexpr}, \ref{sec:datapar.load}, \ref{sec:datapar.store}, \ref{sec:mask.load}, \ref{sec:mask.store}).
-  \item Add a note to special math functions that precondition violation is UB (\ref{sec:datapar.math}).
-  \item Bugfix: Binary operators involving two \type{datapar::reference} objects must work (\ref{sec:datapar.overview}).
+  \item Editorial: Improve \referencetype member specification (\ref{sec:simd.overview}).
+  \item Require \code{swap(v[0], v[1])} to be valid (\ref{sec:simd.overview}).
+  \item Fixed inconsisteny of masked load constructor after move of \code{memload} to \type{where_expression} (\ref{sec:simd.whereexpr}).
+  \item Editorial: Use Requires clause instead of Remarks to require the memory argument to loads and stores to be large enough (\ref{sec:simd.whereexpr}, \ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store}).
+  \item Add a note to special math functions that precondition violation is UB (\ref{sec:simd.math}).
+  \item Bugfix: Binary operators involving two \type{simd::reference} objects must work (\ref{sec:simd.overview}).
   \item Editorial: Replace Note clauses in favor of \wgNote{}.
   \item Editorial: Replace UB Remarks on load/store alignment requirements with Requires clauses.
   \item Add an example section (\ref{sec:Examples}).
   \itemheader{changes after Kona}
   \item[---] design related:
   \item Readd \bool overloads of mask reductions and ensure that implicit conversions to \bool are ill-formed.
-  \item Clarify effects of using an ABI parameter that is not available on the target (\ref{datapar.deleted}, \ref{mask.deleted}, \ref{datapar_size}).
+  \item Clarify effects of using an ABI parameter that is not available on the target (\ref{simd.deleted}, \ref{simd_mask.deleted}, \ref{simd_size}).
   \item Split \whereexpression into \const and non-\const class templates.
   \item Add section on naming (\autoref{sec:Naming}).
   \item Discuss the questions/issues raised on \code{max_fixed_size} in Kona (\autoref{sec:maxfixedsize}).
   \item Make \code{max_fixed_size} dependent on \type{T}.
-  \item Clarify that converting loads and stores only work with arrays of non-bool arithmetic type (\ref{sec:datapar.load}, \ref{sec:datapar.store}).
-  \item Discuss \mask and \type{bitset} reduction interface differences (\autoref{sec:mask queries}).
-  \item Relax requirements on return type of generator function for the generator constructor (\ref{sec:datapar.ctor}).
-  \item Remove overly generic \code{datapar_cast} function.
+  \item Clarify that converting loads and stores only work with arrays of non-bool arithmetic type (\ref{sec:simd.load}, \ref{sec:simd.store}).
+  \item Discuss \mask and \type{bitset} reduction interface differences (\autoref{sec:simd_mask queries}).
+  \item Relax requirements on return type of generator function for the generator constructor (\ref{sec:simd.ctor}).
+  \item Remove overly generic \code{simd_cast} function.
   \item Add proposal for a widening cast function (\autoref{sec:widen}).
   \item Add proposal for \code{split} and \code{concat} cast functions (\autoref{sec:split and concat}).
   \item Add \code{noexcept} or “Throws: Nothing.” to most functions.
 
   \item[---] wording fixes \& improvements:
-  \item Remove non-normative noise about ABI tag types (\ref{sec:datapar.abi}).
-  \item Remove most of the text about vendor-extensions for ABI tag types, since it's QoI (\ref{sec:datapar.abi}).
-  \item Clarify the differences and intent of \type{compatible<T>} vs. \type{native<T>} (\ref{sec:datapar.abi}).
-  \item Move definition of \whereexpression out of the synopsis (\ref{sec:datapar.whereexpr}).
-  \item Editorial: Improve \code{is_datapar} and \code{is_mask} wording (\ref{sec:datapar.traits}).
-  \item Make \emph{ABI tag} a consistent term and add \code{is_abi_tag} trait (\ref{sec:datapar.traits}, \ref{sec:datapar.abi}).
-  \item Clarify that \fixedsizeN must support all \code{N} matching all possible implementation-defined ABI tags (\ref{sec:datapar.abi}).
-  \item Clarify \code{abi_for_size} wording (\ref{sec:datapar.traits}).
+  \item Remove non-normative noise about ABI tag types (\ref{sec:simd.abi}).
+  \item Remove most of the text about vendor-extensions for ABI tag types, since it's QoI (\ref{sec:simd.abi}).
+  \item Clarify the differences and intent of \type{compatible<T>} vs. \type{native<T>} (\ref{sec:simd.abi}).
+  \item Move definition of \whereexpression out of the synopsis (\ref{sec:simd.whereexpr}).
+  \item Editorial: Improve \code{is_simd} and \code{is_mask} wording (\ref{sec:simd.traits}).
+  \item Make \emph{ABI tag} a consistent term and add \code{is_abi_tag} trait (\ref{sec:simd.traits}, \ref{sec:simd.abi}).
+  \item Clarify that \fixedsizeN must support all \code{N} matching all possible implementation-defined ABI tags (\ref{sec:simd.abi}).
+  \item Clarify \code{abi_for_size} wording (\ref{sec:simd.traits}).
   \item Turn \code{memory_alignment} into a trait with a corresponding \code{memory_alignment_v} variable template.
-  \item Clarify \code{memory_alignment} wording; when it has no \code{value} member; and imply its value through a reference to the load and store functions (\ref{sec:datapar.traits}).
-  \item Remove exposition-only \type{where_expression} constructor and make exposition-only data members private (\ref{sec:datapar.whereexpr}).
+  \item Clarify \code{memory_alignment} wording; when it has no \code{value} member; and imply its value through a reference to the load and store functions (\ref{sec:simd.traits}).
+  \item Remove exposition-only \type{where_expression} constructor and make exposition-only data members private (\ref{sec:simd.whereexpr}).
   \item Editorial: use “shall not participate in overload resolution unless” consistently.
-  \item Add a note about variability of \code{max_fixed_size} (\ref{sec:datapar.abi}).
+  \item Add a note about variability of \code{max_fixed_size} (\ref{sec:simd.abi}).
   \item Editorial: use “\targetArch{}” and “\currentTarget{}” consistently.
   \item Add margin notes presenting a wording alternative that avoids “target system” and “target architecture” in normative text.
-  \item Specify result of masked reduce with empty mask (\ref{sec:datapar.reductions}).
-  \item Editorial: clean up the use of “supported” and resolve contradictions resulting from incorrect use of conventions in the rest of the standard text (\ref{datapar.type requirements}, \ref{mask.type requirements}, \ref{sec:datapar.traits}).
+  \item Specify result of masked reduce with empty mask (\ref{sec:simd.reductions}).
+  \item Editorial: clean up the use of “supported” and resolve contradictions resulting from incorrect use of conventions in the rest of the standard text (\ref{simd.type requirements}, \ref{simd_mask.type requirements}, \ref{sec:simd.traits}).
   \item Add \autoref{sec:feature-detection} \nameref{sec:feature-detection}.
 \end{itemize}
 
@@ -241,7 +240,10 @@ Previous revision: \parencite{P0214R4}.
   \itemheader{changes before Toronto}
   \item Changed \type{align_val_t} argument of \type{overaligned<N>} and \type{overaligned_tag<N>} to \type{size_t}.
     (Usage is otherwise too cumbersome.)
-  \itemheader{changes after Toronto}
+  \itemheader{changes after LEWG Review (Tue)}
+  \item Rename \code{datapar} to \code{simd} and \code{mask} to \code{simd_mask}.
+  \item Remove incorrect template parameters to scalar boolean reductions.
+  %\itemheader{changes after Toronto}
   %\todo New section on design decisions; discuss decisions made by SG1, LEWG, and through discussion with Jens; especially discuss the ABI parameter:
   %\begin{itemize}
   %  \item it provides the intended lowest level access to SIMD programming
@@ -254,7 +256,6 @@ Previous revision: \parencite{P0214R4}.
 \input{strawpolls}
 \input{intro}
 \input{examples}
-\input{naming}
 \input{wording}
 \input{widen}
 \input{split-concat}

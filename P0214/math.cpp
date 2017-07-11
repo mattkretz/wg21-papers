@@ -1,15 +1,14 @@
 namespace std {
   namespace experimental {
-    template <class Abi> using scharv = datapar<signed char, Abi>;  // exposition only
-    template <class Abi> using shortv = datapar<short, Abi>;  // exposition only
-    template <class Abi> using intv = datapar<int, Abi>;  // exposition only
-    template <class Abi> using longv = datapar<long int, Abi>;  // exposition only
-    template <class Abi> using llongv = datapar<long long int, Abi>;  // exposition only
-    template <class Abi> using floatv = datapar<float, Abi>;  // exposition only
-    template <class Abi> using doublev = datapar<double, Abi>;  // exposition only
-    template <class Abi> using ldoublev = datapar<long double, Abi>;  // exposition only
-    template <class T, class V>
-    using samesize = fixed_size_datapar<T, V::size()>;  // exposition only
+    template <class Abi> using scharv = simd<signed char, Abi>;                  // exposition only
+    template <class Abi> using shortv = simd<short, Abi>;                        // exposition only
+    template <class Abi> using intv = simd<int, Abi>;                            // exposition only
+    template <class Abi> using longv = simd<long int, Abi>;                      // exposition only
+    template <class Abi> using llongv = simd<long long int, Abi>;                // exposition only
+    template <class Abi> using floatv = simd<float, Abi>;                        // exposition only
+    template <class Abi> using doublev = simd<double, Abi>;                      // exposition only
+    template <class Abi> using ldoublev = simd<long double, Abi>;                // exposition only
+    template <class T, class V> using samesize = fixed_size_simd<T, V::size()>;  // exposition only
 
     template <class Abi> floatv<Abi> acos(floatv<Abi> x);
     template <class Abi> doublev<Abi> acos(doublev<Abi> x);
@@ -253,55 +252,55 @@ namespace std {
     template <class Abi> samesize<int, doublev<Abi>> fpclassify(doublev<Abi> x);
     template <class Abi> samesize<int, ldoublev<Abi>> fpclassify(ldoublev<Abi> x);
 
-    template <class Abi> mask<float, Abi> isfinite(floatv<Abi> x);
-    template <class Abi> mask<double, Abi> isfinite(doublev<Abi> x);
-    template <class Abi> mask<long double, Abi> isfinite(ldoublev<Abi> x);
+    template <class Abi> simd_mask<float, Abi> isfinite(floatv<Abi> x);
+    template <class Abi> simd_mask<double, Abi> isfinite(doublev<Abi> x);
+    template <class Abi> simd_mask<long double, Abi> isfinite(ldoublev<Abi> x);
 
     template <class Abi> samesize<int, floatv<Abi>> isinf(floatv<Abi> x);
     template <class Abi> samesize<int, doublev<Abi>> isinf(doublev<Abi> x);
     template <class Abi> samesize<int, ldoublev<Abi>> isinf(ldoublev<Abi> x);
 
-    template <class Abi> mask<float, Abi> isnan(floatv<Abi> x);
-    template <class Abi> mask<double, Abi> isnan(doublev<Abi> x);
-    template <class Abi> mask<long double, Abi> isnan(ldoublev<Abi> x);
+    template <class Abi> simd_mask<float, Abi> isnan(floatv<Abi> x);
+    template <class Abi> simd_mask<double, Abi> isnan(doublev<Abi> x);
+    template <class Abi> simd_mask<long double, Abi> isnan(ldoublev<Abi> x);
 
-    template <class Abi> mask<float, Abi> isnormal(floatv<Abi> x);
-    template <class Abi> mask<double, Abi> isnormal(doublev<Abi> x);
-    template <class Abi> mask<long double, Abi> isnormal(ldoublev<Abi> x);
+    template <class Abi> simd_mask<float, Abi> isnormal(floatv<Abi> x);
+    template <class Abi> simd_mask<double, Abi> isnormal(doublev<Abi> x);
+    template <class Abi> simd_mask<long double, Abi> isnormal(ldoublev<Abi> x);
 
-    template <class Abi> mask<float, Abi> signbit(floatv<Abi> x);
-    template <class Abi> mask<double, Abi> signbit(doublev<Abi> x);
-    template <class Abi> mask<long double, Abi> signbit(ldoublev<Abi> x);
+    template <class Abi> simd_mask<float, Abi> signbit(floatv<Abi> x);
+    template <class Abi> simd_mask<double, Abi> signbit(doublev<Abi> x);
+    template <class Abi> simd_mask<long double, Abi> signbit(ldoublev<Abi> x);
 
-    template <class Abi> mask<float, Abi> isgreater(floatv<Abi> x, floatv<Abi> y);
-    template <class Abi> mask<double, Abi> isgreater(doublev<Abi> x, doublev<Abi> y);
-    template <class Abi> mask<long double, Abi> isgreater(ldoublev<Abi> x, ldoublev<Abi> y);
+    template <class Abi> simd_mask<float, Abi> isgreater(floatv<Abi> x, floatv<Abi> y);
+    template <class Abi> simd_mask<double, Abi> isgreater(doublev<Abi> x, doublev<Abi> y);
+    template <class Abi> simd_mask<long double, Abi> isgreater(ldoublev<Abi> x, ldoublev<Abi> y);
 
-    template <class Abi> mask<float, Abi> isgreaterequal(floatv<Abi> x, floatv<Abi> y);
-    template <class Abi> mask<double, Abi> isgreaterequal(doublev<Abi> x, doublev<Abi> y);
-    template <class Abi> mask<long double, Abi> isgreaterequal(ldoublev<Abi> x, ldoublev<Abi> y);
+    template <class Abi> simd_mask<float, Abi> isgreaterequal(floatv<Abi> x, floatv<Abi> y);
+    template <class Abi> simd_mask<double, Abi> isgreaterequal(doublev<Abi> x, doublev<Abi> y);
+    template <class Abi> simd_mask<long double, Abi> isgreaterequal(ldoublev<Abi> x, ldoublev<Abi> y);
 
-    template <class Abi> mask<float, Abi> isless(floatv<Abi> x, floatv<Abi> y);
-    template <class Abi> mask<double, Abi> isless(doublev<Abi> x, doublev<Abi> y);
-    template <class Abi> mask<long double, Abi> isless(ldoublev<Abi> x, ldoublev<Abi> y);
+    template <class Abi> simd_mask<float, Abi> isless(floatv<Abi> x, floatv<Abi> y);
+    template <class Abi> simd_mask<double, Abi> isless(doublev<Abi> x, doublev<Abi> y);
+    template <class Abi> simd_mask<long double, Abi> isless(ldoublev<Abi> x, ldoublev<Abi> y);
 
-    template <class Abi> mask<float, Abi> islessequal(floatv<Abi> x, floatv<Abi> y);
-    template <class Abi> mask<double, Abi> islessequal(doublev<Abi> x, doublev<Abi> y);
-    template <class Abi> mask<long double, Abi> islessequal(ldoublev<Abi> x, ldoublev<Abi> y);
+    template <class Abi> simd_mask<float, Abi> islessequal(floatv<Abi> x, floatv<Abi> y);
+    template <class Abi> simd_mask<double, Abi> islessequal(doublev<Abi> x, doublev<Abi> y);
+    template <class Abi> simd_mask<long double, Abi> islessequal(ldoublev<Abi> x, ldoublev<Abi> y);
 
-    template <class Abi> mask<float, Abi> islessgreater(floatv<Abi> x, floatv<Abi> y);
-    template <class Abi> mask<double, Abi> islessgreater(doublev<Abi> x, doublev<Abi> y);
-    template <class Abi> mask<long double, Abi> islessgreater(ldoublev<Abi> x, ldoublev<Abi> y);
+    template <class Abi> simd_mask<float, Abi> islessgreater(floatv<Abi> x, floatv<Abi> y);
+    template <class Abi> simd_mask<double, Abi> islessgreater(doublev<Abi> x, doublev<Abi> y);
+    template <class Abi> simd_mask<long double, Abi> islessgreater(ldoublev<Abi> x, ldoublev<Abi> y);
 
-    template <class Abi> mask<float, Abi> isunordered(floatv<Abi> x, floatv<Abi> y);
-    template <class Abi> mask<double, Abi> isunordered(doublev<Abi> x, doublev<Abi> y);
-    template <class Abi> mask<long double, Abi> isunordered(ldoublev<Abi> x, ldoublev<Abi> y);
+    template <class Abi> simd_mask<float, Abi> isunordered(floatv<Abi> x, floatv<Abi> y);
+    template <class Abi> simd_mask<double, Abi> isunordered(doublev<Abi> x, doublev<Abi> y);
+    template <class Abi> simd_mask<long double, Abi> isunordered(ldoublev<Abi> x, ldoublev<Abi> y);
 
-    template <class V> struct datapar_div_t { V quot, rem; };
-    template <class Abi> datapar_div_t<scharv<Abi>> div(scharv<Abi> numer, scharv<Abi> denom);
-    template <class Abi> datapar_div_t<shortv<Abi>> div(shortv<Abi> numer, shortv<Abi> denom);
-    template <class Abi> datapar_div_t<intv<Abi>> div(intv<Abi> numer, intv<Abi> denom);
-    template <class Abi> datapar_div_t<longv<Abi>> div(longv<Abi> numer, longv<Abi> denom);
-    template <class Abi> datapar_div_t<llongv<Abi>> div(llongv<Abi> numer, llongv<Abi> denom);
+    template <class V> struct simd_div_t { V quot, rem; };
+    template <class Abi> simd_div_t<scharv<Abi>> div(scharv<Abi> numer, scharv<Abi> denom);
+    template <class Abi> simd_div_t<shortv<Abi>> div(shortv<Abi> numer, shortv<Abi> denom);
+    template <class Abi> simd_div_t<intv<Abi>> div(intv<Abi> numer, intv<Abi> denom);
+    template <class Abi> simd_div_t<longv<Abi>> div(longv<Abi> numer, longv<Abi> denom);
+    template <class Abi> simd_div_t<llongv<Abi>> div(llongv<Abi> numer, llongv<Abi> denom);
   }
 }

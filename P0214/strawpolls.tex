@@ -16,8 +16,8 @@
 \begin{itemize}
   \item \wgPoll{Should subscript operator return an lvalue reference?}{0  & 6 & 10 & 2 & 1}
   \item \wgPoll{Should subscript operator return a “smart reference”?}{1  & 7 & 10 & 0 & 0}
-  \item \wgPoll{Specify datapar width using ABI tag, with a special template tag for fixed size.}{3 & 7 & 0 & 0 & 1}
-  \item \wgPoll{Specify datapar width using <T, N, abi>, where abi is not specified by the user.}{1 & 2 & 5 & 2 & 1}
+  \item \wgPoll{Specify simd width using ABI tag, with a special template tag for fixed size.}{3 & 7 & 0 & 0 & 1}
+  \item \wgPoll{Specify simd width using <T, N, abi>, where abi is not specified by the user.}{1 & 2 & 5 & 2 & 1}
 \end{itemize}
 
 \subsection{SG1 at Oulu 2016}
@@ -29,7 +29,7 @@
 
 \subsection{LEWG at Issaquah 2016}
 \begin{itemize}
-  \item \wgPoll{Unary minus on unsigned datapar should be ill formed}{0 & 5 & 6 & 0 & 3}
+  \item \wgPoll{Unary minus on unsigned simd should be ill formed}{0 & 5 & 6 & 0 & 3}
   \item \wgUnanimous{Reductions only as free functions}
   \item \wgUnanimous{Jens should work with the author and return with an updated paper}
 \end{itemize}
@@ -38,27 +38,54 @@
 \begin{itemize}
   \item \wgUnanimous{Want \code{operator<<(signed)} to work except where it's undefined for the underlying integer?}
 
-  \item \wgPoll{Should there be overloads for \code{where} and (\mask and \datapar) reductions with \bool/builtin types in place of \mask/\datapar?}{1&5&6&1&0}
+  \item \wgPoll{Should there be overloads for \code{where} and (\mask and \simd) reductions with \bool/builtin types in place of \mask/\simd?}{1&5&6&1&0}
 
   \item \wgUnanimous{Should there be a named “widen” function that widens the element type \type T from (e.g.) \intt to \type{long}, but rejects \intt to \short?
   The number of elements is not changed.}
   cf. \autoref{sec:widen}
 
-\item \wgUnanimous{Should there be a named “concat” functions that concatenates several \datapar{}s with the same element type, but potentially different length?\\
-  The latter two operations are currently lumped together in \code{datapar_cast}.\\
-  The widen / concat questions, I think, comes down to whether we want the current \code{datapar_cast} or not.}
+\item \wgUnanimous{Should there be a named “concat” functions that concatenates several \simd{}s with the same element type, but potentially different length?\\
+  The latter two operations are currently lumped together in \code{simd_cast}.\\
+  The widen / concat questions, I think, comes down to whether we want the current \code{simd_cast} or not.}
   cf. \autoref{sec:split and concat}
 
 \item \wgUnanimous{We still have a few open ends on implicit conversions (\url{https://github.com/mattkretz/wg21-papers/issues/26}, \url{https://github.com/mattkretz/wg21-papers/issues/3}).
   The current paper is rather strict, there may be room for more implicit conversions without introducing safety problems.
 Should we postpone any changes in this area to after TS feedback?}
 
-\item \noindent Poll: Keep or drop \code{datapar_abi::max_fixed_size}? (cf. \url{https://github.com/mattkretz/wg21-papers/issues/38})\\
+\item \noindent Poll: Keep or drop \code{simd_abi::max_fixed_size}? (cf. \url{https://github.com/mattkretz/wg21-papers/issues/38})\\
   \hspace*{2em} Authors will come back with a proposal\par\medskip
   cf. \autoref{sec:maxfixedsize}
 
-\item \wgUnanimous{Add a list of possible names for “datapar” and “where” to the paper.}
+\item \wgUnanimous{Add a list of possible names for “simd” and “where” to the paper.}
   cf. \autoref{sec:Naming}
+\end{itemize}
+
+\subsection{LEWG at Toronto 2017}
+\begin{itemize}
+  \item \wgUnanimous{Use Option 3 (support both element type and \simd type as cast template argument, instead of just either one of them) for \code{static_simd_cast} and \code{simd_cast}.}
+
+  \item \wgUnanimous{Use \code{abi_for_size_t} instead of unconditionally using \code{fixed_size} for split and concat.
+  Revisit the question after TS feedback.}
+
+  \item \wgPoll{Name it \code{datapar} (in favor) or \code{simd} (against)?}
+    {1&4&1&5&4}
+    We want TS feedback on the name, i.e. whether anyone is confused about the applicability of the feature because of the name.
+
+  \item \wgPoll{Name \code{mask} (in favor) or \code{simdmask} (against)?}
+    {0&1&2&5&7}
+
+  \item \wgPoll{Name \code{simd_mask} (in favor) or \code{simdmask} (against)?}
+    {4&6&3&1&0}
+
+  \item \wgPoll{\code{where} (in favor) vs. \code{masked} (against)?}
+    {5&1&3&2&3}
+    No consensus for change, revisit after TS feedback.
+
+  \item \wgUnanimous{Keep \code{simd_mask} reductions as free functions with the current names.
+  Consider follow-up papers if any names need to be changed (e.g. for consistency).}
+
+  \item \wgPoll{Forward to LWG for TS}{11&2&0&0&0}
 \end{itemize}
 
 % vim: sw=2 sts=2 ai et tw=0

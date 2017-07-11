@@ -1,4 +1,4 @@
-using floatv = native_datapar<float>;
+using floatv = native_simd<float>;
 void f() {
   alignas(memory_alignment_v<floatv>) float data[N];
   fill_data(data);
