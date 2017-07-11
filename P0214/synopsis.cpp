@@ -49,7 +49,8 @@ namespace std {
     template <class T, int N> using fixed_size_mask = simd_mask<T, simd_abi::fixed_size<N>>;
 
     // casts [simd.casts]
-    template <class T, class U, class A> simd<T, /*see below*/> static_simd_cast(const simd<U, A>&);
+    template <class T, class U, class A> /*see below*/ simd_cast(const simd<U, A>&);
+    template <class T, class U, class A> /*see below*/ static_simd_cast(const simd<U, A>&);
 
     template <class T, class A>
     simd<T, simd_abi::fixed_size<simd_size_v<T, A>>> to_fixed_size(const simd<T, A>&) noexcept;

@@ -407,13 +407,39 @@ template <class M, class V> T hmax(const const_where_expression<M, V>& x);
 
 \wgSubsubsection{\simd casts}{simd.casts}
 \begin{itemdecl}
-template <class T, class U, class A>
-simd<T, /*see below*/> static_simd_cast(const simd<U, A>& x);
+template <class T, class U, class A> /*see below*/ simd_cast(const simd<U, A>& x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks The return type is \simd[<T, A>] if either \type U and \type T are equal or \type U and \type T are integral types that only differ in signedness.
+  \pnum\remarks Let \type{To} identify \type{T::\valuetype} if \code{is_simd_v<T>} or \type T otherwise.
+
+  \pnum\remarks The function shall not participate in overload resolution unless
+  \begin{itemize}
+    \item every possible value of type \type U can be represented with type \type{To}, and
+    \item either \code{!is_simd_v<T>} or \code{T::size()} is equal to \code{simd<U, A>::size()}.
+  \end{itemize}
+
+  \pnum\remarks If \code{is_simd_v<T>}, the return type is \type T.
+  Otherwise, if either \type U and \type T are equal or \type U and \type T are integral types that only differ in signedness, the return type is \simd[<T, A>].
   Otherwise, the return type is \simd[<T, \fixedsizescoped{}<\simd<U, A>::size()>>].
-  \pnum\returns A \simd object with the $i$-th element initialized to \code{static_cast<T>(x[i])}.
+
+  \pnum\returns A \simd object with the $i$-th element initialized to \code{static_cast<To>(x[i])}.
+
+  \pnum\throws Nothing.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class T, class U, class A> /*see below*/ static_simd_cast(const simd<U, A>& x);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks Let \type{To} identify \type{T::\valuetype} if \code{is_simd_v<T>} or \type T otherwise.
+
+  \pnum\remarks The function shall not participate in overload resolution unless either \code{!is_simd_v<T>} or \code{T::size()} is equal to \code{simd<U, A>::size()}.
+
+  \pnum\remarks If \code{is_simd_v<T>}, the return type is \type T.
+  Otherwise, if either \type U and \type T are equal or \type U and \type T are integral types that only differ in signedness, the return type is \simd[<T, A>].
+  Otherwise, the return type is \simd[<T, \fixedsizescoped{}<\simd<U, A>::size()>>].
+
+  \pnum\returns A \simd object with the $i$-th element initialized to \code{static_cast<To>(x[i])}.
 
   \pnum\throws Nothing.
 \end{itemdescr}
