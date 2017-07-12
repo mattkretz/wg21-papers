@@ -476,6 +476,44 @@ mask<T, simd_abi::compatible<T>> to_compatible(const simd_mask<T, simd_abi::fixe
   \pnum\returns An object with the $i$-th element initialized to \code{x[i]}.
 \end{itemdescr}
 
+\begin{itemdecl}
+template <size_t... Sizes, class T, class A>
+tuple<simd<T, abi_for_size_t<Sizes>>...> split(const simd<T, A>& x);
+template <size_t... Sizes, class T, class A>
+tuple<simd_mask<T, abi_for_size_t<Sizes>>...> split(const simd_mask<T, A>& x);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks These functions shall not participate in overload resolution unless the sum of all values in the \code{Sizes} pack is equal to \code{simd_size_v<T, A>}.
+  \pnum\returns A \type{tuple} of \simd/\mask objects with the $i$-th \simd/\mask element of the $j$-th \type{tuple} element initialized to the value of the element in \code x with index $i$ + partial sum of the first $j$ values in the \code{Sizes} pack.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class V, class T, class A>
+array<V, simd_size_v<T, A> / V::size()> split(const simd<T, A>& x);
+template <class V, class T, class A>
+array<V, simd_size_v<T, A> / V::size()> split(const simd_mask<T, A>& x);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\remarks These functions shall not participate in overload resolution unless
+  \begin{itemize}
+    \item \code{is_simd_v<V>} for the first signature / \code{is_mask_v<V>} for the second signature,
+    \item and \code{simd_size_v<T, A>} is an integral multiple of \code{V::size()}.
+  \end{itemize}
+
+  \pnum\returns An \type{array} of \simd/\mask objects with the $i$-th \simd/\mask element of the $j$-th \type{array} element initialized to the value of the element in \code x with index $i + j \cdot $\code{V::size()}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class T, class... As>
+simd<T, abi_for_size_t<T, (simd_size_v<T, As> + ...)>> concat(const simd<T, As>&... xs);
+template <class T, class... As>
+simd_mask<T, abi_for_size_t<T, (simd_size_v<T, As> + ...)>> concat(const simd_mask<T, As>&... xs);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns A \simd/\mask object initialized with the concatenated values in the \code{xs} pack of \simd/\mask objects.
+  The $i$-th \simd/\mask element of the $j$-th parameter in the \code{xs} pack is copied to the return value's element with index $i$ + partial sum of the \code{size()} of the first $j$ parameters in the \code{xs} pack.
+\end{itemdescr}
+
 \wgSubsubsection{\simd algorithms}{simd.alg}
 \begin{itemdecl}
 template <class T, class A>

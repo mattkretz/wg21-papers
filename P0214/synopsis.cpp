@@ -65,6 +65,20 @@ namespace std {
     template <class T, size_t N>
     simd_mask<T, simd_abi::compatible<T>> to_compatible(const simd_mask<T, simd_abi::fixed_size<N>>&) noexcept;
 
+    template <size_t... Sizes, class T, class A>
+    tuple<simd<T, abi_for_size_t<Sizes>>...> split(const simd<T, A>&);
+    template <size_t... Sizes, class T, class A>
+    tuple<simd_mask<T, abi_for_size_t<Sizes>>...> split(const simd_mask<T, A>&);
+    template <class V, class T, class A>
+    array<V, simd_size_v<T, A> / V::size()> split(const simd<T, A>&);
+    template <class V, class T, class A>
+    array<V, simd_size_v<T, A> / V::size()> split(const simd_mask<T, A>&);
+
+    template <class T, class... As>
+    simd<T, abi_for_size_t<T, (simd_size_v<T, As> + ...)>> concat(const simd<T, As>&...);
+    template <class T, class... As>
+    simd_mask<T, abi_for_size_t<T, (simd_size_v<T, As> + ...)>> concat(const simd_mask<T, As>&...);
+
     // reductions [simd_mask.reductions]
     template <class T, class Abi> bool  all_of(simd_mask<T, Abi>) noexcept;
     template <class T, class Abi> bool  any_of(simd_mask<T, Abi>) noexcept;
