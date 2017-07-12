@@ -45,8 +45,8 @@ namespace std {
 
     // class template simd_mask [simd_mask]
     template <class T, class Abi = simd_abi::compatible<T>> class simd_mask;
-    template <class T> using native_mask = simd_mask<T, simd_abi::native<T>>;
-    template <class T, int N> using fixed_size_mask = simd_mask<T, simd_abi::fixed_size<N>>;
+    template <class T> using native_simd_mask = simd_mask<T, simd_abi::native<T>>;
+    template <class T, int N> using fixed_size_simd_mask = simd_mask<T, simd_abi::fixed_size<N>>;
 
     // casts [simd.casts]
     template <class T, class U, class A> /*see below*/ simd_cast(const simd<U, A>&);
