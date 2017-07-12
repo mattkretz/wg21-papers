@@ -33,6 +33,9 @@ The alternative (preferred) is to use \simdcast consistently for all other conve
 
 After more discussion on the LEWG reflector, in Issaquah, and between me and Jens, we modified conversions to be even more conservative.
 No implicit conversion will ever allow a narrowing conversion of the element type (and signed - unsigned is narrowing in both directions).
+Also, implicit conversions are only enabled between \fixedsize instances.
+All other ABI tags require explicit conversions in every case.
+This is very conservative and I expect TS feedback on this issue to ask for more (non-narrowing) implicit conversions.
 
 \subsection{Broadcast Constructor}
 The \simd broadcast constructor is not declared \code{explicit} to ease the use of scalar prvalues in expressions involving data-parallel operations.
