@@ -6,7 +6,7 @@ void f() {
   for (; i + floatv::size() <= N; i += floatv::size()) {
     floatv v(&data[i], flags::vector_aligned);
     where(v > 100.f, v) = 100.f + (v - 100.f) * 0.1f;
-    v.memstore(&data[i], flags::vector_aligned);
+    v.copy_to(&data[i], flags::vector_aligned);
   }
   for (; i < N; ++i) {
     float x = data[i];

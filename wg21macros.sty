@@ -191,13 +191,18 @@
 
 \newcommand\guidance[1]{\textit{\small Requesting Guidance:} #1}
 
-\newcommand\wgPoll[2]{
-  \noindent Poll: #1\\
-  \begin{tabular}{r|r|r|r|r}
-    SF & F & N & A & SA \\
-    \hline
-    #2 \\
+\newcommand\wgVote[3]{
+  \noindent #1\\
+  \begin{tabular}{#2}
+    #3 \\
   \end{tabular}\par
+}
+\newcommand\wgPoll[2]{%
+  \wgVote{Poll: #1}
+  {r|r|r|r|r}
+  {SF & F & N & A & SA \\
+    \hline
+  #2}
 }
 \newcommand\wgUnanimous[1]{
   \noindent Poll: #1\\

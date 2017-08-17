@@ -11,8 +11,8 @@ namespace std {
       remove_const_t<T> operator-() const &&;
 
       template <class U, class Flags>
-      [[nodiscard]] V memload(const U* mem, Flags f) const &&;
-      template <class U, class Flags> void memstore(U* mem, Flags f) const &&;
+      [[nodiscard]] V copy_from(const U* mem, Flags f) const &&;
+      template <class U, class Flags> void copy_to(U* mem, Flags f) const &&;
     };
 
     template <class M, class T>
@@ -37,7 +37,7 @@ namespace std {
       void operator--();
       void operator--(int);
 
-      template <class U, class Flags> void memload(const U* mem, Flags);
+      template <class U, class Flags> void copy_from(const U* mem, Flags);
     };
   }
 }

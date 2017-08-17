@@ -123,7 +123,7 @@ template <class U, class Flags> simd(const U *mem, Flags);
 
 \wgSubsubsection{\simd load function}{simd.load}
 \begin{itemdecl}
-template <class U, class Flags> void memload(const U *mem, Flags);
+template <class U, class Flags> void copy_from(const U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This function shall not participate in overload resolution unless \type U is an \realArithmeticType.
@@ -134,7 +134,7 @@ template <class U, class Flags> void memload(const U *mem, Flags);
 
 \wgSubsubsection{\simd store function}{simd.store}
 \begin{itemdecl}
-template <class U, class Flags> void memstore(U *mem, Flags);
+template <class U, class Flags> void copy_to(U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks This function shall not participate in overload resolution unless \type U is an \realArithmeticType.

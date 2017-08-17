@@ -27,10 +27,10 @@ namespace std {
       template <class Flags> simd_mask(const value_type* mem, Flags);
 
       // loads [simd_mask.load]
-      template <class Flags> void memload(const value_type* mem, Flags);
+      template <class Flags> void copy_from(const value_type* mem, Flags);
 
       // stores [simd_mask.store]
-      template <class Flags> void memstore(value_type* mem, Flags) const;
+      template <class Flags> void copy_to(value_type* mem, Flags) const;
 
       // scalar access [simd_mask.subscr]
       reference operator[](size_type);

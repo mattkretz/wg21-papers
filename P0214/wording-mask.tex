@@ -53,7 +53,7 @@ template <class Flags> simd_mask(const value_type *mem, Flags);
 
 \wgSubsubsection{\mask load function}{simd_mask.load}
 \begin{itemdecl}
-template <class Flags> void memload(const value_type *mem, Flags);
+template <class Flags> void copy_from(const value_type *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Replaces the elements of the \mask object such that the $i$-th element is assigned with \code{mem[i]} \foralli.
@@ -63,7 +63,7 @@ template <class Flags> void memload(const value_type *mem, Flags);
 
 \wgSubsubsection{\mask store function}{simd_mask.store}
 \begin{itemdecl}
-template <class Flags> void memstore(value_type *mem, Flags);
+template <class Flags> void copy_to(value_type *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Copies all \mask elements as if \code{mem[i] = operator[](i)} \foralli.

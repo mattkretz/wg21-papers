@@ -212,7 +212,7 @@ remove_const_t<T> operator-() const &&;
 
 \begin{itemdecl}
 template <class U, class Flags>
-[[nodiscard]] remove_const_t<T> memload(const U *mem, Flags) const &&;
+[[nodiscard]] remove_const_t<T> copy_from(const U *mem, Flags) const &&;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks If \code{remove_const_t<T>} is \bool or \code{is_mask_v<remove_const_t<T>>}, the function shall not participate in overload resolution unless \type U is \bool.
@@ -227,7 +227,7 @@ template <class U, class Flags>
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags> void memstore(U *mem, Flags) const &&;
+template <class U, class Flags> void copy_to(U *mem, Flags) const &&;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks If \code{remove_const_t<T>} is \bool or \code{is_mask_v<remove_const_t<T>>}, the function shall not participate in overload resolution unless \type U is \bool.
@@ -277,7 +277,7 @@ void operator--(int);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags> void memload(const U *mem, Flags);
+template <class U, class Flags> void copy_from(const U *mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks If \type T is \bool or \code{is_mask_v<T>}, the function shall not participate in overload resolution unless \type U is \bool.

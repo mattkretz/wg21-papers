@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Data-Parallel Vector Types \& Operations}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P0214R5}
+\newcommand\wgDocumentNumber{D0214R6}
 \newcommand\wgGroup{LWG}
 \newcommand\wgTarget{Parallelism TS 2}
 \newcommand\wgAcknowledgements{
@@ -253,6 +253,12 @@ Previous revision: \parencite{P0214R4}.
   %  \item how the default was chosen, and why having a \emph{compatible} ABI be the default is the nicer default
   %  \item an ABI parameter influences the choice of function parameter passing, not necessarily the choice of instructions or even number of elements (e.g. an implementation can provide an ABI that passes via 128-bit registers but otherwise works with 256-bit registers)
   %\end{itemize}
+\end{itemize}
+
+\subsection{Changes from R5}
+Previous revision: \parencite{P0214R5}.
+\begin{itemize}
+  \item Renamed \code{memload} to \code{copy_from} and \code{memstore} to \code{copy_to}. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
 \end{itemize}
 
 \input{strawpolls}

@@ -30,10 +30,10 @@ namespace std {
       template <class U, class Flags> simd(const U* mem, Flags);
 
       // loads [simd.load]
-      template <class U, class Flags> void memload(const U* mem, Flags);
+      template <class U, class Flags> void copy_from(const U* mem, Flags);
 
       // stores [simd.store]
-      template <class U, class Flags> void memstore(U* mem, Flags) const;
+      template <class U, class Flags> void copy_to(U* mem, Flags) const;
 
       // scalar access [simd.subscr]
       reference operator[](size_type);
