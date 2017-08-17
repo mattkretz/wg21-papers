@@ -146,8 +146,6 @@ If \code{arbitrary<float>() * arbitrary<int>()} just happens to compile (which i
 Note that with the existence of the \type{fundamental} class template, the \code N parameter of the \type{arbitrary} class would not have a default value and thus force the user to think a second longer about portability.
 
 \subsubsection{Progress}\label{sec:fixedsize progress}
-\newcommand\common[2]{\code{\textit{common}(\type{#1}, \type{#2})}}
-\newcommand\commonabi[3]{\code{\textit{commonabi}(\type{#1}, \type{#2}, \type{#3})}}
 
 SG1 Guidance at JAX 2016:\\
 \wgPoll{Specify simd width using ABI tag, with a special template tag for fixed size.}{3 & 7 & 0 & 0 & 1}
@@ -202,7 +200,7 @@ intv y = floatv() + intv();/*! \label{lstline:4} */
     \begin{enumerate}
       \item[\ldots] the \type{Abi} types of \type{intv} and \type{floatv} are not equal.
       \item[\ldots] either \code{\simd[<\float{}>]::size() != N} or \type{intv} is not implicitly convertible to \simd[<\float{}>].
-      \item[\ldots] the last rule for \commonabi{V0}{V1}{T} sets the \type{Abi} type to \type{int_sized_abi}.
+      \item[\ldots] the last rule for \code{\textit{commonabi}(\type{V0}, \type{V1}, \type{T})} sets the \type{Abi} type to \type{int_sized_abi}.
     \end{enumerate}
     Line \ref{lstline:4} is also well-formed because implicit conversion from \simd[<\type T, \fixedsizeN{}>] to \simd[<\type U, \type{Abi}>] is allowed whenever \code{N == \simd{}<\type U, \type{Abi}>::size()}.
 \end{enumerate}
