@@ -1,6 +1,6 @@
-\newcommand\wgTitle{Integrating datapar with parallel algorithms and executors}
+\newcommand\wgTitle{Integrating simd with parallel algorithms}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D0350R1}
+\newcommand\wgDocumentNumber{P0350R1}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgAcknowledgements{
   This work was supported by GSI Helmholtzzentrum für Schwerionenforschung
@@ -17,15 +17,15 @@
 
 \addbibresource{extra.bib}
 
-\newcommand\datapar[1][]{\type{datapar#1}\xspace}
+\newcommand\simd[1][]{\type{simd#1}\xspace}
 \newcommand\valuetype{\type{value\textunderscore{}type}\xspace}
-\newcommand\simdcast{\code{datapar\textunderscore{}cast}\xspace}
+\newcommand\simdcast{\code{simd\textunderscore{}cast}\xspace}
 \newcommand\mask[1][]{\type{mask#1}\xspace}
-\newcommand\fixedsizeN{\type{datapar\textunderscore{}abi::fixed\textunderscore{}size<N>}\xspace}
-\newcommand\fixedsizescoped{\type{datapar\textunderscore{}abi::fixed\textunderscore{}size}\xspace}
+\newcommand\fixedsizeN{\type{simd\textunderscore{}abi::fixed\textunderscore{}size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{simd\textunderscore{}abi::fixed\textunderscore{}size}\xspace}
 \newcommand\fixedsize{\type{fixed\textunderscore{}size}\xspace}
-\newcommand\dataparEP{\code{execution::}\type{datapar}\xspace}
-\DeclareRobustCommand\dataparEPT{\code{execution::}\type{datapar\textunderscore{}policy}\xspace}
+\newcommand\simdEP{\code{execution::}\type{simd}\xspace}
+\DeclareRobustCommand\simdEPT{\code{execution::}\type{simd\textunderscore{}policy}\xspace}
 \newcommand\seqEP{\code{std::execution::}\type{seq}\xspace}
 
 \newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
@@ -33,7 +33,7 @@
 \begin{document}
 \selectlanguage{american}
 \begin{wgTitlepage}
-  This paper discusses a new execution policy for integrating datapar with \emph{parallel algorithms}.
+  This paper discusses a new execution policy for integrating \simd with \emph{parallel algorithms}.
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
@@ -43,7 +43,7 @@
   \item This documents talks about “vector” types/objects.
     In general this will not refer to the \std\type{vector} class template.
     References to the container type will explicitly call out the \code{std} prefix to avoid confusion.
-  \item \citep{P0214R4} is the last paper on \datapar.
+  \item \citep{P0214R5} is the last paper on \simd.
 \end{itemize}
 
 \section{Changelog}
@@ -51,7 +51,7 @@
 Previous revision: \parencite{P0350R0}.
 \begin{itemize}
   \item Update to apply against \CC{}17 wording.
-  \item Removed executors discussion because the design has not left SG1 yet.
+  \item Removed executors discussion because the executors design has not left SG1 yet.
   \item Updated example code to reflect changes in P0214.
 \end{itemize}
 

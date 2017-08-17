@@ -1,44 +1,44 @@
 \section{Parallel Algorithms}
 
 \subsection{Example}
-Consider the example in \lst{datapar foreach}.
-\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:datapar foreach,caption={
-  Example using \dataparEP with \code{iota} and \code{for_each}.
+Consider the example in \lst{simd foreach}.
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:simd foreach,caption={
+  Example using \simdEP with \code{iota} and \code{for_each}.
 }]
 std::vector<float> data;
 data.resize(99);
-iota(/*!\dataparEP{}*/, data.begin(), data.end(), 0.f);
-for_each(/*!\dataparEP{}*/, data.begin(), data.end(), [](auto &x) {
+iota(/*!\simdEP{}*/, data.begin(), data.end(), 0.f);
+for_each(/*!\simdEP{}*/, data.begin(), data.end(), [](auto &x) {
   x *= x;
 });
 \end{lstlisting}
-The \code{iota} and \code{for_each} functions each could create an internal \datapar iterator adaptor, depending on the iterator category.
+The \code{iota} and \code{for_each} functions each could create an internal \simd iterator adaptor, depending on the iterator category.
 Being able to determine whether the storage, the iterator points to, is contiguous, is most important in this context as it enables vector loads and stores.
-Since the \std\type{vector} iterators are \emph{contiguous iterators}, the example implementations shown in \lst{datapar iota implementation} and \lst{datapar foreach implementation} could be used for the example.
-\lstinputlisting[style=Vc,numbers=left,float,label=lst:datapar iota implementation,caption={
-  Implementation idea for the \code{iota} function used in \lst{datapar foreach}.
+Since the \std\type{vector} iterators are \emph{contiguous iterators}, the example implementations shown in \lst{simd iota implementation} and \lst{simd foreach implementation} could be used for the example.
+\lstinputlisting[style=Vc,numbers=left,float,label=lst:simd iota implementation,caption={
+  Implementation idea for the \code{iota} function used in \lst{simd foreach}.
 }]{iota.cpp}
-\lstinputlisting[style=Vc,numbers=left,float,label=lst:datapar foreach implementation,caption={
-  Implementation idea for the \code{for_each} function used in \lst{datapar foreach}.
+\lstinputlisting[style=Vc,numbers=left,float,label=lst:simd foreach implementation,caption={
+  Implementation idea for the \code{for_each} function used in \lst{simd foreach}.
 }]{foreach.cpp}
 
 Both implementations might be improved with a prologue that enables aligned loads and stores.
 Also note that \code{for_each} allows the \code{Function} parameter to mutate the argument if the iterator is a mutable iterator.
-The implementation uses a compile-time trait to determine whether the function \code{f} uses a reference parameter, in which case it stores the temporary \datapar object back.
+The implementation uses a compile-time trait to determine whether the function \code{f} uses a reference parameter, in which case it stores the temporary \simd object back.
 Otherwise, the store is optimized away.
 
-\fig{datapar iota} shows a visualization how the \code{iota} implementation works.
-The \code{init} \datapar object is stored via vector stores to 4 (assuming native \datapar[::size() == 4]) elements in the \std\type{vector}.
-In each iteration the \code{init} object is incremented by \datapar[::size()] and stored to the following elements in the \std\type{vector}.
+\fig{simd iota} shows a visualization how the \code{iota} implementation works.
+The \code{init} \simd object is stored via vector stores to 4 (assuming native \simd[::size() == 4]) elements in the \std\type{vector}.
+In each iteration the \code{init} object is incremented by \simd[::size()] and stored to the following elements in the \std\type{vector}.
 Since the \std\type{vector} has 99 elements, the last three elements cannot be initialized with a vector store of four elements.
-Instead the \code{epilogue} recursion generates a new \code{init} \datapar object for size 2 and subsequently for size 1.
+Instead the \code{epilogue} recursion generates a new \code{init} \simd object for size 2 and subsequently for size 1.
 
-\fig{datapar foreach} visualizes the end of the \code{for_each} implementation.
+\fig{simd foreach} visualizes the end of the \code{for_each} implementation.
 The main \code{for} loop processes four elements of the \std\type{vector} in parallel.
-It executes a vector load, calls the user-provided function with the temporary \datapar object, and executes a vector store back to the same memory location.
+It executes a vector load, calls the user-provided function with the temporary \simd object, and executes a vector store back to the same memory location.
 The remaining three elements are again handled by an \code{epilogue} recursion which divides the number of processed elements by 2 with every step.
 
-For both algorithms it would be perfectly valid to implement the epilogue as a sequential loop using \datapar objects with size 1.
+For both algorithms it would be perfectly valid to implement the epilogue as a sequential loop using \simd objects with size 1.
 
 \begin{figure}[]
   \centering
@@ -92,8 +92,8 @@ For both algorithms it would be perfectly valid to implement the epilogue as a s
     \vNode{98}
     \vArrowsStraight{P0/Mark18}
   \end{tikzpicture}
-  \caption{Visualization of chunking the \code{iota} call with $\VSize{T}=4$ in \lst{datapar foreach}.}
-  \label{fig:datapar iota}
+  \caption{Visualization of chunking the \code{iota} call with $\VSize{T}=4$ in \lst{simd foreach}.}
+  \label{fig:simd iota}
 \end{figure}
 
 \begin{figure}[]
@@ -137,8 +137,8 @@ For both algorithms it would be perfectly valid to implement the epilogue as a s
     \draw[<-] (Mark5.east) -- +(3.0\vNodeWidth,0) |- (F1);
     \draw[<-] (Mark6.east) -- +(3.2\vNodeWidth,0) |- (I0);
   \end{tikzpicture}
-  \caption{Visualization of chunking the \code{foreach} call with $\VSize{T}=4$ in \lst{datapar foreach}.}
-  \label{fig:datapar foreach}
+  \caption{Visualization of chunking the \code{foreach} call with $\VSize{T}=4$ in \lst{simd foreach}.}
+  \label{fig:simd foreach}
 \end{figure}
 
 \subsection{Wording for the policy}
@@ -150,32 +150,32 @@ Add a new execution policy to \citep[§23.19.2]{N4659}:
   // 23.19.6, parallel and unsequenced execution policy\\
   class parallel_unsequenced_policy;\\
   \\
-  \wgAdd{// 23.19.7, \datapar execution policy}\\
-  \wgAdd{class \datapar{}_policy;}\\
+  \wgAdd{// 23.19.7, \simd execution policy}\\
+  \wgAdd{class \simd{}_policy;}\\
   \\
   // 23.19.\wgRemove{7}\wgAdd{8}, execution policy objects:\\
   inline constexpr sequenced_policy seq\{ \textit{unspecified} \};\\
   inline constexpr parallel_policy par\{ \textit{unspecified} \};\\
   inline constexpr parallel_unsequenced_policy par_unseq\{ \textit{unspecified} \};\\
-  \wgAdd{inline constexpr \datapar{}_policy \datapar\{ \textit{unspecified} \};}
+  \wgAdd{inline constexpr \simd{}_policy \simd\{ \textit{unspecified} \};}
   \endgroup
 \end{wgText}
 
-Renumber §23.19.7 to §23.19.8 and add §23.19.7 [execpol.datapar]:
+Renumber §23.19.7 to §23.19.8 and add §23.19.7 [execpol.simd]:
 \begin{wgText}
   \color{WgAdd}
   \begin{itemdecl}
-class @\datapar{}_policy \{ \textit{unspecified} \}@;
+class @\simd{}_policy \{ \textit{unspecified} \}@;
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum The class \datapar[_policy] is an execution policy type used as a unique type to disambiguate parallel algorithm overloading and indicate that a parallel algorithm's execution may be vectorized using \datapar for interfacing with user-provided functionality.
-    \pnum During the execution of a parallel algorithm with the \dataparEPT policy, if the invocation of an element access function exits via an uncaught exception, \code{terminate()} shall be called.
+    \pnum The class \simd[_policy] is an execution policy type used as a unique type to disambiguate parallel algorithm overloading and indicate that a parallel algorithm's execution may be vectorized using \simd for interfacing with user-provided functionality.
+    \pnum During the execution of a parallel algorithm with the \simdEPT policy, if the invocation of an element access function exits via an uncaught exception, \code{terminate()} shall be called.
   \end{itemdescr}
 \end{wgText}
 
 Add to §23.19.8 [execpol.objects]:
 \begin{wgText}
-  \ttfamily\wgAdd{inline constexpr \dataparEPT{} \dataparEP{}\{ \textit{unspecified} \};}
+  \ttfamily\wgAdd{inline constexpr \simdEPT{} \simdEP{}\{ \textit{unspecified} \};}
 \end{wgText}
 
 \citep[§28.4.2]{N4659} defines requirements on user-provided function objects.
@@ -183,38 +183,38 @@ This might be the right place to add:
 \begin{wgText}[{§28.4.2 [algorithms.parallel.user]}]
   \addtocounter{Paras}{1}
   \color{WgAdd}
-  \pnum Function objects passed into parallel algorithms instantiated with the \dataparEP execution policy shall be callable with any argument of type \datapar[<T, Abi>], where \type T is the type obtained from dereferencing the iterator.
+  \pnum Function objects passed into parallel algorithms instantiated with the \simdEP execution policy shall be callable with any argument of type \simd[<T, Abi>], where \type T is the type obtained from dereferencing the iterator.
 \end{wgText}
 
 The following subsection in \citep[§28.4.3]{N4659} defines the semantics of the execution policies.
-A new paragraph for \dataparEP is needed.
+A new paragraph for \simdEP is needed.
 The intent is to
 \begin{enumerate}
   \item constrain execution to the calling thread,
   \item allow implementations to assume unordered access for all internal element access functions (most importantly loads and stores),
-  \item apply user-provided function objects in the order the \datapar chunks are created from sequential iteration over the iterator(s).
+  \item apply user-provided function objects in the order the \simd chunks are created from sequential iteration over the iterator(s).
 \end{enumerate}
 \begin{wgText}[{§28.4.3 [algorithms.parallel.exec]}]
   \addtocounter{Paras}{7}%
   \color{WgAdd}%
   \uline{%
   \pnum
-  The invocations of element access functions in parallel algorithms invoked with an execution policy object of type \dataparEPT are permitted to execute in an unordered fashion in the calling thread, except for the application of user-provided function objects.
-  User-provided function objects are called with an im\-ple\-men\-ta\-tion-defined number of sequence elements combined into a }\underline{\datapar[<T, Abi>]}\uline{ object.
+  The invocations of element access functions in parallel algorithms invoked with an execution policy object of type \simdEPT are permitted to execute in an unordered fashion in the calling thread, except for the application of user-provided function objects.
+  User-provided function objects are called with an im\-ple\-men\-ta\-tion-defined number of sequence elements combined into a }\underline{\simd[<T, Abi>]}\uline{ object.
   The type for \type{Abi} is chosen by the implementation.
   It may be different for subsequent applications of the user-provided function in the same parallel algorithm invocation.
   The type for \type T is the decayed type of the sequence elements.
-  The order of elements in the \datapar object is equal to the order of the corresponding elements in the sequence argument.
+  The order of elements in the \simd object is equal to the order of the corresponding elements in the sequence argument.
   The invocation order of user-provided function objects is sequential.
 }
 \end{wgText}
 
 \newcommand\tmp{[algorithms.parallel.exceptions]}
 It is my understanding that we do not want to add anything to \citep[§28.4.4 \tmp{}]{N4659} at this point.
-The situation is simpler for the \dataparEP policy.
+The situation is simpler for the \simdEP policy.
 It is almost equivalent to the \code{seq} policy.
 
 \subsection{Wording for individual algorithms}
-I have not identified the need for any additional wording in the subsections on the individual algorithms for the \dataparEPT at this point.
+I have not identified the need for any additional wording in the subsections on the individual algorithms for the \simdEPT at this point.
 
 % vim: sw=2 et ft=tex spell tw=0

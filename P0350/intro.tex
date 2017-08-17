@@ -2,11 +2,11 @@
 
 Parallel Algorithms enable implementations of the existing STL algorithms to use non-sequential semantics when executing the user-supplied code (explicit callable or implicit operator call).
 The first argument to the algorithm function determines this change in execution semantics via an \emph{execution policy}.
-This paper introduces a new execution policy, called \dataparEP.
-\dataparEP requires user-provided function objects to be callable with \datapar[<T, Abi>] arguments instead of the \type T arguments the \seqEP variant would use.
-The algorithm therefore processes chunks of \datapar[<T, Abi>::size()] objects concurrently.
+This paper introduces a new execution policy, called \simdEP.
+\simdEP requires user-provided function objects to be callable with \simd[<T, Abi>] arguments instead of the \type T arguments the \seqEP variant would use.
+The algorithm therefore processes chunks of \simd[<T, Abi>::size()] objects concurrently.
 The execution order of the chunks retains the sequential semantics of the non-parallel algorithms.
 
-As a consequence, the applicability of the execution policy is limited to iterators where \datapar[<Iterator::value_type>] is a valid template instantiation of \datapar.
-A future extension of \datapar may lift this restriction by allowing certain (or all) user-defined types as first template argument to \datapar.
+As a consequence, the applicability of the execution policy is limited to iterators where \simd[<Iterator::value_type>] is a valid template instantiation of \simd.
+A future extension of \simd may lift this restriction by allowing certain (or all) user-defined types as first template argument to \simd.
 
