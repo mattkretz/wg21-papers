@@ -488,16 +488,18 @@ tuple<simd_mask<T, abi_for_size_t<Sizes>>...> split(const simd_mask<T, A>& x);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class V, class T, class A>
-array<V, simd_size_v<T, A> / V::size()> split(const simd<T, A>& x);
-template <class V, class T, class A>
-array<V, simd_size_v<T, A> / V::size()> split(const simd_mask<T, A>& x);
+template <class V, class A>
+array<V, simd_size_v<typename V::value_type, A> / V::size()> split(
+    const simd<typename V::value_type, A>&);
+template <class V, class A>
+array<V, simd_size_v<typename V::value_type, A> / V::size()> split(
+    const simd_mask<typename V::value_type, A>&);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks These functions shall not participate in overload resolution unless
   \begin{itemize}
     \item \code{is_simd_v<V>} for the first signature / \code{is_mask_v<V>} for the second signature,
-    \item and \code{simd_size_v<T, A>} is an integral multiple of \code{V::size()}.
+    \item and \code{simd_size_v<typename V::value_type, A>} is an integral multiple of \code{V::size()}.
   \end{itemize}
 
   \pnum\returns An \type{array} of \simd/\mask objects with the $i$-th \simd/\mask element of the $j$-th \type{array} element initialized to the value of the element in \code x with index $i + j \cdot $\code{V::size()}.

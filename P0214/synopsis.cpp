@@ -69,10 +69,12 @@ namespace std {
     tuple<simd<T, abi_for_size_t<Sizes>>...> split(const simd<T, A>&);
     template <size_t... Sizes, class T, class A>
     tuple<simd_mask<T, abi_for_size_t<Sizes>>...> split(const simd_mask<T, A>&);
-    template <class V, class T, class A>
-    array<V, simd_size_v<T, A> / V::size()> split(const simd<T, A>&);
-    template <class V, class T, class A>
-    array<V, simd_size_v<T, A> / V::size()> split(const simd_mask<T, A>&);
+    template <class V, class A>
+    array<V, simd_size_v<typename V::value_type, A> / V::size()> split(
+        const simd<typename V::value_type, A>&);
+    template <class V, class A>
+    array<V, simd_size_v<typename V::value_type, A> / V::size()> split(
+        const simd_mask<typename V::value_type, A>&);
 
     template <class T, class... As>
     simd<T, abi_for_size_t<T, (simd_size_v<T, As> + ...)>> concat(const simd<T, As>&...);
