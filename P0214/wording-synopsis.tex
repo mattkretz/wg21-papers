@@ -129,7 +129,7 @@ template <class T, size_t N> struct abi_for_size { using type = implementation-d
     \item \code{simd_size_v<T, type> == N},
     \item \simd[<T, type>] is default constructible (see \ref{simd.type requirements}),
   \end{itemize}
-  \code{simd_abi::scalar} takes precedence over \fixedsize[<1>].
+  \code{simd_abi::scalar} takes precedence over \fixedsize\code{<1>}.
   The precedence of implementation-defined ABI tags over \fixedsizeN is implementation-defined.
   \wgNote{
     It is expected that implementation-defined ABI tags can produce better optimizations and thus take precedence over \fixedsizeN.
