@@ -165,6 +165,7 @@ namespace std {
 
     template <class Abi> floatv<Abi> ceil(floatv<Abi> x);
     template <class Abi> doublev<Abi> ceil(doublev<Abi> x);
+    template <class Abi> ldoublev<Abi> ceil(ldoublev<Abi> x);
 
     template <class Abi> floatv<Abi> floor(floatv<Abi> x);
     template <class Abi> doublev<Abi> floor(doublev<Abi> x);
