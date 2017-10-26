@@ -257,9 +257,9 @@ namespace std {
     template <class Abi> simd_mask<double, Abi> isfinite(doublev<Abi> x);
     template <class Abi> simd_mask<long double, Abi> isfinite(ldoublev<Abi> x);
 
-    template <class Abi> samesize<int, floatv<Abi>> isinf(floatv<Abi> x);
-    template <class Abi> samesize<int, doublev<Abi>> isinf(doublev<Abi> x);
-    template <class Abi> samesize<int, ldoublev<Abi>> isinf(ldoublev<Abi> x);
+    template <class Abi> simd_mask<float, Abi> isinf(floatv<Abi> x);
+    template <class Abi> simd_mask<double, Abi> isinf(doublev<Abi> x);
+    template <class Abi> simd_mask<long double, Abi> isinf(ldoublev<Abi> x);
 
     template <class Abi> simd_mask<float, Abi> isnan(floatv<Abi> x);
     template <class Abi> simd_mask<double, Abi> isnan(doublev<Abi> x);
