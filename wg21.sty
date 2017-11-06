@@ -59,7 +59,9 @@
 \AtEndDocument{
 \vspace{2\bigskipamount}
 \appendix
+\ifdefined\wgAcknowledgements
 \section{Acknowledgements}\wgAcknowledgements
+\fi
 
 \printbibliography
 }

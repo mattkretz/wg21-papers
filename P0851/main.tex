@@ -1,0 +1,272 @@
+\newcommand\wgTitle{simd<T> is neither a product type nor a container type}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{P0851R0}
+\newcommand\wgGroup{LEWG / SG1}
+%\newcommand\wgTarget{Parallelism TS 2}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{underscore}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{simd#1}\xspace}
+\newcommand\simdT{\type{simd<T>}\xspace}
+\newcommand\valuetype{\type{value\_type}\xspace}
+\newcommand\referencetype{\type{reference}\xspace}
+\newcommand\whereexpression{\type{where\_expression}\xspace}
+\newcommand\simdcast{\code{simd\_cast}\xspace}
+\newcommand\mask[1][]{\type{simd\_mask#1}\xspace}
+\newcommand\maskT{\type{simd\_mask<T>}\xspace}
+\newcommand\fixedsizeN{\type{simd\_abi::fixed\_size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{simd\_abi::fixed\_size}\xspace}
+\newcommand\fixedsize{\type{fixed\_size}\xspace}
+\newcommand\simdEP{\code{execution::}\type{simd}\xspace}
+\newcommand\seqEP{\code{execution::}\type{seq}\xspace}
+
+\newcommand\flagsRemarks[1]{
+  \pnum\requires
+  If the \type{Flags} template parameter is of type \type{flags::vector\_aligned\_tag}, the pointer value represents an address aligned to \code{memory\_alignment\_v<#1>}.
+  If the \type{Flags} template parameter is of type \type{flags::overaligned\_tag<N>}, the pointer value represents an address aligned to \code N.
+}
+
+\newcommand\targetArch{target architecture\xspace}
+\newcommand\targetArchs{target architectures\xspace}
+\newcommand\currentTarget{currently targeted system\xspace}
+
+\newcommand\realArithmeticType{arithmetic type except \type{bool}\xspace}
+
+\usepackage{pifont}
+
+\newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
+\newcommand\forallmaskedi[1]{%
+  for all \code i
+  $\in \{j \in \mathbb{N}_0 | j < \code{size()} ⋀ \code{#1[}j\code{]}\}$%
+  \xspace%
+}
+\newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
+\newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
+\newcommand\itemheader[1]{\item[] \hfill \textcolor{gray}{\textsc{#1}}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper provides context to the question on relational operators raised in P0820R0.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+\section{Introduction}
+\textcite{P0820R0} presents the view of the \type{simd<T>} specification of \textcite{P0214R5} in light of an existing library implementation for a similar problem.
+It is motivated by a different way of using \simd types, which is why I'd like to start with an short detour into vectorization directions.
+
+\subsection{vectorization direction}
+  \begin{description}
+    \item[Horizontal] same data member from several objects
+    \item[Vertical] different data members from one object
+      \footnote{compare with “horizontal marekts” vs. “vertical markets”}
+  \end{description}
+
+  \begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \path[anchor=mid]
+        (-0.5,0) node {Data Set}
+        \foreach \x/\pos in {a/0,b/1,c/2,d/3,e/4,f/5,g/6,h/7}{
+        ($(1,0)+(\pos,0)$) node {\pos}
+        ++(0,-1.0) node {$\x_{x}$}
+        ++(0,-0.6) node {$\x_{y}$}
+        ++(0,-0.6) node {$\x_{z}$}
+        };
+        \colorlet{mydarkred}{red!70!black}
+        \draw[draw=mydarkred,->] (1.25,-0.50) -- +(1, 0)
+        node[right=0.5em,text=mydarkred]
+        {horizontal vectorization};
+        \draw[draw=mydarkred,->] (0.60,-0.70) -- +(0,-0.5)
+        node[left=0.0em,text=mydarkred,text
+        width=5.8em,text badly centered]
+        {vertical vectorization} -- +(0,-1);
+    \end{tikzpicture}
+    \caption{horizontal vs. vertical vectorization}
+    \label{fig:vectorization direction}
+  \end{figure}
+
+  As a simple example, consider a scalar product in a 3-dimensional space (cf. \fig{vectorization direction}).
+  Vertical vectorization takes as input two 3-dimensional vectors and produces a single value.
+  E.g. it places the 3 components of one input into one SIMD register and uses the \code{DPPS} instruction (on x86) to calculate the dot product.
+  Horizontal vectorizing takes as input \VSize{T} 3-dimensional vectors and produces \VSize{T} values.
+  It uses the same sequence of multiplications and additions, a classical scalar implementation would use, only applying it to a full SIMD register in parallel.
+
+\subsection{choosing direction}
+  In my experience, vertical vectorization is the traditional approach to using short vector extensions, such as SSE on x86.
+  However, horizontal vectorization is where the true strength of data-parallel types lies.
+  Horizontal vectorization reduces the need for reductions (e.g. shuffles) and thus can often yield the full speed-up of the SIMD vector width.
+  Consequently, the code is easily scalable between targets with differing \VSize{T}.
+
+  The major reason for using vertical vectorization is that it can be used in small, contained areas of the code, typically hidden inside a single function.
+  It is thus not apparent from the function signature, that the function uses a SIMD implementation.
+  This allows localized changes and is much easier to take up in an existing code base.
+
+  Horizontal vectorization typically requires a much larger effort on an existing code base.
+  Because a function, such as the horizontally vectorized scalar product above, requires the number of inputs and outputs to scale by \VSize{T}.
+  Thus, every function signature changes, and vector types become a major part of the API.
+  Data structure vectorization and AoVS (array of vectorized struct) become important tools.
+
+\section{Design choices}
+\begin{enumerate}
+  \item\label{design horizontal} The main approach to vectorization is horizontal vectorization.
+    \\Rationale: Because horizontal vectorization scales better, and thus produces better portability and even performance portability.
+    \\Note: This does not preclude vertical vectorization.
+    This is only about tailoring the API on one approach, while keeping the other approach possible.
+
+  \item\label{design portable} Code that compiles (correctly) on one system compiles (correctly) on all others.
+    \\Rationale: Because that's what everyone may expect of standard \CC{}.
+    \\Note: This is not always trivial, considering that \simd\code{::size()} differs at compile-time.
+    Some issues are not preventable, though.
+
+  \item\label{design drop-in} The main vector type (\simd[<T>]) is, as much as reasonably possible, a drop-in replacement for \type T.
+    This means vectorization of a function may be as simple as a replacement of \float with \simd[<float>].
+    \\Rationale: Make it easy to use and understand by building on top of the fundamental types of the language.
+    Generic code that works with built-in arithmetic types shall be reusable.
+
+  \item\label{design safety}  If the “drop-in replacement” cannot work without more input from the developer, the code shall not compile.
+    The error message should be as helpful as possible, though; pointing out the missing “input”.
+    \\Rationale: It is dangerous to make assumptions when the intent is not clearly stated in the code (even if the user knows about them): this leads to hard to find bugs.
+    \\Note: The main issue here is relational operators and branching.
+
+  \item\label{design user-centered} Design the API from problems the user has to solve; and to make typical patterns easier to express.
+    Or the inverse: do not simply expose every single special purpose instruction a hardware vendor came up with.
+    Find the generality first.
+    \\Rationale: The user shall state intent; the library and compiler shall find the best instructions.
+    This keeps user code readable and maintainable.
+\end{enumerate}
+
+\section{Type category of \type{simd<T>}}
+In private discussion with Tim Shen and Titus Winters the question came up whether \simd[<T>] is a container or a product type.
+I strongly believe it is neither of those.
+The only precedence in the IS for the type category of \simdT is \type{std::valarray}.
+
+\subsection{container type}
+Compare \simdT and \type{std::array<T>}:
+Both types store a fixed number of values of type \type T.
+However, \simdT is not a good choice for subscript access.
+The return type of \code{simd::operator[]} alone should make clear that \simdT is not a container.
+While it does contain \emph{values} of \type T, it does not necessarily contain \emph{objects} of type \type T.
+Which is why the non-const subscript operator returns a smart reference, rather than an lvalue reference.
+For the same reason \simdT does not even support iterators (at this point).
+Iterators could never return the required lvalue reference and thus would have to stick to being \code{InputIterators}.
+
+\subsection{product type}
+Is \simdT a product type then?
+Or, in other words, has an object of type \simdT \emph{one value} as a whole.
+(After all that's where the term “product” in product type stems from.)
+The answer to this question differs for users that do vertical vs. horizontal vectorization.
+Consider the scalar product example again:
+In the vertical vectorization one \simdT object contains a 3-dim euclidean vector and thus the whole \simdT object has “one value”.
+However, in the case of horizontal vectorization, one \simdT object contains \VSize{T} values of the 1st, 2nd, or 3rd component of \VSize{T} euclidean vectors.
+A single \simdT object has no sensible value as a whole.
+It really just stores \VSize{T} values.
+
+So is it a product type?
+According to the design choices, if horizontal and vertical vectorization disagree, horizontal vectorization is preferred.
+Thus, \simdT is not a product type.
+
+\section{relational operators}
+The type category has important consequences for the definition of relational operators.
+If one considers \simdT a product type, it is reasonable to expect \code{operator==} to return \bool.
+However, when vectorizing horizontally, the only reasonable result for an equality test is to return one boolean answer per element of the SIMD vector.
+Therefore, \simdT in \parencite{P0214R6} returns \maskT.
+
+\subsection{Example \code{std::complex}}
+Consider \type{std::complex<simd<float>>}.
+While officially unspecified, at least libstdc++ has a useful implementation that mostly works.
+Example: \url{https://godbolt.org/g/fHJemB}.
+However, operations such as \code{abs}, require \code{operator==} in its implementation.
+As of the current spec, this does not compile (\url{https://godbolt.org/g/QiJcZn}).
+If we were to change \code{operator==} to return \bool, the code would compile, but not do the right thing.
+According to design choice \ref{design safety}, having \code{operator==} return \bool is a no-go.
+
+\subsection{will extending \code{if} to accept masks help?}
+Lets ignore that we'd ask for a rather narrow language extension, which has low chances of passing through EWG.
+Is an extension allowing \code{if (simd_obj0 == simd_obj1) foo();} a solution/compromise?
+
+Cilk Plus has implemented write-masking via extending \code{if} statements for the array notation extension (cf. \textcite{Intel.Cilk.Array}).
+Conditional statements thus do not disable a branch unless all entries of the mask are \false (though essentially this is an optional optimization).
+Instead, all code branches are executed with an implicit state that determines the disabled vector lanes.
+Consider the example code in \lst{if(mask)} on a system with $\VSize{int} = 4$ and \code{a = \{1, 2, 3, 4\}, b = \{7, 0, 7, 7\}}:
+The expression \code{a < b} returns a mask with 4 boolean values: \code{\{\true, \false, \true, \true{}\}}.
+The compiler therefore has to translate the \code{if}-branch (line \ref{lstline:if(mask)-true}) into instructions that modify \code{a} only at the indexes 0, 2, and 3.
+Subsequently, \code{a} will be \code{a = \{2, 2, 4, 5\}}.
+The \code{else}-branch (line \ref{lstline:if(mask)-false}) then may only modify the \ac{SIMD} vector entry at index 1.
+Thus, \code{a} must become \code{a = \{2, 1, 4, 5\}}, which is the return value of the function \code{f}.
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:if(mask),caption={
+  Example code relying on overloaded semantics for \code{if} statements with mask arguments.
+}]
+simd<int> f(simd<int> a, simd<int> b) {
+  if (a < b) {
+    a += 1;/*!\label{lstline:if(mask)-true}*/
+  } else {
+    a -= 1;/*!\label{lstline:if(mask)-false}*/
+  }
+  return a;
+}
+\end{lstlisting}
+
+The code example in \lst{if(mask)-return} is a small modification of the example in \lst{if(mask)} that would be equivalent for scalar types.
+However, with \ac{SIMD} vector types both of the two \code{return} statements in the code must be taken.
+It is certainly possible to define that this code blends the \ac{SIMD} vectors from the two \code{return} statements according to the implicit masks in the \code{if} and \code{else} branches.
+However, already a seemingly small change, such as returning an \intt instead of \intv (\lst{if(mask)-return2}) leads to unresolvable ambiguity:
+Should the function return \code{+1} or \code{-1}?
+Similar ambiguity issues occur with non-complementary masked \code{return} statements and function calls inside the branches.
+Throwing exceptions and locking/unlocking mutexes would even have to be disallowed altogether.
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:if(mask)-return,caption={
+  Code example that shows unclear return semantics:
+  both branches must execute but from where does the function return and what is the return value?
+}]
+simd<int> f(simd<int> a, simd<int> b) {
+  if (a < b) {
+    return a + 1;/*!\label{lstline:if(mask)-return true}*/
+  } else {
+    return a - 1;/*!\label{lstline:if(mask)-return false}*/
+  }
+}
+\end{lstlisting}
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:if(mask)-return2,caption={
+  Code example that shows unresolvable ambiguity:
+  both branches must execute but there can be only one return value because the return type is a scalar \intt.
+}]
+int f(simd<int> a, simd<int> b) {
+  if (a < b) {
+    return +1;/*!\label{lstline:if(mask)-return2 true}*/
+  } else {
+    return -1;/*!\label{lstline:if(mask)-return2 false}*/
+  }
+}
+\end{lstlisting}
+
+There is a more fundamental uncertainty resulting from implicit masking via \code{if} statements on \ac{SIMD} vector masks:
+How should different \ac{SIMD} vector types interact?
+An \code{if} statement from \intv comparison returns \VSize{int} boolean answers.
+If the branch contains code with \shortv or \doublev, should it be implicitly write-masked or not?
+If yes, how?
+There is no natural and obvious behavior for applying write masks of different \VSize{T}.
+
+This shows that \code{if} statements with non-boolean arguments limit the language features allowed in the \code{if}/\code{else} branches.
+This makes the feature much less intuitive.
+The implicit mask context changes the semantics significantly in different regions of the source code.
+And the problem is aggravated if a developer requires \mbox{\code{else if}} or \code{switch} statements.
+
+I therefore strongly recommend not to extend \code{if}-statements for masking.
+
+\section{Some compromise?}
+If the committee feels uneasy to overload relops for \simd (returning \mask), the TS could experiment with an opt-in mechanism:
+Define the relational operators in a namespace (e.g. \code{std::experimental::simd_relops}, or \code{std::experimental::simd_mask_relops} and \code{std::experimental::simd_bool_relops}).
+The user thus has to select the preferred behavior.
+My recommendation then would be to drop this opt-in behavior after TS feedback on this issue was collected.
+
+\section{Revisit the name?}
+I still believe the name “simd” is potentially misleading, since short vector SIMD instructions have traditionally (only) been used for special purpose optimziations and vertical vectorization.
+I don't recommend to reopen the discussion, though.
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0

@@ -135,20 +135,15 @@ showstringspaces=false
 \lstdefinestyle{alert}{basicstyle=\ttfamily\bfseries\color{darkred},identifierstyle=\color{darkred}}
 \newcommand{\lstalert}[1]{\alert{\underbar{\lstinline[style=alert]#1}}}
 
-\lstdefinestyle{Vc}{morekeywords=[5]{float_v,double_v,int_v,uint_v,short_v,ushort_v,
-  Vector,Mask,
-  long_v,ulong_v,longlong_v,ulonglong_v,schar_v,uchar_v,
-  long_m,ulong_m,longlong_m,ulonglong_m,schar_m,uchar_m,
-  float_m,double_m,int_m,uint_m,short_m,ushort_m},
-  morekeywords=[8]{IndexesFromZero,Zero,One,Size,error,Error,wrong,MemoryAlignment},
+\lstdefinestyle{Vc}{morekeywords=[5]{simd,simd_mask},
+  morekeywords=[8]{error,Error,wrong,MemoryAlignment},
   morekeywords=[3]{foreach_bit}
 }
 
 \lstdefinestyle{VcHighlight}
 {
   emph={
-    float_v,double_v,int_v,uint_v,short_v,ushort_v,
-    float_m,double_m,int_m,uint_m,short_m,ushort_m
+    simd,simd_mask
   },emphstyle=\color{types}\bfseries\underbar,
   emph={[2]
     IndexesFromZero,Zero,One,Size
