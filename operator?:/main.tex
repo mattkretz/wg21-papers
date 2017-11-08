@@ -1,0 +1,74 @@
+\newcommand\wgTitle{Making operator?: overloadable}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{DXXXXR0}
+\newcommand\wgGroup{EWG}
+%\newcommand\wgTarget{Parallelism TS 2}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{underscore}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{simd#1}\xspace}
+\newcommand\simdT{\type{simd<T>}\xspace}
+\newcommand\valuetype{\type{value\_type}\xspace}
+\newcommand\referencetype{\type{reference}\xspace}
+\newcommand\whereexpression{\type{where\_expression}\xspace}
+\newcommand\simdcast{\code{simd\_cast}\xspace}
+\newcommand\mask[1][]{\type{simd\_mask#1}\xspace}
+\newcommand\maskT{\type{simd\_mask<T>}\xspace}
+\newcommand\fixedsizeN{\type{simd\_abi::fixed\_size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{simd\_abi::fixed\_size}\xspace}
+\newcommand\fixedsize{\type{fixed\_size}\xspace}
+\newcommand\simdEP{\code{execution::}\type{simd}\xspace}
+\newcommand\seqEP{\code{execution::}\type{seq}\xspace}
+
+\usepackage{pifont}
+
+\newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
+\newcommand\forallmaskedi[1]{%
+  for all \code i
+  $\in \{j \in \mathbb{N}_0 | j < \code{size()} ⋀ \code{#1[}j\code{]}\}$%
+  \xspace%
+}
+\newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
+\newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
+\newcommand\itemheader[1]{\item[] \hfill \textcolor{gray}{\textsc{#1}}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper explores possibilities for allowing user-defined overloads of \code{operator?:}.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+\section{Introduction}
+
+\section{Motivation}
+
+\section{Choices}
+\begin{enumerate}
+  \item \code{T operator?:(Cond c, T0 a, T1 b)\\\{ if (c) return a; else return b; \}}
+  \item \code{T operator?:(Cond c, F0 a, F1 b)\\\{ if (c) return a(); else return b(); \}}
+  \item \code{T operator?:(Cond c, C0 a, C1 b)\\\{ if (c) return a; else return b; \}}
+\end{enumerate}
+An issue with overloading the conditional operator that's typically brought up is deferred evaluation of the second and third expressions.
+[expr.cond]/1 specifies “Only one of the second and third expressions is evaluated”.
+If the signature of overloadable \code{operator?:} were \code{T operator?:(U, T, T)} then all three expressions must be evaluated before calling the user-defined operator.
+To resolve this, the signature could be defined as \code{T operator?:(U, F0, F1)}, where \code{F0} and \code{F1} are callables with return type \code{T}.
+Calling code such as \code{auto x = cond ? a + b : g(a, b)} could then be transformed to a \code{auto x = operator?:(cond, [\&]() { return a + b; }, [\&]() { return g(a, b); })}.
+
+This could be taken one step further:
+Instead of passing a callable, pass an object that is implicitly convertible to \code{T}.
+The conversion operator invokes the expression.
+This may be easier to use, but it's also easier to use badly (as in invoking the conversion operator multiple times).
+
+\subsection{Allow different types?}
+The operator signature could enforce the types of the second and third expression to be equal, implicitly/explicitly convertible, or arbitrary.
+I believe the most flexible tool for users will be to allow arbitrarily different types.
+Users can put a restriction in place by themselves.
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
