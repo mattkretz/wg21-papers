@@ -1,0 +1,126 @@
+\newcommand\wgTitle{Expected Feedback from \code{simd} in the Parallelism TS 2}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{DXXXXR0}
+\newcommand\wgGroup{SG1 / LEWG}
+%\newcommand\wgTarget{Parallelism TS 2}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{underscore}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{simd#1}\xspace}
+\newcommand\simdT{\type{simd<T>}\xspace}
+\newcommand\valuetype{\type{value\_type}\xspace}
+\newcommand\referencetype{\type{reference}\xspace}
+\newcommand\whereexpression{\type{where\_expression}\xspace}
+\newcommand\simdcast{\code{simd\_cast}\xspace}
+\newcommand\mask[1][]{\type{simd\_mask#1}\xspace}
+\newcommand\maskT{\type{simd\_mask<T>}\xspace}
+\newcommand\fixedsizeN{\type{simd\_abi::fixed\_size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{simd\_abi::fixed\_size}\xspace}
+\newcommand\fixedsize{\type{fixed\_size}\xspace}
+\newcommand\simdEP{\code{execution::}\type{simd}\xspace}
+\newcommand\seqEP{\code{execution::}\type{seq}\xspace}
+
+\usepackage{pifont}
+
+\newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
+\newcommand\forallmaskedi[1]{%
+  for all \code i
+  $\in \{j \in \mathbb{N}_0 | j < \code{size()} ⋀ \code{#1[}j\code{]}\}$%
+  \xspace%
+}
+\newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
+\newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
+\newcommand\itemheader[1]{\item[] \hfill \textcolor{gray}{\textsc{#1}}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper collects the questions we hope to answer via the TS process.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+\section{Introduction}
+\textcite{P0214R6} introduces a type-based expression of data parallelism.
+The paper targets the Parallelism TS 2.
+Through the TS process we hope to get feedback on a number of issues that were not clear to the committee before hands-on experience.
+This paper collects all the questions and design choices that SG1 / LEWG might want to revisit before moving \simdT into the IS.
+
+\section{Questions}
+
+\subsection{Names of \code{popcount}, \code{find_first}, \code{find_last}}
+\url{https://github.com/mattkretz/wg21-papers/issues/63}
+
+\subsection{Names \code{copy_from}, \code{copy_to}}
+\url{https://github.com/mattkretz/wg21-papers/issues/62}
+
+\subsection{Name of \code{where} function}
+\url{https://github.com/mattkretz/wg21-papers/issues/61}
+
+\subsection{Name of \simdT misleading?}
+\url{https://github.com/mattkretz/wg21-papers/issues/60}
+
+\subsection{Return types of split and concat unconditionally \fixedsizeN?}
+\url{https://github.com/mattkretz/wg21-papers/issues/59}
+
+\subsection{Allowed template arguments for (\code{static_})\code{simd_cast}}
+\url{https://github.com/mattkretz/wg21-papers/issues/57}
+
+\subsection{Should converting loads/stores be safer wrt. conversions}
+\url{https://github.com/mattkretz/wg21-papers/issues/34}
+
+Since implicit conversions on broadcasts are restricted to value-preserving conversions, the load/store interface is inconsistent with this strictness.
+I.e.:
+
+\begin{lstlisting}[style=Vc]
+using V = simd<float>;
+V(1.);  // error, double -> float conversion is not value-preserving
+V(short(1));  // good, short -> float is value-preserving
+double mem[V::size()] = {1.};
+V(mem, flags::element_aligned);  // converting load, compiles (but shouldn't?)
+short mem[V::size()] = {1};
+V(mem, flags::element_aligned);  // value-preserving conversion, should compile?
+\end{lstlisting}
+
+The conversion is not obvious when you look at the line of code that requests the load.
+
+Options:
+\begin{enumerate}
+  \item Drop converting loads and stores.
+    (That would be unfortunate, since doing converting loads and stores efficiently and portably is otherwise a hard problem.)
+
+  \item Use different functions, e.g. \code{v.copy_from(mem, flags)} requires \code{mem} to be a \valuetype array. \code{v.memload_cvt_safe(mem, flags)} allows value-preserving conversions.
+    \code{v.memload_cvt_unsafe(mem, flags)} allows all conversions.
+
+  \item Use a flag to enable conversions (without cvt flag, no conversions are allowed), e.g.
+    \begin{lstlisting}[style=Vc]
+    V(mem, flags::element_aligned | flags::safe_cvt);
+    V(mem, flags::element_aligned | flags::any_cvt);
+    V(mem, flags::element_aligned | flags::saturating_cvt);  // new feature
+    \end{lstlisting}
+    As a variation, safe conversions could be enabled per default and only unsafe conversions would require extra typing.
+
+\end{enumerate}
+
+\subsection{Consider more implicit conversions}
+\url{https://github.com/mattkretz/wg21-papers/issues/26} and \url{https://github.com/mattkretz/wg21-papers/issues/3}
+
+\subsection{Relation Operators}
+\textcite{P0820R1} argues for a substantial change to the definition of relation operators.
+\textcite{P0851R0} presents the reason for the status quo.
+The choices are:
+\begin{enumerate}
+  \item All relops are defined and return \mask (status quo).
+  \item Compares returning \mask are provided via new functions (member vs. non-member?)
+    \begin{enumerate}
+      \item No relops are defined.
+      \item \code{operator==} and \code{operator!=} are defined and return \bool.
+    \end{enumerate}
+\end{enumerate}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
