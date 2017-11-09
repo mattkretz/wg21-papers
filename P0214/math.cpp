@@ -1,5 +1,5 @@
-namespace std {
-  namespace experimental {
+namespace std::experimental {
+  inline namespace parallelism_v2 {
     template <class Abi> using scharv = simd<signed char, Abi>;                  // exposition only
     template <class Abi> using shortv = simd<short, Abi>;                        // exposition only
     template <class Abi> using intv = simd<int, Abi>;                            // exposition only

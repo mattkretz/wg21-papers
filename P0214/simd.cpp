@@ -1,5 +1,5 @@
-namespace std {
-  namespace experimental {
+namespace std::experimental {
+  inline namespace parallelism_v2 {
     template <class T, class Abi> class simd {
     public:
       using value_type = T;

@@ -1,5 +1,5 @@
-namespace std {
-  namespace experimental {
+namespace std::experimental {
+  inline namespace parallelism_v2 {
     template <class M, class T> class const_where_expression {
       const M& simd_mask;  // exposition only
       T& data;        // exposition only

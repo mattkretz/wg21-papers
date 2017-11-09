@@ -1,5 +1,5 @@
-namespace std {
-  namespace experimental {
+namespace std::experimental {
+  inline namespace parallelism_v2 {
     namespace simd_abi {
       struct scalar {};
       template <int N> struct fixed_size {};
