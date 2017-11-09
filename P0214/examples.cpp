@@ -4,9 +4,9 @@ void f() {
   fill_data(data);
   size_t i = 0;
   for (; i + floatv::size() <= N; i += floatv::size()) {
-    floatv v(&data[i], flags::vector_aligned);
+    floatv v(&data[i], vector_aligned);
     where(v > 100.f, v) = 100.f + (v - 100.f) * 0.1f;
-    v.copy_to(&data[i], flags::vector_aligned);
+    v.copy_to(&data[i], vector_aligned);
   }
   for (; i < N; ++i) {
     float x = data[i];
