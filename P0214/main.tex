@@ -89,6 +89,9 @@ Previous revision: \parencite{P0214R6}.
   \item Fixed return type of \code{isinf}. (\ref{sec:simd.math})
   \chck Changed namespace to \code{std::experimental::parallelism_v2}.
   \chck Shortened intro sentence in \ref{sec:simd.syn}.
+  \chck Added missing \code{const_where_expression} overload for \code{where(bool, const T\&}. (\ref{sec:simd.syn}, \ref{sec:simd_mask.where}) (The overload is present in my reference implementation.)
+  \chck Removed \code{const} from \code{const_where_expression} return type. (\ref{sec:simd.syn})
+  \item Fixed incorrect \code{const where_expression} return types in \ref{sec:simd_mask.where}.
   \chck Removed \code{flags} namespace \ref{sec:simd.syn}.
   \chck Rename stable name [simd] to [simd.class].
   \chck all of your global constexpr variables should be inline

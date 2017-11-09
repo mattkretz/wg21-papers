@@ -201,34 +201,36 @@ int find_last_set(implementation-defined) noexcept;
 \wgSubsubsection{Masked assigment}{simd_mask.where}
 \begin{itemdecl}
 template <class T, class A>
-where_expression<simd_mask<T, A>, simd<T, A>> where(
-    const typename simd<T, A>::mask_type& k, simd<T, A>& v) noexcept;
+where_expression<simd_mask<T, A>, simd<T, A>> where(const typename simd<T, A>::mask_type& k,
+                                                    simd<T, A>& v) noexcept;
 template <class T, class A>
-const where_expression<simd_mask<T, A>, const simd<T, A>> where(
-    const typename simd<T, A>::mask_type& k, const simd<T, A>& v) noexcept;
+const_where_expression<simd_mask<T, A>, const simd<T, A>> where(const typename simd<T, A>::mask_type& k,
+                                                                const simd<T, A>& v) noexcept;
 
 template <class T, class A>
 where_expression<simd_mask<T, A>, simd_mask<T, A>> where(const remove_const_t<simd_mask<T, A>>& k,
-                                               simd_mask<T, A>& v) noexcept;
+                                                         simd_mask<T, A>& v) noexcept;
 template <class T, class A>
-const where_expression<simd_mask<T, A>, const simd_mask<T, A>> where(
+const_where_expression<simd_mask<T, A>, const simd_mask<T, A>> where(
     const remove_const_t<simd_mask<T, A>>& k, const simd_mask<T, A>& v) noexcept;
 \end{itemdecl}
 \comment{\code{remove_const} is only used in place of a missing \code{template <class T> struct id \{ using type = T; \};} for inhibiting type deduction.}
 \begin{itemdescr}
-  \pnum\returns An object of type \type{where_expression} (see \ref{sec:simd.whereexpr}) initialized with the predicate \code k and the value reference \code v.
+  \pnum\returns An object of type \type{const_where_expression}/\type{where_expression} (see \ref{sec:simd.whereexpr}) initialized with the predicate \code k and the value reference \code v.
 \end{itemdescr}
 
 \begin{itemdecl}
 template <class T> where_expression<bool, T> where(implementation-defined k, T& v) noexcept;
+template <class T>
+const_where_expression<bool, const T> where(implementation-defined k, const T& d) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks The function shall not participate in overload resolution unless
+  \pnum\remarks The functions shall not participate in overload resolution unless
   \begin{itemize}
     \item \type T is neither a \simd nor a \mask instantiation, and
     \item the first argument is of type \bool.
   \end{itemize}
-  \pnum\returns An object of type \type{where_expression} (see \ref{sec:simd.whereexpr}) initialized with the predicate \code k and the value reference \code v.
+  \pnum\returns An object of type \type{const_where_expression}/\type{where_expression} (see \ref{sec:simd.whereexpr}) initialized with the predicate \code k and the value reference \code v.
 \end{itemdescr}
 
 % vim: tw=0 spell sw=2

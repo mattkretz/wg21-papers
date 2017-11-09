@@ -104,17 +104,19 @@ namespace std::experimental {
     where_expression<simd_mask<T, A>, simd<T, A>> where(const typename simd<T, A>::mask_type&,
                                                         simd<T, A>&) noexcept;
     template <class T, class A>
-    const const_where_expression<simd_mask<T, A>, const simd<T, A>> where(
-        const typename simd<T, A>::mask_type&, const simd<T, A>&) noexcept;
+    const_where_expression<simd_mask<T, A>, const simd<T, A>> where(const typename simd<T, A>::mask_type&,
+                                                                    const simd<T, A>&) noexcept;
 
     template <class T, class A>
     where_expression<simd_mask<T, A>, simd_mask<T, A>> where(const remove_const_t<simd_mask<T, A>>&,
                                                              simd_mask<T, A>&) noexcept;
     template <class T, class A>
-    const const_where_expression<simd_mask<T, A>, const simd_mask<T, A>> where(
+    const_where_expression<simd_mask<T, A>, const simd_mask<T, A>> where(
         const remove_const_t<simd_mask<T, A>>&, const simd_mask<T, A>&) noexcept;
 
     template <class T> where_expression<bool, T> where(implementation-defined k, T& d) noexcept;
+    template <class T>
+    const_where_expression<bool, const T> where(implementation-defined k, const T& d) noexcept;
 
     // reductions [simd.reductions]
     template <class BinaryOperation = std::plus<>, class T, class Abi>
