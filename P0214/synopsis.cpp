@@ -120,11 +120,11 @@ namespace std::experimental {
     const_where_expression<bool, const T> where(implementation-defined k, const T& d) noexcept;
 
     // reductions [simd.reductions]
-    template <class BinaryOperation = std::plus<>, class T, class Abi>
+    template <class T, class Abi, class BinaryOperation = std::plus<>>
     T reduce(const simd<T, Abi>&, BinaryOperation = BinaryOperation());
-    template <class BinaryOperation = std::plus<>, class M, class V>
+    template <class M, class V, class BinaryOperation = std::plus<>>
     typename V::value_type reduce(const const_where_expression<M, V>& x,
-                                  typename V::value_type neutral_element = default_neutral_element,
+                                  typename V::value_type neutral_element = implementation-defined,
                                   BinaryOperation binary_op = BinaryOperation());
 
     template <class T, class Abi> T hmin(const simd<T, Abi>&) noexcept;

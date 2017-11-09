@@ -96,12 +96,14 @@ Previous revision: \parencite{P0214R6}.
   \chck all of your global constexpr variables should be inline
   \chck Rename template parameters \code{A} to \code{Abis} and \code{As...} to \code{Abis...}.
   \chck Stable names follow a hierarchy; use [simd.class] instead of [simd]; rename [simd_mask] to [simd.mask]
+  \chck reduce: Moved defaulted \code{BinaryOperation} argument to the end.
+        {\color{red}Note: now the default \code{natural_element} is almost useless}
+  \chck reduce: Replaced \code{default_natural_element} with \emph{implementation-defined}
+  \chck reduce: Explained what the default \code{natural_element} is supposed to do. (\ref{sec:simd.reductions})
   \todo you copy initialze some value but direct initialize others: they should be consistent
   \todo for the see belows we don't put comments but use italics
   \todo all of the casts can benefit from the aliases or the default args
   \todo why are the arguments by value? Consistently pass arguments by const-ref or by value
-  \todo reduce: the defaulted argument should be moved right to the end
-  \todo reduce: define \code{default_natural_element} (or mark it see-below / implementation-defined)
 \end{itemize}
 
 \subsection{Changes from R5}

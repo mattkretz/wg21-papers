@@ -340,7 +340,7 @@ friend mask_type operator< (const simd&, const simd&);
 
 \wgSubsubsection{\simd reductions}{simd.reductions}
 \begin{itemdecl}
-template <class BinaryOperation = std::plus<>, class T, class Abi>
+template <class T, class Abi, class BinaryOperation = std::plus<>>
 T reduce(const simd<T, Abi>& x, BinaryOperation binary_op = BinaryOperation());
 \end{itemdecl}
 \begin{itemdescr}
@@ -350,9 +350,9 @@ T reduce(const simd<T, Abi>& x, BinaryOperation binary_op = BinaryOperation());
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class BinaryOperation = std::plus<>, class M, class V>
+template <class M, class V, class BinaryOperation = std::plus<>>
 typename V::value_type reduce(const const_where_expression<M, V>& x,
-                              typename V::value_type neutral_element = default_neutral_element,
+                              typename V::value_type neutral_element = implementation-defined,
                               BinaryOperation binary_op = BinaryOperation());
 \end{itemdecl}
 \begin{itemdescr}
@@ -361,6 +361,10 @@ typename V::value_type reduce(const const_where_expression<M, V>& x,
   Otherwise, returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \forallmaskedi{x.mask}.
 
   \pnum\requires \code{binary_op} shall be callable with two arguments of type \type T or two arguments of type \simd[<T, A1>], where \type{A1} may be different to \type{Abi}.
+
+  \pnum\requires The value of \code{neutral_element} is default-initialized when \code{BinaryOperation} is one of \code{plus<U>}, \code{multiplies<U>}, \code{bit_and<U>}, \code{bit_or<U>}, \code{bit_xor<U>}, with arbitrary \type U.
+  Otherwise, default initialization shall result in a substitution failure.
+
   \pnum\wgNote{This overload of \code{reduce} requires a neutral value to enable a parallelized implementation:
   A temporary \simd object initialized with \code{neutral_element} is conditionally assigned from \code{x.data} using \code{x.mask}.
   Subsequently, the parallelized reduction (without mask) is applied to the temporary object.}
