@@ -200,19 +200,19 @@ int find_last_set(implementation-defined) noexcept;
 
 \wgSubsubsection{Masked assigment}{simd_mask.where}
 \begin{itemdecl}
-template <class T, class A>
-where_expression<simd_mask<T, A>, simd<T, A>> where(const typename simd<T, A>::mask_type& k,
-                                                    simd<T, A>& v) noexcept;
-template <class T, class A>
-const_where_expression<simd_mask<T, A>, const simd<T, A>> where(const typename simd<T, A>::mask_type& k,
-                                                                const simd<T, A>& v) noexcept;
+template <class T, class Abi>
+where_expression<simd_mask<T, Abi>, simd<T, Abi>> where(const typename simd<T, Abi>::mask_type& k,
+                                                        simd<T, Abi>& v) noexcept;
+template <class T, class Abi>
+const_where_expression<simd_mask<T, Abi>, const simd<T, Abi>> where(
+    const typename simd<T, Abi>::mask_type& k, const simd<T, Abi>& v) noexcept;
 
-template <class T, class A>
-where_expression<simd_mask<T, A>, simd_mask<T, A>> where(const remove_const_t<simd_mask<T, A>>& k,
-                                                         simd_mask<T, A>& v) noexcept;
-template <class T, class A>
-const_where_expression<simd_mask<T, A>, const simd_mask<T, A>> where(
-    const remove_const_t<simd_mask<T, A>>& k, const simd_mask<T, A>& v) noexcept;
+template <class T, class Abi>
+where_expression<simd_mask<T, Abi>, simd_mask<T, Abi>> where(const remove_const_t<simd_mask<T, Abi>>& k,
+                                                             simd_mask<T, Abi>& v) noexcept;
+template <class T, class Abi>
+const_where_expression<simd_mask<T, Abi>, const simd_mask<T, Abi>> where(
+    const remove_const_t<simd_mask<T, Abi>>& k, const simd_mask<T, Abi>& v) noexcept;
 \end{itemdecl}
 \comment{\code{remove_const} is only used in place of a missing \code{template <class T> struct id \{ using type = T; \};} for inhibiting type deduction.}
 \begin{itemdescr}

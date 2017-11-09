@@ -33,7 +33,7 @@ namespace simd_abi {
   \pnum\label{simd.fixedsize.def}%
   Use of the \fixedsizeN tag type forces \simd and \mask to store and manipulate \code N components (i.e. \simd{}\type{<T, \fixedsizeN{}>::size()} returns \code N).
   An implementation must support at least any \code N $\in [1\ldots 32]$.
-  Additionally, for every supported \simd[<T, A>] (see \ref{simd.type requirements}), where \type A is an implementation-defined ABI tag, \code N $=$ \simd[<T, A>::size()] must be supported.
+  Additionally, for every supported \simd[<T, Abi>] (see \ref{simd.type requirements}), where \type{Abi} is an implementation-defined ABI tag, \code N $=$ \simd[<T, Abi>::size()] must be supported.
 
   \wgNote{
     An implementation may choose to forego ABI compatibility between differently compiled translation units for \simd and \mask instantiations using the same \fixedsizeN tag.
@@ -48,7 +48,7 @@ namespace simd_abi {
   }
 
   \pnum
-  An implementation may define additional ABI tag types in the simd_abi namespace, to support other forms of data-parallel computation.
+  An implementation may define additional ABI tag types in the \code{simd_abi} namespace, to support other forms of data-parallel computation.
 
   \pnum
   \type{simd_abi::compatible<T>} is an alias for the ABI tag with the most efficient data parallel execution for the element type \type T that ensures ABI compatibility on the \targetArch.%

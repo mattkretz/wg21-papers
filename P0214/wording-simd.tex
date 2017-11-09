@@ -367,7 +367,7 @@ typename V::value_type reduce(const const_where_expression<M, V>& x,
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class A> T hmin(const simd<T, A>& x);
+template <class T, class Abi> T hmin(const simd<T, Abi>& x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The value of an element \code{x[j]} for which \code{x[j] <= x[i]} \foralli.
@@ -386,7 +386,7 @@ template <class M, class V> T hmin(const const_where_expression<M, V>& x);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class A> T hmax(const simd<T, A>& x);
+template <class T, class Abi> T hmax(const simd<T, Abi>& x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The value of an element \code{x[j]} for which \code{x[j] >= x[i]} \foralli.
@@ -407,7 +407,7 @@ template <class M, class V> T hmax(const const_where_expression<M, V>& x);
 
 \wgSubsubsection{\simd casts}{simd.casts}
 \begin{itemdecl}
-template <class T, class U, class A> /*see below*/ simd_cast(const simd<U, A>& x);
+template <class T, class U, class Abi> /*see below*/ simd_cast(const simd<U, Abi>& x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Let \type{To} identify \type{T::\valuetype} if \code{is_simd_v<T>} or \type T otherwise.
@@ -415,12 +415,12 @@ template <class T, class U, class A> /*see below*/ simd_cast(const simd<U, A>& x
   \pnum\remarks The function shall not participate in overload resolution unless
   \begin{itemize}
     \item every possible value of type \type U can be represented with type \type{To}, and
-    \item either \code{!is_simd_v<T>} or \code{T::size()} is equal to \code{simd<U, A>::size()}.
+    \item either \code{!is_simd_v<T>} or \code{T::size()} is equal to \code{simd<U, Abi>::size()}.
   \end{itemize}
 
   \pnum\remarks If \code{is_simd_v<T>}, the return type is \type T.
-  Otherwise, if either \type U and \type T are equal or \type U and \type T are integral types that only differ in signedness, the return type is \simd[<T, A>].
-  Otherwise, the return type is \simd[<T, \fixedsizescoped{}<\simd<U, A>::size()>>].
+  Otherwise, if either \type U and \type T are equal or \type U and \type T are integral types that only differ in signedness, the return type is \simd[<T, Abi>].
+  Otherwise, the return type is \simd[<T, \fixedsizescoped{}<\simd<U, Abi>::size()>>].
 
   \pnum\returns A \simd object with the $i$-th element initialized to \code{static_cast<To>(x[i])}.
 
@@ -428,16 +428,16 @@ template <class T, class U, class A> /*see below*/ simd_cast(const simd<U, A>& x
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class U, class A> /*see below*/ static_simd_cast(const simd<U, A>& x);
+template <class T, class U, class Abi> /*see below*/ static_simd_cast(const simd<U, Abi>& x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Let \type{To} identify \type{T::\valuetype} if \code{is_simd_v<T>} or \type T otherwise.
 
-  \pnum\remarks The function shall not participate in overload resolution unless either \code{!is_simd_v<T>} or \code{T::size()} is equal to \code{simd<U, A>::size()}.
+  \pnum\remarks The function shall not participate in overload resolution unless either \code{!is_simd_v<T>} or \code{T::size()} is equal to \code{simd<U, Abi>::size()}.
 
   \pnum\remarks If \code{is_simd_v<T>}, the return type is \type T.
-  Otherwise, if either \type U and \type T are equal or \type U and \type T are integral types that only differ in signedness, the return type is \simd[<T, A>].
-  Otherwise, the return type is \simd[<T, \fixedsizescoped{}<\simd<U, A>::size()>>].
+  Otherwise, if either \type U and \type T are equal or \type U and \type T are integral types that only differ in signedness, the return type is \simd[<T, Abi>].
+  Otherwise, the return type is \simd[<T, \fixedsizescoped{}<\simd<U, Abi>::size()>>].
 
   \pnum\returns A \simd object with the $i$-th element initialized to \code{static_cast<To>(x[i])}.
 
@@ -445,10 +445,10 @@ template <class T, class U, class A> /*see below*/ static_simd_cast(const simd<U
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class A>
-simd<T, simd_abi::fixed_size<simd_size_v<T, A>>> to_fixed_size(const simd<T, A>& x) noexcept;
-template <class T, class A>
-mask<T, simd_abi::fixed_size<simd_size_v<T, A>>> to_fixed_size(const simd_mask<T, A>& x) noexcept;
+template <class T, class Abi>
+simd<T, simd_abi::fixed_size<simd_size_v<T, Abi>>> to_fixed_size(const simd<T, Abi>& x) noexcept;
+template <class T, class Abi>
+mask<T, simd_abi::fixed_size<simd_size_v<T, Abi>>> to_fixed_size(const simd_mask<T, Abi>& x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns An object with the $i$-th element initialized to \code{x[i]}.
@@ -477,39 +477,39 @@ mask<T, simd_abi::compatible<T>> to_compatible(const simd_mask<T, simd_abi::fixe
 \end{itemdescr}
 
 \begin{itemdecl}
-template <size_t... Sizes, class T, class A>
-tuple<simd<T, abi_for_size_t<Sizes>>...> split(const simd<T, A>& x);
-template <size_t... Sizes, class T, class A>
-tuple<simd_mask<T, abi_for_size_t<Sizes>>...> split(const simd_mask<T, A>& x);
+template <size_t... Sizes, class T, class Abi>
+tuple<simd<T, abi_for_size_t<Sizes>>...> split(const simd<T, Abi>& x);
+template <size_t... Sizes, class T, class Abi>
+tuple<simd_mask<T, abi_for_size_t<Sizes>>...> split(const simd_mask<T, Abi>& x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\remarks These functions shall not participate in overload resolution unless the sum of all values in the \code{Sizes} pack is equal to \code{simd_size_v<T, A>}.
+  \pnum\remarks These functions shall not participate in overload resolution unless the sum of all values in the \code{Sizes} pack is equal to \code{simd_size_v<T, Abi>}.
   \pnum\returns A \type{tuple} of \simd/\mask objects with the $i$-th \simd/\mask element of the $j$-th \type{tuple} element initialized to the value of the element in \code x with index $i$ + partial sum of the first $j$ values in the \code{Sizes} pack.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class V, class A>
-array<V, simd_size_v<typename V::value_type, A> / V::size()> split(
-    const simd<typename V::value_type, A>&);
-template <class V, class A>
-array<V, simd_size_v<typename V::value_type, A> / V::size()> split(
-    const simd_mask<typename V::value_type, A>&);
+template <class V, class Abi>
+array<V, simd_size_v<typename V::value_type, Abi> / V::size()> split(
+    const simd<typename V::value_type, Abi>&);
+template <class V, class Abi>
+array<V, simd_size_v<typename V::value_type, Abi> / V::size()> split(
+    const simd_mask<typename V::value_type, Abi>&);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks These functions shall not participate in overload resolution unless
   \begin{itemize}
     \item \code{is_simd_v<V>} for the first signature / \code{is_mask_v<V>} for the second signature,
-    \item and \code{simd_size_v<typename V::value_type, A>} is an integral multiple of \code{V::size()}.
+    \item and \code{simd_size_v<typename V::value_type, Abi>} is an integral multiple of \code{V::size()}.
   \end{itemize}
 
   \pnum\returns An \type{array} of \simd/\mask objects with the $i$-th \simd/\mask element of the $j$-th \type{array} element initialized to the value of the element in \code x with index $i + j \cdot $\code{V::size()}.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class... As>
-simd<T, abi_for_size_t<T, (simd_size_v<T, As> + ...)>> concat(const simd<T, As>&... xs);
-template <class T, class... As>
-simd_mask<T, abi_for_size_t<T, (simd_size_v<T, As> + ...)>> concat(const simd_mask<T, As>&... xs);
+template <class T, class... Abis>
+simd<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd<T, Abis>&... xs);
+template <class T, class... Abis>
+simd_mask<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd_mask<T, Abis>&... xs);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A \simd/\mask object initialized with the concatenated values in the \code{xs} pack of \simd/\mask objects.
@@ -518,25 +518,22 @@ simd_mask<T, abi_for_size_t<T, (simd_size_v<T, As> + ...)>> concat(const simd_ma
 
 \wgSubsubsection{\simd algorithms}{simd.alg}
 \begin{itemdecl}
-template <class T, class A>
-simd<T, A> min(const simd<T, A>& a, const simd<T, A>& b) noexcept;
+template <class T, class Abi> simd<T, Abi> min(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns An object with the $i$-th element initialized with the smaller value of \code{a[i]} and \code{b[i]} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class A>
-simd<T, A> max(const simd<T, A>&, const simd<T, A>&) noexcept;
+template <class T, class Abi> simd<T, Abi> max(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns An object with the $i$-th element initialized with the larger value of \code{a[i]} and \code{b[i]} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class A>
-std::pair<simd<T, A>, simd<T, A>> minmax(const simd<T, A>&,
-                                               const simd<T, A>&) noexcept;
+template <class T, class Abi>
+std::pair<simd<T, Abi>, simd<T, Abi>> minmax(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns An object with the $i$-th element in the first \type{pair} member initialized with the smaller value of \code{a[i]} and \code{b[i]} \foralli.
@@ -544,9 +541,8 @@ std::pair<simd<T, A>, simd<T, A>> minmax(const simd<T, A>&,
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class A>
-simd<T, A> clamp(const simd<T, A>& v, const simd<T, A>& lo,
-                    const simd<T, A>& hi);
+template <class T, class Abi>
+simd<T, Abi> clamp(const simd<T, Abi>& v, const simd<T, Abi>& lo, const simd<T, Abi>& hi);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\requires No element in \code{lo} shall be greater than the corresponding element in \code{hi}.

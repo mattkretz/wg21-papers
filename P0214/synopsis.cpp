@@ -47,13 +47,14 @@ namespace std::experimental {
     template <class T, int N> using fixed_size_simd_mask = simd_mask<T, simd_abi::fixed_size<N>>;
 
     // casts [simd.casts]
-    template <class T, class U, class A> /*see below*/ simd_cast(const simd<U, A>&);
-    template <class T, class U, class A> /*see below*/ static_simd_cast(const simd<U, A>&);
+    template <class T, class U, class Abi> /*see below*/ simd_cast(const simd<U, Abi>&);
+    template <class T, class U, class Abi> /*see below*/ static_simd_cast(const simd<U, Abi>&);
 
-    template <class T, class A>
-    simd<T, simd_abi::fixed_size<simd_size_v<T, A>>> to_fixed_size(const simd<T, A>&) noexcept;
-    template <class T, class A>
-    simd_mask<T, simd_abi::fixed_size<simd_size_v<T, A>>> to_fixed_size(const simd_mask<T, A>&) noexcept;
+    template <class T, class Abi>
+    simd<T, simd_abi::fixed_size<simd_size_v<T, Abi>>> to_fixed_size(const simd<T, Abi>&) noexcept;
+    template <class T, class Abi>
+    simd_mask<T, simd_abi::fixed_size<simd_size_v<T, Abi>>> to_fixed_size(
+        const simd_mask<T, Abi>&) noexcept;
     template <class T, size_t N>
     simd<T, simd_abi::native<T>> to_native(const simd<T, simd_abi::fixed_size<N>>&) noexcept;
     template <class T, size_t N>
@@ -63,21 +64,21 @@ namespace std::experimental {
     template <class T, size_t N>
     simd_mask<T, simd_abi::compatible<T>> to_compatible(const simd_mask<T, simd_abi::fixed_size<N>>&) noexcept;
 
-    template <size_t... Sizes, class T, class A>
-    tuple<simd<T, abi_for_size_t<Sizes>>...> split(const simd<T, A>&);
-    template <size_t... Sizes, class T, class A>
-    tuple<simd_mask<T, abi_for_size_t<Sizes>>...> split(const simd_mask<T, A>&);
-    template <class V, class A>
-    array<V, simd_size_v<typename V::value_type, A> / V::size()> split(
-        const simd<typename V::value_type, A>&);
-    template <class V, class A>
-    array<V, simd_size_v<typename V::value_type, A> / V::size()> split(
-        const simd_mask<typename V::value_type, A>&);
+    template <size_t... Sizes, class T, class Abi>
+    tuple<simd<T, abi_for_size_t<Sizes>>...> split(const simd<T, Abi>&);
+    template <size_t... Sizes, class T, class Abi>
+    tuple<simd_mask<T, abi_for_size_t<Sizes>>...> split(const simd_mask<T, Abi>&);
+    template <class V, class Abi>
+    array<V, simd_size_v<typename V::value_type, Abi> / V::size()> split(
+        const simd<typename V::value_type, Abi>&);
+    template <class V, class Abi>
+    array<V, simd_size_v<typename V::value_type, Abi> / V::size()> split(
+        const simd_mask<typename V::value_type, Abi>&);
 
-    template <class T, class... As>
-    simd<T, abi_for_size_t<T, (simd_size_v<T, As> + ...)>> concat(const simd<T, As>&...);
-    template <class T, class... As>
-    simd_mask<T, abi_for_size_t<T, (simd_size_v<T, As> + ...)>> concat(const simd_mask<T, As>&...);
+    template <class T, class... Abis>
+    simd<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd<T, Abis>&...);
+    template <class T, class... Abis>
+    simd_mask<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd_mask<T, Abis>&...);
 
     // reductions [simd_mask.reductions]
     template <class T, class Abi> bool  all_of(simd_mask<T, Abi>) noexcept;
@@ -100,19 +101,19 @@ namespace std::experimental {
     template <class M, class T> class const_where_expression;
     template <class M, class T> class where_expression;
 
-    template <class T, class A>
-    where_expression<simd_mask<T, A>, simd<T, A>> where(const typename simd<T, A>::mask_type&,
-                                                        simd<T, A>&) noexcept;
-    template <class T, class A>
-    const_where_expression<simd_mask<T, A>, const simd<T, A>> where(const typename simd<T, A>::mask_type&,
-                                                                    const simd<T, A>&) noexcept;
+    template <class T, class Abi>
+    where_expression<simd_mask<T, Abi>, simd<T, Abi>> where(const typename simd<T, Abi>::mask_type&,
+                                                            simd<T, Abi>&) noexcept;
+    template <class T, class Abi>
+    const_where_expression<simd_mask<T, Abi>, const simd<T, Abi>> where(
+        const typename simd<T, Abi>::mask_type&, const simd<T, Abi>&) noexcept;
 
-    template <class T, class A>
-    where_expression<simd_mask<T, A>, simd_mask<T, A>> where(const remove_const_t<simd_mask<T, A>>&,
-                                                             simd_mask<T, A>&) noexcept;
-    template <class T, class A>
-    const_where_expression<simd_mask<T, A>, const simd_mask<T, A>> where(
-        const remove_const_t<simd_mask<T, A>>&, const simd_mask<T, A>&) noexcept;
+    template <class T, class Abi>
+    where_expression<simd_mask<T, Abi>, simd_mask<T, Abi>> where(const remove_const_t<simd_mask<T, Abi>>&,
+                                                                 simd_mask<T, Abi>&) noexcept;
+    template <class T, class Abi>
+    const_where_expression<simd_mask<T, Abi>, const simd_mask<T, Abi>> where(
+        const remove_const_t<simd_mask<T, Abi>>&, const simd_mask<T, Abi>&) noexcept;
 
     template <class T> where_expression<bool, T> where(implementation-defined k, T& d) noexcept;
     template <class T>
@@ -126,17 +127,17 @@ namespace std::experimental {
                                   typename V::value_type neutral_element = default_neutral_element,
                                   BinaryOperation binary_op = BinaryOperation());
 
-    template <class T, class A> T hmin(const simd<T, A>&) noexcept;
+    template <class T, class Abi> T hmin(const simd<T, Abi>&) noexcept;
     template <class M, class V> T hmin(const const_where_expression<M, V>&) noexcept;
-    template <class T, class A> T hmax(const simd<T, A>&) noexcept;
+    template <class T, class Abi> T hmax(const simd<T, Abi>&) noexcept;
     template <class M, class V> T hmax(const const_where_expression<M, V>&) noexcept;
 
     // algorithms [simd.alg]
-    template <class T, class A> simd<T, A> min(const simd<T, A>&, const simd<T, A>&) noexcept;
-    template <class T, class A> simd<T, A> max(const simd<T, A>&, const simd<T, A>&) noexcept;
-    template <class T, class A>
-    std::pair<simd<T, A>, simd<T, A>> minmax(const simd<T, A>&, const simd<T, A>&) noexcept;
-    template <class T, class A>
-    simd<T, A> clamp(const simd<T, A>& v, const simd<T, A>& lo, const simd<T, A>& hi);
+    template <class T, class Abi> simd<T, Abi> min(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
+    template <class T, class Abi> simd<T, Abi> max(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
+    template <class T, class Abi>
+    std::pair<simd<T, Abi>, simd<T, Abi>> minmax(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
+    template <class T, class Abi>
+    simd<T, Abi> clamp(const simd<T, Abi>& v, const simd<T, Abi>& lo, const simd<T, Abi>& hi);
   }
 }
