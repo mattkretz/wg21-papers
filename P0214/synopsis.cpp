@@ -3,7 +3,7 @@ namespace std::experimental {
     namespace simd_abi {
       struct scalar {};
       template <int N> struct fixed_size {};
-      template <typename T> constexpr int max_fixed_size = implementation-defined;
+      template <typename T> inline constexpr int max_fixed_size = implementation-defined;
       template <typename T> using compatible = implementation-defined;
       template <typename T> using native = implementation-defined;
     }
@@ -11,30 +11,30 @@ namespace std::experimental {
     struct element_aligned_tag {};
     struct vector_aligned_tag {};
     template <size_t> struct overaligned_tag {};
-    constexpr element_aligned_tag element_aligned = {};
-    constexpr vector_aligned_tag vector_aligned = {};
-    template <size_t N> constexpr overaligned_tag<N> overaligned = {};
+    inline constexpr element_aligned_tag element_aligned = {};
+    inline constexpr vector_aligned_tag vector_aligned = {};
+    template <size_t N> inline constexpr overaligned_tag<N> overaligned = {};
 
     // traits [simd.traits]
     template <class T> struct is_abi_tag;
-    template <class T> constexpr bool is_abi_tag_v = is_abi_tag<T>::value;
+    template <class T> inline constexpr bool is_abi_tag_v = is_abi_tag<T>::value;
 
     template <class T> struct is_simd;
-    template <class T> constexpr bool is_simd_v = is_simd<T>::value;
+    template <class T> inline constexpr bool is_simd_v = is_simd<T>::value;
 
     template <class T> struct is_simd_mask;
-    template <class T> constexpr bool is_simd_mask_v = is_simd_mask<T>::value;
+    template <class T> inline constexpr bool is_simd_mask_v = is_simd_mask<T>::value;
 
     template <class T, size_t N> struct abi_for_size { using type = implementation-defined; };
     template <class T, size_t N> using abi_for_size_t = typename abi_for_size<T, N>::type;
 
     template <class T, class Abi = simd_abi::compatible<T>> struct simd_size;
     template <class T, class Abi = simd_abi::compatible<T>>
-    constexpr size_t simd_size_v = simd_size<T, Abi>::value;
+    inline constexpr size_t simd_size_v = simd_size<T, Abi>::value;
 
     template <class T, class U = typename T::value_type> struct memory_alignment;
     template <class T, class U = typename T::value_type>
-    constexpr size_t memory_alignment_v = memory_alignment<T, U>::value;
+    inline constexpr size_t memory_alignment_v = memory_alignment<T, U>::value;
 
     // class template simd [simd]
     template <class T, class Abi = simd_abi::compatible<T>> class simd;
