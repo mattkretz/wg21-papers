@@ -83,96 +83,40 @@
 \end{itemize}
 
 \section{Changelog}
-\subsection{Changes from R0}
-Previous revision: \parencite{P0214R0}.
+\subsection{Changes from R6}
+Previous revision: \parencite{P0214R6}.
 \begin{itemize}
-  \item Extended the \code{simd_abi} tag types with a \code{fixed_size<N>} tag to handle arbitrarily sized vectors (\ref{sec:simd.abi}).
-  \item Converted \code{memory_alignment} into a non-member trait (\ref{sec:simd.traits}).
-  \item Extended implicit conversions to handle \fixedsizeN (\ref{sec:simd.ctor}).
-  \item Extended binary operators to convert correctly with \fixedsizeN (\ref{sec:simd.binary}).
-  \item Dropped the section on “\simd logical operators”. Added a note that the omission is deliberate (\ref{sec:simd.logical}).
-  \item Added logical and bitwise operators to \mask (\ref{sec:simd_mask.binary}).
-  \item Modified \mask compares to work better with implicit conversions (\ref{sec:simd_mask.comparison}).
-  \item Modified \code{where} to support different Abi tags on the \mask and \simd arguments (\ref{sec:simd_mask.where}).
-  \item Converted the load functions to non-member functions.
-    SG1 asked for guidance from LEWG whether a load-expression or a template parameter to load is more appropriate.
-  \item Converted the store functions to non-member functions to be consistent with the load functions.
-  \item Added a note about masked stores not invoking out-of-bounds accesses for masked-off elements of the vector.
-  \item Converted the return type of \simd{}\code{::operator[]} to return a smart reference instead of an lvalue reference.
-  \item Modified the wording of \mask{}\code{::operator[]} to match the reference type returned from \simd{}\code{::operator[]}.
-  \item Added non-trig/pow/exp/log math functions on \simd.
-  \item Added discussion on defaulting load/store flags.
-  \item Added sum, product, min, and max reductions for \simd.
-  \item Added load constructor.
-  \item Modified the wording of \code{native_handle()} to make the existence of the functions implementation-defined, instead of only the return type.
-    Added a section in the discussion (cf. Section \ref{sec:native}).
-  \item Fixed missing flag objects.
+  \item Fixed return type of \code{isinf}. (\ref{sec:simd.math})
 \end{itemize}
-  %\todo Fix missing flag objects and specify the freedom for implementations to add additional flags and that \code{operator|} must work.
-  %\todo Added usage examples
 
-\subsection{Changes from R1}
-Previous revision: \parencite{P0214R1}.
+\subsection{Changes from R5}
+Previous revision: \parencite{P0214R5}.
 \begin{itemize}
-    \item Fixed converting constructor synopsis of \simd and \mask to also allow varying Abi types.
-    \item Modified the wording of \code{\mask{}::native_handle()} to make the existence of the functions implementation-defined.
-    \item Updated the discussion of member types to reflect the changes in R1.
-    \item Added all previous SG1 straw poll results.
-    \item Fixed \code{\textit{commonabi}} to not invent native Abi that makes the operator ill-formed.
-    \item Dropped table of math functions.
-    \item Be more explicit about the implementation-defined Abi types.
-    \item Discussed resolution of the \fixedsizeN design (\ref{sec:fixedsize progress}).
-    \item Made the \type{compatible} and \type{native} ABI aliases depend on \type T (\ref{sec:simd.abi}).
-    \item Added \code{max_fixed_size} constant (\ref{simd.maxfixedsize.def}).
-    \item Added masked loads.
-    \item Added rationale for return type of \simd[::operator-()] (\ref{sec:unary minus}).
-  \color{black}\item[---] SG1 guidance:
-    \item Dropped the default load / store flags.
-    \item Renamed the (un)aligned flags to \code{element_aligned} and \code{vector_aligned}.
-    \item Added an \code{overaligned<N>} load / store flag.
-    \item Dropped the ampersand on \code{native_handle} (no strong preference).
-    \item Completed the set of math functions (i.e. add trig, log, and exp).
-  \color{black}\item[---] LEWG (small group) guidance:
-    \item Dropped \code{native_handle} and add non-normative wording for supporting \code{static_cast} to implementation-defined SIMD extensions.
-    \item Dropped non-member load and store functions.
-    Instead have \code{copy_from} and \code{copy_to} member functions for loads and stores. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
-    (Did not use the \code{load} and \code{store} names because of the unfortunate inconsistency with \std\type{atomic}.)
-    \item Added algorithm overloads for \simd reductions.
-    Integrate with \code{where} to enable masked reductions. (\ref{sec:simd.reductions})
-    This made it necessary to spell out the class \type{where_expression}.
+  \item Renamed \code{memload} to \code{copy_from} and \code{memstore} to \code{copy_to}. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
+  \item Fixed \code{split} to never convert the \valuetype. (\ref{sec:simd.casts})
+  \item Added missing \type{long double} overload of \code{ceil}. (\ref{sec:simd.math})
 \end{itemize}
-\subsection{Changes from R2}
-Previous revision: \parencite{P0214R2}.
+
+\subsection{Changes from R4}
+Previous revision: \parencite{P0214R4}.
 \begin{itemize}
-    \item Fixed return type of masked \code{reduce} (\ref{sec:simd.reductions}).
-    \item Added binary \code{min}, \code{max}, \code{minmax}, and \code{clamp} (\ref{sec:simd.alg}).
-    \item Moved member \code{min} and \code{max} to non-member \code{hmin} and \code{hmax}, which cannot easily be optimized from \code{reduce}, since no function object such as \code{std::plus} exists (\ref{sec:simd.reductions}).
-    \item Fixed neutral element of masked \code{hmin}/\code{hmax} and drop UB (\ref{sec:simd.reductions}).
-    \item Removed remaining reduction member functions in favor of non-member \code{reduce} (as requested by LEWG).
-    \item Replaced \code{init} parameter of masked \code{reduce} with \code{neutral_element} (\ref{sec:simd.reductions}).
-    \item Extend \type{where_expression} to support \const \simd objects (\ref{sec:simd_mask.where}).
-    \item Fixed missing \code{explicit} keyword on \code{simd_mask(bool)} constructor (\ref{sec:simd_mask.ctor}).
-    \item Made binary operators for \simd and \mask friend functions of \simd and \mask, simplifying the SFINAE requirements considerably (\ref{sec:simd.binary}, \ref{sec:simd_mask.binary}).
-    \item Restricted broadcasts to only allow non-narrowing conversions (\ref{sec:simd.ctor}).
-    \item Restricted simd to simd conversions to only allow non-narrowing conversions with \type{fixed_size} ABI (\ref{sec:simd.ctor}).
-    \item Added generator constructor (as discussed in LEWG in Issaquah) (\ref{sec:simd.ctor}).
-    \item Renamed \code{copy_from} to \code{memload} and \code{copy_to} to \code{memstore}. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
-    \item Documented effect of \type{overaligned_tag<N>} as \type{Flags} parameter to load/store. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
-    \item Clarified cv requirements on \type T parameter of \simd and \mask.
-    \item Allowed all implicit \mask conversions with \fixedsize ABI and equal size (\ref{sec:simd_mask.ctor}).
-    \item Made increment and decrement of \type{where_expression} return \type{void}.
-    \item Added \code{static_simd_cast} for simple casts (\ref{sec:simd.casts}).
-    \item Clarified default constructor (\ref{sec:simd.overview}, \ref{sec:simd.overview}).
-    \item Clarified \simd and \mask with invalid template parameters to be complete types with deleted constructors, destructor, and assignment (\ref{sec:simd.overview}, \ref{sec:simd.overview}).
-    \item Wrote a new subsection for a detailed description of \type{where_expression} (\ref{sec:simd.whereexpr}).
-    \item Moved masked loads and stores from \simd and \mask to \type{where_expression} (\ref{sec:simd.whereexpr}).
-          This required two more overloads of \code{where} to support value objects of type \mask (\ref{sec:simd_mask.where}).
-    \item Removed \type{where_expression}\code{::operator!} (\ref{sec:simd.whereexpr}).
-    \item Added aliases \type{native_simd}, \type{native_mask}, \type{fixed_size_simd}, \type{fixed_size_mask} (\ref{sec:simd.syn}).
-    \item Removed \bool overloads of mask reductions awaiting a better solution (\ref{sec:simd_mask.reductions}).
-    \item Removed special math functions with \code f and \code l suffix and \code l and \code{ll} prefix (\ref{sec:simd.math}).
-    \item Modified special math functions with mixed types to use \type{fixed_size} instead of \code{abi_for_size} (\ref{sec:simd.math}).
-    \item Added simple ABI cast functions \code{to_fixed_size}, \code{to_native}, and \code{to_compatible} (\ref{sec:simd.casts}).
+  \item Changed \type{align_val_t} argument of \type{overaligned<N>} and \type{overaligned_tag<N>} to \type{size_t}.
+    (Usage is otherwise too cumbersome.)
+  \itemheader{changes after LEWG Review}
+  \item Remove section on naming (after the topic was discussed and decided in LEWG).
+  \item Rename \code{datapar} to \code{simd} and \code{mask} to \code{simd_mask}.
+  \item Remove incorrect template parameters to scalar boolean reductions.
+  \item Merge proposed \code{simd_cast} into the wording (using Option 3) and extend \code{static_simd_cast} accordingly.
+  \item Merge proposed \code{split} and \code{concat} functions into the wording.
+  \item Since the target is a TS, place headers into \code{experimental/} directory.
+  %\itemheader{changes after Toronto}
+  %\todo New section on design decisions; discuss decisions made by SG1, LEWG, and through discussion with Jens; especially discuss the ABI parameter:
+  %\begin{itemize}
+  %  \item it provides the intended lowest level access to SIMD programming
+  %  \item it allows easy high-level abstraction
+  %  \item how the default was chosen, and why having a \emph{compatible} ABI be the default is the nicer default
+  %  \item an ABI parameter influences the choice of function parameter passing, not necessarily the choice of instructions or even number of elements (e.g. an implementation can provide an ABI that passes via 128-bit registers but otherwise works with 256-bit registers)
+  %\end{itemize}
 \end{itemize}
 
 \subsection{Changes from R3}
@@ -234,41 +178,97 @@ Previous revision: \parencite{P0214R3}.
   \item Add \autoref{sec:feature-detection} \nameref{sec:feature-detection}.
 \end{itemize}
 
-\subsection{Changes from R4}
-Previous revision: \parencite{P0214R4}.
+\subsection{Changes from R2}
+Previous revision: \parencite{P0214R2}.
 \begin{itemize}
-  \item Changed \type{align_val_t} argument of \type{overaligned<N>} and \type{overaligned_tag<N>} to \type{size_t}.
-    (Usage is otherwise too cumbersome.)
-  \itemheader{changes after LEWG Review}
-  \item Remove section on naming (after the topic was discussed and decided in LEWG).
-  \item Rename \code{datapar} to \code{simd} and \code{mask} to \code{simd_mask}.
-  \item Remove incorrect template parameters to scalar boolean reductions.
-  \item Merge proposed \code{simd_cast} into the wording (using Option 3) and extend \code{static_simd_cast} accordingly.
-  \item Merge proposed \code{split} and \code{concat} functions into the wording.
-  \item Since the target is a TS, place headers into \code{experimental/} directory.
-  %\itemheader{changes after Toronto}
-  %\todo New section on design decisions; discuss decisions made by SG1, LEWG, and through discussion with Jens; especially discuss the ABI parameter:
-  %\begin{itemize}
-  %  \item it provides the intended lowest level access to SIMD programming
-  %  \item it allows easy high-level abstraction
-  %  \item how the default was chosen, and why having a \emph{compatible} ABI be the default is the nicer default
-  %  \item an ABI parameter influences the choice of function parameter passing, not necessarily the choice of instructions or even number of elements (e.g. an implementation can provide an ABI that passes via 128-bit registers but otherwise works with 256-bit registers)
-  %\end{itemize}
+    \item Fixed return type of masked \code{reduce} (\ref{sec:simd.reductions}).
+    \item Added binary \code{min}, \code{max}, \code{minmax}, and \code{clamp} (\ref{sec:simd.alg}).
+    \item Moved member \code{min} and \code{max} to non-member \code{hmin} and \code{hmax}, which cannot easily be optimized from \code{reduce}, since no function object such as \code{std::plus} exists (\ref{sec:simd.reductions}).
+    \item Fixed neutral element of masked \code{hmin}/\code{hmax} and drop UB (\ref{sec:simd.reductions}).
+    \item Removed remaining reduction member functions in favor of non-member \code{reduce} (as requested by LEWG).
+    \item Replaced \code{init} parameter of masked \code{reduce} with \code{neutral_element} (\ref{sec:simd.reductions}).
+    \item Extend \type{where_expression} to support \const \simd objects (\ref{sec:simd_mask.where}).
+    \item Fixed missing \code{explicit} keyword on \code{simd_mask(bool)} constructor (\ref{sec:simd_mask.ctor}).
+    \item Made binary operators for \simd and \mask friend functions of \simd and \mask, simplifying the SFINAE requirements considerably (\ref{sec:simd.binary}, \ref{sec:simd_mask.binary}).
+    \item Restricted broadcasts to only allow non-narrowing conversions (\ref{sec:simd.ctor}).
+    \item Restricted simd to simd conversions to only allow non-narrowing conversions with \type{fixed_size} ABI (\ref{sec:simd.ctor}).
+    \item Added generator constructor (as discussed in LEWG in Issaquah) (\ref{sec:simd.ctor}).
+    \item Renamed \code{copy_from} to \code{memload} and \code{copy_to} to \code{memstore}. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
+    \item Documented effect of \type{overaligned_tag<N>} as \type{Flags} parameter to load/store. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
+    \item Clarified cv requirements on \type T parameter of \simd and \mask.
+    \item Allowed all implicit \mask conversions with \fixedsize ABI and equal size (\ref{sec:simd_mask.ctor}).
+    \item Made increment and decrement of \type{where_expression} return \type{void}.
+    \item Added \code{static_simd_cast} for simple casts (\ref{sec:simd.casts}).
+    \item Clarified default constructor (\ref{sec:simd.overview}, \ref{sec:simd.overview}).
+    \item Clarified \simd and \mask with invalid template parameters to be complete types with deleted constructors, destructor, and assignment (\ref{sec:simd.overview}, \ref{sec:simd.overview}).
+    \item Wrote a new subsection for a detailed description of \type{where_expression} (\ref{sec:simd.whereexpr}).
+    \item Moved masked loads and stores from \simd and \mask to \type{where_expression} (\ref{sec:simd.whereexpr}).
+          This required two more overloads of \code{where} to support value objects of type \mask (\ref{sec:simd_mask.where}).
+    \item Removed \type{where_expression}\code{::operator!} (\ref{sec:simd.whereexpr}).
+    \item Added aliases \type{native_simd}, \type{native_mask}, \type{fixed_size_simd}, \type{fixed_size_mask} (\ref{sec:simd.syn}).
+    \item Removed \bool overloads of mask reductions awaiting a better solution (\ref{sec:simd_mask.reductions}).
+    \item Removed special math functions with \code f and \code l suffix and \code l and \code{ll} prefix (\ref{sec:simd.math}).
+    \item Modified special math functions with mixed types to use \type{fixed_size} instead of \code{abi_for_size} (\ref{sec:simd.math}).
+    \item Added simple ABI cast functions \code{to_fixed_size}, \code{to_native}, and \code{to_compatible} (\ref{sec:simd.casts}).
 \end{itemize}
 
-\subsection{Changes from R5}
-Previous revision: \parencite{P0214R5}.
+\subsection{Changes from R1}
+Previous revision: \parencite{P0214R1}.
 \begin{itemize}
-  \item Renamed \code{memload} to \code{copy_from} and \code{memstore} to \code{copy_to}. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
-  \item Fixed \code{split} to never convert the \valuetype. (\ref{sec:simd.casts})
-  \item Added missing \type{long double} overload of \code{ceil}. (\ref{sec:simd.math})
+    \item Fixed converting constructor synopsis of \simd and \mask to also allow varying Abi types.
+    \item Modified the wording of \code{\mask{}::native_handle()} to make the existence of the functions implementation-defined.
+    \item Updated the discussion of member types to reflect the changes in R1.
+    \item Added all previous SG1 straw poll results.
+    \item Fixed \code{\textit{commonabi}} to not invent native Abi that makes the operator ill-formed.
+    \item Dropped table of math functions.
+    \item Be more explicit about the implementation-defined Abi types.
+    \item Discussed resolution of the \fixedsizeN design (\ref{sec:fixedsize progress}).
+    \item Made the \type{compatible} and \type{native} ABI aliases depend on \type T (\ref{sec:simd.abi}).
+    \item Added \code{max_fixed_size} constant (\ref{simd.maxfixedsize.def}).
+    \item Added masked loads.
+    \item Added rationale for return type of \simd[::operator-()] (\ref{sec:unary minus}).
+  \color{black}\item[---] SG1 guidance:
+    \item Dropped the default load / store flags.
+    \item Renamed the (un)aligned flags to \code{element_aligned} and \code{vector_aligned}.
+    \item Added an \code{overaligned<N>} load / store flag.
+    \item Dropped the ampersand on \code{native_handle} (no strong preference).
+    \item Completed the set of math functions (i.e. add trig, log, and exp).
+  \color{black}\item[---] LEWG (small group) guidance:
+    \item Dropped \code{native_handle} and add non-normative wording for supporting \code{static_cast} to implementation-defined SIMD extensions.
+    \item Dropped non-member load and store functions.
+    Instead have \code{copy_from} and \code{copy_to} member functions for loads and stores. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
+    (Did not use the \code{load} and \code{store} names because of the unfortunate inconsistency with \std\type{atomic}.)
+    \item Added algorithm overloads for \simd reductions.
+    Integrate with \code{where} to enable masked reductions. (\ref{sec:simd.reductions})
+    This made it necessary to spell out the class \type{where_expression}.
 \end{itemize}
-
-\subsection{Changes from R6}
-Previous revision: \parencite{P0214R6}.
+\subsection{Changes from R0}
+Previous revision: \parencite{P0214R0}.
 \begin{itemize}
-  \item Fixed return type of \code{isinf}. (\ref{sec:simd.math})
+  \item Extended the \code{simd_abi} tag types with a \code{fixed_size<N>} tag to handle arbitrarily sized vectors (\ref{sec:simd.abi}).
+  \item Converted \code{memory_alignment} into a non-member trait (\ref{sec:simd.traits}).
+  \item Extended implicit conversions to handle \fixedsizeN (\ref{sec:simd.ctor}).
+  \item Extended binary operators to convert correctly with \fixedsizeN (\ref{sec:simd.binary}).
+  \item Dropped the section on “\simd logical operators”. Added a note that the omission is deliberate (\ref{sec:simd.logical}).
+  \item Added logical and bitwise operators to \mask (\ref{sec:simd_mask.binary}).
+  \item Modified \mask compares to work better with implicit conversions (\ref{sec:simd_mask.comparison}).
+  \item Modified \code{where} to support different Abi tags on the \mask and \simd arguments (\ref{sec:simd_mask.where}).
+  \item Converted the load functions to non-member functions.
+    SG1 asked for guidance from LEWG whether a load-expression or a template parameter to load is more appropriate.
+  \item Converted the store functions to non-member functions to be consistent with the load functions.
+  \item Added a note about masked stores not invoking out-of-bounds accesses for masked-off elements of the vector.
+  \item Converted the return type of \simd{}\code{::operator[]} to return a smart reference instead of an lvalue reference.
+  \item Modified the wording of \mask{}\code{::operator[]} to match the reference type returned from \simd{}\code{::operator[]}.
+  \item Added non-trig/pow/exp/log math functions on \simd.
+  \item Added discussion on defaulting load/store flags.
+  \item Added sum, product, min, and max reductions for \simd.
+  \item Added load constructor.
+  \item Modified the wording of \code{native_handle()} to make the existence of the functions implementation-defined, instead of only the return type.
+    Added a section in the discussion (cf. Section \ref{sec:native}).
+  \item Fixed missing flag objects.
 \end{itemize}
+  %\todo Fix missing flag objects and specify the freedom for implementations to add additional flags and that \code{operator|} must work.
+  %\todo Added usage examples
 
 \input{strawpolls}
 \input{intro}
