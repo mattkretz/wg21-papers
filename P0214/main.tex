@@ -95,6 +95,14 @@ Previous revision: \parencite{P0214R6}.
   \chck Removed \code{flags} namespace \ref{sec:simd.syn}.
   \chck Rename stable name [simd] to [simd.class].
   \chck all of your global constexpr variables should be inline
+  \todo you copy initialze some value but direct initialize others: they should be consistent
+  \todo Every time I read A I think Allocator: can the be Abi instead?
+  \todo stable names should follow a hierarchy; for [simd] I would suggest [simd.class]; so everything should be [simd.*]
+  \todo for the see belows we don't put comments but use italics
+  \todo all of the casts can benefit from the aliases or the default args
+  \todo why are the arguments by value? Consistently pass arguments by const-ref or by value
+  \todo reduce: the defaulted argument should be moved right to the end
+  \todo reduce: define \code{default_natural_element} (or mark it see-below / implementation-defined)
 \end{itemize}
 
 \subsection{Changes from R5}
