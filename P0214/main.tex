@@ -107,7 +107,7 @@ Previous revision: \parencite{P0214R6}.
   Be consistent.
   Resolved to consistently pass by const-ref. Rationale: if an implementation wants a non-inline, pass-by-value function it can inline the public const-ref function and call an internal function.
   If the public function uses by value parameters it may happen that the implied copy is not optimized away.)
-  \todo all of the casts can benefit from the aliases or the default args
+  \chck Simplify casts using aliases or default arguments.
 \end{itemize}
 
 \subsection{Changes from R5}

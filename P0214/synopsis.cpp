@@ -51,18 +51,14 @@ namespace std::experimental {
     template <class T, class U, class Abi> @\emph{see below}@ static_simd_cast(const simd<U, Abi>&);
 
     template <class T, class Abi>
-    simd<T, simd_abi::fixed_size<simd_size_v<T, Abi>>> to_fixed_size(const simd<T, Abi>&) noexcept;
+    fixed_size_simd<T, simd_size_v<T, Abi>> to_fixed_size(const simd<T, Abi>&) noexcept;
     template <class T, class Abi>
-    simd_mask<T, simd_abi::fixed_size<simd_size_v<T, Abi>>> to_fixed_size(
-        const simd_mask<T, Abi>&) noexcept;
+    fixed_size_simd_mask<T, simd_size_v<T, Abi>> to_fixed_size(const simd_mask<T, Abi>&) noexcept;
+    template <class T, size_t N> native_simd<T> to_native(const fixed_size_simd<T, N>&) noexcept;
     template <class T, size_t N>
-    simd<T, simd_abi::native<T>> to_native(const simd<T, simd_abi::fixed_size<N>>&) noexcept;
-    template <class T, size_t N>
-    simd_mask<T, simd_abi::native<T>> to_native(const simd_mask<T, simd_abi::fixed_size<N>>&) noexcept;
-    template <class T, size_t N>
-    simd<T, simd_abi::compatible<T>> to_compatible(const simd<T, simd_abi::fixed_size<N>>&) noexcept;
-    template <class T, size_t N>
-    simd_mask<T, simd_abi::compatible<T>> to_compatible(const simd_mask<T, simd_abi::fixed_size<N>>&) noexcept;
+    native_simd_mask<T> to_native(const fixed_size_simd_mask<T, N>> &) noexcept;
+    template <class T, size_t N> simd<T> to_compatible(const fixed_size_simd<T, N>&) noexcept;
+    template <class T, size_t N> simd_mask<T> to_compatible(const fixed_size_simd_mask<T, N>&) noexcept;
 
     template <size_t... Sizes, class T, class Abi>
     tuple<simd<T, abi_for_size_t<Sizes>>...> split(const simd<T, Abi>&);

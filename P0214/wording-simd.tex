@@ -450,19 +450,17 @@ template <class T, class U, class Abi> @\emph{see below}@ static_simd_cast(const
 
 \begin{itemdecl}
 template <class T, class Abi>
-simd<T, simd_abi::fixed_size<simd_size_v<T, Abi>>> to_fixed_size(const simd<T, Abi>& x) noexcept;
+fixed_size_simd<T, simd_size_v<T, Abi>> to_fixed_size(const simd<T, Abi>& x) noexcept;
 template <class T, class Abi>
-mask<T, simd_abi::fixed_size<simd_size_v<T, Abi>>> to_fixed_size(const simd_mask<T, Abi>& x) noexcept;
+fixed_size_simd_mask<T, simd_size_v<T, Abi>> to_fixed_size(const simd_mask<T, Abi>& x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns An object with the $i$-th element initialized to \code{x[i]}.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, size_t N>
-simd<T, simd_abi::native<T>> to_native(const simd<T, simd_abi::fixed_size<N>>& x) noexcept;
-template <class T, size_t N>
-mask<T, simd_abi::native<T>> to_native(const simd_mask<T, simd_abi::fixed_size<N>>& x) noexcept;
+template <class T, size_t N> native_simd<T> to_native(const fixed_size_simd<T, N>& x) noexcept;
+template <class T, size_t N> native_simd_mask<T> to_native(const fixed_size_simd_mask<T, N>> &x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks These functions shall not participate in overload resolution unless \code{simd_size_v<T, simd_abi::native<T>>} is equal to \code N.
@@ -470,10 +468,8 @@ mask<T, simd_abi::native<T>> to_native(const simd_mask<T, simd_abi::fixed_size<N
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, size_t N>
-simd<T, simd_abi::compatible<T>> to_compatible(const simd<T, simd_abi::fixed_size<N>>& x) noexcept;
-template <class T, size_t N>
-mask<T, simd_abi::compatible<T>> to_compatible(const simd_mask<T, simd_abi::fixed_size<N>>& x) noexcept;
+template <class T, size_t N> simd<T> to_compatible(const fixed_size_simd<T, N>& x) noexcept;
+template <class T, size_t N> simd_mask<T> to_compatible(const fixed_size_simd_mask<T, N>& x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks These functions shall not participate in overload resolution unless \code{simd_size_v<T, simd_abi::compatible<T>>} is equal to \code N.
