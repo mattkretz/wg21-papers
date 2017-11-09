@@ -100,10 +100,14 @@ Previous revision: \parencite{P0214R6}.
         {\color{red}Note: now the default \code{natural_element} is almost useless}
   \chck reduce: Replaced \code{default_natural_element} with \emph{implementation-defined}
   \chck reduce: Explained what the default \code{natural_element} is supposed to do. (\ref{sec:simd.reductions})
-  \todo you copy initialze some value but direct initialize others: they should be consistent
-  \todo for the see belows we don't put comments but use italics
+  \chck Consistently copy initialze.
+  \chck Put the “see belows” in italics instead of comments.
+  \chck Consistently pass by const-ref.
+  (LWG: Why are the arguments by value?
+  Be consistent.
+  Resolved to consistently pass by const-ref. Rationale: if an implementation wants a non-inline, pass-by-value function it can inline the public const-ref function and call an internal function.
+  If the public function uses by value parameters it may happen that the implied copy is not optimized away.)
   \todo all of the casts can benefit from the aliases or the default args
-  \todo why are the arguments by value? Consistently pass arguments by const-ref or by value
 \end{itemize}
 
 \subsection{Changes from R5}

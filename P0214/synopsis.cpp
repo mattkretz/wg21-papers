@@ -47,8 +47,8 @@ namespace std::experimental {
     template <class T, int N> using fixed_size_simd_mask = simd_mask<T, simd_abi::fixed_size<N>>;
 
     // casts [simd.casts]
-    template <class T, class U, class Abi> /*see below*/ simd_cast(const simd<U, Abi>&);
-    template <class T, class U, class Abi> /*see below*/ static_simd_cast(const simd<U, Abi>&);
+    template <class T, class U, class Abi> @\emph{see below}@ simd_cast(const simd<U, Abi>&);
+    template <class T, class U, class Abi> @\emph{see below}@ static_simd_cast(const simd<U, Abi>&);
 
     template <class T, class Abi>
     simd<T, simd_abi::fixed_size<simd_size_v<T, Abi>>> to_fixed_size(const simd<T, Abi>&) noexcept;
@@ -81,13 +81,13 @@ namespace std::experimental {
     simd_mask<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd_mask<T, Abis>&...);
 
     // reductions [simd.mask.reductions]
-    template <class T, class Abi> bool  all_of(simd_mask<T, Abi>) noexcept;
-    template <class T, class Abi> bool  any_of(simd_mask<T, Abi>) noexcept;
-    template <class T, class Abi> bool none_of(simd_mask<T, Abi>) noexcept;
-    template <class T, class Abi> bool some_of(simd_mask<T, Abi>) noexcept;
-    template <class T, class Abi> int popcount(simd_mask<T, Abi>) noexcept;
-    template <class T, class Abi> int find_first_set(simd_mask<T, Abi>);
-    template <class T, class Abi> int find_last_set(simd_mask<T, Abi>);
+    template <class T, class Abi> bool  all_of(const simd_mask<T, Abi>&) noexcept;
+    template <class T, class Abi> bool  any_of(const simd_mask<T, Abi>&) noexcept;
+    template <class T, class Abi> bool none_of(const simd_mask<T, Abi>&) noexcept;
+    template <class T, class Abi> bool some_of(const simd_mask<T, Abi>&) noexcept;
+    template <class T, class Abi> int popcount(const simd_mask<T, Abi>&) noexcept;
+    template <class T, class Abi> int find_first_set(const simd_mask<T, Abi>&);
+    template <class T, class Abi> int find_last_set(const simd_mask<T, Abi>&);
 
     bool  all_of(implementation-defined) noexcept;
     bool  any_of(implementation-defined) noexcept;

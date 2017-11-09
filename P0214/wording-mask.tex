@@ -134,42 +134,42 @@ friend simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
 
 \wgSubsubsection{\mask reductions}{simd.mask.reductions}
 \begin{itemdecl}
-template <class T, class Abi> bool  all_of(simd_mask<T, Abi>) noexcept;
+template <class T, class Abi> bool  all_of(const simd_mask<T, Abi>&) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \true if all boolean elements in the function argument equal \true, \false otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> bool  any_of(simd_mask<T, Abi>) noexcept;
+template <class T, class Abi> bool  any_of(const simd_mask<T, Abi>&) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \true if at least one boolean element in the function argument equals \true, \false otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> bool none_of(simd_mask<T, Abi>) noexcept;
+template <class T, class Abi> bool none_of(const simd_mask<T, Abi>&) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \true if none of the boolean element in the function argument equals \true, \false otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> bool some_of(simd_mask<T, Abi>) noexcept;
+template <class T, class Abi> bool some_of(const simd_mask<T, Abi>&) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns \true if at least one of the boolean elements in the function argument equals \true and at least one of the boolean elements in the function argument equals \false, \false otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> int popcount(simd_mask<T, Abi>) noexcept;
+template <class T, class Abi> int popcount(const simd_mask<T, Abi>&) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns The number of boolean elements that are \true.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> int find_first_set(simd_mask<T, Abi> m);
+template <class T, class Abi> int find_first_set(const simd_mask<T, Abi>& m);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\requires \code{any_of(m)} returns \true
@@ -177,7 +177,7 @@ template <class T, class Abi> int find_first_set(simd_mask<T, Abi> m);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> int find_last_set(simd_mask<T, Abi> m);
+template <class T, class Abi> int find_last_set(const simd_mask<T, Abi>& m);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\requires \code{any_of(m)} returns \true

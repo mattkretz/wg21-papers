@@ -411,7 +411,7 @@ template <class M, class V> T hmax(const const_where_expression<M, V>& x);
 
 \wgSubsubsection{\simd casts}{simd.casts}
 \begin{itemdecl}
-template <class T, class U, class Abi> /*see below*/ simd_cast(const simd<U, Abi>& x);
+  template <class T, class U, class Abi> @\emph{see below}@ simd_cast(const simd<U, Abi>& x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Let \type{To} identify \type{T::\valuetype} if \code{is_simd_v<T>} or \type T otherwise.
@@ -432,7 +432,7 @@ template <class T, class U, class Abi> /*see below*/ simd_cast(const simd<U, Abi
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class U, class Abi> /*see below*/ static_simd_cast(const simd<U, Abi>& x);
+template <class T, class U, class Abi> @\emph{see below}@ static_simd_cast(const simd<U, Abi>& x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks Let \type{To} identify \type{T::\valuetype} if \code{is_simd_v<T>} or \type T otherwise.
