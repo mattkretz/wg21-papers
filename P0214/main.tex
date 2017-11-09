@@ -89,15 +89,14 @@ Previous revision: \parencite{P0214R6}.
   \item Fixed return type of \code{isinf}. (\ref{sec:simd.math})
   \chck Changed namespace to \code{std::experimental::parallelism_v2}.
   \chck Shortened intro sentence in \ref{sec:simd.syn}.
-  \chck Added missing \code{const_where_expression} overload for \code{where(bool, const T\&}. (\ref{sec:simd.syn}, \ref{sec:simd_mask.where}) (The overload is present in my reference implementation.)
+  \chck Added missing \code{const_where_expression} overload for \code{where(bool, const T\&}. (\ref{sec:simd.syn}, \ref{sec:simd.mask.where}) (The overload is present in my reference implementation.)
   \chck Removed \code{const} from \code{const_where_expression} return type. (\ref{sec:simd.syn})
-  \item Fixed incorrect \code{const where_expression} return types in \ref{sec:simd_mask.where}.
+  \item Fixed incorrect \code{const where_expression} return types in \ref{sec:simd.mask.where}.
   \chck Removed \code{flags} namespace \ref{sec:simd.syn}.
-  \chck Rename stable name [simd] to [simd.class].
   \chck all of your global constexpr variables should be inline
   \chck Rename template parameters \code{A} to \code{Abis} and \code{As...} to \code{Abis...}.
+  \chck Stable names follow a hierarchy; use [simd.class] instead of [simd]; rename [simd_mask] to [simd.mask]
   \todo you copy initialze some value but direct initialize others: they should be consistent
-  \todo stable names should follow a hierarchy; for [simd] I would suggest [simd.class]; so everything should be [simd.*]
   \todo for the see belows we don't put comments but use italics
   \todo all of the casts can benefit from the aliases or the default args
   \todo why are the arguments by value? Consistently pass arguments by const-ref or by value
@@ -108,7 +107,7 @@ Previous revision: \parencite{P0214R6}.
 \subsection{Changes from R5}
 Previous revision: \parencite{P0214R5}.
 \begin{itemize}
-  \item Renamed \code{memload} to \code{copy_from} and \code{memstore} to \code{copy_to}. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
+  \item Renamed \code{memload} to \code{copy_from} and \code{memstore} to \code{copy_to}. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd.mask.load}, \ref{sec:simd.mask.store})
   \item Fixed \code{split} to never convert the \valuetype. (\ref{sec:simd.casts})
   \item Added missing \type{long double} overload of \code{ceil}. (\ref{sec:simd.math})
 \end{itemize}
@@ -146,12 +145,12 @@ Previous revision: \parencite{P0214R3}.
         This enables more efficient implementations.
         This signature is present in the Vc library, and was forgotten in the wording.
   \item Remove empty section about the omission of logical operators.
-  \item Modify \mask compares to return a \mask instead of \bool (\ref{sec:simd_mask.comparison}).
+  \item Modify \mask compares to return a \mask instead of \bool (\ref{sec:simd.mask.comparison}).
         This resolves an inconsistency with all the other binary operators.
   \item Editorial: Improve \referencetype member specification (\ref{sec:simd.overview}).
   \item Require \code{swap(v[0], v[1])} to be valid (\ref{sec:simd.overview}).
   \item Fixed inconsisteny of masked load constructor after move of \code{memload} to \type{where_expression} (\ref{sec:simd.whereexpr}).
-  \item Editorial: Use Requires clause instead of Remarks to require the memory argument to loads and stores to be large enough (\ref{sec:simd.whereexpr}, \ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store}).
+  \item Editorial: Use Requires clause instead of Remarks to require the memory argument to loads and stores to be large enough (\ref{sec:simd.whereexpr}, \ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd.mask.load}, \ref{sec:simd.mask.store}).
   \item Add a note to special math functions that precondition violation is UB (\ref{sec:simd.math}).
   \item Bugfix: Binary operators involving two \type{simd::reference} objects must work (\ref{sec:simd.overview}).
   \item Editorial: Replace Note clauses in favor of \wgNote{}.
@@ -166,11 +165,11 @@ Previous revision: \parencite{P0214R3}.
   \item Discuss the questions/issues raised on \code{max_fixed_size} in Kona (\autoref{sec:maxfixedsize}).
   \item Make \code{max_fixed_size} dependent on \type{T}.
   \item Clarify that converting loads and stores only work with arrays of non-bool arithmetic type (\ref{sec:simd.load}, \ref{sec:simd.store}).
-  \item Discuss \mask and \type{bitset} reduction interface differences (\autoref{sec:simd_mask queries}).
+  \item Discuss \mask and \type{bitset} reduction interface differences.
   \item Relax requirements on return type of generator function for the generator constructor (\ref{sec:simd.ctor}).
   \item Remove overly generic \code{simd_cast} function.
-  \item Add proposal for a widening cast function (\autoref{sec:widen}).
-  \item Add proposal for \code{split} and \code{concat} cast functions (\autoref{sec:split and concat}).
+  \item Add proposal for a widening cast function.
+  \item Add proposal for \code{split} and \code{concat} cast functions.
   \item Add \code{noexcept} or “Throws: Nothing.” to most functions.
 
   \item[---] wording fixes \& improvements:
@@ -203,26 +202,26 @@ Previous revision: \parencite{P0214R2}.
     \item Fixed neutral element of masked \code{hmin}/\code{hmax} and drop UB (\ref{sec:simd.reductions}).
     \item Removed remaining reduction member functions in favor of non-member \code{reduce} (as requested by LEWG).
     \item Replaced \code{init} parameter of masked \code{reduce} with \code{neutral_element} (\ref{sec:simd.reductions}).
-    \item Extend \type{where_expression} to support \const \simd objects (\ref{sec:simd_mask.where}).
-    \item Fixed missing \code{explicit} keyword on \code{simd_mask(bool)} constructor (\ref{sec:simd_mask.ctor}).
-    \item Made binary operators for \simd and \mask friend functions of \simd and \mask, simplifying the SFINAE requirements considerably (\ref{sec:simd.binary}, \ref{sec:simd_mask.binary}).
+    \item Extend \type{where_expression} to support \const \simd objects (\ref{sec:simd.mask.where}).
+    \item Fixed missing \code{explicit} keyword on \code{simd_mask(bool)} constructor (\ref{sec:simd.mask.ctor}).
+    \item Made binary operators for \simd and \mask friend functions of \simd and \mask, simplifying the SFINAE requirements considerably (\ref{sec:simd.binary}, \ref{sec:simd.mask.binary}).
     \item Restricted broadcasts to only allow non-narrowing conversions (\ref{sec:simd.ctor}).
     \item Restricted simd to simd conversions to only allow non-narrowing conversions with \type{fixed_size} ABI (\ref{sec:simd.ctor}).
     \item Added generator constructor (as discussed in LEWG in Issaquah) (\ref{sec:simd.ctor}).
-    \item Renamed \code{copy_from} to \code{memload} and \code{copy_to} to \code{memstore}. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
-    \item Documented effect of \type{overaligned_tag<N>} as \type{Flags} parameter to load/store. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
+    \item Renamed \code{copy_from} to \code{memload} and \code{copy_to} to \code{memstore}. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd.mask.load}, \ref{sec:simd.mask.store})
+    \item Documented effect of \type{overaligned_tag<N>} as \type{Flags} parameter to load/store. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd.mask.load}, \ref{sec:simd.mask.store})
     \item Clarified cv requirements on \type T parameter of \simd and \mask.
-    \item Allowed all implicit \mask conversions with \fixedsize ABI and equal size (\ref{sec:simd_mask.ctor}).
+    \item Allowed all implicit \mask conversions with \fixedsize ABI and equal size (\ref{sec:simd.mask.ctor}).
     \item Made increment and decrement of \type{where_expression} return \type{void}.
     \item Added \code{static_simd_cast} for simple casts (\ref{sec:simd.casts}).
     \item Clarified default constructor (\ref{sec:simd.overview}, \ref{sec:simd.overview}).
     \item Clarified \simd and \mask with invalid template parameters to be complete types with deleted constructors, destructor, and assignment (\ref{sec:simd.overview}, \ref{sec:simd.overview}).
     \item Wrote a new subsection for a detailed description of \type{where_expression} (\ref{sec:simd.whereexpr}).
     \item Moved masked loads and stores from \simd and \mask to \type{where_expression} (\ref{sec:simd.whereexpr}).
-          This required two more overloads of \code{where} to support value objects of type \mask (\ref{sec:simd_mask.where}).
+          This required two more overloads of \code{where} to support value objects of type \mask (\ref{sec:simd.mask.where}).
     \item Removed \type{where_expression}\code{::operator!} (\ref{sec:simd.whereexpr}).
     \item Added aliases \type{native_simd}, \type{native_mask}, \type{fixed_size_simd}, \type{fixed_size_mask} (\ref{sec:simd.syn}).
-    \item Removed \bool overloads of mask reductions awaiting a better solution (\ref{sec:simd_mask.reductions}).
+    \item Removed \bool overloads of mask reductions awaiting a better solution (\ref{sec:simd.mask.reductions}).
     \item Removed special math functions with \code f and \code l suffix and \code l and \code{ll} prefix (\ref{sec:simd.math}).
     \item Modified special math functions with mixed types to use \type{fixed_size} instead of \code{abi_for_size} (\ref{sec:simd.math}).
     \item Added simple ABI cast functions \code{to_fixed_size}, \code{to_native}, and \code{to_compatible} (\ref{sec:simd.casts}).
@@ -252,7 +251,7 @@ Previous revision: \parencite{P0214R1}.
   \color{black}\item[---] LEWG (small group) guidance:
     \item Dropped \code{native_handle} and add non-normative wording for supporting \code{static_cast} to implementation-defined SIMD extensions.
     \item Dropped non-member load and store functions.
-    Instead have \code{copy_from} and \code{copy_to} member functions for loads and stores. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store})
+    Instead have \code{copy_from} and \code{copy_to} member functions for loads and stores. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd.mask.load}, \ref{sec:simd.mask.store})
     (Did not use the \code{load} and \code{store} names because of the unfortunate inconsistency with \std\type{atomic}.)
     \item Added algorithm overloads for \simd reductions.
     Integrate with \code{where} to enable masked reductions. (\ref{sec:simd.reductions})
@@ -265,10 +264,10 @@ Previous revision: \parencite{P0214R0}.
   \item Converted \code{memory_alignment} into a non-member trait (\ref{sec:simd.traits}).
   \item Extended implicit conversions to handle \fixedsizeN (\ref{sec:simd.ctor}).
   \item Extended binary operators to convert correctly with \fixedsizeN (\ref{sec:simd.binary}).
-  \item Dropped the section on “\simd logical operators”. Added a note that the omission is deliberate (\ref{sec:simd.logical}).
-  \item Added logical and bitwise operators to \mask (\ref{sec:simd_mask.binary}).
-  \item Modified \mask compares to work better with implicit conversions (\ref{sec:simd_mask.comparison}).
-  \item Modified \code{where} to support different Abi tags on the \mask and \simd arguments (\ref{sec:simd_mask.where}).
+  \item Dropped the section on “\simd logical operators”. Added a note that the omission is deliberate.
+  \item Added logical and bitwise operators to \mask (\ref{sec:simd.mask.binary}).
+  \item Modified \mask compares to work better with implicit conversions (\ref{sec:simd.mask.comparison}).
+  \item Modified \code{where} to support different Abi tags on the \mask and \simd arguments (\ref{sec:simd.mask.where}).
   \item Converted the load functions to non-member functions.
     SG1 asked for guidance from LEWG whether a load-expression or a template parameter to load is more appropriate.
   \item Converted the store functions to non-member functions to be consistent with the load functions.

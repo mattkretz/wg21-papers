@@ -1,5 +1,5 @@
-\wgSubsection{Class template \type{simd_mask}}{simd_mask}
-\wgSubsubsection{Class template \mask overview}{simd_mask.overview}
+\wgSubsection{Class template \type{simd_mask}}{simd.mask.class}
+\wgSubsubsection{Class template \mask overview}{simd.mask.overview}
 \lstinputlisting[]{mask.cpp}
 
 \pnum The class template \mask[<T, Abi>] is a one-dimensional smart array of booleans.
@@ -25,7 +25,7 @@ explicit simd(const implementation-defined& init);
 \end{itemdecl}
 \end{noteEnv}
 
-\wgSubsubsection{\mask constructors}{simd_mask.ctor}
+\wgSubsubsection{\mask constructors}{simd.mask.ctor}
 \begin{itemdecl}
 explicit simd_mask(value_type) noexcept;
 \end{itemdecl}
@@ -51,7 +51,7 @@ template <class Flags> simd_mask(const value_type *mem, Flags);
   \flagsRemarks{\mask{}}
 \end{itemdescr}
 
-\wgSubsubsection{\mask load function}{simd_mask.load}
+\wgSubsubsection{\mask load function}{simd.mask.load}
 \begin{itemdecl}
 template <class Flags> void copy_from(const value_type *mem, Flags);
 \end{itemdecl}
@@ -61,7 +61,7 @@ template <class Flags> void copy_from(const value_type *mem, Flags);
   \flagsRemarks{\mask{}}
 \end{itemdescr}
 
-\wgSubsubsection{\mask store function}{simd_mask.store}
+\wgSubsubsection{\mask store function}{simd.mask.store}
 \begin{itemdecl}
 template <class Flags> void copy_to(value_type *mem, Flags);
 \end{itemdecl}
@@ -71,7 +71,7 @@ template <class Flags> void copy_to(value_type *mem, Flags);
   \flagsRemarks{\mask{}}
 \end{itemdescr}
 
-\wgSubsubsection{\mask{} subscript operators}{simd_mask.subscr}
+\wgSubsubsection{\mask{} subscript operators}{simd.mask.subscr}
 \begin{itemdecl}
 reference operator[](size_type i);
 \end{itemdecl}
@@ -90,7 +90,7 @@ value_type operator[](size_type i) const;
   \pnum\throws Nothing.
 \end{itemdescr}
 
-\wgSubsubsection{\mask unary operators}{simd_mask.unary}
+\wgSubsubsection{\mask unary operators}{simd.mask.unary}
 \begin{itemdecl}
 mask operator!() const noexcept;
 \end{itemdecl}
@@ -98,9 +98,9 @@ mask operator!() const noexcept;
   \pnum\returns A \mask object with the $i$-th element set to the logical negation \foralli.
 \end{itemdescr}
 
-\wgSubsection{\type{simd_mask} non-member operations}{simd_mask.nonmembers}
+\wgSubsection{\type{simd_mask} non-member operations}{simd.mask.nonmembers}
 
-\wgSubsubsection{\mask binary operators}{simd_mask.binary}
+\wgSubsubsection{\mask binary operators}{simd.mask.binary}
 \begin{itemdecl}
 friend simd_mask operator&&(const simd_mask&, const simd_mask&) noexcept;
 friend simd_mask operator||(const simd_mask&, const simd_mask&) noexcept;
@@ -112,7 +112,7 @@ friend simd_mask operator^ (const simd_mask&, const simd_mask&) noexcept;
   \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator.
 \end{itemdescr}
 
-\wgSubsubsection{\mask compound assignment}{simd_mask.cassign}
+\wgSubsubsection{\mask compound assignment}{simd.mask.cassign}
 \begin{itemdecl}
 friend simd_mask& operator&=(simd_mask&, const simd_mask&) noexcept;
 friend simd_mask& operator|=(simd_mask&, const simd_mask&) noexcept;
@@ -123,7 +123,7 @@ friend simd_mask& operator^=(simd_mask&, const simd_mask&) noexcept;
   \pnum\returns A reference to the first argument.
 \end{itemdescr}
 
-\wgSubsubsection{\mask compares}{simd_mask.comparison}
+\wgSubsubsection{\mask compares}{simd.mask.comparison}
 \begin{itemdecl}
 friend simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
 friend simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
@@ -132,7 +132,7 @@ friend simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
   \pnum\returns A \mask object initialized with the results of the component-wise application of the indicated operator.
 \end{itemdescr}
 
-\wgSubsubsection{\mask reductions}{simd_mask.reductions}
+\wgSubsubsection{\mask reductions}{simd.mask.reductions}
 \begin{itemdecl}
 template <class T, class Abi> bool  all_of(simd_mask<T, Abi>) noexcept;
 \end{itemdecl}
@@ -198,7 +198,7 @@ int find_last_set(implementation-defined) noexcept;
   \pnum\returns \code{all_of} and \code{any_of} return their arguments; \code{none_of} returns the negation of its argument; \code{some_of} returns \false; \code{popcount} returns the integral representation of its argument; \code{find_first_set} and \code{find_last_set} return 0.
 \end{itemdescr}
 
-\wgSubsubsection{Masked assigment}{simd_mask.where}
+\wgSubsubsection{Masked assigment}{simd.mask.where}
 \begin{itemdecl}
 template <class T, class Abi>
 where_expression<simd_mask<T, Abi>, simd<T, Abi>> where(const typename simd<T, Abi>::mask_type& k,

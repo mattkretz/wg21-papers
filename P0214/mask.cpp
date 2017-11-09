@@ -26,32 +26,32 @@ namespace std::experimental {
       // load constructor
       template <class Flags> simd_mask(const value_type* mem, Flags);
 
-      // loads [simd_mask.load]
+      // loads [simd.mask.load]
       template <class Flags> void copy_from(const value_type* mem, Flags);
 
-      // stores [simd_mask.store]
+      // stores [simd.mask.store]
       template <class Flags> void copy_to(value_type* mem, Flags) const;
 
-      // scalar access [simd_mask.subscr]
+      // scalar access [simd.mask.subscr]
       reference operator[](size_type);
       value_type operator[](size_type) const;
 
-      // unary operators [simd_mask.unary]
+      // unary operators [simd.mask.unary]
       simd_mask operator!() const noexcept;
 
-      // simd_mask binary operators [simd_mask.binary]
+      // simd_mask binary operators [simd.mask.binary]
       friend simd_mask operator&&(const simd_mask&, const simd_mask&) noexcept;
       friend simd_mask operator||(const simd_mask&, const simd_mask&) noexcept;
       friend simd_mask operator& (const simd_mask&, const simd_mask&) noexcept;
       friend simd_mask operator| (const simd_mask&, const simd_mask&) noexcept;
       friend simd_mask operator^ (const simd_mask&, const simd_mask&) noexcept;
 
-      // simd_mask compound assignment [simd_mask.cassign]
+      // simd_mask compound assignment [simd.mask.cassign]
       friend simd_mask& operator&=(simd_mask&, const simd_mask&) noexcept;
       friend simd_mask& operator|=(simd_mask&, const simd_mask&) noexcept;
       friend simd_mask& operator^=(simd_mask&, const simd_mask&) noexcept;
 
-      // simd_mask compares [simd_mask.comparison]
+      // simd_mask compares [simd.mask.comparison]
       friend simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
       friend simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
     };

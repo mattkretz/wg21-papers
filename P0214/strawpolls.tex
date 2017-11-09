@@ -42,12 +42,10 @@
 
   \item \wgUnanimous{Should there be a named “widen” function that widens the element type \type T from (e.g.) \intt to \type{long}, but rejects \intt to \short?
   The number of elements is not changed.}
-  cf. \autoref{sec:widen}
 
 \item \wgUnanimous{Should there be a named “concat” functions that concatenates several \simd{}s with the same element type, but potentially different length?\\
   The latter two operations are currently lumped together in \code{simd_cast}.\\
   The widen / concat questions, I think, comes down to whether we want the current \code{simd_cast} or not.}
-  cf. \autoref{sec:split and concat}
 
 \item \wgUnanimous{We still have a few open ends on implicit conversions (\url{https://github.com/mattkretz/wg21-papers/issues/26}, \url{https://github.com/mattkretz/wg21-papers/issues/3}).
   The current paper is rather strict, there may be room for more implicit conversions without introducing safety problems.
@@ -58,7 +56,6 @@ Should we postpone any changes in this area to after TS feedback?}
   cf. \autoref{sec:maxfixedsize}
 
 \item \wgUnanimous{Add a list of possible names for “simd” and “where” to the paper.}
-  cf. \autoref{sec:Naming}
 \end{itemize}
 
 \subsection{LEWG at Toronto 2017}

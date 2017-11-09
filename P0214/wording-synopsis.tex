@@ -173,7 +173,7 @@ template <class T, class U = typename T::value_type> struct memory_alignment;
   \pnum
   Otherwise, the type \type{memory_alignment<T, U>} is a \BinaryTypeTrait with a \BaseCharacteristic of \type{integral_constant<size_t, N>} for some implementation-defined \code{N}.
   \wgNote{
-    \code{value} identifies the alignment restrictions on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U (see \ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd_mask.load}, \ref{sec:simd_mask.store}).
+    \code{value} identifies the alignment restrictions on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U (see \ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd.mask.load}, \ref{sec:simd.mask.store}).
   }
 \end{itemdescr}
 

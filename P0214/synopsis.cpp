@@ -36,12 +36,12 @@ namespace std::experimental {
     template <class T, class U = typename T::value_type>
     inline constexpr size_t memory_alignment_v = memory_alignment<T, U>::value;
 
-    // class template simd [simd]
+    // class template simd [simd.class]
     template <class T, class Abi = simd_abi::compatible<T>> class simd;
     template <class T> using native_simd = simd<T, simd_abi::native<T>>;
     template <class T, int N> using fixed_size_simd = simd<T, simd_abi::fixed_size<N>>;
 
-    // class template simd_mask [simd_mask]
+    // class template simd_mask [simd.mask.class]
     template <class T, class Abi = simd_abi::compatible<T>> class simd_mask;
     template <class T> using native_simd_mask = simd_mask<T, simd_abi::native<T>>;
     template <class T, int N> using fixed_size_simd_mask = simd_mask<T, simd_abi::fixed_size<N>>;
@@ -80,7 +80,7 @@ namespace std::experimental {
     template <class T, class... Abis>
     simd_mask<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd_mask<T, Abis>&...);
 
-    // reductions [simd_mask.reductions]
+    // reductions [simd.mask.reductions]
     template <class T, class Abi> bool  all_of(simd_mask<T, Abi>) noexcept;
     template <class T, class Abi> bool  any_of(simd_mask<T, Abi>) noexcept;
     template <class T, class Abi> bool none_of(simd_mask<T, Abi>) noexcept;
@@ -97,7 +97,7 @@ namespace std::experimental {
     int find_first_set(implementation-defined) noexcept;
     int find_last_set(implementation-defined) noexcept;
 
-    // masked assignment [simd_mask.where]
+    // masked assignment [simd.mask.where]
     template <class M, class T> class const_where_expression;
     template <class M, class T> class where_expression;
 
