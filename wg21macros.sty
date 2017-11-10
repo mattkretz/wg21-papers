@@ -85,16 +85,19 @@
 %%--------------------------------------------------
 %% Paragraph numbering
 \RequirePackage{chngcntr}
+\newcounter{WGClause}
+\newcounter{WGSubSection}[WGClause]
+\newcounter{WGSubSubSection}[WGSubSection]
+\newcounter{WGParagraph}[WGSubSubSection]
 \newcounter{Paras}
 %\counterwithin{Paras}{chapter}
-\counterwithin{Paras}{section}
-\counterwithin{Paras}{subsection}
-\counterwithin{Paras}{subsubsection}
-\counterwithin{Paras}{paragraph}
-%\counterwithin{Paras}{subparagraph}
+\counterwithin{Paras}{WGClause}
+\counterwithin{Paras}{WGSubSection}
+\counterwithin{Paras}{WGSubSubSection}
+\counterwithin{Paras}{WGParagraph}
 \makeatletter
 \def\pnum{\par%
-  \addtocounter{Paras}{1}\protected@edef\@currentlabel{\theparagraph~p.\arabic{Paras}}%
+  \stepcounter{Paras}\protected@edef\@currentlabel{\theWGParagraph~p.\arabic{Paras}}%
 \noindent\llap{{%
   \scriptsize\raisebox{.5ex}{\arabic{Paras}}}\hspace{\@totalleftmargin}\quad}}
 \makeatother
@@ -159,33 +162,42 @@
 
 \DeclareRobustCommand\std{\code{std\MayBreak::\MayBreak}}
 
+\newcommand{\wgOrigSection}[1]{%
+    \leavevmode\llap{\normalfont\usekomafont{#1}(\csname #1format\endcsname\hspace{-.3em})\qquad}%
+}
 \newcommand{\wgSection}[2]{%
     \par%
     \vskip1.0\baselineskip plus 1.5\baselineskip minus 0.2\baselineskip%
     \phantomsection%
+    \refstepcounter{WGClause}%
     \refstepcounter{subsection}%
-    \addcontentsline{toc}{subsection}{\thesubsection{} #1 [#2]}%
-    {\larger[2]\noindent\thesubsection{} #1\label{sec:#2}\hfill[#2]}\\%
+    \setcounter{Paras}{0}%
+    \addcontentsline{toc}{subsection}{(\thesubsection{}) \theWGClause{} #1 [#2]}%
+    {\noindent\wgOrigSection{subsection}\larger[2]\arabic{WGClause} #1\label{sec:#2}\hfill[#2]}\\%
     \noindent%
 }
 \newcommand\wgSubsection[2]{%
     \par%
     \vskip0.75\baselineskip plus 1.0\baselineskip minus 0.15\baselineskip%
     \phantomsection%
+    \refstepcounter{WGSubSection}%
     \refstepcounter{subsubsection}%
     \setcounter{Paras}{0}%
-    \addcontentsline{toc}{subsubsection}{\thesubsubsection{} #1 [#2]}%
-    {\larger[1]\noindent\thesubsubsection{} #1\label{sec:#2}\hfill[#2]}\\%
+    \def\theWGSubSection{\theWGClause{}.\arabic{WGSubSection}}%
+    \addcontentsline{toc}{subsubsection}{(\thesubsubsection{}) \theWGSubSection{} #1 [#2]}%
+    {\noindent\wgOrigSection{subsubsection}\larger[1]\theWGSubSection{} #1\label{sec:#2}\hfill[#2]}\\%
     \noindent%
 }
 \newcommand\wgSubsubsection[2]{%
     \par%
     \vskip0.5\baselineskip plus .5\baselineskip minus 0.1\baselineskip%
     \phantomsection%
+    \refstepcounter{WGSubSubSection}%
     \refstepcounter{paragraph}%
     \setcounter{Paras}{0}%
-    \addcontentsline{toc}{paragraph}{\theparagraph{} #1 [#2]}%
-    {\noindent\theparagraph{} #1\label{sec:#2}\hfill[#2]}\\%
+    \def\theWGSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}}%
+    \addcontentsline{toc}{paragraph}{(\theparagraph{}) \theWGSubSubSection{} #1 [#2]}%
+    {\noindent\wgOrigSection{paragraph}\theWGSubSubSection{} #1\label{sec:#2}\hfill[#2]}\\%
     \noindent%
 }
 
