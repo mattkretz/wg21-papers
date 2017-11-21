@@ -101,6 +101,9 @@ namespace std::experimental {
     template <class M, class T> class where_expression;
 
     // masked assignment \ref{sec:simd.mask.where}
+    template <class T> struct nodeduce { using type = T; };            // exposition only
+    template <class T> using nodeduce_t = typename nodeduce<T>::type;  // exposition only
+
     template <class T, class Abi>
     where_expression<simd_mask<T, Abi>, simd<T, Abi>> where(const typename simd<T, Abi>::mask_type&,
                                                             simd<T, Abi>&) noexcept;
@@ -109,11 +112,11 @@ namespace std::experimental {
         const typename simd<T, Abi>::mask_type&, const simd<T, Abi>&) noexcept;
 
     template <class T, class Abi>
-    where_expression<simd_mask<T, Abi>, simd_mask<T, Abi>> where(const remove_const_t<simd_mask<T, Abi>>&,
+    where_expression<simd_mask<T, Abi>, simd_mask<T, Abi>> where(const nodeduce_t<simd_mask<T, Abi>>&,
                                                                  simd_mask<T, Abi>&) noexcept;
     template <class T, class Abi>
     const_where_expression<simd_mask<T, Abi>, const simd_mask<T, Abi>> where(
-        const remove_const_t<simd_mask<T, Abi>>&, const simd_mask<T, Abi>&) noexcept;
+        const nodeduce_t<simd_mask<T, Abi>>&, const simd_mask<T, Abi>&) noexcept;
 
     template <class T> where_expression<bool, T> where(@\emph{see below}@ k, T& d) noexcept;
     template <class T>
