@@ -3,41 +3,35 @@ namespace std::experimental {
     template <class T, class Abi> class simd {
     public:
       using value_type = T;
-      using reference = implementation-defined;  // see below
+      using reference = @\emph{see below}@;
       using mask_type = simd_mask<T, Abi>;
-      using size_type = size_t;
       using abi_type = Abi;
 
-      static constexpr size_type size() noexcept;
+      static constexpr size_t size() noexcept;
 
       simd() = default;
-
-      simd(const simd&) = default;
-      simd(simd&&) = default;
-      simd& operator=(const simd&) = default;
-      simd& operator=(simd&&) = default;
-
-      // implicit broadcast constructor
-      template <class U> simd(U&&);
 
       // implicit type conversion constructor
       template <class U> simd(const simd<U, simd_abi::fixed_size<size()>>&);
 
-      // generator constructor
-      template <class G> simd(G&& gen);
+      // implicit broadcast constructor (see below for constraints)
+      template <class U> simd(U&& value);
+
+      // generator constructor (see below for constraints)
+      template <class G> explicit simd(G&& gen);
 
       // load constructor
-      template <class U, class Flags> simd(const U* mem, Flags);
+      template <class U, class Flags> simd(const U* mem, Flags f);
 
       // loads [simd.load]
-      template <class U, class Flags> void copy_from(const U* mem, Flags);
+      template <class U, class Flags> void copy_from(const U* mem, Flags f);
 
       // stores [simd.store]
-      template <class U, class Flags> void copy_to(U* mem, Flags) const;
+      template <class U, class Flags> void copy_to(U* mem, Flags f) const;
 
       // scalar access [simd.subscr]
-      reference operator[](size_type);
-      value_type operator[](size_type) const;
+      reference operator[](size_t);
+      value_type operator[](size_t) const;
 
       // unary operators [simd.unary]
       simd& operator++();
@@ -45,7 +39,7 @@ namespace std::experimental {
       simd& operator--();
       simd operator--(int);
       mask_type operator!() const;
-      simd operator~() const;
+      simd operator~() const;  // see below
       simd operator+() const;
       simd operator-() const;
 

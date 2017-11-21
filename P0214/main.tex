@@ -35,25 +35,30 @@
 \newcommand\fixedsize{\type{fixed\_size}\xspace}
 \newcommand\simdEP{\code{execution::}\type{simd}\xspace}
 \newcommand\seqEP{\code{execution::}\type{seq}\xspace}
+\newcommand\dataparalleltype{data-parallel type\xspace}
+\newcommand\dataparalleltypes{data-parallel types\xspace}
 
-\newcommand\flagsRemarks[1]{
+\newcommand\flagsRequires[1]{%
   \pnum\requires
-  If the \type{Flags} template parameter is of type \type{vector\_aligned\_tag}, the pointer value represents an address aligned to \code{memory\_alignment\_v<#1>}.
-  If the \type{Flags} template parameter is of type \type{overaligned\_tag<N>}, the pointer value represents an address aligned to \code N.
+  If the template parameter \type{Flags} is \type{vector\_aligned\_tag}, the pointer value shall represent an address aligned to \code{memory\_alignment\_v<#1>}.
+  If the template parameter \type{Flags} is \type{overaligned\_tag<N>}, the pointer value shall represent an address aligned to \code N.
 }
 
 \newcommand\targetArch{target architecture\xspace}
 \newcommand\targetArchs{target architectures\xspace}
 \newcommand\currentTarget{currently targeted system\xspace}
 
-\newcommand\realArithmeticType{arithmetic type except \type{bool}\xspace}
+%\newcommand\specialsfinae{shall either not be declared or not participate in overload resolution}
+\newcommand\specialsfinae{shall not participate in overload resolution\comment{“shall either not be declared or not participate in overload resolution”? impl. via base class or concepts}\xspace}
+
+\newcommand\realArithmeticType{vectorizable type\xspace}
 
 \usepackage{pifont}
 
 \newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
-\newcommand\forallmaskedi[1]{%
+\newcommand\forallmaskedi[2][]{%
   for all \code i
-  $\in \{j \in \mathbb{N}_0 | j < \code{size()} ⋀ \code{#1[}j\code{]}\}$%
+  $\in \{j \in \mathbb{N}_0 | j < \code{#1size()} ⋀ \code{#2[}j\code{]}\}$%
   \xspace%
 }
 \newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
@@ -97,10 +102,9 @@ Previous revision: \parencite{P0214R6}.
   \chck Rename template parameters \code{A} to \code{Abis} and \code{As...} to \code{Abis...}.
   \chck Stable names follow a hierarchy; use [simd.class] instead of [simd]; rename [simd_mask] to [simd.mask]
   \chck reduce: Moved defaulted \code{BinaryOperation} argument to the end.
-        {\color{red}Note: now the default \code{natural_element} is almost useless}
   \chck reduce: Replaced \code{default_natural_element} with \emph{implementation-defined}
   \chck reduce: Explained what the default \code{natural_element} is supposed to do. (\ref{sec:simd.reductions})
-  \chck Consistently copy initialze.
+  \chck Consistently initialze tags.
   \chck Put the “see belows” in italics instead of comments.
   \chck Consistently pass by const-ref.
   (LWG: Why are the arguments by value?
@@ -108,6 +112,40 @@ Previous revision: \parencite{P0214R6}.
   Resolved to consistently pass by const-ref. Rationale: if an implementation wants a non-inline, pass-by-value function it can inline the public const-ref function and call an internal function.
   If the public function uses by value parameters it may happen that the implied copy is not optimized away.)
   \chck Simplify casts using aliases or default arguments.
+  \chck Split second \code{reduce} overload in six functions, one without default \code{neutral_element} and five explicitly overloaded for \code{plus<>}, \code{multiplies<>}, \code{bit_and<>}, \code{bit_or}, and \code{bit_xor}.
+  \chck Improved requires clause on \code{reduce} to mention return type and generalize ABI tag type requirement.
+  \chck Require integral \code{value_type} for bitwise reductions.
+  \chck Removed impossible condition from \code{simd_cast} remark.
+  \chck Fixed masked \code{hmin} and \code{hmax} specification to use “forallmaskedi”.
+  \chck Forward \code{min}, \code{max}, \code{minmax}, and \code{clamp} to \code{std::min/max/minmax/clamp}.
+  \chck \code{scalar} \emph{is} not an alias for \code{fixed_size<1>}.
+  \chck “an implementation \emph{shall} support at least \emph{all} \ldots” (\ref{sec:simd.abi})
+  \chck Replaced “exact-bool” arguments from \emph{implementation-defined} to \emph{see below}.
+  \chck Reveresed “if” to “unless” logic.
+  \chck Fixed \code{is_mask} to \code{is_simd_mask}.
+  \chck Fixed incorrect \code{simd_mask} exposition-only member name to \code{mask} (\ref{sec:simd.whereexpr}).
+  \chck Fixed constraints on generator ctor to require generator be callable with all element indexes.
+  \chck Fixed wording to allow vectorized execution of the generator.
+  \chck Moved all wording about “target” or “architecture” into non-normative notes.
+  \chck Add \code{is_simd_flag_type} trait and use it for all loads and stores.
+  \chck Define and use the term \emph{\realArithmeticType} to simplify the wording.
+  \chck Define “selected elements” in \code{where_expression} to use it instead of \code{data[i]} where \code{mask[i]} is \true.
+  \chck \ref{sec:simd.whereexpr} reword what the members of \code{where_expression} mean and where they come from
+  \chck Replaced “floating-point and integral” with “arithmetic”.
+  \chck Consistently use “element” instead of “component”.
+  \chck Consistently place “and”/“or” and the end of bullet points instead of the front.
+  \item Allow shifts on signed integers as was requested by LEWG.
+  \chck Added introduction in \ref{sec:simd.general}.
+  \chck Added wording in \ref{sec:simd.general} to clarify that the application of operations/operators on elements in \simd and \mask are unsequenced with respect to each other.
+  \chck Fix Order: requires, effects, sync, post-cond, returns, throws, complexity, remarks, error-cond
+  \chck Removed repetitions of clause names.
+  \chck “Let X be foo” doesn't need a “Remarks” clause.
+  \chck Defined “vectorizable types” as a term for “arithmetic types other than bool”.
+
+  \todo Introduce exposition-only \code{nodeduce_t} to replace \code{remove_const_t}.
+  %\todo Find better wording for removing \code{operator~} and bitwise operators from \simd.
+  \todo look for prior art to improve the \returns clause in increment and decrement
+  \todo (optional: put function argument names in the synopsis)
 \end{itemize}
 
 \subsection{Changes from R5}

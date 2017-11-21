@@ -11,11 +11,11 @@ namespace std::experimental {
     struct element_aligned_tag {};
     struct vector_aligned_tag {};
     template <size_t> struct overaligned_tag {};
-    inline constexpr element_aligned_tag element_aligned = {};
-    inline constexpr vector_aligned_tag vector_aligned = {};
-    template <size_t N> inline constexpr overaligned_tag<N> overaligned = {};
+    inline constexpr element_aligned_tag element_aligned{};
+    inline constexpr vector_aligned_tag vector_aligned{};
+    template <size_t N> inline constexpr overaligned_tag<N> overaligned{};
 
-    // traits [simd.traits]
+    // traits \ref{sec:simd.traits}
     template <class T> struct is_abi_tag;
     template <class T> inline constexpr bool is_abi_tag_v = is_abi_tag<T>::value;
 
@@ -25,7 +25,10 @@ namespace std::experimental {
     template <class T> struct is_simd_mask;
     template <class T> inline constexpr bool is_simd_mask_v = is_simd_mask<T>::value;
 
-    template <class T, size_t N> struct abi_for_size { using type = implementation-defined; };
+    template <class T> struct is_simd_flag_type;
+    template <class T> inline constexpr bool is_simd_flag_type_v = is_simd_flag_type<T>::value;
+
+    template <class T, size_t N> struct abi_for_size { using type = @\emph{see below}@; };
     template <class T, size_t N> using abi_for_size_t = typename abi_for_size<T, N>::type;
 
     template <class T, class Abi = simd_abi::compatible<T>> struct simd_size;
@@ -36,17 +39,17 @@ namespace std::experimental {
     template <class T, class U = typename T::value_type>
     inline constexpr size_t memory_alignment_v = memory_alignment<T, U>::value;
 
-    // class template simd [simd.class]
+    // class template simd \ref{sec:simd.class}
     template <class T, class Abi = simd_abi::compatible<T>> class simd;
     template <class T> using native_simd = simd<T, simd_abi::native<T>>;
     template <class T, int N> using fixed_size_simd = simd<T, simd_abi::fixed_size<N>>;
 
-    // class template simd_mask [simd.mask.class]
+    // class template simd_mask \ref{sec:simd.mask.class}
     template <class T, class Abi = simd_abi::compatible<T>> class simd_mask;
     template <class T> using native_simd_mask = simd_mask<T, simd_abi::native<T>>;
     template <class T, int N> using fixed_size_simd_mask = simd_mask<T, simd_abi::fixed_size<N>>;
 
-    // casts [simd.casts]
+    // casts \ref{sec:simd.casts}
     template <class T, class U, class Abi> @\emph{see below}@ simd_cast(const simd<U, Abi>&);
     template <class T, class U, class Abi> @\emph{see below}@ static_simd_cast(const simd<U, Abi>&);
 
@@ -76,7 +79,7 @@ namespace std::experimental {
     template <class T, class... Abis>
     simd_mask<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd_mask<T, Abis>&...);
 
-    // reductions [simd.mask.reductions]
+    // reductions \ref{sec:simd.mask.reductions}
     template <class T, class Abi> bool  all_of(const simd_mask<T, Abi>&) noexcept;
     template <class T, class Abi> bool  any_of(const simd_mask<T, Abi>&) noexcept;
     template <class T, class Abi> bool none_of(const simd_mask<T, Abi>&) noexcept;
@@ -85,18 +88,19 @@ namespace std::experimental {
     template <class T, class Abi> int find_first_set(const simd_mask<T, Abi>&);
     template <class T, class Abi> int find_last_set(const simd_mask<T, Abi>&);
 
-    bool  all_of(implementation-defined) noexcept;
-    bool  any_of(implementation-defined) noexcept;
-    bool none_of(implementation-defined) noexcept;
-    bool some_of(implementation-defined) noexcept;
-    int popcount(implementation-defined) noexcept;
-    int find_first_set(implementation-defined) noexcept;
-    int find_last_set(implementation-defined) noexcept;
+    bool  all_of(@\emph{see below}@) noexcept;
+    bool  any_of(@\emph{see below}@) noexcept;
+    bool none_of(@\emph{see below}@) noexcept;
+    bool some_of(@\emph{see below}@) noexcept;
+    int popcount(@\emph{see below}@) noexcept;
+    int find_first_set(@\emph{see below}@) noexcept;
+    int find_last_set(@\emph{see below}@) noexcept;
 
-    // masked assignment [simd.mask.where]
+    // masked assignment \ref{sec:simd.whereexpr}
     template <class M, class T> class const_where_expression;
     template <class M, class T> class where_expression;
 
+    // masked assignment \ref{sec:simd.mask.where}
     template <class T, class Abi>
     where_expression<simd_mask<T, Abi>, simd<T, Abi>> where(const typename simd<T, Abi>::mask_type&,
                                                             simd<T, Abi>&) noexcept;
@@ -111,24 +115,33 @@ namespace std::experimental {
     const_where_expression<simd_mask<T, Abi>, const simd_mask<T, Abi>> where(
         const remove_const_t<simd_mask<T, Abi>>&, const simd_mask<T, Abi>&) noexcept;
 
-    template <class T> where_expression<bool, T> where(implementation-defined k, T& d) noexcept;
+    template <class T> where_expression<bool, T> where(@\emph{see below}@ k, T& d) noexcept;
     template <class T>
-    const_where_expression<bool, const T> where(implementation-defined k, const T& d) noexcept;
+    const_where_expression<bool, const T> where(@\emph{see below}@ k, const T& d) noexcept;
 
-    // reductions [simd.reductions]
+    // reductions \ref{sec:simd.reductions}
     template <class T, class Abi, class BinaryOperation = std::plus<>>
     T reduce(const simd<T, Abi>&, BinaryOperation = BinaryOperation());
-    template <class M, class V, class BinaryOperation = std::plus<>>
+    template <class M, class V, class BinaryOperation>
     typename V::value_type reduce(const const_where_expression<M, V>& x,
-                                  typename V::value_type neutral_element = implementation-defined,
-                                  BinaryOperation binary_op = BinaryOperation());
+                                  typename V::value_type neutral_element, BinaryOperation binary_op);
+    template <class M, class V>
+    typename V::value_type reduce(const const_where_expression<M, V>& x, plus<> binary_op = plus<>());
+    template <class M, class V>
+    typename V::value_type reduce(const const_where_expression<M, V>& x, multiplies<> binary_op);
+    template <class M, class V>
+    typename V::value_type reduce(const const_where_expression<M, V>& x, bit_and<> binary_op);
+    template <class M, class V>
+    typename V::value_type reduce(const const_where_expression<M, V>& x, bit_or<> binary_op);
+    template <class M, class V>
+    typename V::value_type reduce(const const_where_expression<M, V>& x, bit_xor<> binary_op);
 
     template <class T, class Abi> T hmin(const simd<T, Abi>&) noexcept;
     template <class M, class V> T hmin(const const_where_expression<M, V>&) noexcept;
     template <class T, class Abi> T hmax(const simd<T, Abi>&) noexcept;
     template <class M, class V> T hmax(const const_where_expression<M, V>&) noexcept;
 
-    // algorithms [simd.alg]
+    // algorithms \ref{sec:simd.alg}
     template <class T, class Abi> simd<T, Abi> min(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
     template <class T, class Abi> simd<T, Abi> max(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
     template <class T, class Abi>

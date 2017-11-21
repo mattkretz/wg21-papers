@@ -3,9 +3,36 @@
 The following is a draft targetting inclusion into the Parallelism TS 2.
 It defines a basic set of data-parallel types and operations.
 
+\newcommand\clause{Clause\xspace}
+\newcommand\width{width\xspace}
+
 \begin{wgText}
+  \setcounter{WGClause}{7}
   \wgSection{Data-Parallel Types}{simd.types}
+  \wgSubsection{General}{simd.general}
+  \pnum
+  The data-parallel library consists of data-parallel types and operations on these types.
+  A data-parallel type consists of elements of an underlying arithmetic type, called the \emph{element type}.
+  The number of elements is a constant for each data-parallel type and called the \width of that type.
+
+  \pnum
+  Throughout this \clause, the term \emph{data-parallel type} refers to all \emph{supported} \ref{sec:simd.overview} instantiations of the \simd and \mask class templates.
+  A \emph{data-parallel object} is an object of \emph{data-parallel type}.
+
+  \pnum
+  An \emph{element-wise} operation applies a specified operation to the elements of one or more data-parallel objects.
+  Each per-element operation is unsequenced with respect to one another.\comment{does this allow GPU execution?}
+  A \emph{unary element-wise} operation is an element-wise operation that applies a unary operation to each element of a data-parallel object.
+  A \emph{binary element-wise} operation is an element-wise operation that applies a binary operation to corresponding elements of two data-parallel objects.
+
+  \pnum Throughout this \clause, the set of \emph{vectorizable types} for a data-parallel type comprises all cv-unqualified arithmetic types other than \bool.
+
+  \pnum
+  \wgNote{The intent is to support acceleration through data-parallel where available.}\comment{query Pablo for word-smithing}
+
   \input{wording-synopsis}
   \input{wording-simd}
   \input{wording-mask}
 \end{wgText}
+
+% vim: tw=0

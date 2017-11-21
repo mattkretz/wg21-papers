@@ -3,19 +3,13 @@ namespace std::experimental {
     template <class T, class Abi> class simd_mask {
     public:
       using value_type = bool;
-      using reference = implementation-defined;  // see simd::reference
+      using reference = @\emph{see below}@;
       using simd_type = simd<T, Abi>;
-      using size_type = size_t;
       using abi_type = Abi;
 
-      static constexpr size_type size() noexcept;
+      static constexpr size_t size() noexcept;
 
       simd_mask() = default;
-
-      simd_mask(const simd_mask&) = default;
-      simd_mask(simd_mask&&) = default;
-      simd_mask& operator=(const simd_mask&) = default;
-      simd_mask& operator=(simd_mask&&) = default;
 
       // broadcast constructor
       explicit simd_mask(value_type) noexcept;
@@ -26,32 +20,30 @@ namespace std::experimental {
       // load constructor
       template <class Flags> simd_mask(const value_type* mem, Flags);
 
-      // loads [simd.mask.load]
+      // loads \ref{sec:simd.mask.copy}
       template <class Flags> void copy_from(const value_type* mem, Flags);
-
-      // stores [simd.mask.store]
       template <class Flags> void copy_to(value_type* mem, Flags) const;
 
-      // scalar access [simd.mask.subscr]
-      reference operator[](size_type);
-      value_type operator[](size_type) const;
+      // scalar access \ref{sec:simd.mask.subscr}
+      reference operator[](size_t);
+      value_type operator[](size_t) const;
 
-      // unary operators [simd.mask.unary]
+      // unary operators \ref{sec:simd.mask.unary}
       simd_mask operator!() const noexcept;
 
-      // simd_mask binary operators [simd.mask.binary]
+      // simd_mask binary operators \ref{sec:simd.mask.binary}
       friend simd_mask operator&&(const simd_mask&, const simd_mask&) noexcept;
       friend simd_mask operator||(const simd_mask&, const simd_mask&) noexcept;
       friend simd_mask operator& (const simd_mask&, const simd_mask&) noexcept;
       friend simd_mask operator| (const simd_mask&, const simd_mask&) noexcept;
       friend simd_mask operator^ (const simd_mask&, const simd_mask&) noexcept;
 
-      // simd_mask compound assignment [simd.mask.cassign]
+      // simd_mask compound assignment \ref{sec:simd.mask.cassign}
       friend simd_mask& operator&=(simd_mask&, const simd_mask&) noexcept;
       friend simd_mask& operator|=(simd_mask&, const simd_mask&) noexcept;
       friend simd_mask& operator^=(simd_mask&, const simd_mask&) noexcept;
 
-      // simd_mask compares [simd.mask.comparison]
+      // simd_mask compares \ref{sec:simd.mask.comparison}
       friend simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
       friend simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
     };

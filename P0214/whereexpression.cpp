@@ -1,7 +1,7 @@
 namespace std::experimental {
   inline namespace parallelism_v2 {
     template <class M, class T> class const_where_expression {
-      const M& simd_mask;  // exposition only
+      const M& mask;  // exposition only
       T& data;        // exposition only
 
     public:
@@ -12,6 +12,10 @@ namespace std::experimental {
 
       template <class U, class Flags>
       [[nodiscard]] V copy_from(const U* mem, Flags f) const &&;
+      // rename the above to disambiguate with where_expression::copy_from:
+      // - merge_from
+      // - merge_with_copy_from
+      // - ?
       template <class U, class Flags> void copy_to(U* mem, Flags f) const &&;
     };
 
