@@ -146,6 +146,7 @@ Previous revision: \parencite{P0214R6}.
     LEWG queried/informed via reflector.
     Quick review of the issue at the start of Jacksonville meeting requested.
   \item Introduced exposition-only \code{nodeduce_t} to replace \code{remove_const_t} (\ref{sec:simd.mask.where}).
+  \item Removed \code{noexcept} from \code{hmin} and \code{hmax} in the synopsis, to match the declarations below.
 
   %\todo Find better wording for removing \code{operator~} and bitwise operators from \simd.
   \todo look for prior art to improve the \returns clause in increment and decrement

@@ -139,10 +139,10 @@ namespace std::experimental {
     template <class M, class V>
     typename V::value_type reduce(const const_where_expression<M, V>& x, bit_xor<> binary_op);
 
-    template <class T, class Abi> T hmin(const simd<T, Abi>&) noexcept;
-    template <class M, class V> T hmin(const const_where_expression<M, V>&) noexcept;
-    template <class T, class Abi> T hmax(const simd<T, Abi>&) noexcept;
-    template <class M, class V> T hmax(const const_where_expression<M, V>&) noexcept;
+    template <class T, class Abi> T hmin(const simd<T, Abi>&);
+    template <class M, class V> T hmin(const const_where_expression<M, V>&);
+    template <class T, class Abi> T hmax(const simd<T, Abi>&);
+    template <class M, class V> T hmax(const const_where_expression<M, V>&);
 
     // algorithms \ref{sec:simd.alg}
     template <class T, class Abi> simd<T, Abi> min(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
