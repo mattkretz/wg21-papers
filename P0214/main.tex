@@ -155,7 +155,7 @@ Previous revision: \parencite{P0214R6}.
 \subsection{Changes from R5}
 Previous revision: \parencite{P0214R5}.
 \begin{itemize}
-  \item Renamed \code{memload} to \code{copy_from} and \code{memstore} to \code{copy_to}. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd.mask.load}, \ref{sec:simd.mask.store})
+  \item Renamed \code{memload} to \code{copy_from} and \code{memstore} to \code{copy_to}. (\ref{sec:simd.copy}, \ref{sec:simd.mask.copy})
   \item Fixed \code{split} to never convert the \valuetype. (\ref{sec:simd.casts})
   \item Added missing \type{long double} overload of \code{ceil}. (\ref{sec:simd.math})
 \end{itemize}
@@ -198,7 +198,7 @@ Previous revision: \parencite{P0214R3}.
   \item Editorial: Improve \referencetype member specification (\ref{sec:simd.overview}).
   \item Require \code{swap(v[0], v[1])} to be valid (\ref{sec:simd.overview}).
   \item Fixed inconsisteny of masked load constructor after move of \code{memload} to \type{where_expression} (\ref{sec:simd.whereexpr}).
-  \item Editorial: Use Requires clause instead of Remarks to require the memory argument to loads and stores to be large enough (\ref{sec:simd.whereexpr}, \ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd.mask.load}, \ref{sec:simd.mask.store}).
+  \item Editorial: Use Requires clause instead of Remarks to require the memory argument to loads and stores to be large enough (\ref{sec:simd.whereexpr}, \ref{sec:simd.copy}, \ref{sec:simd.mask.copy}).
   \item Add a note to special math functions that precondition violation is UB (\ref{sec:simd.math}).
   \item Bugfix: Binary operators involving two \type{simd::reference} objects must work (\ref{sec:simd.overview}).
   \item Editorial: Replace Note clauses in favor of \wgNote{}.
@@ -212,7 +212,7 @@ Previous revision: \parencite{P0214R3}.
   \item Add section on naming.
   \item Discuss the questions/issues raised on \code{max_fixed_size} in Kona (\autoref{sec:maxfixedsize}).
   \item Make \code{max_fixed_size} dependent on \type{T}.
-  \item Clarify that converting loads and stores only work with arrays of non-bool arithmetic type (\ref{sec:simd.load}, \ref{sec:simd.store}).
+  \item Clarify that converting loads and stores only work with arrays of non-bool arithmetic type (\ref{sec:simd.copy}).
   \item Discuss \mask and \type{bitset} reduction interface differences.
   \item Relax requirements on return type of generator function for the generator constructor (\ref{sec:simd.ctor}).
   \item Remove overly generic \code{simd_cast} function.
@@ -256,8 +256,8 @@ Previous revision: \parencite{P0214R2}.
     \item Restricted broadcasts to only allow non-narrowing conversions (\ref{sec:simd.ctor}).
     \item Restricted simd to simd conversions to only allow non-narrowing conversions with \type{fixed_size} ABI (\ref{sec:simd.ctor}).
     \item Added generator constructor (as discussed in LEWG in Issaquah) (\ref{sec:simd.ctor}).
-    \item Renamed \code{copy_from} to \code{memload} and \code{copy_to} to \code{memstore}. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd.mask.load}, \ref{sec:simd.mask.store})
-    \item Documented effect of \type{overaligned_tag<N>} as \type{Flags} parameter to load/store. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd.mask.load}, \ref{sec:simd.mask.store})
+    \item Renamed \code{copy_from} to \code{memload} and \code{copy_to} to \code{memstore}. (\ref{sec:simd.copy}, \ref{sec:simd.mask.copy})
+    \item Documented effect of \type{overaligned_tag<N>} as \type{Flags} parameter to load/store. (\ref{sec:simd.copy}, \ref{sec:simd.mask.copy})
     \item Clarified cv requirements on \type T parameter of \simd and \mask.
     \item Allowed all implicit \mask conversions with \fixedsize ABI and equal size (\ref{sec:simd.mask.ctor}).
     \item Made increment and decrement of \type{where_expression} return \type{void}.
@@ -299,7 +299,7 @@ Previous revision: \parencite{P0214R1}.
   \color{black}\item[---] LEWG (small group) guidance:
     \item Dropped \code{native_handle} and add non-normative wording for supporting \code{static_cast} to implementation-defined SIMD extensions.
     \item Dropped non-member load and store functions.
-    Instead have \code{copy_from} and \code{copy_to} member functions for loads and stores. (\ref{sec:simd.load}, \ref{sec:simd.store}, \ref{sec:simd.mask.load}, \ref{sec:simd.mask.store})
+    Instead have \code{copy_from} and \code{copy_to} member functions for loads and stores. (\ref{sec:simd.copy}, \ref{sec:simd.mask.copy})
     (Did not use the \code{load} and \code{store} names because of the unfortunate inconsistency with \std\type{atomic}.)
     \item Added algorithm overloads for \simd reductions.
     Integrate with \code{where} to enable masked reductions. (\ref{sec:simd.reductions})
