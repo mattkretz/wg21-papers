@@ -184,7 +184,12 @@
   \addtocounter{Comment}{1}%
   \tikz[remember picture,overlay]{\coordinate (anchor) at (0,0);}%
   \marginpar{%
-    \tikz[remember picture,overlay,opacity=0.33,Maroon]{\draw (anchor) -- (0,0);\path[fill=Maroon] (anchor) circle (0.1em);}%
+    \tikz[remember picture,overlay,opacity=0.33,Maroon]{
+      \coordinate (dst) at (0,-1ex);
+      \draw (anchor) |- (dst);
+      \path[fill=Maroon] (anchor) circle (0.1em);
+    }%
+    \vspace*{1ex}%
     \begin{spacing}{0.9}%
       \smaller[3]%
       \vspace*{-1.05\baselineskip}%
