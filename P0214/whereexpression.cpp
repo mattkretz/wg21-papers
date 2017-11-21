@@ -10,12 +10,6 @@ namespace std::experimental {
 
       remove_const_t<T> operator-() const &&;
 
-      template <class U, class Flags>
-      [[nodiscard]] V copy_from(const U* mem, Flags f) const &&;
-      // rename the above to disambiguate with where_expression::copy_from:
-      // - merge_from
-      // - merge_with_copy_from
-      // - ?
       template <class U, class Flags> void copy_to(U* mem, Flags f) const &&;
     };
 

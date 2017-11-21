@@ -141,6 +141,10 @@ Previous revision: \parencite{P0214R6}.
   \chck Removed repetitions of clause names.
   \chck “Let X be foo” doesn't need a “Remarks” clause.
   \chck Defined “vectorizable types” as a term for “arithmetic types other than bool”.
+  \item Removed immutable masked load.
+    Requested in LWG review session because it's too clever and may block/hinder acceptance.
+    LEWG queried/informed via reflector.
+    Quick review of the issue at the start of Jacksonville meeting requested.
 
   \todo Introduce exposition-only \code{nodeduce_t} to replace \code{remove_const_t}.
   %\todo Find better wording for removing \code{operator~} and bitwise operators from \simd.

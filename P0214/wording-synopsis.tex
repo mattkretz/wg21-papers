@@ -220,24 +220,6 @@ remove_const_t<T> operator-() const &&;
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags>
-[[nodiscard]] remove_const_t<T> copy_from(const U *mem, Flags) const &&;
-\end{itemdecl}
-\comment{needs a new name or be dropped (contentious)}
-\begin{itemdescr}
-  \flagsRequires{\type T, \type U}
-  %\pnum\requires
-  If \type M is not \bool, the largest i $\in$ \code{[0, M::size())} where \code{mask[i]} is \true is less than the number of values pointed to by \code{mem}.
-
-  \pnum\returns A copy of \code{data} with each of the selected elements replaced by the corresponding value \code{static_cast<value_type>(mem[i])} \forallmaskedi[M::]{mask}.\comment{ed.: stick a note about unsequenced operation here?}
-
-  \pnum\throws Nothing.
-
-  \pnum\remarks If \code{remove_const_t<T>} is \bool or \code{is_simd_mask_v<remove_const_t<T>>} is \true, this function shall not participate in overload resolution unless \type U is \bool.
-  Otherwise, this function shall not participate in overload resolution unless \type U is a \realArithmeticType and \code{is_simd_flag_type_v<Flags>} is \true.
-\end{itemdescr}
-
-\begin{itemdecl}
 template <class U, class Flags> void copy_to(U *mem, Flags) const &&;
 \end{itemdecl}
 \begin{itemdescr}
