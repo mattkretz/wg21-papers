@@ -97,7 +97,7 @@
 \counterwithin{Paras}{WGParagraph}
 \makeatletter
 \def\pnum{\par%
-  \stepcounter{Paras}\protected@edef\@currentlabel{\theWGParagraph~p.\arabic{Paras}}%
+  \stepcounter{Paras}\protected@edef\@currentlabel{[\theWgStableName]~p.\arabic{Paras}}%
 \noindent\llap{{%
   \scriptsize\raisebox{.5ex}{\arabic{Paras}}}\hspace{\@totalleftmargin}\quad}}
 \makeatother
@@ -165,13 +165,18 @@
 \newcommand{\wgOrigSection}[1]{%
     \leavevmode\llap{\normalfont\usekomafont{#1}(\csname #1format\endcsname\hspace{-.3em})\qquad}%
 }
+\makeatletter
 \newcommand{\wgSection}[2]{%
     \par%
     \vskip1.0\baselineskip plus 1.5\baselineskip minus 0.2\baselineskip%
     \phantomsection%
-    \refstepcounter{WGClause}%
-    \refstepcounter{subsection}%
+    \stepcounter{subsection}%
+    \stepcounter{WGClause}%
     \setcounter{Paras}{0}%
+    \def\theWgStableName{#2}%
+    \def\theWGSubSection{\theWGClause{}}%
+    \def\theWGSubSubSection{\theWGClause{}}%
+    \protected@edef\@currentlabel{[#2]}%
     \addcontentsline{toc}{subsection}{(\thesubsection{}) \theWGClause{} #1 [#2]}%
     {\noindent\wgOrigSection{subsection}\larger[2]\arabic{WGClause} #1\label{sec:#2}\hfill[#2]}\\%
     \noindent%
@@ -180,10 +185,13 @@
     \par%
     \vskip0.75\baselineskip plus 1.0\baselineskip minus 0.15\baselineskip%
     \phantomsection%
-    \refstepcounter{WGSubSection}%
-    \refstepcounter{subsubsection}%
+    \stepcounter{subsubsection}%
+    \stepcounter{WGSubSection}%
     \setcounter{Paras}{0}%
+    \def\theWgStableName{#2}%
     \def\theWGSubSection{\theWGClause{}.\arabic{WGSubSection}}%
+    \def\theWGSubSubSection{\theWGSubSection{}}%
+    \protected@edef\@currentlabel{[#2]}%
     \addcontentsline{toc}{subsubsection}{(\thesubsubsection{}) \theWGSubSection{} #1 [#2]}%
     {\noindent\wgOrigSection{subsubsection}\larger[1]\theWGSubSection{} #1\label{sec:#2}\hfill[#2]}\\%
     \noindent%
@@ -192,14 +200,17 @@
     \par%
     \vskip0.5\baselineskip plus .5\baselineskip minus 0.1\baselineskip%
     \phantomsection%
-    \refstepcounter{WGSubSubSection}%
-    \refstepcounter{paragraph}%
+    \stepcounter{paragraph}%
+    \stepcounter{WGSubSubSection}%
     \setcounter{Paras}{0}%
+    \def\theWgStableName{#2}%
     \def\theWGSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}}%
+    \protected@edef\@currentlabel{[#2]}%
     \addcontentsline{toc}{paragraph}{(\theparagraph{}) \theWGSubSubSection{} #1 [#2]}%
     {\noindent\wgOrigSection{paragraph}\theWGSubSubSection{} #1\label{sec:#2}\hfill[#2]}\\%
     \noindent%
 }
+\makeatother
 
 \newcommand\guidance[1]{\textit{\small Requesting Guidance:} #1}
 
