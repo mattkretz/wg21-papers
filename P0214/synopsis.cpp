@@ -58,15 +58,14 @@ namespace std::experimental {
     template <class T, class Abi>
     fixed_size_simd_mask<T, simd_size_v<T, Abi>> to_fixed_size(const simd_mask<T, Abi>&) noexcept;
     template <class T, size_t N> native_simd<T> to_native(const fixed_size_simd<T, N>&) noexcept;
-    template <class T, size_t N>
-    native_simd_mask<T> to_native(const fixed_size_simd_mask<T, N>> &) noexcept;
+    template <class T, size_t N> native_simd_mask<T> to_native(const fixed_size_simd_mask<T, N>&) noexcept;
     template <class T, size_t N> simd<T> to_compatible(const fixed_size_simd<T, N>&) noexcept;
     template <class T, size_t N> simd_mask<T> to_compatible(const fixed_size_simd_mask<T, N>&) noexcept;
 
     template <size_t... Sizes, class T, class Abi>
-    tuple<simd<T, abi_for_size_t<Sizes>>...> split(const simd<T, Abi>&);
+    tuple<simd<T, abi_for_size_t<T, Sizes>>...> split(const simd<T, Abi>&);
     template <size_t... Sizes, class T, class Abi>
-    tuple<simd_mask<T, abi_for_size_t<Sizes>>...> split(const simd_mask<T, Abi>&);
+    tuple<simd_mask<T, abi_for_size_t<T, Sizes>>...> split(const simd_mask<T, Abi>&);
     template <class V, class Abi>
     array<V, simd_size_v<typename V::value_type, Abi> / V::size()> split(
         const simd<typename V::value_type, Abi>&);
@@ -140,9 +139,9 @@ namespace std::experimental {
     typename V::value_type reduce(const const_where_expression<M, V>& x, bit_xor<> binary_op);
 
     template <class T, class Abi> T hmin(const simd<T, Abi>&);
-    template <class M, class V> T hmin(const const_where_expression<M, V>&);
+    template <class M, class V> typename V::value_type hmin(const const_where_expression<M, V>&);
     template <class T, class Abi> T hmax(const simd<T, Abi>&);
-    template <class M, class V> T hmax(const const_where_expression<M, V>&);
+    template <class M, class V> typename V::value_type hmax(const const_where_expression<M, V>&);
 
     // algorithms \ref{sec:simd.alg}
     template <class T, class Abi> simd<T, Abi> min(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
