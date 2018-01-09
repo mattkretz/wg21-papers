@@ -133,7 +133,7 @@ namespace std::experimental {
 
     template <class Abi> floatv<Abi> hypot(floatv<Abi> x, floatv<Abi> y);
     template <class Abi> doublev<Abi> hypot(doublev<Abi> x, doublev<Abi> y);
-    template <class Abi> ldoublev<Abi> hypot(doublev<Abi> x, doublev<Abi> y);
+    template <class Abi> ldoublev<Abi> hypot(ldoublev<Abi> x, ldoublev<Abi> y);
 
     template <class Abi> floatv<Abi> hypot(floatv<Abi> x, floatv<Abi> y, floatv<Abi> z);
     template <class Abi> doublev<Abi> hypot(doublev<Abi> x, doublev<Abi> y, doublev<Abi> z);
