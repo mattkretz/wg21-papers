@@ -95,6 +95,7 @@
 \counterwithin{Paras}{WGSubSection}
 \counterwithin{Paras}{WGSubSubSection}
 \counterwithin{Paras}{WGParagraph}
+\def\theWgStableName{}
 \makeatletter
 \def\pnum{\par%
   \stepcounter{Paras}\protected@edef\@currentlabel{[\theWgStableName]~p.\arabic{Paras}}%

@@ -1,0 +1,78 @@
+\newcommand\wgTitle{Naming implementation-defined simd\_abi tag types}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{DXXXXR0}
+\newcommand\wgGroup{LEWG}
+\newcommand\wgTarget{Parallelism TS 2}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{underscore}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{simd#1}\xspace}
+\newcommand\simdT{\type{simd<T>}\xspace}
+\newcommand\valuetype{\type{value\_type}\xspace}
+\newcommand\referencetype{\type{reference}\xspace}
+\newcommand\whereexpression{\type{where\_expression}\xspace}
+\newcommand\simdcast{\code{simd\_cast}\xspace}
+\newcommand\mask[1][]{\type{simd\_mask#1}\xspace}
+\newcommand\maskT{\type{simd\_mask<T>}\xspace}
+\newcommand\fixedsizeN{\type{simd\_abi::fixed\_size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{simd\_abi::fixed\_size}\xspace}
+\newcommand\fixedsize{\type{fixed\_size}\xspace}
+\newcommand\simdEP{\code{execution::}\type{simd}\xspace}
+\newcommand\seqEP{\code{execution::}\type{seq}\xspace}
+
+\usepackage{pifont}
+
+\newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
+\newcommand\forallmaskedi[1]{%
+  for all \code i
+  $\in \{j \in \mathbb{N}_0 | j < \code{size()} ⋀ \code{#1[}j\code{]}\}$%
+  \xspace%
+}
+\newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
+\newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
+\newcommand\itemheader[1]{\item[] \hfill \textcolor{gray}{\textsc{#1}}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper aims to allow implementations to use less scary names for implementation-defined ABI tag types.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+\section{Introduction}
+\textcite{P0214R8} specifies that implementations may (actually should) add implementation-defined ABI tag types to the \code{simd_abi} namespace.
+Since there is no additional exemption for naming, the usual rules apply and an implementation has to use double underscores or underscore plus uppercase prefixes for these names.
+This was not my intent.
+These implementation-defined names are meant to be used directly in user code (though hopefully only in special cases).
+
+\section{Choices}
+\begin{description}
+  \item[do nothing] Give the users a proper scare so that they better use the available aliases instead.
+    \label{choice1}
+
+  \item[allow anything] This effectively closes the \code{simd_abi} namespace for further extensions in the specification.
+    \label{choice2}
+
+  \item[allow uppercase] Reserves the lowercase namespace for the standard and opens the uppercase namespace for implementations.
+    \label{choice3}
+\end{description}
+
+I prefer the last choice.
+
+\section{Wording}
+I recommend to apply the change to the Parallelism TS 2 before finalization.
+\begin{wgText}[modify §8.2.1 p5]
+  \setcounter{Paras}{4}
+  \pnum
+  An implementation may define additional ABI tag types in the \code{simd_abi} namespace, to support other forms of data-parallel computation.
+  \wgAdd{Implementation-defined ABI tags may use names starting with an uppercase letter.}
+\end{wgText}
+
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
