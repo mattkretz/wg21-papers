@@ -638,7 +638,8 @@ The results per element are not required to be bitwise equal to the application 
 \comment{Neither the C nor the \CC{} standard say anything about expected error/precision.
 It seems returning 0 from all functions is a conforming implementation --- just bad QoI.}
 \wgNote{
-  If a precondition of the indicated mathematical function is violated, the behavior is undefined.
+  If a precondition of the indicated mathematical function is violated, the behavior is undefined.%
+  \comment{Make this normative? And prefer implementation-defined?}
 }
 
 \pnum If \code{abs} is called with an argument of type \simd[<X, Abi>] for which \code{is_unsigned<X>::value} is \true, the program is ill-formed.
