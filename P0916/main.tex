@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Naming implementation-defined simd\_abi tag types}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{DXXXXR0}
+\newcommand\wgDocumentNumber{P0916R0}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{Parallelism TS 2}
 %\newcommand\wgAcknowledgements{ }
@@ -45,7 +45,7 @@
 
 \pagestyle{scrheadings}
 \section{Introduction}
-\textcite{P0214R8} specifies that implementations may (actually should) add implementation-defined ABI tag types to the \code{simd_abi} namespace.
+\cite{P0214R8} specifies that implementations may (actually should) add implementation-defined ABI tag types to the \code{simd_abi} namespace.
 Since there is no additional exemption for naming, the usual rules apply and an implementation has to use double underscores or underscore plus uppercase prefixes for these names.
 This was not my intent.
 These implementation-defined names are meant to be used directly in user code (though hopefully only in special cases).
