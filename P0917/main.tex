@@ -1,0 +1,248 @@
+\newcommand\wgTitle{Making operator?: overloadable}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{D0917R0}
+\newcommand\wgGroup{EWG}
+%\newcommand\wgTarget{Parallelism TS 2}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{underscore}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{simd#1}\xspace}
+\newcommand\simdT{\type{simd<T>}\xspace}
+\newcommand\valuetype{\type{value\_type}\xspace}
+\newcommand\referencetype{\type{reference}\xspace}
+\newcommand\whereexpression{\type{where\_expression}\xspace}
+\newcommand\simdcast{\code{simd\_cast}\xspace}
+\newcommand\mask[1][]{\type{simd\_mask#1}\xspace}
+\newcommand\maskT{\type{simd\_mask<T>}\xspace}
+\newcommand\fixedsizeN{\type{simd\_abi::fixed\_size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{simd\_abi::fixed\_size}\xspace}
+\newcommand\fixedsize{\type{fixed\_size}\xspace}
+\newcommand\simdEP{\code{execution::}\type{simd}\xspace}
+\newcommand\seqEP{\code{execution::}\type{seq}\xspace}
+
+\usepackage{pifont}
+
+\newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
+\newcommand\forallmaskedi[1]{%
+  for all \code i
+  $\in \{j \in \mathbb{N}_0 | j < \code{size()} ⋀ \code{#1[}j\code{]}\}$%
+  \xspace%
+}
+\newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
+\newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
+\newcommand\itemheader[1]{\item[] \hfill \textcolor{gray}{\textsc{#1}}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper explores user-defined overloads of \code{operator?:}.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+%\begin{itemize}
+%  \todo
+%\end{itemize}
+\section{Introduction}
+Most operators in \CC{} can be overloaded.
+The few exceptions are: \code{?:}, \code{::}, \code{.}\footnote{cf. P0416R0}, \code{.*}.
+For the conditional operator, \textcite{StrFaq} writes:
+“There is no fundamental reason to disallow overloading of \code{?:}.
+I just didn't see the need to introduce the special case of overloading a ternary operator.
+Note that a function overloading \code{expr1?expr2:expr3} would not be able to guarantee that only one of \code{expr2} and \code{expr3} was executed.”
+
+In this paper I want to show a need for overloading the conditional operator as well as present a possiblity of deferred evaluation of \code{expr2} and \code{expr3}.
+
+\section{Motivation}
+\subsection{Blend Operations}
+The conditional operator is a perfect match for expressing blend operations generically, i.e. so that fundamental types still work with the same syntax.
+Consider \textcite{P0214R8}, where a certain number (determined at compile time) of values of arithmetic type \type T are combined to a single object of type \type{simd<T, Abi>}.
+All operators act alement-wise and concurrently.
+Thus, the meaning of
+\smallskip\begin{lstlisting}[style=Vc]
+template <class T> T abs(T x) {
+  return x < 0 ? -x : x;
+}
+\end{lstlisting}
+intuitively translates from fundamental types to \type{simd} types:
+Element-wise application of the conditional operator blends the elements of \code{-x} and \code x into a single \type{simd} object according to the \type{simd_mask} object (\code{x < 0}).
+The alternative solution for \type{simd} blend operations is to use a function, such as “inline-if”:
+\smallskip\begin{lstlisting}[style=Vc]
+template <class T> T abs(T x) {
+  return iif(x < 0, -x, x);
+}
+\end{lstlisting}
+This is less intuitive, since the name is either long or cryptic and the arguments seem to be arbitrarily ordered (comma doesn't convey semantics such as \code ? and \code : do).
+More importantly, a function will typically not be found via ADL, so that the code actually requires \code{return std::experimental::iif(x < 0, -x, x)} to work for fundamental types.
+This is annoying and easily forgotten since ADL works fine for \type{simd} arguments.
+
+It is not possible (and not a good idea, in my opinion) to overload \code{if} statements and iteration statements for non-boolean conditions.
+Thus, to support any “collection of \bool{}”-like type in conditional expressions using built-in syntax, the conditional operator is the only candidate.
+
+Considering cases where generality of the syntax, i.e. extension from the built-in case to user-defined types, is important, we see that all such use cases will have a type for the condition that is not contextually convertible to \bool because the user-defined condition object stores multiple boolean states.
+Overloading the conditional operator is thus most interesting for stating conditional evaluation of multiple data sets without imposing an order and thus enabling parallelization.
+
+\subsection{Embedded Domain Specific Languages}
+Embedded domain specific languages in \CC{} often redefine operators for user-defined types to create a new language embedded into \CC{}.
+Having the conditional operator available makes \CC{} more versatile for such uses.
+Most sensible uses of the conditional operator will likely be similar to the “blend operations” case discussed for \type{simd} types, though.
+The motivation is not as strong as in the above case, since in most cases substitutability of the code to fundamental types is not a goal.
+
+\section{Choices}
+The main issue to decide when considering overloading the conditional operator, is deferred evaluation of the second and third expressions.
+[expr.cond]/1 specifies “Only one of the second and third expressions is evaluated”.
+If the signature of overloadable \code{operator?:} were \code{T operator?:(U, T, T)} then all three expressions must be evaluated before calling the user-defined operator.
+To resolve this, the signature could be defined as \code{T operator?:(U, F0, F1)}, where \code{F0} and \code{F1} are callables with return type \code{T}.
+Calling code such as \code{auto x = cond ? a + b : g(a, b)} could then be transformed to a \code{auto x = operator?:(cond, [\&]() { return a + b; }, [\&]() { return g(a, b); })}.
+
+This could be taken one step further:
+Instead of passing a callable, pass an object that is implicitly convertible to \code{T}.
+Its conversion operator invokes the expression.
+This may be easier to use, but it's also easier to use badly (as in invoking the conversion operator multiple times).
+I believe such an approach is too magical, so I will not pursue it further in this paper.
+
+Thus, we have two choices for supporting the operator overload (cf. Figure \ref{fig:demo}):
+\begin{enumerate}
+  \item\label{simple} The simple approach, which follows the rules of the other operator overloads:\\
+    \code{T operator?:(Cond c, T a, T b)\\\{ if (c) return a; else return b; \}}
+
+    The expression \code{x = c ? f(a, b) : g(a, b)} means \code{x = operator?:(c, f(a, b), g(a, b))}.
+
+  \item\label{deferred} An approach to support deferred evaluation:\\
+    \code{T operator?:(Cond c, F0 a, F1 b)\\\{ if (c) return a(); else return b(); \}}
+
+    The expression \code{x = c ? f(a, b) : g(a, b)} means \code{x = operator?:(c, [\&]() \{ return f(a, b); \}, [\&]() \{ return g(a, b); \})}.
+
+\end{enumerate}
+
+\subsection{Overload Resolution}
+Choice \ref{simple} allows overload resolution on the types for the second and third argument.
+If we want to support overloads using \bool for the first argument (I do not know of a use case), then choosing the overload via the types of the remaining arguments is important.
+Choice \ref{deferred} makes this harder, since the requirement must be expressed as a return type of the function call expression of the arguments.
+
+\begin{figure}
+  \centering
+  \begin{minipage}[t]{.7\linewidth}
+    \begin{lstlisting}[style=Vc]
+template <class T0, class T1>
+const auto ternary1(bool c, T0 &&yes, T1 &&no) {
+    if (c) return std::forward<T0>(yes);
+    return std::forward<T1>(no);
+}
+
+template <class F0, class F1>
+const auto ternary2_impl(bool c, F0 &&yes, F1 &&no) {
+    if (c) return yes();
+    return no();
+}
+#define ternary2(c_, yes_, no_)             \
+ternary2_impl((c_), [&]() { return yes_; }, \
+                    [&]() { return no_; })
+
+int a();
+int b();
+
+int f1(bool c) {
+    return ternary1(c, a(), b());
+}
+int f2(bool c) {
+    return ternary2(c, a(), b());
+}
+int f3(bool c) {
+    return c ? a() : b();
+}
+    \end{lstlisting}
+  \end{minipage}\hfill%
+  \begin{minipage}[t]{.25\linewidth}
+    \begin{lstlisting}[language={}]
+f1(bool):
+pushq %rbp
+pushq %rbx
+pushq %rax
+movl %edi, %ebx
+callq a()
+movl %eax, %ebp
+callq b()
+testb %bl, %bl
+cmovnel %ebp, %eax
+addq $8, %rsp
+popq %rbx
+popq %rbp
+retq
+
+f2(bool):
+testb %dil, %dil
+je .LBB1_2
+jmp a()
+.LBB1_2:
+jmp b()
+
+f3(bool):
+testb %dil, %dil
+je .LBB2_2
+jmp a()
+.LBB2_2:
+jmp b()
+    \end{lstlisting}
+  \end{minipage}
+  \caption{Demonstration of the two choices compared with a builtin conditional operator (\code{f3}), cf. \url{https://godbolt.org/g/tpPrVR}}
+  \label{fig:demo}
+\end{figure}
+
+\subsection{Life-time Extension (Non-)Issue}
+Using choice \ref{deferred}, there is a case where life-time extension does not work, where it would otherwise work in the built-in case.
+Consider:
+\smallskip\begin{lstlisting}[style=Vc]
+template <class F0, class F1>
+const auto &operator?:(MyCond c, F0 &&yes, F1 &&no) {
+  if (c) {
+    return yes();
+  }
+  return no();
+}
+
+const auto &x = c ? a + b : a - b;
+\end{lstlisting}
+In this case the temporary is produced inside the \code{operator?:} function, and thus returning a const-ref returns a reference to a local temporary object.
+Using choice \ref{simple}, the temporary is produced before calling the overloaded operator, and thus lifetime extension would make the last line well-formed.
+The simple solution here is to return \code{const auto} instead of \code{const auto \&}, so this issue appears to be rather academic.
+
+\subsection{Allow different types?}
+The operator signature could enforce the types of the second and third expression to be equal, implicitly/explicitly convertible, or arbitrary.
+I believe the most flexible tool for users will be to allow arbitrarily different types.
+Users can put a restriction in place by themselves.
+
+\subsection{Is there a need for deferred evaluation?}
+Consider the implementation of the conditional operator using choice \ref{simple} for \type{simd<T, Abi>}:
+\smallskip\begin{lstlisting}[style=Vc]
+template <class T, class Abi>
+simd<T, Abi> operator?:(simd_mask<T, Abi> mask, simd<T, Abi> a, simd<T, Abi> b) {
+  if (all_of(mask)) [[unlikely]] {
+    return a;
+  } else if (none_of(mask)) [[unlikely]] {
+    return b;
+  }
+  where(mask, b) = a;
+  return b;
+}
+\end{lstlisting}
+If this code is inlined, the compiler will know how to improve the calling code without the need for explicit deferred evaluation of \code a and \code b.
+Only if the expressions in the second and third argument to the conditional operator have side effects, is the difference important.
+
+In the presence of inlining (and link-time optimizations), I would prefer to go with choice \ref{simple}:
+\begin{itemize}
+  \item I believe we do not have to complicate the language to support conditional side effects in overloaded conditional operators.
+  \item Choice \ref{simple} is less of an implementation burden.
+  \item Choice \ref{simple} is simpler to use and understand, even if slightly less powerful.
+  \item Choice \ref{deferred} would break with the overload syntax of all other overloadable operators.
+\end{itemize}
+
+\section{Wording}
+TBD.
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
