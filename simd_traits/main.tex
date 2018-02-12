@@ -1,0 +1,167 @@
+\newcommand\wgTitle{Finding the right set of traits for \code{simd<T>}}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{DXXXXR0}
+\newcommand\wgGroup{SG1, LEWG}
+%\newcommand\wgTarget{Parallelism TS 2}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{underscore}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{simd#1}\xspace}
+\newcommand\simdT{\type{simd<T>}\xspace}
+\newcommand\valuetype{\type{value\_type}\xspace}
+\newcommand\referencetype{\type{reference}\xspace}
+\newcommand\whereexpression{\type{where\_expression}\xspace}
+\newcommand\simdcast{\code{simd\_cast}\xspace}
+\newcommand\mask[1][]{\type{simd\_mask#1}\xspace}
+\newcommand\maskT{\type{simd\_mask<T>}\xspace}
+\newcommand\fixedsizeN{\type{simd\_abi::fixed\_size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{simd\_abi::fixed\_size}\xspace}
+\newcommand\fixedsize{\type{fixed\_size}\xspace}
+\newcommand\simdEP{\code{execution::}\type{simd}\xspace}
+\newcommand\seqEP{\code{execution::}\type{seq}\xspace}
+\newcommand\realArithmeticType{vectorizable type\xspace}
+
+\usepackage{pifont}
+
+\newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
+\newcommand\forallmaskedi[1]{%
+  for all \code i
+  $\in \{j \in \mathbb{N}_0 | j < \code{size()} ⋀ \code{#1[}j\code{]}\}$%
+  \xspace%
+}
+\newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
+\newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
+\newcommand\itemheader[1]{\item[] \hfill \textcolor{gray}{\textsc{#1}}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper discusses the set of traits we want to ship with \simdT.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+\section{Introduction}
+\textcite{P0214R8} defines the trait \code{abi_for_size<T, N>}, allowing users to find an “implementation-recommended” ABI tag for a given \valuetype and number of elements.
+\textcite{P0820R1} discusses a use for considering involved ABI tags in the “recommendation”.
+SG1 polled in Albuquerque about\\
+\wgPoll{\code{abi_for_size_t} (SF) vs. \emph{implementation-defined} (SA)}{1&7&7&0&0}
+\noindent The poll result implies that SG1 prefers users to be able to spell out the ABI tags that are determined as return types.
+The poll was not about a specific name to use for the trait.
+\textcite{P0820R1} suggests to rename the trait to \code{rebind_abi<T, N, Abis...>}.
+
+\section{Motivation}
+I believe the name \code{rebind_abi} in \textcite{P0820R1} is misleading, since no rebinding is taking place, but rather a type for implementing a rebind of a given \simd[<T, Abi>] to a different \valuetype \type U is made possible.
+Therefore, I propose to
+\begin{enumerate}
+  \item not rename the \code{abi_for_size} trait in \textcite{P0214R8}, and
+  \item extend \code{abi_for_size} to consider input ABI tags in its decision, and
+  \item introduce a new trait \code{rebind_simd<U, V>}, which deduces a \simd[<U, Abi>] instantiation from a given \simd type \type V and requested \valuetype \type U.
+\end{enumerate}
+
+In addition to \code{rebind_simd}, SG1 should consider whether a \code{resize_simd} trait should be added.
+\code{resize_simd_t<N, \simd<T, Abi0>>} is an alias for a \simd[<T, Abi1>] so that \code{simd_size_v<T, Abi1> == N}, and
+\code{resize_simd_t<N, \mask<T, Abi0>>} is an alias for a \mask[<T, Abi1>] so that \code{simd_size_v<T, Abi1> == N}.
+Since the implementation burden is minimal and the trait can simplify user code, I recommend to add it to the Parallelism TS 2.
+
+\section{Proposed Wording}
+
+Apply the following change to the Parallelism TS 2 before finalization:
+\begin{wgText}[modify §8.2]
+  \begingroup
+    \ttfamily\smaller[1]
+    \wgRem{template <class T, size_t N> struct abi_for_size \{ using type = \emph{see below}; \};}\\
+    \wgRem{template <class T, size_t N> using abi_for_size_t = typename abi_for_size<T, N>::type;}\\
+    \wgAdd{template <class T, size_t N, class... Abis> struct abi_for_size \{ using type = \emph{see below}; \};}\\
+    \wgAdd{template <class T, size_t N, class... Abis> using abi_for_size_t = typename abi_for_size<T, N, Abis...>::type;}\\
+    \wgAdd{}\\
+    \wgAdd{template <class T, class V> struct rebind_simd \{ using type = \emph{see below}; \};}\\
+    \wgAdd{template <class T, class V> using rebind_simd_t = typename rebind_simd<T, V>::type;}
+  \endgroup
+\end{wgText}
+
+\begin{wgText}[modify §8.2.2]
+\begingroup
+  \ttfamily\smaller[1]
+  \wgRem{template <class T, size_t N> struct abi_for_size \{ using type = \emph{see below}; \};}\\
+  \wgAdd{template <class T, size_t N, class... Abis> struct abi_for_size \{ using type = \emph{see below}; \};}
+\endgroup
+\begin{itemdescr}
+  \setcounter{Paras}{4}
+  \pnum The member \type{type} shall be omitted unless
+  \begin{itemize}
+    \item \type T is a cv-unqualified type, and
+    \item \type T is a \realArithmeticType{}, and
+    \item \fixedsizeN is supported (see [simd.abi])\wgAdd{, and}
+    \wgItemAdd\wgAdd{every type in the \code{Abis} pack is an ABI tag}.
+  \end{itemize}
+
+  \pnum Where present, the member typedef \type{type} shall name an ABI tag type that satisfies
+  \begin{itemize}
+    \item \code{simd_size_v<T, type> == N}, and
+    \item \simd[<T, type>] is default constructible (see [simd.overview]),
+  \end{itemize}
+  \code{simd_abi::scalar} takes precedence over \code{simd_abi::}\fixedsize\code{<1>}.
+  The precedence of implementation-defined ABI tags over \fixedsizeN is implementation-defined.
+  \wgNote{
+    It is expected that implementation-defined ABI tags can produce better optimizations and thus take precedence over \fixedsizeN.
+    \wgAdd{Implementations may want to base the choice on \code{Abis}, but may also ignore the \code{Abis} arguments.}
+  }
+\end{itemdescr}
+
+\begingroup
+  \ttfamily\smaller[1]
+  \wgAdd{template <class T, class V> struct rebind_simd \{ using type = \emph{see below}; \};}
+\endgroup
+\begin{itemdescr}
+  %\setcounter{Paras}{4}
+  \pnum \wgAdd{The member \type{type} shall be omitted unless}
+  \begin{itemize}
+    \wgItemAdd\wgAdd{\type{T} is a cv-unqualified type, and}
+    \wgItemAdd\wgAdd{\type{T} is a vectorizable type, and}
+    \wgItemAdd\wgAdd{\type{V} is either \type{simd<U, Abi0>} or \type{simd_mask<U, Abi0>}, where \type U and \type{Abi0} are deduced from \type V.}
+  \end{itemize}
+
+  \pnum \wgAdd{Where present, the member typedef \type{type} shall name
+  \type{simd<T, Abi1>} if \type V is \type{simd<U, Abi0>} or
+  \type{simd_mask<T, Abi1>} if \type V is \type{simd_mask<U, Abi0>}.
+  \type{Abi1} is equal to \code{abi_for_size_t<T, simd_size_v<U, Abi0>, Abi0>}.}
+\end{itemdescr}
+
+\end{wgText}
+
+If \code{resize_simd} is accepted, add the following right after \code{rebind_simd_t}:
+\begin{wgText}[modify §8.2]
+  \begingroup
+    \ttfamily\smaller[1]
+    template <class T, class V> using rebind_simd_t = typename rebind_simd<T, V>::type;\\
+    \wgAdd{}\\
+    \wgAdd{template <int N, class V> struct resize_simd \{ using type = \emph{see below}; \};}\\
+    \wgAdd{template <int N, class V> using resize_simd_t = typename resize_simd<N, V>::type;}
+  \endgroup
+\end{wgText}
+
+And the following after paragraph 8 in §8.2.2:
+\begin{wgText}[modify §8.2.2]
+\begingroup
+  \ttfamily\smaller[1]
+  \wgAdd{template <int N, class V> struct resize_simd \{ using type = \emph{see below}; \};}
+\endgroup
+\begin{itemdescr}
+  \pnum \wgAdd{The member \type{type} shall be omitted unless}
+  \begin{itemize}
+    \wgItemAdd\wgAdd{\code{N > 0}, and}
+    \wgItemAdd\wgAdd{\type{V} is either \type{simd<T, Abi0>} or \type{simd_mask<T, Abi0>}, where \type T and \type{Abi0} are deduced from \type V.}
+  \end{itemize}
+
+  \pnum \wgAdd{Where present, the member typedef \type{type} shall name \type{simd<T, Abi1>} if \type V is \type{simd<T, Abi0>} or \type{simd_mask<T, Abi1>} if \type V is \type{simd_mask<T, Abi0>}.
+  \type{Abi1} is equal to \code{abi_for_size_t<T, N, Abi0>}.}
+\end{itemdescr}
+\end{wgText}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0

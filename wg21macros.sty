@@ -28,7 +28,8 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{wg21macros}[2014/10/27 v0.1 Macros for WG21 documents markup]
 
-\RequirePackage[normalem]{ulem}
+%\RequirePackage[normalem]{ulem}
+\RequirePackage{soul}
 \RequirePackage{xcolor}
 \RequirePackage{relsize}
 \RequirePackage{listings}
@@ -54,13 +55,18 @@
 —~\textit{end example}~]}
 \ifwgmacros@mono@
 \colorlet{WgAdd}{black}
-\colorlet{WgRemove}{black}
+\colorlet{WgRem}{black}
 \else
 \colorlet{WgAdd}{green!40!black}
-\colorlet{WgRemove}{red!40!black}
+\colorlet{WgRem}{red!40!black}
 \fi
-\newcommand\wgAdd[1]{{\color{WgAdd}\underline{#1}}}
-\newcommand\wgRemove[1]{{\color{WgRemove}\sout{#1}}}
+\soulregister{\code}{1}
+\soulregister{\type}{1}
+\newcommand\wgAdd[1]{{\color{WgAdd}\ul{#1}}}
+\newcommand\wgRemove[1]{{\color{WgRem}\st{#1}}} % deprecated
+\newcommand\wgRem[1]{{\color{WgRem}\st{#1}}}
+\newcommand\wgItemAdd{\color{WgAdd}\item[\ul{\mbox{ \textbullet }}]\hspace*{-\labelsep}\ul{\mbox{\hspace*{\labelsep}}}}
+\newcommand\wgItemRem{\color{WgRem}\item[\st{\mbox{ \textbullet }}]\hspace*{-\labelsep}\st{\mbox{\hspace*{\labelsep}}}}
 \newenvironment{wgText}[1][]{
   \begingroup
   \lstset{%
