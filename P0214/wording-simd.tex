@@ -372,19 +372,16 @@ T reduce(const simd<T, Abi>& x, BinaryOperation binary_op = BinaryOperation());
 
 \begin{itemdecl}
 template <class M, class V, class BinaryOperation>
-typename V::value_type reduce(const const_where_expression<M, V>& x, typename V::value_type neutral_element,
+typename V::value_type reduce(const const_where_expression<M, V>& x, typename V::value_type identity_element,
                               BinaryOperation binary_op);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\requires \code{binary_op} shall be callable with two arguments of type \type T returning \type T, or callable with two arguments of type \simd[<T, A1>] returning \simd[<T, A1>] for every \type{A1} that is an ABI tag type.
+  The results of \code{binary_op(identity_element, x)} and \code{binary_op(x, identity_element)} shall be equal to \code{x} for all finite values \code{x} representable by \type{V::value_type}.
 
   \pnum\returns
-  If \code{none_of(x.mask)}, returns \code{neutral_element}.
+  If \code{none_of(x.mask)}, returns \code{identity_element}.
   Otherwise, returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \forallmaskedi{x.mask}.
-
-  \pnum\wgNote{This overload of \code{reduce} requires a neutral value to enable a parallelized implementation:
-  A temporary \simd object initialized with \code{neutral_element} is conditionally assigned from \code{x.data} using \code{x.mask}.
-  Subsequently, the parallelized reduction is applied to the temporary object.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -631,15 +628,32 @@ simd<T, Abi> clamp(const simd<T, Abi>& v, const simd<T, Abi>& lo, const simd<T, 
 \end{itemdescr}
 
 \wgSubsubsection{\simd math library}{simd.math}
-\lstinputlisting[]{math.cpp}
+%\lstinputlisting[]{math.cpp}
 
-\pnum Each listed function concurrently applies the indicated mathematical function element-wise.
+\pnum \label{cl:cmath-spec} For each set of overloaded functions within \code{<cmath>}, there shall be additional overloads sufficient to ensure that if any argument corresponding to a \double parameter has type \simd[<T, Abi>], where \code{is_floating_point_v<T>} is \true, then:
+\begin{itemize}
+  \item All arguments corresponding to \double parameters shall be convertible to \simd[<T, Abi>].
+
+  \item All arguments corresponding to \type{double*} parameters shall be of type \simd[<T, Abi>*].
+
+  \item All arguments corresponding to parameters of integral type \type U shall be convertible to \code{fixed_size_simd<U, simd_size_v<T, Abi>>}.
+
+  \item All arguments corresponding to \type{U*}, where \type U is integral, shall be of type \code{fixed_size_simd<U, simd_size_v<T, Abi>>*}.
+
+  \item If the corresponding return type is \double, the return type of the additional overload is \simd[<T, Abi>].
+    Otherwise, if the corresponding return type is \bool, the return type of the additional overload is \mask[<T, Abi>].
+    Otherwise, the return type is \code{fixed_size_simd<R, simd_size_v<T, Abi>>}, with \type R denoting the corresponding return type.
+\end{itemize}
+It is unspecified whether a call to these overloads with arguments that are all convertible to \simd[<T, Abi>] but are not of type \simd[<T, Abi>] is well-formed.
+
+\pnum Each function overload produced by the above rules concurrently applies the indicated mathematical function element-wise.
 The results per element are not required to be bitwise equal to the application of the function which is overloaded for the element type.
 \comment{Neither the C nor the \CC{} standard say anything about expected error/precision.
 It seems returning 0 from all functions is a conforming implementation --- just bad QoI.}
 \wgNote{
+  \label{cl:precond-violation}
   If a precondition of the indicated mathematical function is violated, the behavior is undefined.%
-  \comment{Make this normative? And prefer implementation-defined?}
+  \comment{Make this normative? And prefer implementation-defined or unspecified?}
 }
 
 \pnum If \code{abs} is called with an argument of type \simd[<X, Abi>] for which \code{is_unsigned<X>::value} is \true, the program is ill-formed.

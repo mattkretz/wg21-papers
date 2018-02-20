@@ -126,7 +126,7 @@ namespace std::experimental {
     T reduce(const simd<T, Abi>&, BinaryOperation = BinaryOperation());
     template <class M, class V, class BinaryOperation>
     typename V::value_type reduce(const const_where_expression<M, V>& x,
-                                  typename V::value_type neutral_element, BinaryOperation binary_op);
+                                  typename V::value_type identity_element, BinaryOperation binary_op);
     template <class M, class V>
     typename V::value_type reduce(const const_where_expression<M, V>& x, plus<> binary_op = plus<>());
     template <class M, class V>

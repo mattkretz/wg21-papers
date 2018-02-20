@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Data-Parallel Vector Types \& Operations}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D0214R8}
+\newcommand\wgDocumentNumber{P0214R8}
 \newcommand\wgGroup{LWG}
 \newcommand\wgTarget{Parallelism TS 2}
 \newcommand\wgAcknowledgements{
@@ -88,6 +88,19 @@
 \end{itemize}
 
 \section{Changelog}
+\subsection{Changes from R7}
+Previous revision: \parencite{P0214R7}.
+\begin{itemize}
+  \item Removed the explicit signatures of the special math functions in favor of a rule to translate the \code{<cmath>} signatures to \simd types.
+    This resolves an overspecification, which disallowed certain valid implementation strategies. (see \ref{cl:cmath-spec})
+
+  \item Added margin-note questioning non-normative note about special math function preconditions. (see \ref{cl:precond-violation})
+
+  \item Fixed and finalized note on the intent of the data-parallel library. (see \ref{cl:intent-note})
+
+  \item Renamed \code{neutral_element} to \code{identity_element} and specified the requirement on its value in relation to \code{binary_op}. Removed the note explaining an implementation detail. (see \ref{sec:simd.reductions})
+\end{itemize}
+
 \subsection{Changes from R6}
 Previous revision: \parencite{P0214R6}.
 \begin{itemize}
