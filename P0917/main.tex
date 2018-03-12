@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Making operator?: overloadable}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P0917R0}
+\newcommand\wgDocumentNumber{D0917R1}
 \newcommand\wgGroup{EWG}
 %\newcommand\wgTarget{Parallelism TS 2}
 %\newcommand\wgAcknowledgements{ }
@@ -44,9 +44,13 @@
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
-%\begin{itemize}
-%  \todo
-%\end{itemize}
+\addtocounter{section}{-1}
+\section{Changelog}
+\begin{itemize}
+  \item Added \code{bounded::integer} motivation and example.
+  \item Added a reference to \cite{P0927R0}; making a stronger case for the simple choice.
+\end{itemize}
+
 \section{Introduction}
 Most operators in \CC{} can be overloaded.
 The few exceptions are: \code{?:}, \code{::}, \code{.}\footnote{cf. P0416R0}, \code{.*}.
@@ -92,6 +96,20 @@ Having the conditional operator available makes \CC{} more versatile for such us
 Most sensible uses of the conditional operator will likely be similar to the “blend operations” case discussed for \type{simd} types, though.
 The motivation is not as strong as in the above case, since in most cases substitutability of the code to fundamental types is not a goal.
 
+\subsection{More flexibility in supported types}
+Consider the \code{bounded::integer} example (cf. \cite{site.bounded-integer}):
+\smallskip\begin{lstlisting}[style=Vc,escapeinside={/*!}{*/},numbers=left]
+bounded::integer<1, 100> const a = f();
+bounded::integer<-3, 7> const b = g();
+bounded::integer<-2, 107> c = a + b;  /*!\label{lst:ok}*/
+bounded::integer<-3, 100> d = some_condition ? a : b;  /*!\label{lst:notok}*/
+\end{lstlisting}
+
+Line \ref{lst:ok} is what the \code{bounded::integer} library can currently do for you.
+However, line \ref{lst:notok} is currently not possible since it would require more control by the library over the types involved with the conditional operator.
+
+Any design that wants to allow different types on the second and third argument (without implicit conversions), and determine a return type from them, requires an overloadable conditional operator.
+
 \section{Choices}
 The main issue to decide when considering overloading the conditional operator, is deferred evaluation of the second and third expressions.
 [expr.cond]/1 specifies “Only one of the second and third expressions is evaluated”.
@@ -117,11 +135,14 @@ Thus, we have two choices for supporting the operator overload (cf. Figure \ref{
 
     The expression \code{x = c ? f(a, b) : g(a, b)} means \code{x = operator?:(c, [\&]() \{ return f(a, b); \}, [\&]() \{ return g(a, b); \})}.
 
+  \item\label{generic} \textcite{P0927R0} propose an extension that would easily solve the issue.
+    Thus by adopting P0927R0, choice \ref{simple} can support deferred evaluation.
+
 \end{enumerate}
 
 \subsection{Overload Resolution}
 Choice \ref{simple} allows overload resolution on the types for the second and third argument.
-If we want to support overloads using \bool for the first argument (I do not know of a use case), then choosing the overload via the types of the remaining arguments is important.
+If we want to support overloads using \bool for the first argument, then choosing the overload via the types of the remaining arguments is important.
 Choice \ref{deferred} makes this harder, since the requirement must be expressed as a return type of the function call expression of the arguments.
 
 \begin{figure}
@@ -233,13 +254,24 @@ simd<T, Abi> operator?:(simd_mask<T, Abi> mask, simd<T, Abi> a, simd<T, Abi> b) 
 If this code is inlined, the compiler will know how to improve the calling code without the need for explicit deferred evaluation of \code a and \code b.
 Only if the expressions in the second and third argument to the conditional operator have side effects, is the difference important.
 
-In the presence of inlining (and link-time optimizations), I would prefer to go with choice \ref{simple}:
+Consider a possible implementation of the conditional operator for \code{bounded::integer}:
+\smallskip\begin{lstlisting}[style=Vc]
+template <BoundedInteger T0, BoundedInteger T1>
+common_type_and_value_category_t<T0, T1> operator?:(bool cond, T0 a, T1 b) {
+  return cond ? static_cast<common_type_and_value_category_t<T0, T1>>(a)
+              : static_cast<common_type_and_value_category_t<T0, T1>>(b);
+}
+\end{lstlisting}
+Again, inlining can cover all the important cases (i.e. all but side effects).
+
+In the presence of inlining (and link-time optimizations), I would prefer to go with choice \ref{simple}.
 \begin{itemize}
   \item I believe we do not have to complicate the language to support conditional side effects in overloaded conditional operators.
   \item Choice \ref{simple} is less of an implementation burden.
   \item Choice \ref{simple} is simpler to use and understand, even if slightly less powerful.
   \item Choice \ref{deferred} would break with the overload syntax of all other overloadable operators.
 \end{itemize}
+If a mechanism as suggested in \textcite{P0927R0} is adopted, I'd be strongly in favor of choice \ref{simple}.
 
 \section{Wording}
 TBD.
