@@ -102,12 +102,25 @@
 \counterwithin{Paras}{WGSubSubSection}
 \counterwithin{Paras}{WGParagraph}
 \def\theWgStableName{}
+\newcommand\useStdStablenameRef{
 \makeatletter
 \def\pnum{\par%
-  \stepcounter{Paras}\protected@edef\@currentlabel{[\theWgStableName]~p.\arabic{Paras}}%
+  \stepcounter{Paras}%
+  \protected@edef\@currentlabel{[\theWgStableName]}%
 \noindent\llap{{%
   \scriptsize\raisebox{.5ex}{\arabic{Paras}}}\hspace{\@totalleftmargin}\quad}}
 \makeatother
+}
+\newcommand\useVerboseStablenameRef{
+\makeatletter
+\def\pnum{\par%
+  \stepcounter{Paras}%
+  \protected@edef\@currentlabel{[\theWgStableName]~p.\arabic{Paras}}%
+\noindent\llap{{%
+  \scriptsize\raisebox{.5ex}{\arabic{Paras}}}\hspace{\@totalleftmargin}\quad}}
+\makeatother
+}
+\useVerboseStablenameRef
 
 \newenvironment{indented}
 {\list{}{}\item\relax}
