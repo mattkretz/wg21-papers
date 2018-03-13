@@ -57,10 +57,10 @@ namespace std::experimental {
     fixed_size_simd<T, simd_size_v<T, Abi>> to_fixed_size(const simd<T, Abi>&) noexcept;
     template <class T, class Abi>
     fixed_size_simd_mask<T, simd_size_v<T, Abi>> to_fixed_size(const simd_mask<T, Abi>&) noexcept;
-    template <class T, size_t N> native_simd<T> to_native(const fixed_size_simd<T, N>&) noexcept;
-    template <class T, size_t N> native_simd_mask<T> to_native(const fixed_size_simd_mask<T, N>&) noexcept;
-    template <class T, size_t N> simd<T> to_compatible(const fixed_size_simd<T, N>&) noexcept;
-    template <class T, size_t N> simd_mask<T> to_compatible(const fixed_size_simd_mask<T, N>&) noexcept;
+    template <class T, int N> native_simd<T> to_native(const fixed_size_simd<T, N>&) noexcept;
+    template <class T, int N> native_simd_mask<T> to_native(const fixed_size_simd_mask<T, N>&) noexcept;
+    template <class T, int N> simd<T> to_compatible(const fixed_size_simd<T, N>&) noexcept;
+    template <class T, int N> simd_mask<T> to_compatible(const fixed_size_simd_mask<T, N>&) noexcept;
 
     template <size_t... Sizes, class T, class Abi>
     tuple<simd<T, abi_for_size_t<T, Sizes>>...> split(const simd<T, Abi>&);
@@ -122,13 +122,13 @@ namespace std::experimental {
     const_where_expression<bool, const T> where(@\emph{see below}@ k, const T& d) noexcept;
 
     // reductions \ref{sec:simd.reductions}
-    template <class T, class Abi, class BinaryOperation = std::plus<>>
+    template <class T, class Abi, class BinaryOperation = plus<>>
     T reduce(const simd<T, Abi>&, BinaryOperation = BinaryOperation());
     template <class M, class V, class BinaryOperation>
     typename V::value_type reduce(const const_where_expression<M, V>& x,
                                   typename V::value_type identity_element, BinaryOperation binary_op);
     template <class M, class V>
-    typename V::value_type reduce(const const_where_expression<M, V>& x, plus<> binary_op = plus<>());
+    typename V::value_type reduce(const const_where_expression<M, V>& x, plus<> binary_op = {});
     template <class M, class V>
     typename V::value_type reduce(const const_where_expression<M, V>& x, multiplies<> binary_op);
     template <class M, class V>
@@ -147,7 +147,7 @@ namespace std::experimental {
     template <class T, class Abi> simd<T, Abi> min(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
     template <class T, class Abi> simd<T, Abi> max(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
     template <class T, class Abi>
-    std::pair<simd<T, Abi>, simd<T, Abi>> minmax(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
+    pair<simd<T, Abi>, simd<T, Abi>> minmax(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
     template <class T, class Abi>
     simd<T, Abi> clamp(const simd<T, Abi>& v, const simd<T, Abi>& lo, const simd<T, Abi>& hi);
   }

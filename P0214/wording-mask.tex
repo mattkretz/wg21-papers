@@ -3,37 +3,37 @@
 \lstinputlisting[]{mask.cpp}
 
 \pnum The class template \mask is a \dataparalleltype with the element type \bool.
-The \width of a given \mask instantiation is a constant expression, determined by the template parameters.
+The \width of a given \mask specialization is a constant expression, determined by the template parameters.
 Specifically, \code{simd_mask<T, Abi>::size() == simd<T, Abi>::size()} is \true.
 
 \simdTypeRequirements{simd_mask}
 
-\pnum Default initialization performs no initialization of the elements; value-initialization initializes each element with \code{bool()}.
+\pnum Default initialization performs no initialization of the elements; value-initialization initializes each element with \false.
 \wgNote{Thus, default initialization leaves the elements in an indeterminate state.}
 
-\pnum The member type \referencetype follows the specification of the \simd[<T, Abi>::reference] member type.
+\pnum The member type \referencetype is the same as \simd[<T, Abi>::reference], except for\comment[TODO]{probably just \valuetype}.
+\comment[TODO]{add stable name reference}
 
 \begin{itemdecl}
 static constexpr size_t size() noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns the number of boolean elements stored in objects of the given \mask[<T, Abi>] type.
+  \pnum\returns The width of \simd[<T, Abi>].
 \end{itemdescr}
 
-\pnum\begin{noteEnv}Implementations are encouraged to enable \code{static_cast}ing from and to implementation-defined types.
+\pnum Implementations should enable explicit conversion from and to implementation-defined types.
 This would add one or more of the following declarations to class \mask:
 \begin{itemdecl}
 explicit operator implementation-defined() const;
-explicit simd(const implementation-defined& init);
+explicit simd_mask(const implementation-defined& init);
 \end{itemdecl}
-\end{noteEnv}
 
 \wgSubsubsection{\mask constructors}{simd.mask.ctor}
 \begin{itemdecl}
-explicit simd_mask(value_type) noexcept;
+explicit simd_mask(value_type x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\effects Constructs an object with each element initialized to the value of the argument.
+  \pnum\effects Constructs an object with each element initialized to \code x.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -51,7 +51,7 @@ template <class Flags> simd_mask(const value_type *mem, Flags);
 \begin{itemdescr}
   \flagsRequires{\mask{}}
   %\pnum\requires
-  \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
+  \code{[mem, mem + size())} is a valid range.
 
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{mem[i]} \foralli.
 
@@ -65,7 +65,7 @@ template <class Flags> void copy_from(const value_type *mem, Flags);
 \begin{itemdescr}
   \flagsRequires{\mask{}}
   %\pnum\requires
-  \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
+  \code{[mem, mem + size())} is a valid range.
 
   \pnum\effects Replaces the elements of the \mask object such that the $i$-th element is replaced with \code{mem[i]} \foralli.
 
@@ -73,12 +73,12 @@ template <class Flags> void copy_from(const value_type *mem, Flags);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class Flags> void copy_to(value_type *mem, Flags);
+template <class Flags> void copy_to(value_type *mem, Flags) const;
 \end{itemdecl}
 \begin{itemdescr}
   \flagsRequires{\mask{}}
   %\pnum\requires
-  \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
+  \code{[mem, mem + size())} is a valid range.
 
   \pnum\effects Copies all \mask elements as if \code{mem[i] = operator[](i)} \foralli.
 
@@ -97,22 +97,20 @@ reference operator[](size_t i);
 value_type operator[](size_t i) const;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\requires The value of \code{i} is less than \code{size()}.
+  \pnum\requires \code{i < size()}.
 
-  \pnum\returns A copy of the $i$-th element.
+  \pnum\returns The value of the $i$-th element.
 
   \pnum\throws Nothing.
 \end{itemdescr}
 
 \wgSubsubsection{\mask unary operators}{simd.mask.unary}
 \begin{itemdecl}
-mask operator!() const noexcept;
+simd_mask operator!() const noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns The result of unary element-wise application of \code{operator!}.
+  \pnum\returns The result of element-wise application of \code{operator!}.
   %A \mask object with the $i$-th element set to the logical negation \foralli.
-
-  \pnum\throws Nothing.
 \end{itemdescr}
 
 \wgSubsection{\type{simd_mask} non-member operations}{simd.mask.nonmembers}
@@ -127,8 +125,6 @@ friend simd_mask operator^ (const simd_mask&, const simd_mask&) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A \mask object initialized with the results of the element-wise application of the indicated operator.
-
-  \pnum\throws Nothing.
 \end{itemdescr}
 
 \wgSubsubsection{\mask compound assignment}{simd.mask.cassign}
@@ -138,20 +134,18 @@ friend simd_mask& operator|=(simd_mask& lhs, const simd_mask& rhs) noexcept;
 friend simd_mask& operator^=(simd_mask& lhs, const simd_mask& rhs) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\effects Each of these operators performs the indicated operator element-wise on each of the corresponding elements of the arguments.
+  \pnum\effects These operators perform the indicated binary element-wise operation.
 
   \pnum\returns \code{lhs}.
-
-  \pnum\throws Nothing.
 \end{itemdescr}
 
-\wgSubsubsection{\mask compares}{simd.mask.comparison}
+\wgSubsubsection{\mask comparisons}{simd.mask.comparison}
 \begin{itemdecl}
 friend simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
 friend simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns A \mask object initialized with the results of the element-wise application of the indicated operator.
+  \pnum\returns An object initialized with the results of the element-wise application of the indicated operator.
 \end{itemdescr}
 
 \wgSubsubsection{\mask reductions}{simd.mask.reductions}
@@ -194,7 +188,7 @@ template <class T, class Abi> int popcount(const simd_mask<T, Abi>& k) noexcept;
 template <class T, class Abi> int find_first_set(const simd_mask<T, Abi>& k);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\requires \code{any_of(k)} returns \true
+  \pnum\requires \code{any_of(k)} returns \true.
 
   \pnum\returns The lowest element index \code i where \code{k[i]} is \true.
 \end{itemdescr}
@@ -203,7 +197,7 @@ template <class T, class Abi> int find_first_set(const simd_mask<T, Abi>& k);
 template <class T, class Abi> int find_last_set(const simd_mask<T, Abi>& k);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\requires \code{any_of(k)} returns \true
+  \pnum\requires \code{any_of(k)} returns \true.
 
   \pnum\returns The greatest element index \code i where \code{k[i]} is \true.
 \end{itemdescr}
@@ -214,15 +208,24 @@ bool  any_of(@\emph{see below}@) noexcept;
 bool none_of(@\emph{see below}@) noexcept;
 bool some_of(@\emph{see below}@) noexcept;
 int popcount(@\emph{see below}@) noexcept;
-int find_first_set(@\emph{see below}@) noexcept;
-int find_last_set(@\emph{see below}@) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\remarks The functions shall not participate in overload resolution unless the argument is of type \bool.
   \pnum\returns \code{all_of} and \code{any_of} return their arguments; \code{none_of} returns the negation of its argument; \code{some_of} returns \false; \code{popcount} returns the integral representation of its argument; \code{find_first_set} and \code{find_last_set} return 0.
 \end{itemdescr}
 
-\wgSubsubsection{Masked assigment}{simd.mask.where}
+\begin{itemdecl}
+int find_first_set(@\emph{see below}@) noexcept;
+int find_last_set(@\emph{see below}@) noexcept;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\requires The
+  \pnum\remarks The functions shall not participate in overload resolution unless the argument is of type \bool.
+  \pnum\returns \code 0.
+  \code{find_first_set} and \code{find_last_set} return 0.
+\end{itemdescr}
+
+\wgSubsubsection{Where functions}{simd.mask.where}
 \begin{itemdecl}
 template <class T, class Abi>
 where_expression<simd_mask<T, Abi>, simd<T, Abi>> where(const typename simd<T, Abi>::mask_type& k,
@@ -239,7 +242,7 @@ const_where_expression<simd_mask<T, Abi>, const simd_mask<T, Abi>> where(
     const nodeduce_t<simd_mask<T, Abi>>& k, const simd_mask<T, Abi>& v) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns A where expression object \ref{sec:simd.whereexpr} as if the exposition-only data members \code{mask} and \code{data} are initialized with \code{k} and \code{v} respectively.
+  \pnum\returns An object \ref{sec:simd.whereexpr} with \code{mask} and \code{data} initialized with \code{k} and \code{v} respectively.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -250,7 +253,7 @@ const_where_expression<bool, const T> where(@\emph{see below}@ k, const T& v) no
 \begin{itemdescr}
   \pnum\remarks The functions shall not participate in overload resolution unless
   \begin{itemize}
-    \item \type T is neither a \simd nor a \mask instantiation, and
+    \item \type T is neither a \simd nor a \mask specialization, and
     \item the first argument is of type \bool.
   \end{itemize}
   \pnum\returns A where expression object \ref{sec:simd.whereexpr} as if the exposition-only data members \code{mask} and \code{data} are initialized with \code{k} and \code{v} respectively.

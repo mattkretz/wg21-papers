@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Data-Parallel Vector Types \& Operations}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P0214R8}
+\newcommand\wgDocumentNumber{D0214R9}
 \newcommand\wgGroup{LWG}
 \newcommand\wgTarget{Parallelism TS 2}
 \newcommand\wgAcknowledgements{
@@ -40,8 +40,9 @@
 
 \newcommand\flagsRequires[1]{%
   \pnum\requires
-  If the template parameter \type{Flags} is \type{vector\_aligned\_tag}, the pointer value shall represent an address aligned to \code{memory\_alignment\_v<#1>}.
-  If the template parameter \type{Flags} is \type{overaligned\_tag<N>}, the pointer value shall represent an address aligned to \code N.
+  If the template parameter \type{Flags} is \type{vector\_aligned\_tag}, \code{mem} shall point to storage aligned by \code{memory\_alignment\_v<#1>}.
+  If the template parameter \type{Flags} is \type{overaligned\_tag<N>}, \code{mem} shall point to storage aligned by \code N.
+  If the template parameter \type{Flags} is \type{element\_aligned\_tag}, \code{mem} shall point to storage aligned by \code{alignof(value\_type)}.
 }
 
 \newcommand\targetArch{target architecture\xspace}
@@ -49,7 +50,7 @@
 \newcommand\currentTarget{currently targeted system\xspace}
 
 %\newcommand\specialsfinae{shall either not be declared or not participate in overload resolution}
-\newcommand\specialsfinae{shall not participate in overload resolution\comment{“shall either not be declared or not participate in overload resolution”? impl. via base class or concepts}\xspace}
+\newcommand\specialsfinae{shall not participate in overload resolution\xspace}
 
 \newcommand\realArithmeticType{vectorizable type\xspace}
 
@@ -88,6 +89,22 @@
 \end{itemize}
 
 \section{Changelog}
+\subsection{Changes from R8}
+Previous revision: \parencite{P0214R8}.
+\begin{itemize}
+  \item Use the word-of-power “width” in the specification of \code{size()}.
+
+  \item Aligned wording in \code{copy_from} and \code{copy_to} restricting pointer alignment with the wording in [ptr.align].
+    Also added wording for the meaning of \code{element_aligned_tag}.
+
+  \item Fixed missing SFINAE constraints on \code{Flags} in masked load.
+    Streamlined the wording to use itemization for listing multiple constraints.
+
+  \item Removed \code{const} from the second template argument to \code{const_where_expression}.
+    Consequently, removed \code{remove_const_t} from the defintions and wording in \code{const_where_expression}.
+    (I verified the change in my implementation.)
+\end{itemize}
+
 \subsection{Changes from R7}
 Previous revision: \parencite{P0214R7}.
 \begin{itemize}

@@ -7,15 +7,15 @@ The \width of a given \simd instantiation is a constant expression, determined b
 
 \newcommand\simdTypeRequirements[1]{
 \pnum\label{#1.type requirements}\label{#1.deleted}%
-Each instantiation of \type{#1} shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment unless all of the following hold:
+Each instantiation of \type{#1} shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment unless all of the following are true:
 \begin{itemize}
-  \item The first template argument \type T is a cv-unqualified \realArithmeticType.
+  \item The first template argument \type T is a \realArithmeticType.
   \item The second template argument \type{Abi} is an ABI tag.
   \item The \type{Abi} type is a supported ABI tag.
     It is supported if
     \begin{itemize}
       \item \type{Abi} is \type{simd_abi::scalar}, or
-      \item \type{Abi} is \fixedsizeN with \code N $\le 32$ or implementation-defined additional valid values for \code N (see \ref{simd.fixedsize.def}).
+      \item \type{Abi} is \fixedsizeN with \code N $\le 32$, or implementation-defined additional valid values for \code N (see \ref{simd.fixedsize.def}).
     \end{itemize}
     It is implementation-defined whether a given combination of \type T and an implementation-defined ABI tag is supported.
     \wgNote{The intent is for implementations to decide on the basis of the \currentTarget.}
@@ -27,10 +27,10 @@ Each instantiation of \type{#1} shall be a complete type with deleted default co
   Consider an implementation that defines the implementation-defined ABI tags \type{simd_x} and \type{gpu_y}.
   When the compiler is invoked to translate to a machine that has support for the \type{simd_x} ABI tag for all arithmetic types other than \type{long double} and no support for the \type{gpu_y} ABI tag, then:
   \begin{itemize}
-    \item \simd[<T, simd_abi::gpu_y>] is not supported for any \type T and results in a type with deleted constructor
-    \item \simd[<long double, simd_abi::simd_x>] is not supported and results in a type with deleted constructor
-    \item \simd[<double, simd_abi::simd_x>] is supported
-    \item \simd[<long double, simd_abi::scalar>] is supported
+    \item \simd[<T, simd_abi::gpu_y>] is not supported for any \type T and has a deleted constructor.
+    \item \simd[<long double, simd_abi::simd_x>] is not supported and has a deleted constructor.
+    \item \simd[<double, simd_abi::simd_x>] is supported.
+    \item \simd[<long double, simd_abi::scalar>] is supported.
   \end{itemize}
 }
 
@@ -58,16 +58,16 @@ Each instantiation of \type{#1} shall be a complete type with deleted default co
 static constexpr size_t size() noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns the number of elements stored in objects of the given \simd[<T, Abi>] type.
+  \pnum\returns The width of \simd[<T, Abi>].
 \end{itemdescr}
 
-\pnum\begin{noteEnv} Implementations are encouraged to enable \code{static_cast}ing from and to implementation-defined types.
+\pnum Implementations should enable explicit conversion from and to implementation-defined types.
 This would add one or more of the following declarations to class \simd:
 \begin{itemdecl}
-explicit operator implementation-defined() const;
-explicit simd(const implementation-defined& init);
+  explicit operator implementation-defined() const;
+  explicit simd(const implementation-defined& init);
 \end{itemdecl}
-\end{noteEnv}
+\comment{Add an example.}
 
 \wgSubsubsection{\simd constructors}{simd.ctor}
 \begin{itemdecl}
@@ -79,8 +79,7 @@ template <class U> simd(U&&);
   \pnum\throws Any exception thrown while converting the argument to \valuetype.
 
   \pnum\remarks This constructor shall not participate in overload resolution unless:
-  \comment[Q]{Mention forwarding on conversion to \valuetype?}%
-  \comment[Q]{\type U is cv- and ref-qualified, is the wording below OK?}
+  \comment[Q]{\type U is cv- and ref-qualified, the wording below is not OK.}
   \begin{itemize}
     \item \type U is a \realArithmeticType and every possible value of type \type U can be represented with type \valuetype, or
     \item \type U is not an arithmetic type and is implicitly convertible to \valuetype, or
@@ -112,7 +111,6 @@ template <class G> simd(G&& gen);
   \pnum\remarks This constructor shall not participate in overload resolution unless \code{simd(gen(integral_constant<size_t, i>()))} is well-formed \foralli.
   %\pnum\remarks
   The calls to \code{gen} are unsequenced with respect to each other.
-  \wgNote{This allows vectorized execution of the \code{gen} calls.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -121,11 +119,15 @@ template <class U, class Flags> simd(const U *mem, Flags);
 \begin{itemdescr}
   \flagsRequires{\simd, \type U}
   %\pnum\requires
-  \code{size()} is less than or equal to the number of values pointed to by \code{mem}.
+  \code{[mem, mem + size())} is a valid range.
 
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{static_cast<T>(mem[i])} \foralli.
 
-  \pnum\remarks This constructor shall not participate in overload resolution unless \type U is a \realArithmeticType and \code{is_simd_flag_type_v<Flags>} is \true.
+  \pnum\remarks This constructor shall not participate in overload resolution unless
+  \begin{itemize}
+      \item \code{is_simd_flag_type_v<Flags>} is \true, and
+      \item \type U is a \realArithmeticType.
+  \end{itemize}
 \end{itemdescr}
 
 \wgSubsubsection{\simd copy functions}{simd.copy}
@@ -139,11 +141,15 @@ template <class U, class Flags> void copy_from(const U *mem, Flags);
 
   \pnum\effects Replaces the elements of the \simd object such that the $i$-th element is assigned with \code{static_cast<T>(mem[i])} \foralli.
 
-  \pnum\remarks This function shall not participate in overload resolution unless \type U is a \realArithmeticType and \code{is_simd_flag_type_v<Flags>} is \true.
+  \pnum\remarks This function shall not participate in overload resolution unless
+  \begin{itemize}
+      \item \code{is_simd_flag_type_v<Flags>} is \true, and
+      \item \type U is a \realArithmeticType.
+  \end{itemize}
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags> void copy_to(U *mem, Flags);
+template <class U, class Flags> void copy_to(U *mem, Flags) const;
 \end{itemdecl}
 \begin{itemdescr}
   \flagsRequires{\simd, \type U}
@@ -152,14 +158,18 @@ template <class U, class Flags> void copy_to(U *mem, Flags);
 
   \pnum\effects Copies all \simd elements as if \code{mem[i] = static_cast<U>(operator[](i))} \foralli.
 
-  \pnum\remarks This function shall not participate in overload resolution unless \type U is a \realArithmeticType and \code{is_simd_flag_type_v<Flags>} is \true.
+  \pnum\remarks This function shall not participate in overload resolution unless
+  \begin{itemize}
+      \item \code{is_simd_flag_type_v<Flags>} is \true, and
+      \item \type U is a \realArithmeticType.
+  \end{itemize}
 \end{itemdescr}
 
 \wgSubsubsection{\simd subscript operators}{simd.subscr}
 \newcommand\simdElementReference[1]{
-  \pnum\requires \code{i < size()}
+  \pnum\requires \code{i < size()}.
 
-  \pnum\returns A temporary object of type \referencetype (see \ref{sec:reference type}) that references the $i$-th element.
+  \pnum\returns A \code{reference} (see \ref{sec:reference type}) referring to the $i$-th element.
   %with the following effects:
   %\begin{itemize}
     %\item The assignment, compound assignment, increment, and decrement operators of \referencetype execute the indicated operation on the $i$-th element of the #1 object.
@@ -182,19 +192,20 @@ value_type operator[](size_t i) const;
 \begin{itemdescr}
   \pnum\requires \code{i < size()}
 
-  \pnum\returns A copy of the $i$-th element.
+  \pnum\returns The value of the $i$-th element.
 
   \pnum\throws Nothing.
 \end{itemdescr}
 
 \wgSubsubsection{\simd unary operators}{simd.unary}
+%\pnum This subclause applies unary element-wise operations.
 \begin{itemdecl}
 simd& operator++();
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Is a unary element-wise operation that applies \code{operator++}.
 
-  \pnum\returns \code{*this}
+  \pnum\returns \code{*this}.
 
   \pnum\throws Nothing.
 \end{itemdescr}
@@ -216,7 +227,7 @@ simd& operator--();
 \begin{itemdescr}
   \pnum\effects Is a unary element-wise operation that applies \code{operator--}.
 
-  \pnum\returns \code{*this}
+  \pnum\returns \code{*this}.
 
   \pnum\throws Nothing.
 \end{itemdescr}
@@ -302,7 +313,7 @@ friend simd operator>>(const simd& v, int n);
 
   \pnum\throws Nothing.
 
-  \pnum\remarks Both operators \specialsfinae unless the indicated operator can be applied to objects of type \type{value_type}.
+  \pnum\remarks These operators \specialsfinae unless the indicated operator can be applied to objects of type \type{value_type}.
 \end{itemdescr}
 
 \wgSubsubsection{\simd compound assignment}{simd.cassign}
@@ -317,29 +328,17 @@ friend simd& operator|= (simd& lhs, const simd& rhs);
 friend simd& operator^= (simd& lhs, const simd& rhs);
 friend simd& operator<<=(simd& lhs, const simd& rhs);
 friend simd& operator>>=(simd& lhs, const simd& rhs);
+friend simd& operator<<=(simd& lhs, int n);
+friend simd& operator>>=(simd& lhs, int n);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\effects Each of these operators performs the indicated operator element-wise on each of the corresponding elements of the arguments.
+  \pnum\effects These operators perform the indicated binary element-wise operation.
 
   \pnum\returns \code{lhs}.
 
   \pnum\throws Nothing.
 
-  \pnum\remarks Each of these operators \specialsfinae unless the indicated operator can be applied to objects of type \type{value_type}.
-\end{itemdescr}
-
-\begin{itemdecl}
-friend simd& operator<<=(simd& v, int n);
-friend simd& operator>>=(simd& v, int n);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum\effects Performs the indicated shift by \code n operation on the $i$-th element of \code v \foralli.
-
-  \pnum\returns \code v.
-
-  \pnum\throws Nothing.
-
-  \pnum\remarks Both operators \specialsfinae unless the indicated operator can be applied to objects of type \valuetype.
+  \pnum\remarks These operators \specialsfinae unless the indicated operator can be applied to objects of type \type{value_type}.
 \end{itemdescr}
 
 \wgSubsubsection{\simd compare operators}{simd.comparison}
@@ -358,8 +357,10 @@ friend mask_type operator< (const simd&, const simd&);
 \end{itemdescr}
 
 \wgSubsubsection{\simd reductions}{simd.reductions}
+\pnum In this subclause, \code{BinaryOperation} shall be a binary element-wise operation.
+
 \begin{itemdecl}
-template <class T, class Abi, class BinaryOperation = std::plus<>>
+template <class T, class Abi, class BinaryOperation = plus<>>
 T reduce(const simd<T, Abi>& x, BinaryOperation binary_op = BinaryOperation());
 \end{itemdecl}
 \begin{itemdescr}
@@ -386,11 +387,11 @@ typename V::value_type reduce(const const_where_expression<M, V>& x, typename V:
 
 \begin{itemdecl}
 template <class M, class V>
-typename V::value_type reduce(const const_where_expression<M, V>& x, plus<> binary_op = plus<>());
+typename V::value_type reduce(const const_where_expression<M, V>& x, plus<> binary_op = {});
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns
-  If \code{none_of(x.mask)}, returns 0.
+  If \code{none_of(x.mask)}, returns \code 0.
   Otherwise, returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \forallmaskedi{x.mask}.
 
   \pnum\throws Nothing.
@@ -402,7 +403,7 @@ typename V::value_type reduce(const const_where_expression<M, V>& x, multiplies<
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns
-  If \code{none_of(x.mask)}, returns 1.
+  If \code{none_of(x.mask)}, returns \code 1.
   Otherwise, returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \forallmaskedi{x.mask}.
 
   \pnum\throws Nothing.
@@ -416,7 +417,7 @@ typename V::value_type reduce(const const_where_expression<M, V>& x, bit_and<> b
   \pnum\requires \code{is_integral_v<V::value_type>} is \true.
 
   \pnum\returns
-  If \code{none_of(x.mask)}, returns ~(V::value_type()).
+  If \code{none_of(x.mask)}, returns \code{\textasciitilde{}V::value_type()}.
   Otherwise, returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \forallmaskedi{x.mask}.
 
   \pnum\throws Nothing.
@@ -432,7 +433,7 @@ typename V::value_type reduce(const const_where_expression<M, V>& x, bit_xor<> b
   \pnum\requires \code{is_integral_v<V::value_type>} is \true.
 
   \pnum\returns
-  If \code{none_of(x.mask)}, returns 0.
+  If \code{none_of(x.mask)}, returns \code 0.
   Otherwise, returns \code{\textit{GENERALIZED_SUM}(binary_op, x.data[i], \ldots)} \forallmaskedi{x.mask}.
 
   \pnum\throws Nothing.
@@ -470,7 +471,7 @@ template <class T, class Abi> T hmax(const simd<T, Abi>& x);
 template <class M, class V> typename V::value_type hmax(const const_where_expression<M, V>& x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns If \code{none_of(x.mask)}, the return value is \code{numeric_limits<V::value_type>::min()}.
+  \pnum\returns If \code{none_of(x.mask)}, the return value is \code{numeric_limits<V::value_type>::lowest()}.
   Otherwise, returns the value of an element \code{x.data[j]} for which \code{x.mask[j] == true} and \code{x.data[j] >= x.data[i]} \forallmaskedi{x.mask}.
 
   \pnum\throws Nothing.
@@ -484,7 +485,7 @@ template <class M, class V> typename V::value_type hmax(const const_where_expres
 \begin{itemdescr}
   \pnum Let \type{To} identify \type{T::\valuetype} if \code{is_simd_v<T>} is \true, or \type T otherwise.
 
-  \pnum\returns A \simd object with the $i$-th element initialized to \code{static_cast<To>(x[i])}.
+  \pnum\returns A \simd object with the $i$-th element initialized to \code{static_cast<To>(x[i])} \foralli.
 
   \pnum\throws Nothing.
 
@@ -493,10 +494,17 @@ template <class M, class V> typename V::value_type hmax(const const_where_expres
     \item every possible value of type \type U can be represented with type \type{To}, and
     \item either \code{is_simd_v<T>} is \false, or \code{T::size() == simd<U, Abi>::size()} is \true.
   \end{itemize}
-  %\pnum\remarks
-  If \code{is_simd_v<T>} is \true, the return type is \type T.
-  Otherwise, if \type U is \type T, the return type is \simd[<T, Abi>].
-  Otherwise, the return type is \simd[<T, \fixedsizescoped{}<\simd{}<U, Abi>::size()>>].
+
+  \pnum
+  The return type is
+  \begin{itemize}
+    \item \type T if \code{is_simd_v<T>} is \true, otherwise
+    \item \simd[<T, Abi>] if \type U is \type T, otherwise
+    \item \simd[<T, \fixedsizescoped{}<\simd{}<U, Abi>::size()>>].
+  \end{itemize}
+  %If \code{is_simd_v<T>} is \true, the return type is \type T.
+  %Otherwise, if \type U is \type T, the return type is \simd[<T, Abi>].
+  %Otherwise, the return type is \simd[<T, \fixedsizescoped{}<\simd{}<U, Abi>::size()>>].
 
 \end{itemdescr}
 
@@ -504,14 +512,15 @@ template <class M, class V> typename V::value_type hmax(const const_where_expres
 template <class T, class U, class Abi> @\emph{see below}@ static_simd_cast(const simd<U, Abi>& x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum Let \type{To} identify \type{T::\valuetype} if \code{is_simd_v<T>} or \type T otherwise.
+  \pnum Let \type{To} identify \type{T::\valuetype} if \code{is_simd_v<T>} is \true or \type T otherwise.
 
-  \pnum\returns A \simd object with the $i$-th element initialized to \code{static_cast<To>(x[i])}.
+  \pnum\returns A \simd object with the $i$-th element initialized to \code{static_cast<To>(x[i])} \foralli.
 
   \pnum\throws Nothing.
 
   \pnum\remarks The function shall not participate in overload resolution unless either \code{is_simd_v<T>} is \false or \code{T::size() == simd<U, Abi>::size()} is \true.
-  %\pnum\remarks
+
+  \pnum
   If \code{is_simd_v<T>} is \true, the return type is \type T.
   Otherwise, if either \type U is \type T or \type U and \type T are integral types that only differ in signedness, the return type is \simd[<T, Abi>].
   Otherwise, the return type is \simd[<T, \fixedsizescoped{}<\simd{}<U, Abi>::size()>>].
@@ -524,25 +533,25 @@ template <class T, class Abi>
 fixed_size_simd_mask<T, simd_size_v<T, Abi>> to_fixed_size(const simd_mask<T, Abi>& x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns An object of the return type with the $i$-th element initialized to \code{x[i]}.
+  \pnum\returns A data-parallel object with the $i$-th element initialized to \code{x[i]} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, size_t N> native_simd<T> to_native(const fixed_size_simd<T, N>& x) noexcept;
-template <class T, size_t N> native_simd_mask<T> to_native(const fixed_size_simd_mask<T, N>& x) noexcept;
+template <class T, int N> native_simd<T> to_native(const fixed_size_simd<T, N>& x) noexcept;
+template <class T, int N> native_simd_mask<T> to_native(const fixed_size_simd_mask<T, N>& x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns An object of the return type with the $i$-th element initialized to \code{x[i]}.
+  \pnum\returns A data-parallel object with the $i$-th element initialized to \code{x[i]} \foralli.
 
   \pnum\remarks These functions shall not participate in overload resolution unless \code{simd_size_v<T, simd_abi::native<T>> == N} is \true.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, size_t N> simd<T> to_compatible(const fixed_size_simd<T, N>& x) noexcept;
-template <class T, size_t N> simd_mask<T> to_compatible(const fixed_size_simd_mask<T, N>& x) noexcept;
+template <class T, int N> simd<T> to_compatible(const fixed_size_simd<T, N>& x) noexcept;
+template <class T, int N> simd_mask<T> to_compatible(const fixed_size_simd_mask<T, N>& x) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns An object of the return type with the $i$-th element initialized to \code{x[i]}.
+  \pnum\returns A data-parallel object with the $i$-th element initialized to \code{x[i]} \foralli.
 
   \pnum\remarks These functions shall not participate in overload resolution unless \code{simd_size_v<T, simd_abi::compatible<T>> == N} is \true.
 \end{itemdescr}
@@ -554,7 +563,7 @@ template <size_t... Sizes, class T, class Abi>
 tuple<simd_mask<T, abi_for_size_t<T, Sizes>>...> split(const simd_mask<T, Abi>& x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns A \type{tuple} of data-parallel objects with the $i$-th \simd/\mask element of the $j$-th \type{tuple} element initialized to the value of the element in \code x with index $i$ + partial sum of the first $j$ values in the \code{Sizes} pack.
+  \pnum\returns A \type{tuple} of data-parallel objects with the $i$-th \simd/\mask element of the $j$-th \type{tuple} element initialized to the value of the element in \code x with index $i$ + sum of the first $j$ values in the \code{Sizes} pack.
 
   \pnum\remarks These functions shall not participate in overload resolution unless the sum of all values in the \code{Sizes} pack is equal to \code{simd_size_v<T, Abi>}.
 \end{itemdescr}
@@ -562,17 +571,17 @@ tuple<simd_mask<T, abi_for_size_t<T, Sizes>>...> split(const simd_mask<T, Abi>& 
 \begin{itemdecl}
 template <class V, class Abi>
 array<V, simd_size_v<typename V::value_type, Abi> / V::size()> split(
-    const simd<typename V::value_type, Abi>&);
+    const simd<typename V::value_type, Abi>& x);
 template <class V, class Abi>
 array<V, simd_size_v<typename V::value_type, Abi> / V::size()> split(
-    const simd_mask<typename V::value_type, Abi>&);
+    const simd_mask<typename V::value_type, Abi>& x);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns An \type{array} of data-parallel objects with the $i$-th \simd/\mask element of the $j$-th \type{array} element initialized to the value of the element in \code x with index $i + j \cdot $\code{V::size()}.
+  \pnum\returns An \type{array} of data-parallel objects with the $i$-th \simd/\mask element of the $j$-th \type{array} element initialized to the value of the element in \code x with index \code{$i$ + $j$ * V::size()}.
 
   \pnum\remarks These functions shall not participate in overload resolution unless
   \begin{itemize}
-    \item \code{is_simd_v<V>} is \true for the first signature / \code{is_mask_v<V>} is \true for the second signature, and
+    \item for the first signature \code{is_simd_v<V>} is \true, for the second signature \code{is_simd_mask_v<V>} is \true, and
     \item \code{simd_size_v<typename V::value_type, Abi>} is an integral multiple of \code{V::size()}.
   \end{itemize}
 \end{itemdescr}
@@ -585,7 +594,7 @@ simd_mask<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd_
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A data-parallel object initialized with the concatenated values in the \code{xs} pack of data-parallel objects:
-  The $i$-th \simd/\mask element of the $j$-th parameter in the \code{xs} pack is copied to the return value's element with index $i$ + partial sum of the \code{size()} of the first $j$ parameters in the \code{xs} pack.
+  The $i$-th \simd/\mask element of the $j$-th parameter in the \code{xs} pack is copied to the return value's element with index $i$ + the sum of the width of the first $j$ parameters in the \code{xs} pack.
 \end{itemdescr}
 
 \wgSubsubsection{\simd algorithms}{simd.alg}
@@ -593,27 +602,27 @@ simd_mask<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd_
 template <class T, class Abi> simd<T, Abi> min(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns The result of binary element-wise application of \code{std::min(a[i], b[i])} \foralli.
+  \pnum\returns The result of element-wise application of \code{std::min(a[i], b[i])} \foralli.
   %An object with the $i$-th element initialized to the value of \code{std::min(a[i], b[i])} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T, class Abi> simd<T, Abi> max(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
+template <class T, class Abi> simd<T, Abi> max(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns The result of binary element-wise application of \code{std::max(a[i], b[i])} \foralli.
+  \pnum\returns The result of element-wise application of \code{std::max(a[i], b[i])} \foralli.
   %\pnum\returns An object with the $i$-th element initialized to the value of \code{std::max(a[i], b[i])} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
 template <class T, class Abi>
-std::pair<simd<T, Abi>, simd<T, Abi>> minmax(const simd<T, Abi>&, const simd<T, Abi>&) noexcept;
+pair<simd<T, Abi>, simd<T, Abi>> minmax(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A pair initialized with
   \begin{itemize}
-    \item the result of binary element-wise application of \code{std::min(a[i], b[i])} \foralli in the \code{first} member, and
-    \item the result of binary element-wise application of \code{std::max(a[i], b[i])} \foralli in the \code{second} member.
+    \item the result of element-wise application of \code{std::min(a[i], b[i])} \foralli in the \code{first} member, and
+    \item the result of element-wise application of \code{std::max(a[i], b[i])} \foralli in the \code{second} member.
   \end{itemize}
 \end{itemdescr}
 
@@ -624,7 +633,7 @@ simd<T, Abi> clamp(const simd<T, Abi>& v, const simd<T, Abi>& lo, const simd<T, 
 \begin{itemdescr}
   \pnum\requires No element in \code{lo} shall be greater than the corresponding element in \code{hi}.
 
-  \pnum\returns The result of element-wise\comment{do we really need a definition of \emph{ternary element-wise}?} application of \code{std::clamp(a[i], lo[i], hi[i])} \foralli.
+  \pnum\returns The result of element-wise application of \code{std::clamp(v[i], lo[i], hi[i])} \foralli.
 \end{itemdescr}
 
 \wgSubsubsection{\simd math library}{simd.math}
@@ -646,15 +655,15 @@ simd<T, Abi> clamp(const simd<T, Abi>& v, const simd<T, Abi>& lo, const simd<T, 
 \end{itemize}
 It is unspecified whether a call to these overloads with arguments that are all convertible to \simd[<T, Abi>] but are not of type \simd[<T, Abi>] is well-formed.
 
-\pnum Each function overload produced by the above rules concurrently applies the indicated mathematical function element-wise.
+\pnum Each function overload produced by the above rules applies the indicated mathematical function element-wise.
 The results per element are not required to be bitwise equal to the application of the function which is overloaded for the element type.
-\comment{Neither the C nor the \CC{} standard say anything about expected error/precision.
-It seems returning 0 from all functions is a conforming implementation --- just bad QoI.}
-\wgNote{
+
+\pnum\requires
   \label{cl:precond-violation}
-  If a precondition of the indicated mathematical function is violated, the behavior is undefined.%
-  \comment{Make this normative? And prefer implementation-defined or unspecified?}
-}
+The precondition of the indicated mathematical function shall not be violated.
+% leverage “that no domain, pole, or range error occurs”
+
+%\comment{Neither the C nor the \CC{} standard say anything about expected error/precision.  It seems returning 0 from all functions is a conforming implementation --- just bad QoI.}
 
 \pnum If \code{abs} is called with an argument of type \simd[<X, Abi>] for which \code{is_unsigned<X>::value} is \true, the program is ill-formed.
 

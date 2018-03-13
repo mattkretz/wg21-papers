@@ -31,21 +31,22 @@ namespace simd_abi {
   Use of the \type{scalar} tag type requires \dataparalleltypes to store a single element (i.e., \simd{}\type{<T, simd_abi::scalar>::size()} returns \code 1).
   \wgNote{\type{scalar} is not an alias for \type{fixed_size<1>}.}
 
+  \pnum\label{simd.maxfixedsize.def}%
+  The value of \code{max_fixed_size<T>} is at least 32.
+
   \pnum\label{simd.fixedsize.def}%
   Use of the \fixedsizeN tag type requires \dataparalleltypes to store and manipulate \code N elements (i.e. \simd{}\type{<T, \fixedsizeN{}>::size()} returns \code N).
-  An implementation shall support at least all \code N $\in [1\ldots 32]$.
-  Additionally, for every supported \simd[<T, Abi>] (see \ref{simd.type requirements}), where \type{Abi} is an implementation-defined ABI tag, \code N $=$ \simd[<T, Abi>::size()] shall be supported.
+  \simd[<T, fixed_size<N>>] and \mask[<T, fixed_size<N>>] with \code{N > 0} and \code{N <= max_fixed_size<T>} shall be supported.
+  Additionally, for every supported \simd[<T, Abi>] (see \ref{simd.type requirements}), where \type{Abi} is an ABI tag that is not an instance of \code{simd_abi::fixed_size<int>}, \code N $=$ \simd[<T, Abi>::size()] shall be supported.
 
   \wgNote{
-    An implementation may choose to forego ABI compatibility between differently compiled translation units for \simd and \mask instantiations using the same \fixedsizeN tag.
-    Otherwise, the efficiency of \simd[<T, Abi>] is likely to be better than for \simd[<T, fixed_size<simd_size_v<T, Abi>>>] (with \type{Abi} not a instance of \fixedsizescoped).
+    It is unspecified whether \simd[<T, fixed_size<N>>] with \code{N > max_fixed_size<T>} is supported.
+    The value of \code{max_fixed_size<T>} can depend on compiler flags and can change between different compiler versions.
   }
 
-  \pnum\label{simd.maxfixedsize.def}%
-  The value of \code{max_fixed_size<T>} declares that an instance of \simd[<T, fixed_size<N>>] with \code{N <= max_fixed_size<T>} is supported by the implementation.
   \wgNote{
-    It is unspecified whether an implementation supports \simd[<T, fixed_size<N>>] with \code{N > max_fixed_size<T>}.
-    The value of \code{max_fixed_size<T>} may depend on compiler flags and may change between different compiler versions.
+    An implementation can choose to forego ABI compatibility between differently compiled translation units for \simd and \mask instantiations using the same \fixedsizeN tag.
+    Otherwise, the efficiency of \simd[<T, Abi>] is likely to be better than for \simd[<T, fixed_size<simd_size_v<T, Abi>>>] (with \type{Abi} not a instance of \fixedsizescoped).
   }
 
   \pnum
@@ -95,14 +96,14 @@ template <class T> struct is_abi_tag { @\emph{see below}@ };
 template <class T> struct is_simd { @\emph{see below}@ };
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum The type \type{is_simd<T>} is a \UnaryTypeTrait with a \BaseCharacteristic of \type{true_type} if \type T is an instance of the \simd class template, and \type{false_type} otherwise.
+  \pnum The type \type{is_simd<T>} is a \UnaryTypeTrait with a \BaseCharacteristic of \type{true_type} if \type T is a specialization of the \simd class template, and \type{false_type} otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
 template <class T> struct is_simd_mask { @\emph{see below}@ };
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum The type \type{is_simd_mask<T>} is a \UnaryTypeTrait with a \BaseCharacteristic of \type{true_type} if \type T is an instance of the \mask class template, and \type{false_type} otherwise.
+  \pnum The type \type{is_simd_mask<T>} is a \UnaryTypeTrait with a \BaseCharacteristic of \type{true_type} if \type T is an specialization of the \mask class template, and \type{false_type} otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -124,7 +125,6 @@ template <class T, size_t N> struct abi_for_size { using type = @\emph{see below
 \begin{itemdescr}
   \pnum The member \type{type} shall be omitted unless
   \begin{itemize}
-    \item \type T is a cv-unqualified type, and
     \item \type T is a \realArithmeticType{}, and
     \item \fixedsizeN is supported (see \ref{simd.fixedsize.def}).
   \end{itemize}
@@ -134,10 +134,12 @@ template <class T, size_t N> struct abi_for_size { using type = @\emph{see below
     \item \code{simd_size_v<T, type> == N}, and
     \item \simd[<T, type>] is default constructible (see \ref{simd.type requirements}),
   \end{itemize}
+
+  When there are multiple types that satisfies the constraints the 
   \code{simd_abi::scalar} takes precedence over \code{simd_abi::}\fixedsize\code{<1>}.
   The precedence of implementation-defined ABI tags over \fixedsizeN is implementation-defined.
   \wgNote{
-    It is expected that implementation-defined ABI tags can produce better optimizations and thus take precedence over \fixedsizeN.
+    It is expected that implementation-defined ABI tags can produce better optimizations and thus are preferred over \fixedsizeN.
   }
 \end{itemdescr}
 
@@ -148,7 +150,6 @@ template <class T, class Abi = simd_abi::compatible<T>> struct simd_size { @\emp
   \pnum\label{simd_size}%
   \type{simd_size<T, Abi>} shall have no member \code{value} unless
   \begin{itemize}
-    \item \type T is a cv-unqualified type, and
     \item \type T is a \realArithmeticType, and
     \item \code{is_abi_tag_v<Abi>} is \true.
   \end{itemize}
@@ -186,35 +187,38 @@ template <class T, class U = typename T::value_type> struct memory_alignment { @
 \wgSubsubsection{Class templates \code{const_where_expression} and \code{where_expression}}{simd.whereexpr}
 \lstinputlisting[]{whereexpression.cpp}
 
-\pnum
-The following\comment{i.e. subclauses \ref{sec:simd.whereexpr}, \ref{sec:simd.reductions}, and \ref{sec:simd.mask.where}} refers to an object of type \type M as exposition-only data member \code{mask} and to a reference to \type T as exposition-only data member \code{data}.
+\pnum The class templates \code{const_where_expression} and \code{where_expression} abstract the notion of selecting elements of a given object of arithmetic or data-parallel type.
 
-\pnum In the following,\comment{i.e. subclause \ref{sec:simd.whereexpr}} if \type M is \bool, \code{data[0]} is used interchangeably for \code{data},
-\code{mask[0]} is used interchangeably for \code{mask}, and
-\code{M::size()} is used interchangeably for \code{1}.
-
-\pnum The class templates \code{const_where_expression} and \code{where_expression} abstract the notion of \emph{selected elements} of a given object of arithmetic or data-parallel type.
-%If \code{is_simd_mask_v<M>} is \true,
-Selected elements signifies the elements \code{data[i]} \forallmaskedi[M::]{mask}.
-%If \type M is \bool, selected elements signifies either \code{data} if \code{mask} is \true, or no element if \code{mask} is \false.
-
-\pnum The first template argument \type M shall be cv-unqualified \bool or a cv-unqualified \mask instantiation.
+\pnum The first template argument \type M shall be cv-unqualified \bool or a cv-unqualified \mask specialization.
 
 \pnum
 If \type M is \bool, \type{T} shall be a non-volatile arithmetic type.
 Otherwise, \type{T} shall either be \type M, \type{const M}, \type{typename M::simd_type}, or \type{const typename M::simd_type}.
 
-\pnum In the following,\comment{i.e. subclause \ref{sec:simd.whereexpr}} the type \valuetype is an alias for \code{remove_const_t<T>} if \type M is \bool, or an alias for \code{typename T::value_type} if \code{is_simd_mask_v<M>} is \true.
+%\pnum
+%The following\comment{i.e. subclauses \ref{sec:simd.whereexpr}, \ref{sec:simd.reductions}, and \ref{sec:simd.mask.where}} refers to an object of type \type M as exposition-only data member \code{mask} and to a reference to \type T as exposition-only data member \code{data}.
+
+\pnum In this subclause, if \type M is \bool, \code{data[0]} is used interchangeably for \code{data},
+\code{mask[0]} is used interchangeably for \code{mask}, and
+\code{M::size()} is used interchangeably for \code{1}.
+
+%If \code{is_simd_mask_v<M>} is \true,
+\pnum The \emph{selected elements} signify the elements \code{data[i]} \forallmaskedi[M::]{mask}.
+%If \type M is \bool, selected elements signifies either \code{data} if \code{mask} is \true, or no element if \code{mask} is \false.
+
+\pnum In this subclause, the type \valuetype is an alias for \code{T} if \type M is \bool, or an alias for \code{typename T::value_type} if \code{is_simd_mask_v<M>} is \true.
 
 \pnum\wgNote{
   The \code{where} functions [simd.mask.where] initialize \code{mask} with the first argument to \code{where} and \code{data} with the second argument to \code{where}.
 }
 
 \begin{itemdecl}
-remove_const_t<T> operator-() const &&;
+T operator-() const &&;
+T operator+() const &&;
+T operator~() const &&;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns A copy of \code{data} with unary minus applied to all selected elements.
+  \pnum\returns A copy of \code{data} with the indicated unary operator applied to all selected elements.
 
   \pnum\throws Nothing.
 \end{itemdescr}
@@ -223,7 +227,7 @@ remove_const_t<T> operator-() const &&;
 template <class U, class Flags> void copy_to(U *mem, Flags) const &&;
 \end{itemdecl}
 \begin{itemdescr}
-  \flagsRequires{\type remove_const_t<T>, \type U}
+  \flagsRequires{\type T, \type U}
   %\pnum\requires
    If \type M is not \bool, the largest i $\in$ \code{[0, M::size())} where \code{mask[i]} is \true is less than the number of values pointed to by \code{mem}.
 
@@ -231,26 +235,30 @@ template <class U, class Flags> void copy_to(U *mem, Flags) const &&;
 
   \pnum\throws Nothing.
 
-  \pnum\remarks If \code{remove_const_t<T>} is \bool or \code{is_simd_mask_v<remove_const_t<T>>}, the function shall not participate in overload resolution unless \type U is \bool.
-  Otherwise, the function shall not participate in overload resolution unless \type U is a \realArithmeticType and \code{is_simd_flag_type_v<Flags>} is \true.
+  \pnum\remarks This function shall not participate in overload resolution unless
+  \begin{itemize}
+      \item \code{is_simd_flag_type_v<Flags>} is \true, and
+      \item either \type U is \bool and \valuetype is \bool or
+          \type U is a \realArithmeticType and \valuetype is not \bool.
+  \end{itemize}
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U> void operator=(U&& x);
-template <class U> void operator+=(U&& x);
-template <class U> void operator-=(U&& x);
-template <class U> void operator*=(U&& x);
-template <class U> void operator/=(U&& x);
-template <class U> void operator%=(U&& x);
-template <class U> void operator&=(U&& x);
-template <class U> void operator|=(U&& x);
-template <class U> void operator^=(U&& x);
-template <class U> void operator<<=(U&& x);
-template <class U> void operator>>=(U&& x);
+template <class U> void operator=(U&& x) &&;
+template <class U> void operator+=(U&& x) &&;
+template <class U> void operator-=(U&& x) &&;
+template <class U> void operator*=(U&& x) &&;
+template <class U> void operator/=(U&& x) &&;
+template <class U> void operator%=(U&& x) &&;
+template <class U> void operator&=(U&& x) &&;
+template <class U> void operator|=(U&& x) &&;
+template <class U> void operator^=(U&& x) &&;
+template <class U> void operator<<=(U&& x) &&;
+template <class U> void operator>>=(U&& x) &&;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects
-  Overwrites the selected elements with the corresponding elements from the application of the indicated operator on \code{data} and \code{forward<U>(x)}.
+  Replaces the selected elements of \code{data} with the corresponding elements from the application of the indicated operator on \code{data} and \code{std::forward<U>(x)}.
 
   \pnum\remarks Each of these operators shall not participate in overload resolution unless the indicated operator can be applied to objects of type \type T.
   %\pnum\remarks
@@ -258,10 +266,10 @@ template <class U> void operator>>=(U&& x);
 \end{itemdescr}
 
 \begin{itemdecl}
-void operator++();
-void operator++(int);
-void operator--();
-void operator--(int);
+void operator++() &&;
+void operator++(int) &&;
+void operator--() &&;
+void operator--(int) &&;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects Applies the indicated operator to the selected elements.
@@ -270,18 +278,23 @@ void operator--(int);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags> void copy_from(const U *mem, Flags);
+template <class U, class Flags> void copy_from(const U *mem, Flags) &&;
 \end{itemdecl}
 \begin{itemdescr}
   \flagsRequires{\type T, \type U}
   %\pnum\requires
-  If \type M is not \bool, the largest i $\in$ \code{[0, M::size())} where \code{mask[i]} is \true is less than the number of values pointed to by \code{mem}.
+  If \type M is not \bool, every i $\in$ \code{[0, M::size())} where \code{mask[i]} is \true shall be less than the number of values pointed to by \code{mem}.
 
-  \pnum\effects Overwrites the selected elements with the corresponding values \code{static_cast<value_type>(mem[i])} \forallmaskedi[M::]{mask}.
+  \pnum\effects Replaces the selected elements with the corresponding values \code{static_cast<value_type>(mem[i])} \forallmaskedi[M::]{mask}.
   %If \type M is \bool, assign \code{mem[0]} to \code{data} unless \code{mask} is \false.
   %If \type M is not \bool, replace the elements of \code{data} where \code{mask[i]} is \true such that the $i$-th element is assigned with \code{static_cast<T::value_type>(mem[i])} \foralli[M::].
 
-  \pnum\remarks If \type T is \bool or \code{is_simd_mask_v<T>}, this function shall not participate in overload resolution unless \type U is \bool.
+  \pnum\remarks This function shall not participate in overload resolution unless
+  \begin{itemize}
+      \item \code{is_simd_flag_type_v<Flags>} is \true, and
+      \item either \type U is \bool and \valuetype is \bool or
+          \type U is a \realArithmeticType and \valuetype is not \bool.
+  \end{itemize}
 \end{itemdescr}
 
 % vim: tw=0
