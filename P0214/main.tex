@@ -104,6 +104,8 @@ Previous revision: \parencite{P0214R8}.
   \item Removed \code{const} from the second template argument to \code{const_where_expression}.
     Consequently, removed \code{remove_const_t} from the defintions and wording in \code{const_where_expression}.
     (I verified the change in my implementation.)
+
+  \item Use "extended ABI tag" instead of "implementation-defined ABI tag". The corresponding word of power is defined in \ref{extended ABI tag}.
 \end{itemize}
 
 \subsection{Changes from R7}
@@ -259,7 +261,7 @@ Previous revision: \parencite{P0214R3}.
   \item Move definition of \whereexpression out of the synopsis (\ref{sec:simd.whereexpr}).
   \item Editorial: Improve \code{is_simd} and \code{is_mask} wording (\ref{sec:simd.traits}).
   \item Make \emph{ABI tag} a consistent term and add \code{is_abi_tag} trait (\ref{sec:simd.traits}, \ref{sec:simd.abi}).
-  \item Clarify that \fixedsizeN must support all \code{N} matching all possible implementation-defined ABI tags (\ref{sec:simd.abi}).
+  \item Clarify that \fixedsizeN must support all \code{N} matching all possible extended ABI tags (\ref{sec:simd.abi}).
   \item Clarify \code{abi_for_size} wording (\ref{sec:simd.traits}).
   \item Turn \code{memory_alignment} into a trait with a corresponding \code{memory_alignment_v} variable template.
   \item Clarify \code{memory_alignment} wording; when it has no \code{value} member; and imply its value through a reference to the load and store functions (\ref{sec:simd.traits}).

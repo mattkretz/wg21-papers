@@ -49,8 +49,8 @@ namespace simd_abi {
     Otherwise, the efficiency of \simd[<T, Abi>] is likely to be better than for \simd[<T, fixed_size<simd_size_v<T, Abi>>>] (with \type{Abi} not a instance of \fixedsizescoped).
   }
 
-  \pnum
-  An implementation may define additional ABI tag types in the \code{simd_abi} namespace, to support other forms of data-parallel computation.
+  \pnum\label{extended ABI tag}
+  An implementation may define additional \emph{extended ABI tag} types in the \code{simd_abi} namespace, to support other forms of data-parallel computation.
 
   \pnum \type{compatible<T>} is an implementation-defined alias for an ABI tag.
     \wgNote{
@@ -58,7 +58,7 @@ namespace simd_abi {
     }
 
   \wgExample{
-    Consider a \targetArch supporting the implementation-defined ABI tags \type{simd128} and \type{simd256}, where the \type{simd256} type requires an optional ISA extension on said \targetArch.
+    Consider a \targetArch supporting the extended ABI tags \type{simd128} and \type{simd256}, where the \type{simd256} type requires an optional ISA extension on said \targetArch.
     Also, the \targetArch does not support \type{long double} with either ABI tag.
     The implementation therefore defines
     \begin{itemize}
@@ -75,7 +75,7 @@ namespace simd_abi {
   }
 
   \wgExample{
-      Consider a \targetArch supporting the implementation-defined ABI tags \type{simd128} and \type{simd256}, where hardware support for \type{simd256} only exists for floating-point types.
+      Consider a \targetArch supporting the extended ABI tags \type{simd128} and \type{simd256}, where hardware support for \type{simd256} only exists for floating-point types.
     The implementation therefore defines \type{native<T>} as an alias for
     \begin{itemize}
       \item \type{simd256} if \type T is a floating-point type,
@@ -89,7 +89,7 @@ namespace simd_abi {
 template <class T> struct is_abi_tag { @\emph{see below}@ };
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum The type \type{is_abi_tag<T>} is a \UnaryTypeTrait with a \BaseCharacteristic of \type{true_type} if \type T is a standard or implementation-defined ABI tag, and \type{false_type} otherwise.
+  \pnum The type \type{is_abi_tag<T>} is a \UnaryTypeTrait with a \BaseCharacteristic of \type{true_type} if \type T is a standard or extended ABI tag, and \type{false_type} otherwise.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -137,9 +137,9 @@ template <class T, size_t N> struct abi_for_size { using type = @\emph{see below
 
   When there are multiple types that satisfies the constraints the 
   \code{simd_abi::scalar} takes precedence over \code{simd_abi::}\fixedsize\code{<1>}.
-  The precedence of implementation-defined ABI tags over \fixedsizeN is implementation-defined.
+  The precedence of extended ABI tags over \fixedsizeN is implementation-defined.
   \wgNote{
-    It is expected that implementation-defined ABI tags can produce better optimizations and thus are preferred over \fixedsizeN.
+    It is expected that extended ABI tags can produce better optimizations and thus are preferred over \fixedsizeN.
   }
 \end{itemdescr}
 

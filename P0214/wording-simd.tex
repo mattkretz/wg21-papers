@@ -17,14 +17,14 @@ Each instantiation of \type{#1} shall be a complete type with deleted default co
       \item \type{Abi} is \type{simd_abi::scalar}, or
       \item \type{Abi} is \fixedsizeN with \code N $\le 32$, or implementation-defined additional valid values for \code N (see \ref{simd.fixedsize.def}).
     \end{itemize}
-    It is implementation-defined whether a given combination of \type T and an implementation-defined ABI tag is supported.
+    It is implementation-defined whether a given combination of \type T and an extended ABI tag is supported.
     \wgNote{The intent is for implementations to decide on the basis of the \currentTarget.}
 \end{itemize}
 }
 \simdTypeRequirements{simd}
 
 \wgExample{
-  Consider an implementation that defines the implementation-defined ABI tags \type{simd_x} and \type{gpu_y}.
+  Consider an implementation that defines the extended ABI tags \type{simd_x} and \type{gpu_y}.
   When the compiler is invoked to translate to a machine that has support for the \type{simd_x} ABI tag for all arithmetic types other than \type{long double} and no support for the \type{gpu_y} ABI tag, then:
   \begin{itemize}
     \item \simd[<T, simd_abi::gpu_y>] is not supported for any \type T and has a deleted constructor.
