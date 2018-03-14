@@ -84,6 +84,29 @@ namespace simd_abi {
   }
 \end{itemdescr}
 
+\begin{itemdecl}
+template <class T, size_t N> struct deduce { using type = @\emph{see below}@; };
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum The member \type{type} shall be omitted unless
+  \begin{itemize}
+    \item \type T is a \realArithmeticType{}, and
+    \item \fixedsizeN is supported (see \ref{simd.fixedsize.def}).
+  \end{itemize}
+
+  \pnum Where present, the member typedef \type{type} shall name an ABI tag type that satisfies
+  \begin{itemize}
+    \item \code{simd_size_v<T, type> == N}, and
+    \item \simd[<T, type>] is default constructible (see \ref{simd.type requirements}),
+  \end{itemize}
+
+  If \code{N} is 1, the member typedef \type{type} is \code{simd_abi::scalar}.
+  Otherwise, if there are multiple ABI tag types that satisfy the constraints, the member typedef \type{type} is implementation-defined.
+  \wgNote{
+    It is expected that extended ABI tags can produce better optimizations and thus are preferred over \fixedsizeN.
+  }
+\end{itemdescr}
+
 \wgSubsubsection{\simd type traits}{simd.traits}
 \begin{itemdecl}
 template <class T> struct is_abi_tag { @\emph{see below}@ };
@@ -117,30 +140,6 @@ template <class T> struct is_simd_flag_type { @\emph{see below}@ };
     \item \code{overaligned_tag<N>} with arbitrary value \code{N}
   \end{itemize}
   and \type{false_type} otherwise.
-\end{itemdescr}
-
-\begin{itemdecl}
-template <class T, size_t N> struct abi_for_size { using type = @\emph{see below}@; };
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum The member \type{type} shall be omitted unless
-  \begin{itemize}
-    \item \type T is a \realArithmeticType{}, and
-    \item \fixedsizeN is supported (see \ref{simd.fixedsize.def}).
-  \end{itemize}
-
-  \pnum Where present, the member typedef \type{type} shall name an ABI tag type that satisfies
-  \begin{itemize}
-    \item \code{simd_size_v<T, type> == N}, and
-    \item \simd[<T, type>] is default constructible (see \ref{simd.type requirements}),
-  \end{itemize}
-
-  When there are multiple types that satisfies the constraints the 
-  \code{simd_abi::scalar} takes precedence over \code{simd_abi::}\fixedsize\code{<1>}.
-  The precedence of extended ABI tags over \fixedsizeN is implementation-defined.
-  \wgNote{
-    It is expected that extended ABI tags can produce better optimizations and thus are preferred over \fixedsizeN.
-  }
 \end{itemdescr}
 
 \begin{itemdecl}

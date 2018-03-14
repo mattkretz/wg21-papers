@@ -6,6 +6,9 @@ namespace std::experimental {
       template <typename T> inline constexpr int max_fixed_size = implementation-defined;
       template <typename T> using compatible = implementation-defined;
       template <typename T> using native = implementation-defined;
+
+      template <class T, size_t N> struct deduce { using type = @\emph{see below}@; };
+      template <class T, size_t N> using deduce_t = typename deduce<T, N>::type;
     }
 
     struct element_aligned_tag {};
@@ -27,9 +30,6 @@ namespace std::experimental {
 
     template <class T> struct is_simd_flag_type;
     template <class T> inline constexpr bool is_simd_flag_type_v = is_simd_flag_type<T>::value;
-
-    template <class T, size_t N> struct abi_for_size { using type = @\emph{see below}@; };
-    template <class T, size_t N> using abi_for_size_t = typename abi_for_size<T, N>::type;
 
     template <class T, class Abi = simd_abi::compatible<T>> struct simd_size;
     template <class T, class Abi = simd_abi::compatible<T>>
@@ -63,9 +63,9 @@ namespace std::experimental {
     template <class T, int N> simd_mask<T> to_compatible(const fixed_size_simd_mask<T, N>&) noexcept;
 
     template <size_t... Sizes, class T, class Abi>
-    tuple<simd<T, abi_for_size_t<T, Sizes>>...> split(const simd<T, Abi>&);
+    tuple<simd<T, simd_abi::deduce_t<T, Sizes>>...> split(const simd<T, Abi>&);
     template <size_t... Sizes, class T, class Abi>
-    tuple<simd_mask<T, abi_for_size_t<T, Sizes>>...> split(const simd_mask<T, Abi>&);
+    tuple<simd_mask<T, simd_abi::deduce_t<T, Sizes>>...> split(const simd_mask<T, Abi>&);
     template <class V, class Abi>
     array<V, simd_size_v<typename V::value_type, Abi> / V::size()> split(
         const simd<typename V::value_type, Abi>&);
@@ -74,9 +74,9 @@ namespace std::experimental {
         const simd_mask<typename V::value_type, Abi>&);
 
     template <class T, class... Abis>
-    simd<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd<T, Abis>&...);
+    simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd<T, Abis>&...);
     template <class T, class... Abis>
-    simd_mask<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd_mask<T, Abis>&...);
+    simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd_mask<T, Abis>&...);
 
     // reductions \ref{sec:simd.mask.reductions}
     template <class T, class Abi> bool  all_of(const simd_mask<T, Abi>&) noexcept;

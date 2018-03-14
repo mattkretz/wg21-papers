@@ -558,9 +558,9 @@ template <class T, int N> simd_mask<T> to_compatible(const fixed_size_simd_mask<
 
 \begin{itemdecl}
 template <size_t... Sizes, class T, class Abi>
-tuple<simd<T, abi_for_size_t<T, Sizes>>...> split(const simd<T, Abi>& x);
+tuple<simd<T, simd_abi::deduce_t<T, Sizes>>...> split(const simd<T, Abi>& x);
 template <size_t... Sizes, class T, class Abi>
-tuple<simd_mask<T, abi_for_size_t<T, Sizes>>...> split(const simd_mask<T, Abi>& x);
+tuple<simd_mask<T, simd_abi::deduce_t<T, Sizes>>...> split(const simd_mask<T, Abi>& x);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A \type{tuple} of data-parallel objects with the $i$-th \simd/\mask element of the $j$-th \type{tuple} element initialized to the value of the element in \code x with index $i$ + sum of the first $j$ values in the \code{Sizes} pack.
@@ -588,9 +588,9 @@ array<V, simd_size_v<typename V::value_type, Abi> / V::size()> split(
 
 \begin{itemdecl}
 template <class T, class... Abis>
-simd<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd<T, Abis>&... xs);
+simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd<T, Abis>&... xs);
 template <class T, class... Abis>
-simd_mask<T, abi_for_size_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd_mask<T, Abis>&... xs);
+simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(const simd_mask<T, Abis>&... xs);
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\returns A data-parallel object initialized with the concatenated values in the \code{xs} pack of data-parallel objects:

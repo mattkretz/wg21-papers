@@ -106,6 +106,10 @@ Previous revision: \parencite{P0214R8}.
     (I verified the change in my implementation.)
 
   \item Use "extended ABI tag" instead of "implementation-defined ABI tag". The corresponding word of power is defined in \ref{extended ABI tag}.
+
+  \item Renamed \code{abi_for_size<T, N>} to \code{simd_abi::deduce<T, N>}.
+
+  \item Improved wording in case multiple ABI tags match the constraints passed to \code{simd_abi::deduce<T, N>}.
 \end{itemize}
 
 \subsection{Changes from R7}
