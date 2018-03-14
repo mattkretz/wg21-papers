@@ -181,19 +181,16 @@ template <class T, class U = typename T::value_type> struct memory_alignment { @
 \end{itemdecl}
 \begin{itemdescr}
   \pnum
-  \type{memory_alignment<T, U>} shall have no member \code{value} if either
+  \type{memory_alignment<T, U>} shall have no member \code{value} unless
   \begin{itemize}
-    \item \type T is cv-qualified, or
-    \item \type U is cv-qualified, or
-    \item \code{!is_simd_v<T> \&\& !is_simd_mask_v<T>}, or
-    \item \code{is_simd_v<T>} and \type U is not an arithmetic type or \type U is \bool, or
-    \item \code{is_simd_mask_v<T>} and \type U is not \bool.
+    \item \code{is_simd_mask_v<T>} is \true and \type U is \bool, or
+    \item \code{is_simd_v<T>} is \true and \type U is a vectorizable type.
   \end{itemize}
 
   \pnum
-  Otherwise, the type \type{memory_alignment<T, U>} is a \BinaryTypeTrait with a \BaseCharacteristic of \type{integral_constant<size_t, N>} for some implementation-defined \code{N}.
+  Otherwise, the type \type{memory_alignment<T, U>} is a \BinaryTypeTrait with a \BaseCharacteristic of \type{integral_constant<size_t, N>} for some implementation-defined \code{N} (see \ref{sec:simd.copy} and \ref{sec:simd.mask.copy}).
   \wgNote{
-    \code{value} identifies the alignment restrictions on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U (see \ref{sec:simd.copy} and \ref{sec:simd.mask.copy}).
+    \code{value} identifies the alignment restrictions on pointers used for (converting) loads and stores for the given type \type T on arrays of type \type U.
   }
 
   \pnum\disallowUserSpecialization{memory_alignment}
