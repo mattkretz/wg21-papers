@@ -53,6 +53,12 @@
 \newcommand\wgExample[1]{\mdseries[~\textit{Example:}
 #1
 —~\textit{end example}~]}
+\newenvironment{exampleEnv}
+{
+\noindent\mdseries[~\textit{Example:}
+}{
+—~\textit{end example}~]
+}
 \ifwgmacros@mono@
 \colorlet{WgAdd}{black}
 \colorlet{WgRem}{black}
