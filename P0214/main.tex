@@ -46,6 +46,8 @@
   If the template parameter \type{Flags} is \type{element\_aligned\_tag}, \code{mem} shall point to storage aligned by \code{alignof(value\_type)}.
 }
 
+\newcommand\disallowUserSpecialization[1]{The behavior of a program that adds specializations for \code{#1} is undefined.}
+
 \newcommand\targetArch{target architecture\xspace}
 \newcommand\targetArchs{target architectures\xspace}
 \newcommand\currentTarget{currently targeted system\xspace}
@@ -110,6 +112,10 @@ Previous revision: \parencite{P0214R8}.
   \item Renamed \code{abi_for_size<T, N>} to \code{simd_abi::deduce<T, N>}.
 
   \item Improved wording in case multiple ABI tags match the constraints passed to \code{simd_abi::deduce<T, N>}.
+
+  \item Clarify valid values for \code N for \code{is_simd_flag_type<overaligned_tag<N>>} (\ref{is_simd_flag_type}).
+
+  \item Call out that user specialization of traits is UB.
 \end{itemize}
 
 \subsection{Changes from R7}

@@ -3,11 +3,11 @@
 \lstinputlisting[]{simd.cpp}
 
 \pnum The class template \simd{} is a \dataparalleltype.
-The \width of a given \simd instantiation is a constant expression, determined by the template parameters.
+The \width of a given \simd specialization is a constant expression, determined by the template parameters.
 
 \newcommand\simdTypeRequirements[1]{
 \pnum\label{#1.type requirements}\label{#1.deleted}%
-Each instantiation of \type{#1} shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment unless all of the following are true:
+Each specialization of \type{#1} shall be a complete type with deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment unless all of the following are true:
 \begin{itemize}
   \item The first template argument \type T is a \realArithmeticType.
   \item The second template argument \type{Abi} is an ABI tag.
