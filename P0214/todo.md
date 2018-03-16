@@ -1,4 +1,10 @@
+# Done
+
 - Idea: use "extended ABI tags" instead of "implementation-defined ABI tags"
+
+- Remove const in template argument of const_where_expression
+
+- Remove paragraph references in \ref macros.
 
 - Recommend a new name for abi_for_size(_t)
   * rebind_abi<T, N>
@@ -9,22 +15,16 @@
   * simd_abi::best<T, N>
   * simd_abi::deduce<T, N>
 
-- Remove const in template argument of const_where_expression
-
-- @LEWG: Put identity_element to last argument for reduce(const_where_expression, ...)
-
-- Remove paragraph references in \ref macros.
-
 - Switch p3 and p4 in [simd.abi]
   (can I strike 'implementation-defined' in p3 "Additionally, for every supported ..."?)
 
-- copy more wording to 8.2.2 [execpol.type]p3 about user specialization -> UB
-
 - is is_simd_flag_type_v<overaligned_tag<N>> really true for arbitrary N? Or just for power-of-two N?
+
+- copy more wording to 8.2.2 [execpol.type]p3 about user specialization -> UB
 
 - 8.2.2 p6: drop most of the text after the bullets. Idea: `type` is implementation-defined, except for N=1 where type = scalar.
 
-- 8.2.2 p5 , p7, and p9: invert logic
+- 8.2.2 p5 , p7, and p9: invert logic (I don't like it; it seems even more confusing)
   p9: recheck whether I want "vectorizable type"
 
 - 8.2.2 p10: move the fwd references to [simd.copy] into normative wording.
@@ -33,29 +33,28 @@
 
 - all copy_from/to specifications (\flagsRequires): steal from [ptr.align] p1
 
-- 8.2.3: reword 'selected elements' to 'selected indices'
-
 - 8.2.3 p13: One sentence "The function shall not participate in overload resolution unless <bullet points>"
 
 - 8.2.3 p14: Rewrite.
 
 - 8.2.3 p15: Restrict U.
 
+- 8.2.3: reword 'selected elements' to 'selected indices'
+
 - 8.2.3 p20: Turn the logic around if possible.
 
 - 8.2.3 Add unary plus and operator~.
 
-- Front matter: If I say "Flags" I mean a type  all load/store remarks require is_lo
-
 - replace "instantiation" with "specialization"
+
+- Front matter: If I say "Flags" I mean a type  all load/store remarks require is_lo
+  => resolved by repeating it everywhere instead
 
 - flip logic of 8.3.1 p2
 
 - 8.3.1 p2:
   - get rid of 32 - reference some other place that specifies it
   - move sentence after last bullet into a new bullet
-
-- make simd::reference exposition only but spell out the class definition (cf. [container.node])
 
 - 8.3.1 p6: no note - reword (see notes)
 
@@ -69,6 +68,12 @@
 
 - 8.4.4 Add Throws: to first to reduce functions.
 
+- make simd::reference exposition only but spell out the class definition (cf. [container.node])
+
+- @LEWG: (waiting for feedback) Put identity_element to last argument for reduce(const_where_expression, ...)
+  => no change
+
+# Todo
 - Do I want to replace any more size() with width?
 
 - Instruct the editor to reference the C standard (for cmath overloads).
@@ -97,3 +102,5 @@
 # Issue List
 
 * Shouldn't hmin and hmax return infinities in case of none_of(x.mask)?
+
+* binary min/max should make NaN input unspecified (because of x86 minp[sd])
