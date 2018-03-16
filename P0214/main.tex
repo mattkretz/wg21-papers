@@ -43,7 +43,7 @@
   \pnum\requires
   If the template parameter \type{Flags} is \type{vector\_aligned\_tag}, \code{mem} shall point to storage aligned by \code{memory\_alignment\_v<#1>}.
   If the template parameter \type{Flags} is \type{overaligned\_tag<N>}, \code{mem} shall point to storage aligned by \code N.
-  If the template parameter \type{Flags} is \type{element\_aligned\_tag}, \code{mem} shall point to storage aligned by \code{alignof(value\_type)}.
+  If the template parameter \type{Flags} is \type{element\_aligned\_tag}, \code{mem} shall point to storage aligned by \code{alignof(U)}.
 }
 
 \newcommand\disallowUserSpecialization[1]{The behavior of a program that adds specializations for \code{#1} is undefined.}
@@ -119,7 +119,7 @@ Previous revision: \parencite{P0214R8}.
 
   \item Simplified \code{memory_alignment} SFINAE logic.
 
-  \item Improved wording for selected elements/indexes.
+  \item Improved wording for selected elements/indices.
 
   \item Rewrite the logic for what template arguments \simd and \mask are supported.
 
@@ -130,6 +130,8 @@ Previous revision: \parencite{P0214R8}.
   \item Call out constraints on the generator callable in the generator ctor (\ref{sec:simd.ctor}).
 
   \item Add Throws specification to \code{reduce} overloads that a user-defined \code{binary_op}.
+
+  \item Reword \code{simd::reference} using an exposition-only class definition (\ref{sec:simd.reference}).
 \end{itemize}
 
 \subsection{Changes from R7}
@@ -181,7 +183,7 @@ Previous revision: \parencite{P0214R6}.
   \chck Reveresed “if” to “unless” logic.
   \chck Fixed \code{is_mask} to \code{is_simd_mask}.
   \chck Fixed incorrect \code{simd_mask} exposition-only member name to \code{mask} (\ref{sec:simd.whereexpr}).
-  \chck Fixed constraints on generator ctor to require generator be callable with all element indexes.
+  \chck Fixed constraints on generator ctor to require generator be callable with all element indices.
   \chck Fixed wording to allow vectorized execution of the generator.
   \chck Moved all wording about “target” or “architecture” into non-normative notes.
   \chck Add \code{is_simd_flag_type} trait and use it for all loads and stores.

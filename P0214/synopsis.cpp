@@ -107,23 +107,23 @@ namespace std::experimental {
     where_expression<simd_mask<T, Abi>, simd<T, Abi>> where(const typename simd<T, Abi>::mask_type&,
                                                             simd<T, Abi>&) noexcept;
     template <class T, class Abi>
-    const_where_expression<simd_mask<T, Abi>, const simd<T, Abi>> where(
-        const typename simd<T, Abi>::mask_type&, const simd<T, Abi>&) noexcept;
+    const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> where(const typename simd<T, Abi>::mask_type&,
+                                                                  const simd<T, Abi>&) noexcept;
 
     template <class T, class Abi>
     where_expression<simd_mask<T, Abi>, simd_mask<T, Abi>> where(const nodeduce_t<simd_mask<T, Abi>>&,
                                                                  simd_mask<T, Abi>&) noexcept;
     template <class T, class Abi>
-    const_where_expression<simd_mask<T, Abi>, const simd_mask<T, Abi>> where(
-        const nodeduce_t<simd_mask<T, Abi>>&, const simd_mask<T, Abi>&) noexcept;
+    const_where_expression<simd_mask<T, Abi>, simd_mask<T, Abi>> where(const nodeduce_t<simd_mask<T, Abi>>&,
+                                                                       const simd_mask<T, Abi>&) noexcept;
 
     template <class T> where_expression<bool, T> where(@\emph{see below}@ k, T& d) noexcept;
     template <class T>
-    const_where_expression<bool, const T> where(@\emph{see below}@ k, const T& d) noexcept;
+    const_where_expression<bool, T> where(@\emph{see below}@ k, const T& d) noexcept;
 
     // reductions \ref{sec:simd.reductions}
     template <class T, class Abi, class BinaryOperation = plus<>>
-    T reduce(const simd<T, Abi>&, BinaryOperation = BinaryOperation());
+    T reduce(const simd<T, Abi>&, BinaryOperation = {});
     template <class M, class V, class BinaryOperation>
     typename V::value_type reduce(const const_where_expression<M, V>& x,
                                   typename V::value_type identity_element, BinaryOperation binary_op);

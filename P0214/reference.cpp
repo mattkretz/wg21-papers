@@ -1,6 +1,7 @@
 class reference  // exposition only
 {
 public:
+    reference() = delete;
     reference(const reference &) = delete;
 
     operator value_type() const noexcept;

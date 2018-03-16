@@ -8,22 +8,20 @@ The \width of a given \simd specialization is a constant expression, determined 
 \newcommand\simdTypeRequirements[1]{
 \pnum\label{#1.type requirements}\label{#1.deleted}%
 Every specialization of \type{#1} shall be a complete type.
-\begin{itemize}
-  \item The specialization \type{#1<T, Abi>} is supported if \type T is a \realArithmeticType and
-    \begin{itemize}
-      \item \type{Abi} is \type{simd_abi::scalar}, or
-      \item \type{Abi} is \fixedsizeN, with \code N constrained as defined in \ref{simd.fixedsize.def}.
-    \end{itemize}
+The specialization \type{#1<T, Abi>} is supported if \type T is a \realArithmeticType and
+  \begin{itemize}
+    \item \type{Abi} is \type{simd_abi::scalar}, or
+    \item \type{Abi} is \fixedsizeN, with \code N constrained as defined in \ref{simd.fixedsize.def}.
+  \end{itemize}
 
-  \item If \type{Abi} is an extended ABI tag, it is implementation-defined whether \type{#1<T, Abi>} is supported.
-    \wgNote{The intent is for implementations to decide on the basis of the \currentTarget.}
+\noindent If \type{Abi} is an extended ABI tag, it is implementation-defined whether \type{#1<T, Abi>} is supported.
+  \wgNote{The intent is for implementations to decide on the basis of the \currentTarget.}
 
-  \item If \type{#1<T, Abi>} is not supported, the specialization shall have a deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
-\end{itemize}
+\noindent If \type{#1<T, Abi>} is not supported, the specialization shall have a deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
 }
 \simdTypeRequirements{simd}
 
-\wgExample{
+\noindent\wgExample{
   Consider an implementation that defines the extended ABI tags \type{simd_x} and \type{gpu_y}.
   When the compiler is invoked to translate to a machine that has support for the \type{simd_x} ABI tag for all arithmetic types other than \type{long double} and no support for the \type{gpu_y} ABI tag, then:
   \begin{itemize}
@@ -45,7 +43,7 @@ static constexpr size_t size() noexcept;
 \end{itemdescr}
 
 \pnum Implementations should enable explicit conversion from and to implementation-defined types.
-This would add one or more of the following declarations to class \simd:
+This adds one or more of the following declarations to class \simd:
 \begin{itemdecl}
   explicit operator implementation-defined() const;
   explicit simd(const implementation-defined& init);
@@ -113,7 +111,7 @@ template <class G> simd(G&& gen);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags> simd(const U *mem, Flags);
+template <class U, class Flags> simd(const U* mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \flagsRequires{\simd, \type U}
@@ -131,7 +129,7 @@ template <class U, class Flags> simd(const U *mem, Flags);
 
 \wgSubsubsection{\simd copy functions}{simd.copy}
 \begin{itemdecl}
-template <class U, class Flags> void copy_from(const U *mem, Flags);
+template <class U, class Flags> void copy_from(const U* mem, Flags);
 \end{itemdecl}
 \begin{itemdescr}
   \flagsRequires{\simd, \type U}
@@ -148,7 +146,7 @@ template <class U, class Flags> void copy_from(const U *mem, Flags);
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class U, class Flags> void copy_to(U *mem, Flags) const;
+template <class U, class Flags> void copy_to(U* mem, Flags) const;
 \end{itemdecl}
 \begin{itemdescr}
   \flagsRequires{\simd, \type U}
@@ -189,7 +187,7 @@ reference operator[](size_t i);
 value_type operator[](size_t i) const;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\requires \code{i < size()}
+  \pnum\requires \code{i < size()}.
 
   \pnum\returns The value of the $i$-th element.
 
@@ -267,7 +265,7 @@ simd operator~() const;
 simd operator+() const;
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns \code{*this}
+  \pnum\returns \code{*this}.
 
   \pnum\throws Nothing.
 \end{itemdescr}
@@ -361,7 +359,7 @@ friend mask_type operator< (const simd&, const simd&);
 
 \begin{itemdecl}
 template <class T, class Abi, class BinaryOperation = plus<>>
-T reduce(const simd<T, Abi>& x, BinaryOperation binary_op = BinaryOperation());
+T reduce(const simd<T, Abi>& x, BinaryOperation binary_op = {});
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\requires \code{binary_op} shall be callable with two arguments of type \type T returning \type T, or callable with two arguments of type \simd[<T, A1>] returning \simd[<T, A1>] for every \type{A1} that is an ABI tag type.
