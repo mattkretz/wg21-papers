@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Finding the right set of traits for \code{simd<T>}}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P0964R0}
+\newcommand\wgDocumentNumber{D0964R1}
 \newcommand\wgGroup{SG1, LEWG}
 %\newcommand\wgTarget{Parallelism TS 2}
 %\newcommand\wgAcknowledgements{ }
@@ -46,7 +46,7 @@
 
 \pagestyle{scrheadings}
 \section{Introduction}
-\textcite{P0214R8} defines the trait \code{abi_for_size<T, N>}, allowing users to find an “implementation-recommended” ABI tag for a given \valuetype and number of elements.
+\textcite{P0214R9} defines the trait \code{simd_abi::deduce<T, N>}\footnote{The trait was called \code{abi_for_size<T, N>} in \textcite{P0214R8}}, allowing users to find an “implementation-recommended” ABI tag for a given \valuetype and number of elements.
 \textcite{P0820R1} discusses a use for considering involved ABI tags in the “recommendation”.
 SG1 polled in Albuquerque about\\
 \wgPoll{\code{abi_for_size_t} (SF) vs. \emph{implementation-defined} (SA)}{1&7&7&0&0}
@@ -58,8 +58,8 @@ The poll was not about a specific name to use for the trait.
 I believe the name \code{rebind_abi} in \textcite{P0820R1} is misleading, since no rebinding is taking place, but rather a type for implementing a rebind of a given \simd[<T, Abi>] to a different \valuetype \type U is made possible.
 Therefore, I propose to
 \begin{enumerate}
-  \item not rename the \code{abi_for_size} trait in \textcite{P0214R8}, and
-  \item extend \code{abi_for_size} to consider input ABI tags in its decision, and
+  \item not rename the \code{simd_abi::deduce} trait in \textcite{P0214R8}, and
+  \item extend \code{simd_abi::deduce} to consider input ABI tags in its decision, and
   \item introduce a new trait \code{rebind_simd<U, V>}, which deduces a \simd[<U, Abi>] instantiation from a given \simd type \type V and requested \valuetype \type U.
 \end{enumerate}
 
@@ -74,10 +74,10 @@ Apply the following change to the Parallelism TS 2 before finalization:
 \begin{wgText}[modify §8.2]
   \begingroup
     \ttfamily\smaller[1]
-    \wgRem{template <class T, size_t N> struct abi_for_size \{ using type = \emph{see below}; \};}\\
-    \wgRem{template <class T, size_t N> using abi_for_size_t = typename abi_for_size<T, N>::type;}\\
-    \wgAdd{template <class T, size_t N, class... Abis> struct abi_for_size \{ using type = \emph{see below}; \};}\\
-    \wgAdd{template <class T, size_t N, class... Abis> using abi_for_size_t = typename abi_for_size<T, N, Abis...>::type;}\\
+    \wgRem{template <class T, size_t N> struct deduce \{ using type = \emph{see below}; \};}\\
+    \wgRem{template <class T, size_t N> using deduce_t = typename deduce<T, N>::type;}\\
+    \wgAdd{template <class T, size_t N, class... Abis> struct deduce \{ using type = \emph{see below}; \};}\\
+    \wgAdd{template <class T, size_t N, class... Abis> using deduce_t = typename deduce<T, N, Abis...>::type;}\\
     \wgAdd{}\\
     \wgAdd{template <class T, class V> struct rebind_simd \{ using type = \emph{see below}; \};}\\
     \wgAdd{template <class T, class V> using rebind_simd_t = typename rebind_simd<T, V>::type;}
@@ -87,8 +87,8 @@ Apply the following change to the Parallelism TS 2 before finalization:
 \begin{wgText}[modify §8.2.2]
 \begingroup
   \ttfamily\smaller[1]
-  \wgRem{template <class T, size_t N> struct abi_for_size \{ using type = \emph{see below}; \};}\\
-  \wgAdd{template <class T, size_t N, class... Abis> struct abi_for_size \{ using type = \emph{see below}; \};}
+  \wgRem{template <class T, size_t N> struct deduce \{ using type = \emph{see below}; \};}\\
+  \wgAdd{template <class T, size_t N, class... Abis> struct deduce \{ using type = \emph{see below}; \};}
 \endgroup
 \begin{itemdescr}
   \setcounter{Paras}{4}
@@ -129,7 +129,7 @@ Apply the following change to the Parallelism TS 2 before finalization:
   \pnum \wgAdd{Where present, the member typedef \type{type} shall name
   \type{simd<T, Abi1>} if \type V is \type{simd<U, Abi0>} or
   \type{simd_mask<T, Abi1>} if \type V is \type{simd_mask<U, Abi0>}.
-  \type{Abi1} is equal to \code{abi_for_size_t<T, simd_size_v<U, Abi0>, Abi0>}.}
+  \type{Abi1} is equal to \code{deduce_t<T, simd_size_v<U, Abi0>, Abi0>}.}
 \end{itemdescr}
 
 \end{wgText}
@@ -159,7 +159,7 @@ And the following after paragraph 8 in §8.2.2:
   \end{itemize}
 
   \pnum \wgAdd{Where present, the member typedef \type{type} shall name \type{simd<T, Abi1>} if \type V is \type{simd<T, Abi0>} or \type{simd_mask<T, Abi1>} if \type V is \type{simd_mask<T, Abi0>}.
-  \type{Abi1} is equal to \code{abi_for_size_t<T, N, Abi0>}.}
+  \type{Abi1} is equal to \code{deduce_t<T, N, Abi0>}.}
 \end{itemdescr}
 \end{wgText}
 
