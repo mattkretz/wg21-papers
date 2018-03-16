@@ -657,12 +657,26 @@ simd<T, Abi> clamp(const simd<T, Abi>& v, const simd<T, Abi>& lo, const simd<T, 
 \end{itemize}
 It is unspecified whether a call to these overloads with arguments that are all convertible to \simd[<T, Abi>] but are not of type \simd[<T, Abi>] is well-formed.
 
-\pnum Each function overload produced by the above rules applies the indicated mathematical function element-wise.
+\pnum Each function overload produced by the above rules applies the indicated \code{<cmath>} function element-wise.
 The results per element are not required to be bitwise equal to the application of the function which is overloaded for the element type.
 
-\pnum\requires
-  \label{cl:precond-violation}
-The precondition of the indicated mathematical function shall not be violated.
+\pnum\label{cl:precond-violation}%
+  The behavior is undefined if a domain, pole, or range error occurs when the input argument(s) are applied to the indicated \code{<cmath>} function.
+  %\begin{itemize}
+    %\item an input argument is outside the domain over which the mathematical function is defined, or if
+    %\item the mathematical function has an exact infinite result as the finite input argument(s) are approached in the limit, or if
+    %\item the mathematical result of the function cannot be represented in an object of the specified type, due to extreme magnitude, or if
+    %\item a domain, pole, or range error occurs when the input argument(s) are applied to the indicated \code{<cmath>} function.
+  %\end{itemize}
+  %If, any of the elements in the function arguments, when applied to the corresponding function in \code{<cmath>}
+  %If the corresponding function in \code{<cmath>} produces a domain, pole, or range error for one of the elements in the function arguments, the behavior is undefined.
+
+%The precondition of the indicated mathematical function shall not be violated.
+%If a domain, pole, or range error occurred for one the inputs 
+%\begin{itemize}
+  %%\item If the corresponding function in \code{<cmath>} can produce a domain error, 
+    %one of the input elements to the
+%\end{itemize}
 % leverage “that no domain, pole, or range error occurs”
 
 %\comment{Neither the C nor the \CC{} standard say anything about expected error/precision.  It seems returning 0 from all functions is a conforming implementation --- just bad QoI.}
