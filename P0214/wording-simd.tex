@@ -22,12 +22,12 @@ The specialization \type{#1<T, Abi>} is supported if \type T is a \realArithmeti
 \simdTypeRequirements{simd}
 
 \noindent\wgExample{
-  Consider an implementation that defines the extended ABI tags \type{simd_x} and \type{gpu_y}.
-  When the compiler is invoked to translate to a machine that has support for the \type{simd_x} ABI tag for all arithmetic types other than \type{long double} and no support for the \type{gpu_y} ABI tag, then:
+  Consider an implementation that defines the extended ABI tags \type{__simd_x} and \type{__gpu_y}.
+  When the compiler is invoked to translate to a machine that has support for the \type{__simd_x} ABI tag for all arithmetic types other than \type{long double} and no support for the \type{__gpu_y} ABI tag, then:
   \begin{itemize}
-    \item \simd[<T, simd_abi::gpu_y>] is not supported for any \type T and has a deleted constructor.
-    \item \simd[<long double, simd_abi::simd_x>] is not supported and has a deleted constructor.
-    \item \simd[<double, simd_abi::simd_x>] is supported.
+    \item \simd[<T, simd_abi::__gpu_y>] is not supported for any \type T and has a deleted constructor.
+    \item \simd[<long double, simd_abi::__simd_x>] is not supported and has a deleted constructor.
+    \item \simd[<double, simd_abi::__simd_x>] is supported.
     \item \simd[<long double, simd_abi::scalar>] is supported.
   \end{itemize}
 }
@@ -53,7 +53,7 @@ This adds one or more of the following declarations to class \simd:
   Consider an implementation that supports the type \type{__vec4f} and the function \code{__vec4f, _vec4f_addsub(__vec4f, __vec4f)} for the \currentTarget.
   A user may require the use of \code{_vec4f_addsub} for maximum performance and thus writes:
   \begin{lstlisting}[style=Vc]
-using V = simd<float, simd_abi::Simd128>;
+using V = simd<float, simd_abi::__simd128>;
 V addsub(V a, V b) {
   return static_cast<V>(_vec4f_addsub(static_cast<__vec4f>(a), static_cast<__vec4f>(b)));
 }

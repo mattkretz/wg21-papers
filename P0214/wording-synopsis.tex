@@ -58,11 +58,11 @@ namespace simd_abi {
     }
 
   \wgExample{
-    Consider a \targetArch supporting the extended ABI tags \type{simd128} and \type{simd256}, where the \type{simd256} type requires an optional ISA extension on said \targetArch.
+    Consider a \targetArch supporting the extended ABI tags \type{__simd128} and \type{__simd256}, where the \type{__simd256} type requires an optional ISA extension on said \targetArch.
     Also, the \targetArch does not support \type{long double} with either ABI tag.
     The implementation therefore defines
     \begin{itemize}
-      \item \type{compatible<T>} as an alias for \type{simd128} for all vectorizable \type T, except \type{long double},
+      \item \type{compatible<T>} as an alias for \type{__simd128} for all vectorizable \type T, except \type{long double},
       \item and \type{compatible<long double>} as an alias for \type{scalar}.
     \end{itemize}
   }
@@ -75,11 +75,11 @@ namespace simd_abi {
   }
 
   \wgExample{
-      Consider a \targetArch supporting the extended ABI tags \type{simd128} and \type{simd256}, where hardware support for \type{simd256} only exists for floating-point types.
+      Consider a \targetArch supporting the extended ABI tags \type{__simd128} and \type{__simd256}, where hardware support for \type{__simd256} only exists for floating-point types.
     The implementation therefore defines \type{native<T>} as an alias for
     \begin{itemize}
-      \item \type{simd256} if \type T is a floating-point type,
-      \item and \type{simd128} otherwise.
+      \item \type{__simd256} if \type T is a floating-point type,
+      \item and \type{__simd128} otherwise.
     \end{itemize}
   }
 \end{itemdescr}
