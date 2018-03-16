@@ -11,9 +11,6 @@ Specifically, \code{simd_mask<T, Abi>::size() == simd<T, Abi>::size()} is \true.
 \pnum Default initialization performs no initialization of the elements; value-initialization initializes each element with \false.
 \wgNote{Thus, default initialization leaves the elements in an indeterminate state.}
 
-\pnum The member type \referencetype is the same as \simd[<T, Abi>::reference], except for\comment[TODO]{probably just \valuetype}.
-\comment[TODO]{add stable name reference}
-
 \begin{itemdecl}
 static constexpr size_t size() noexcept;
 \end{itemdecl}
@@ -27,6 +24,9 @@ This would add one or more of the following declarations to class \mask:
 explicit operator implementation-defined() const;
 explicit simd_mask(const implementation-defined& init);
 \end{itemdecl}
+
+\pnum The member type \referencetype has the same interface as \simd[<T, Abi>::reference], except its \valuetype is \bool.
+(\ref{sec:reference type})
 
 \wgSubsubsection{\mask constructors}{simd.mask.ctor}
 \begin{itemdecl}

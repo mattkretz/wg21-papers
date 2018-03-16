@@ -1,0 +1,80 @@
+\wgSubsubsection{Element references}{simd.reference}\label{sec:reference type}
+\pnum A \code{reference} is an object that refers to an element in a \simd or \mask object.
+
+\pnum Class \code{reference} is for exposition only.
+An implementation is permitted to provide equivalent functionality without providing a class with this name.
+
+\lstinputlisting[]{reference.cpp}
+
+\begin{itemdecl}
+operator value_type() const noexcept;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns The value of the element referred to by \code{*this}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class U> reference operator=(U&& x) &&;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Replaces the referred to element in \simd or \mask with \code{static_cast<value_type>(std::forward<U>(x))}.
+
+  \pnum\returns A copy of \code{*this}.
+
+  \pnum\remarks This function shall not participate in overload resolution unless \code{declval<value_type \&>() = std::forward<U>(x)} is well-formed.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class U> reference operator+=(U&& x) &&;
+template <class U> reference operator-=(U&& x) &&;
+template <class U> reference operator*=(U&& x) &&;
+template <class U> reference operator/=(U&& x) &&;
+template <class U> reference operator%=(U&& x) &&;
+template <class U> reference operator|=(U&& x) &&;
+template <class U> reference operator&=(U&& x) &&;
+template <class U> reference operator^=(U&& x) &&;
+template <class U> reference operator<<=(U&& x) &&;
+template <class U> reference operator>>=(U&& x) &&;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Applies the indicated compound operator to the referred to element in \simd or \mask and \code{std::forward<U>(x)}.
+
+  \pnum\returns A copy of \code{*this}.
+
+  \pnum\remarks This function shall not participate in overload resolution unless \code{declval<value_type \&>() @= std::forward<U>(x)} is well-formed.
+\end{itemdescr}
+
+\begin{itemdecl}
+reference operator++() &&;
+reference operator--() &&;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Applies the indicated operator to the referred to element in \simd or \mask.
+
+  \pnum\returns A copy of \code{*this}.
+
+  \pnum\remarks This function shall not participate in overload resolution unless the indicated operator can be applied to objects of type \valuetype.% i.e. break it for bool
+\end{itemdescr}
+
+\begin{itemdecl}
+value_type operator++(int) &&;
+value_type operator--(int) &&;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Applies the indicated operator to the referred to element in \simd or \mask.
+
+  \pnum\returns A copy of the referred to element before applying the indicated operator.
+
+  \pnum\remarks This function shall not participate in overload resolution unless the indicated operator can be applied to objects of type \valuetype.% i.e. break it for bool
+\end{itemdescr}
+
+\begin{itemdecl}
+friend void swap(reference&& a, reference&& b) noexcept;
+friend void swap(value_type& a, reference&& b) noexcept;
+friend void swap(reference&& a, value_type& b) noexcept;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects Exchanges the values \code{a} and \code{b} refer to.
+\end{itemdescr}
+
+% vim: ft=tex tw=0 spell sw=2
