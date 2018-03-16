@@ -138,7 +138,7 @@ template <class U, class Flags> void copy_from(const U* mem, Flags);
 
   \pnum\effects Replaces the elements of the \simd object such that the $i$-th element is assigned with \code{static_cast<T>(mem[i])} \foralli.
 
-  \pnum\remarks This function shall not participate in overload resolution unless
+  \pnum\remarks The program is ill-formed unless
   \begin{itemize}
       \item \code{is_simd_flag_type_v<Flags>} is \true, and
       \item \type U is a \realArithmeticType.
@@ -155,7 +155,7 @@ template <class U, class Flags> void copy_to(U* mem, Flags) const;
 
   \pnum\effects Copies all \simd elements as if \code{mem[i] = static_cast<U>(operator[](i))} \foralli.
 
-  \pnum\remarks This function shall not participate in overload resolution unless
+  \pnum\remarks The program is ill-formed unless
   \begin{itemize}
       \item \code{is_simd_flag_type_v<Flags>} is \true, and
       \item \type U is a \realArithmeticType.

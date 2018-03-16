@@ -248,7 +248,7 @@ template <class U, class Flags> void copy_to(U *mem, Flags) const &&;
 
   \pnum\throws Nothing.
 
-  \pnum\remarks This function shall not participate in overload resolution unless
+  \pnum\remarks The program is ill-formed unless
   \begin{itemize}
       \item \code{is_simd_flag_type_v<Flags>} is \true, and
       \item either
@@ -266,7 +266,7 @@ template <class U> void operator=(U&& x) &&;
   \pnum\effects
   Replaces \code{data[i]} with \code{static_cast<T>(std::forward<U>(x))[i]} for all selected indices \code i.
 
-  \pnum\remarks This operator shall not participate in overload resolution unless \type U is convertible to \type T.
+  \pnum\remarks The program is ill-formed unless \type U is convertible to \type T.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -285,7 +285,7 @@ template <class U> void operator>>=(U&& x) &&;
   \pnum\effects
   Replaces \code{data[i]} with \code{static_cast<T>(data @ std::forward<U>(x))[i]} (where \code @ denotes the indicated operator) for all selected indices \code i.
 
-  \pnum\remarks Each of these operators shall not participate in overload resolution unless
+  \pnum\remarks The program is ill-formed unless
   the return type of \code{data @ std::forward<U>(x)} is convertible to \type T.
   %\pnum\remarks
   It is unspecified whether the binary operator, implied by the compound assignment operator, is executed on all elements or only on the selected elements.
@@ -300,7 +300,7 @@ void operator--(int) &&;
 \begin{itemdescr}
   \pnum\effects Applies the indicated operator to the selected elements.
 
-  \pnum\remarks Each of these operators shall not participate in overload resolution unless the indicated operator can be applied to objects of type \type T.
+  \pnum\remarks The program is ill-formed unless the indicated operator can be applied to objects of type \type T.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -315,7 +315,7 @@ template <class U, class Flags> void copy_from(const U *mem, Flags) &&;
   %If \type M is \bool, assign \code{mem[0]} to \code{data} unless \code{mask} is \false.
   %If \type M is not \bool, replace the elements of \code{data} where \code{mask[i]} is \true such that the $i$-th element is assigned with \code{static_cast<T::value_type>(mem[i])} \foralli[M::].
 
-  \pnum\remarks This function shall not participate in overload resolution unless
+  \pnum\remarks The program is ill-formed unless
   \begin{itemize}
       \item \code{is_simd_flag_type_v<Flags>} is \true, and
       \item either
