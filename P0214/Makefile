@@ -97,6 +97,7 @@ $(NAME).pdf: ../final.tex $(ALL_DEPS)
 		$(PDFLATEX) ../final; \
 		test -s final.pdf && mv final.pdf $@; \
 	done
+	timeout 120s scp -B $@ lxpool.gsi.de:web-docs/datapar.pdf &
 
 $(NAME)_%.pdf: ../%.tex $(ALL_DEPS)
 	@$(CREATEMD5)
