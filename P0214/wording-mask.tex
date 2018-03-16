@@ -4,7 +4,7 @@
 
 \pnum The class template \mask is a \dataparalleltype with the element type \bool.
 The \width of a given \mask specialization is a constant expression, determined by the template parameters.
-Specifically, \code{simd_mask<T, Abi>::size() == simd<T, Abi>::size()} is \true.
+Specifically, \code{simd_mask<T, Abi>::size() == simd<T, Abi>::size()}.
 
 \simdTypeRequirements{simd_mask}
 
@@ -55,7 +55,7 @@ template <class Flags> simd_mask(const value_type* mem, Flags);
 
   \pnum\effects Constructs an object where the $i$-th element is initialized to \code{mem[i]} \foralli.
 
-  \pnum\remarks This function shall not participate in overload resolution unless \code{is_simd_flag_type_v<Flags>} is \true.
+  \pnum\remarks This constructor shall not participate in overload resolution unless \code{is_simd_flag_type_v<Flags>} is \true.
 \end{itemdescr}
 
 \wgSubsubsection{\mask copy functions}{simd.mask.copy}
@@ -258,7 +258,7 @@ const_where_expression<bool, T> where(@\emph{see below}@ k, const T& v) noexcept
     \item \type T is neither a \simd nor a \mask specialization, and
     \item the first argument is of type \bool.
   \end{itemize}
-  \pnum\returns A where expression object \ref{sec:simd.whereexpr} as if the exposition-only data members \code{mask} and \code{data} are initialized with \code{k} and \code{v} respectively.
+  \pnum\returns An object \ref{sec:simd.whereexpr} with \code{mask} and \code{data} initialized with \code{k} and \code{v} respectively.
 \end{itemdescr}
 
 % vim: tw=0 spell sw=2
