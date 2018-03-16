@@ -215,7 +215,7 @@ Otherwise, \type{T} shall either be \type M or \type{typename M::simd_type}.
 \code{M::size()} is used interchangeably for \code{1}.
 
 %If \code{is_simd_mask_v<M>} is \true,
-\pnum The \emph{selected indices} signify the integers \forallmaskedi[M::]{mask}.
+\pnum The \emph{selected indices} signify the integers \maskedi[M::]{mask}.
 The \emph{selected elements} signify the elements \code{data[i]} for all selected indices \code{i}.
 %If \type M is \bool, selected elements signifies either \code{data} if \code{mask} is \true, or no element if \code{mask} is \false.
 

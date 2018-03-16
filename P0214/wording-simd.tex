@@ -594,8 +594,9 @@ array<V, simd_size_v<typename V::value_type, Abi> / V::size()> split(
 
   \pnum\remarks These functions shall not participate in overload resolution unless
   \begin{itemize}
-    \item for the first signature \code{is_simd_v<V>} is \true, for the second signature \code{is_simd_mask_v<V>} is \true, and
-    \item \code{simd_size_v<typename V::value_type, Abi>} is an integral multiple of \code{V::size()}.
+    \item \code{simd_size_v<typename V::value_type, Abi>} is an integral multiple of \code{V::size()}, and
+    \item for the overload with a \simd parameter \code{is_simd_v<V>} is \true,
+          for the overload with a \mask parameter \code{is_simd_mask_v<V>} is \true.
   \end{itemize}
 \end{itemdescr}
 
@@ -692,6 +693,6 @@ The results per element are not required to be bitwise equal to the application 
 
 %\comment{Neither the C nor the \CC{} standard say anything about expected error/precision.  It seems returning 0 from all functions is a conforming implementation --- just bad QoI.}
 
-\pnum If \code{abs} is called with an argument of type \simd[<X, Abi>] for which \code{is_unsigned<X>::value} is \true, the program is ill-formed.
+\pnum If \code{abs} is called with an argument of type \simd[<X, Abi>] for which \code{is_unsigned_v<X>} is \true, the program is ill-formed.
 
 % vim: tw=0 spell sw=2

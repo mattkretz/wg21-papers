@@ -62,6 +62,11 @@
 \usepackage{pifont}
 
 \newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
+\newcommand\maskedi[2][]{%
+  \code i
+  $\in \{j \in \mathbb{N}_0 | j < \code{#1size()} ⋀ \code{#2[}j\code{]}\}$%
+  \xspace%
+}
 \newcommand\forallmaskedi[2][]{%
   for all \code i
   $\in \{j \in \mathbb{N}_0 | j < \code{#1size()} ⋀ \code{#2[}j\code{]}\}$%
