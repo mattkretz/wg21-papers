@@ -73,21 +73,14 @@
 - @LEWG: (waiting for feedback) Put identity_element to last argument for reduce(const_where_expression, ...)
   => no change
 
-# Todo
-- Do I want to replace any more size() with width?
-
-- Instruct the editor to reference the C standard (for cmath overloads).
 - Reference the "domain, pole, and range error" wording in the C standard to say where the preconditions of the math functions are violated.
-
-# Future improvement
-
-- Consider exposition-only data member of simd/simd_mask (value_type data[size()])
 
 # TS feedback issues
 
 * Is std::memory_aligment too generic for std?
 
-* @LEWG: Too much SFINAE on copy_from/to U parameter? Rather allow use of static_assert and provide a trait to detect whether it's usable
+* Too much SFINAE on copy_from/to and other non-overloaded functions?
+  - Rather allow use of static_assert in the implementation and provide traits to detect whether a certain operation usable
   - Actually, there's EWG feedback on this question:
     "use concepts: they give you correct SFINAE and readable error messages". (cf. N4186)
 
