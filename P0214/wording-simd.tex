@@ -494,7 +494,11 @@ template <class M, class V> typename V::value_type hmax(const const_where_expres
   \pnum\remarks The function shall not participate in overload resolution unless
   \begin{itemize}
     \item every possible value of type \type U can be represented with type \type{To}, and
-    \item either \code{is_simd_v<T>} is \false, or \code{T::size() == simd<U, Abi>::size()} is \true.
+    \item either
+      \begin{itemize}
+        \item \code{is_simd_v<T>} is \false, or
+        \item \code{T::size() == simd<U, Abi>::size()} is \true.
+      \end{itemize}
   \end{itemize}
 
   \pnum
@@ -520,12 +524,19 @@ template <class T, class U, class Abi> @\emph{see below}@ static_simd_cast(const
 
   \pnum\throws Nothing.
 
-  \pnum\remarks The function shall not participate in overload resolution unless either \code{is_simd_v<T>} is \false or \code{T::size() == simd<U, Abi>::size()} is \true.
+  \pnum\remarks The function shall not participate in overload resolution unless either
+  \begin{itemize}
+    \item \code{is_simd_v<T>} is \false, or
+    \item \code{T::size() == simd<U, Abi>::size()} is \true.
+  \end{itemize}
 
   \pnum
-  If \code{is_simd_v<T>} is \true, the return type is \type T.
-  Otherwise, if either \type U is \type T or \type U and \type T are integral types that only differ in signedness, the return type is \simd[<T, Abi>].
-  Otherwise, the return type is \simd[<T, \fixedsizescoped{}<\simd{}<U, Abi>::size()>>].
+  The return type is
+  \begin{itemize}
+    \item \type T if \code{is_simd_v<T>} is \true, otherwise
+    \item \simd[<T, Abi>] if either \type U is \type T or \type U and \type T are integral types that only differ in signedness, otherwise
+    \item \simd[<T, \fixedsizescoped{}<\simd{}<U, Abi>::size()>>].
+  \end{itemize}
 \end{itemdescr}
 
 \begin{itemdecl}
