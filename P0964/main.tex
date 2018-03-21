@@ -1,8 +1,8 @@
 \newcommand\wgTitle{Finding the right set of traits for \code{simd<T>}}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D0964R1}
-\newcommand\wgGroup{SG1, LEWG}
-%\newcommand\wgTarget{Parallelism TS 2}
+\newcommand\wgDocumentNumber{P0964R1}
+\newcommand\wgGroup{LEWG}
+\newcommand\wgTarget{Parallelism TS 2}
 %\newcommand\wgAcknowledgements{ }
 
 \usepackage{mymacros}
@@ -41,32 +41,33 @@
 \begin{document}
 \selectlanguage{american}
 \begin{wgTitlepage}
-  This paper discusses the set of traits we want to ship with \simdT.
+  This paper makes the set of traits for \simdT more complete.
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
 \section{Introduction}
-\textcite{P0214R9} defines the trait \code{simd_abi::deduce<T, N>}\footnote{The trait was called \code{abi_for_size<T, N>} in \textcite{P0214R8}}, allowing users to find an “implementation-recommended” ABI tag for a given \valuetype and number of elements.
+\textcite{P0214R9} defines the trait \code{simd_abi::deduce<T, N>}, allowing users to find an “implementation-recommended” ABI tag for a given \valuetype and number of elements.
 \textcite{P0820R1} discusses a use for considering involved ABI tags in the “recommendation”.
 SG1 polled in Albuquerque about\\
 \wgPoll{\code{abi_for_size_t} (SF) vs. \emph{implementation-defined} (SA)}{1&7&7&0&0}
 \noindent The poll result implies that SG1 prefers users to be able to spell out the ABI tags that are determined as return types.
-The poll was not about a specific name to use for the trait.
-\textcite{P0820R1} suggests to rename the trait to \code{rebind_abi<T, N, Abis...>}.
 
 \section{Motivation}
-I believe the name \code{rebind_abi} in \textcite{P0820R1} is misleading, since no rebinding is taking place, but rather a type for implementing a rebind of a given \simd[<T, Abi>] to a different \valuetype \type U is made possible.
+As \textcite{P0820R1} shows, there is a use case for deducing an ABI tag type from a \valuetype, a width, and additionally zero or more “input” ABI tags.
+The latter tells the deduction logic what ABI tags are used in the input types to produce an object of the requested \valuetype and width.
+This enables an implementation design choice of staying within a certain SIMD register subset.
+
+From the user's perspective, the ABI tag deduction is most often necessary in the following two cases:
+\begin{itemize}
+  \item Given a certain \code{simd} type, what is the best \code{simd} type for a different \valuetype (e.g. mixed precision calculations).
+  \item Given a certain \code{simd} type, what is the best \code{simd} type for a different width (e.g. split, concat, shuffle).
+\end{itemize}
 Therefore, I propose to
 \begin{enumerate}
-  \item not rename the \code{simd_abi::deduce} trait in \textcite{P0214R8}, and
-  \item extend \code{simd_abi::deduce} to consider input ABI tags in its decision, and
-  \item introduce a new trait \code{rebind_simd<U, V>}, which deduces a \simd[<U, Abi>] instantiation from a given \simd type \type V and requested \valuetype \type U.
+  \item extend \code{simd_abi::deduce} to consider input ABI tags in its decision,
+  \item introduce a new trait \code{rebind_simd<U, V>}, which deduces a \simd[<U, Abi>] instantiation from a given \simd type \type V and requested \valuetype \type U, and
+  \item introduce a new trait \code{resize_simd<N, V>}, which deduces a \simd[<T, Abi>] instantiation from a given \simd type \type V with \valuetype \type T and requested width \code N.
 \end{enumerate}
-
-In addition to \code{rebind_simd}, SG1 should consider whether a \code{resize_simd} trait should be added.
-\code{resize_simd_t<N, \simd<T, Abi0>>} is an alias for a \simd[<T, Abi1>] so that \code{simd_size_v<T, Abi1> == N}, and
-\code{resize_simd_t<N, \mask<T, Abi0>>} is an alias for a \mask[<T, Abi1>] so that \code{simd_size_v<T, Abi1> == N}.
-Since the implementation burden is minimal and the trait can simplify user code, I recommend to add it to the Parallelism TS 2.
 
 \section{Proposed Wording}
 
@@ -131,13 +132,14 @@ Apply the following change to the Parallelism TS 2:
 \endgroup
 \begin{itemdescr}
   \setcounter{Paras}{14}
-  \pnum \wgAdd{The member \type{type} shall be present if and only if}
+  \pnum\wgAdd{The member \type{type} shall be present if and only if}
   \begin{itemize}
+    \wgItemAdd\wgAdd{\type{V} is either \type{simd<U, Abi0>} or \type{simd_mask<U, Abi0>}, where \type U and \type{Abi0} are deduced from \type V, and}
     \wgItemAdd\wgAdd{\type{T} is a vectorizable type, and}
-    \wgItemAdd\wgAdd{\type{V} is either \type{simd<U, Abi0>} or \type{simd_mask<U, Abi0>}, where \type U and \type{Abi0} are deduced from \type V.}
+    \wgItemAdd\wgAdd{\code{simd_abi::deduce<T, simd_size_v<U, Abi0>, Abi0>} has a member type \type{type}.}
   \end{itemize}
 
-  \pnum \wgAdd{
+  \pnum\wgAdd{%
     Let \type{Abi1} identify the type \code{deduce_t<T, simd_size_v<U, Abi0>, Abi0>}.
     Where present, the member typedef \type{type} shall name
     \type{simd<T, Abi1>} if \type V is \type{simd<U, Abi0>} or
@@ -149,17 +151,19 @@ Apply the following change to the Parallelism TS 2:
   \wgAdd{template <int N, class V> struct resize_simd \{ using type = \emph{see below}; \};}
 \endgroup
 \begin{itemdescr}
-  \pnum \wgAdd{The member \type{type} shall be present if and only if}
+  \pnum\wgAdd{The member \type{type} shall be present if and only if}
   \begin{itemize}
     \wgItemAdd\wgAdd{\type{V} is either \type{simd<T, Abi0>} or \type{simd_mask<T, Abi0>}, where \type T and \type{Abi0} are deduced from \type V, and}
     \wgItemAdd\wgAdd{\code{simd_abi::deduce<T, N, Abi0>} has a member type \type{type}.}
   \end{itemize}
 
-  \pnum \wgAdd{
+  \pnum\wgAdd{%
     Let \type{Abi1} identify the type \code{deduce_t<T, N, Abi0>}.
     Where present, the member typedef \type{type} shall name \type{simd<T, Abi1>} if \type V is \type{simd<T, Abi0>} or \type{simd_mask<T, Abi1>} if \type V is \type{simd_mask<T, Abi0>}.}
 \end{itemdescr}
 \end{wgText}
 
+\input{changelog}
+\input{strawpolls}
 \end{document}
 % vim: sw=2 sts=2 ai et tw=0
