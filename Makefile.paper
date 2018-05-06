@@ -8,7 +8,7 @@ SHELL := /bin/bash
 EXTRA_DEPS := $(wildcard *.sty ../*.sty) ._dummy.tex
 CREATEMD5 := md5sum `find . -regex '.*\.\(aux\|bbl\|toc\|tex\|ind\)'` > ._aux-md5sums
 CHECKMD5  := md5sum --quiet -c ._aux-md5sums
-UPLOADNAME := $(subst P,D,$(NAME:R%=)).pdf
+UPLOADNAME := D$(shell echo $(NAME)|cut -c2-5).pdf
 
 all: final mobile
 
