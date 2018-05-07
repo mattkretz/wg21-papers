@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Making operator?: overloadable}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D0917R1}
+\newcommand\wgDocumentNumber{P0917R1}
 \newcommand\wgGroup{EWG}
 %\newcommand\wgTarget{Parallelism TS 2}
 %\newcommand\wgAcknowledgements{ }
@@ -44,16 +44,9 @@
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
-\addtocounter{section}{-1}
-\section{Changelog}
-\begin{itemize}
-  \item Added \code{bounded::integer} motivation and example.
-  \item Added a reference to \cite{P0927R0}; making a stronger case for the simple choice.
-\end{itemize}
-
 \section{Introduction}
 Most operators in \CC{} can be overloaded.
-The few exceptions are: \code{?:}, \code{::}, \code{.}\footnote{cf. P0416R0}, \code{.*}.
+The few exceptions are: \code{?:}, \code{::}, \code{.}, \code{.*}.
 For the conditional operator, \textcite{StrFaq} writes:
 “There is no fundamental reason to disallow overloading of \code{?:}.
 I just didn't see the need to introduce the special case of overloading a ternary operator.
@@ -62,10 +55,19 @@ Note that a function overloading \code{expr1?expr2:expr3} would not be able to g
 In this paper I want to show a need for overloading the conditional operator as well as present a possiblity of deferred evaluation of \code{expr2} and \code{expr3}.
 
 \section{Motivation}
+\subsection{Be General}
+“Don’t restrict what is inherent.
+Don’t arbitrarily restrict a complete set of uses.
+Avoid special cases and partial features.” \cite{P0745R0}
+
+\CC{} allows operator overloading for almost all operators.
+Operator-dot overloading is under consideration in the committee \cite{P0352R1,P0416R1}.
+This leaves \code{operator?:} as the last missing piece\footnote{Maybe \code{operator::} as well. I didn't take much time to consider what it would mean, though.}.
+
 \subsection{Blend Operations}
 The conditional operator is a perfect match for expressing blend operations generically, i.e. so that fundamental types still work with the same syntax.
-Consider \textcite{P0214R8}, where a certain number (determined at compile time) of values of arithmetic type \type T are combined to a single object of type \type{simd<T, Abi>}.
-All operators act alement-wise and concurrently.
+Consider \cite{N4744}, where a certain number (determined at compile time) of values of arithmetic type \type T are combined to a single object of type \type{simd<T, Abi>}.
+All operators act element-wise and concurrently.
 Thus, the meaning of
 \smallskip\begin{lstlisting}[style=Vc]
 template <class T> T abs(T x) {
@@ -80,8 +82,8 @@ template <class T> T abs(T x) {
   return iif(x < 0, -x, x);
 }
 \end{lstlisting}
-This is less intuitive, since the name is either long or cryptic and the arguments seem to be arbitrarily ordered (comma doesn't convey semantics such as \code ? and \code : do).
-More importantly, a function will typically not be found via ADL, so that the code actually requires \code{return std::experimental::iif(x < 0, -x, x)} to work for fundamental types.
+This is less intuitive, since the name is either long or cryptic, and the arguments appear to be arbitrarily ordered (comma doesn't convey semantics such as \code ? and \code : do).
+More importantly, if \code x is a builtin type, the function will not be found via ADL; consequently, user code requires \code{return std::experimental::iif(x < 0, -x, x)} to be generic.
 This is annoying and easily forgotten since ADL works fine for \type{simd} arguments.
 
 It is not possible (and not a good idea, in my opinion) to overload \code{if} statements and iteration statements for non-boolean conditions.
@@ -96,7 +98,7 @@ Having the conditional operator available makes \CC{} more versatile for such us
 Most sensible uses of the conditional operator will likely be similar to the “blend operations” case discussed for \type{simd} types, though.
 The motivation is not as strong as in the above case, since in most cases substitutability of the code to fundamental types is not a goal.
 
-\subsection{More flexibility in supported types}
+\subsection{Increased flexibility about participating types}
 Consider the \code{bounded::integer} example (cf. \cite{site.bounded-integer}):
 \smallskip\begin{lstlisting}[style=Vc,escapeinside={/*!}{*/},numbers=left]
 bounded::integer<1, 100> const a = f();
@@ -106,16 +108,21 @@ bounded::integer<-3, 100> d = some_condition ? a : b;  /*!\label{lst:notok}*/
 \end{lstlisting}
 
 Line \ref{lst:ok} is what the \code{bounded::integer} library can currently do for you.
-However, line \ref{lst:notok} is currently not possible since it would require more control by the library over the types involved with the conditional operator.
+However, line \ref{lst:notok} is currently not possible since it would require more control by the library over the types involved (arguments and result) with the conditional operator.
 
 Any design that wants to allow different types on the second and third argument (without implicit conversions), and determine a return type from them, requires an overloadable conditional operator.
+
+\subsection{Existing Practice}
+GCC implements support for the conditional operator to allowing blending its vector builtins.
+OpenCL uses the conditional operator for blending operations.
+Allowing overloads of \code{operator?:} in \CC{} enables users to implement blend semantics with the same syntax as provided by GCC and OpenCL.
 
 \section{Choices}
 The main issue to decide when considering overloading the conditional operator, is deferred evaluation of the second and third expressions.
 [expr.cond]/1 specifies “Only one of the second and third expressions is evaluated”.
 If the signature of overloadable \code{operator?:} were \code{T operator?:(U, T, T)} then all three expressions must be evaluated before calling the user-defined operator.
 To resolve this, the signature could be defined as \code{T operator?:(U, F0, F1)}, where \code{F0} and \code{F1} are callables with return type \code{T}.
-Calling code such as \code{auto x = cond ? a + b : g(a, b)} could then be transformed to a \code{auto x = operator?:(cond, [\&]() { return a + b; }, [\&]() { return g(a, b); })}.
+Calling code such as \code{auto x = cond ? a + b : g(a, b)} could then be transformed to \code{auto x = operator?:(cond, [\&]() { return a + b; }, [\&]() { return g(a, b); })}.
 
 This could be taken one step further:
 Instead of passing a callable, pass an object that is implicitly convertible to \code{T}.
@@ -123,27 +130,55 @@ Its conversion operator invokes the expression.
 This may be easier to use, but it's also easier to use badly (as in invoking the conversion operator multiple times).
 I believe such an approach is too magical, so I will not pursue it further in this paper.
 
-Thus, we have two choices for supporting the operator overload (cf. Figure \ref{fig:demo}):
+\textcite{P0927R0} propose an extension that would easily solve the issue.
+Thus, if P0927R0 is adopted, the issue of deferred evaluation is easily resolved and under full control of the developer introducing the operator overload.
+
+If P0927R0 is not adopted, we have two choices for the signature of the conditional operator overload (cf. Figure \ref{fig:demo}):
 \begin{enumerate}
   \item\label{simple} The simple approach, which follows the rules of the other operator overloads:\\
-    \code{T operator?:(Cond c, T a, T b)\\\{ if (c) return a; else return b; \}}
+\begin{lstlisting}[style=Vc]
+template <class T, class U>
+MyReturnType<T, U> operator?:(MyCondition<T, U> c, T a, U b) {
+  if (c) {
+    return a;
+  } else {
+    return b;
+  }
+}
+\end{lstlisting}
 
     The expression \code{x = c ? f(a, b) : g(a, b)} means \code{x = operator?:(c, f(a, b), g(a, b))}.
 
   \item\label{deferred} An approach to support deferred evaluation:\\
-    \code{T operator?:(Cond c, F0 a, F1 b)\\\{ if (c) return a(); else return b(); \}}
+\begin{lstlisting}[style=Vc]
+template <class F0, class F1,
+          class T = std::invoke_result_t<F0>,
+          class U = std::invoke_result_t<F1>>
+MyReturnType<T, U> operator?:(MyCondition<T, U> c, F0 a, F1 b) {
+  if (c) {
+    return a();
+  } else {
+    return b();
+  }
+}
+\end{lstlisting}
 
     The expression \code{x = c ? f(a, b) : g(a, b)} means \code{x = operator?:(c, [\&]() \{ return f(a, b); \}, [\&]() \{ return g(a, b); \})}.
-
-  \item\label{generic} \textcite{P0927R0} propose an extension that would easily solve the issue.
-    Thus by adopting P0927R0, choice \ref{simple} can support deferred evaluation.
 
 \end{enumerate}
 
 \subsection{Overload Resolution}
 Choice \ref{simple} allows overload resolution on the types for the second and third argument.
 If we want to support overloads using \bool for the first argument, then choosing the overload via the types of the remaining arguments is important.
-Choice \ref{deferred} makes this harder, since the requirement must be expressed as a return type of the function call expression of the arguments.
+
+Choice \ref{deferred} requires considerably more complex overload resolution rules.
+Consider \code{template <class F0, class F1> UDT operator?:(bool, F0, F1)}, where \code{F0} and \code{F1} return a prvalue of type \code{UDT}.
+The built in operator would be viable for \code{some_bool ? udt_object_a : udt_object_b} and the overload, even without transformation of the expressions into lambda.
+I.e. the user-defined operator, requires a constraint that \code{F0} and \code{F1} are callables.
+Assuming we had this, we'd now have to require all uses of the conditional operator to consider both the implicit-lambda wrapper and the direct use of the built in operator for overload resolution.
+Should a viable user-defined conditional operator with an implicit-lambda wrapper then always be prefered over the built in operator?
+It seems this would be required.
+Consequently, it is very important that user-defined conditional operators use exact constraints on the second and third parameter types.
 
 \begin{figure}
   \centering
@@ -210,7 +245,7 @@ jmp a()
 jmp b()
     \end{lstlisting}
   \end{minipage}
-  \caption{Demonstration of the two choices compared with a builtin conditional operator (\code{f3}), cf. \url{https://godbolt.org/g/tpPrVR}}
+  \caption{Demonstration of the two choices compared to a builtin conditional operator (\code{f3}), cf. \url{https://godbolt.org/g/tpPrVR}}
   \label{fig:demo}
 \end{figure}
 
@@ -230,7 +265,7 @@ const auto &x = c ? a + b : a - b;
 \end{lstlisting}
 In this case the temporary is produced inside the \code{operator?:} function, and thus returning a const-ref returns a reference to a local temporary object.
 Using choice \ref{simple}, the temporary is produced before calling the overloaded operator, and thus lifetime extension would make the last line well-formed.
-The simple solution here is to return \code{const auto} instead of \code{const auto \&}, so this issue appears to be rather academic.
+The simple solution here is to return \code{auto} instead of \code{const auto \&}, so this issue appears to be rather academic.
 
 \subsection{Allow different types?}
 The operator signature could enforce the types of the second and third expression to be equal, implicitly/explicitly convertible, or arbitrary.
@@ -238,7 +273,7 @@ I believe the most flexible tool for users will be to allow arbitrarily differen
 Users can put a restriction in place by themselves.
 
 \subsection{Is there a need for deferred evaluation?}
-Consider the implementation of the conditional operator using choice \ref{simple} for \type{simd<T, Abi>}:
+Consider a conceivable implementation of the conditional operator using choice \ref{simple} for \type{simd<T, Abi>}:
 \smallskip\begin{lstlisting}[style=Vc]
 template <class T, class Abi>
 simd<T, Abi> operator?:(simd_mask<T, Abi> mask, simd<T, Abi> a, simd<T, Abi> b) {
@@ -271,10 +306,13 @@ In the presence of inlining (and link-time optimizations), I would prefer to go 
   \item Choice \ref{simple} is simpler to use and understand, even if slightly less powerful.
   \item Choice \ref{deferred} would break with the overload syntax of all other overloadable operators.
 \end{itemize}
-If a mechanism as suggested in \textcite{P0927R0} is adopted, I'd be strongly in favor of choice \ref{simple}.
+If a mechanism as suggested in \textcite{P0927R0} is adopted, I'd be strongly in favor of choice \ref{simple} / against choice \ref{deferred}.
 
 \section{Wording}
 TBD.
+
+\input{changelog}
+\input{strawpolls}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=0

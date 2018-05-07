@@ -5,6 +5,8 @@
 \newcommand\wgTarget{Parallelism TS 2}
 %\newcommand\wgAcknowledgements{ }
 
+\usepackage{hyphenat}
+\let\BreakableUnderscore\undefined
 \usepackage{mymacros}
 \usepackage{wg21}
 \usepackage{underscore}
@@ -46,7 +48,7 @@
 
 \pagestyle{scrheadings}
 \section{Introduction}
-\textcite{P0214R9} defines the trait \code{simd_abi::deduce<T, N>}, allowing users to find an “implementation-recommended” ABI tag for a given \valuetype and number of elements.
+\cite{N4744} defines the trait \code{simd_abi::deduce<T, N>}, allowing users to find an “implementation\hyp recommended” ABI tag for a given \valuetype and number of elements.
 \textcite{P0820R1} discusses a use for considering involved ABI tags in the “recommendation”.
 SG1 polled in Albuquerque about\\
 \wgPoll{\code{abi_for_size_t} (SF) vs. \emph{implementation-defined} (SA)}{1&7&7&0&0}
@@ -71,8 +73,8 @@ Therefore, I propose to
 
 \section{Proposed Wording}
 
-Apply the following change to the Parallelism TS 2:
-\begin{wgText}[modify {[simd.syn]}]
+Apply the following change to the Parallelism TS 2 \cite{N4744}:
+\begin{wgText}[modify {[parallel.simd.synopsis]}]
   \begingroup
     \ttfamily\smaller[1]
     \wgRem{template <class T, size_t N> struct deduce \{ using type = \emph{see below}; \};}\\
@@ -82,7 +84,7 @@ Apply the following change to the Parallelism TS 2:
   \endgroup
 \end{wgText}
 
-\begin{wgText}[add to {[simd.syn]}]
+\begin{wgText}[add to {[parallel.simd.synopsis]}]
   \begingroup
     \ttfamily\smaller[1]
     inline constexpr size_t memory_alignment_v = memory_alignment<T, U>::value;\\
@@ -95,25 +97,25 @@ Apply the following change to the Parallelism TS 2:
   \endgroup
 \end{wgText}
 
-\begin{wgText}[modify {[simd.abi]}]
+\begin{wgText}[modify {[parallel.simd.abi]}]
 \begingroup
   \ttfamily\smaller[1]
   \wgRem{template <class T, size_t N> struct deduce \{ using type = \emph{see below}; \};}\\
   \wgAdd{template <class T, size_t N, class... Abis> struct deduce \{ using type = \emph{see below}; \};}
 \endgroup
 \begin{itemdescr}
-  \setcounter{Paras}{7}
+  \setcounter{Paras}{11}
   \pnum The member \type{type} shall be present if and only if
   \begin{itemize}
     \item \type T is a \realArithmeticType{}, and
-    \item \fixedsizeN is supported (see [simd.abi])\wgAdd{, and}
+    \item \fixedsizeN is supported (see 9.2.1)\wgAdd{, and}
     \wgItemAdd\wgAdd{every type in the \code{Abis} pack is an ABI tag}.
   \end{itemize}
 
   \pnum Where present, the member typedef \type{type} shall name an ABI tag type that satisfies
   \begin{itemize}
     \item \code{simd_size_v<T, type> == N}, and
-    \item \simd[<T, type>] is default constructible (see \ref{simd.type requirements}),
+    \item \simd[<T, type>] is default constructible (see 9.3.1),
   \end{itemize}
 
   If \code{N} is 1, the member typedef \type{type} is \code{simd_abi::scalar}.
@@ -125,7 +127,7 @@ Apply the following change to the Parallelism TS 2:
 \end{itemdescr}
 \end{wgText}
 
-\begin{wgText}[add at the end of {[simd.traits]}]
+\begin{wgText}[add at the end of {[parallel.simd.traits]}]
 \begingroup
   \ttfamily\smaller[1]
   \wgAdd{template <class T, class V> struct rebind_simd \{ using type = \emph{see below}; \};}
