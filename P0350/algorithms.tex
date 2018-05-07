@@ -163,20 +163,24 @@ Add a new execution policy to \citep[§23.19.2]{N4659}:
 
 Renumber §23.19.7 to §23.19.8 and add §23.19.7 [execpol.simd]:
 \begin{wgText}
-  \color{WgAdd}
   \begin{itemdecl}
-class @\simd{}_policy \{ \textit{unspecified} \}@;
+@\wgAdd{class \simd{}_policy \{ \textit{unspecified} \};}@
   \end{itemdecl}
   \begin{itemdescr}
-    \pnum The class \simd[_policy] is an execution policy type used as a unique type to disambiguate parallel algorithm overloading and indicate that a parallel algorithm's execution may be vectorized using \simd for interfacing with user-provided functionality.
-    \pnum During the execution of a parallel algorithm with the \simdEPT policy, if the invocation of an element access function exits via an uncaught exception, \code{terminate()} shall be called.
+    \wgAdd{
+      %\setcounter{Paras}{1}
+      \pnum The class \simd\type{_policy} is an execution policy type used as a unique type to disambiguate parallel algorithm overloading and indicate that a parallel algorithm's execution may be vectorized using \simd{} for interfacing with user-provided functionality.
+
+      %\setcounter{Paras}{2}
+      \pnum During the execution of a parallel algorithm with the \simdEPT{} policy, if the invocation of an element access function exits via an uncaught exception, \code{terminate()} shall be called.
+    }
   \end{itemdescr}
 \end{wgText}
 
 Add to §23.19.8 [execpol.objects]:
-\begin{wgText}
-  \ttfamily\wgAdd{inline constexpr \simdEPT{} \simdEP{}\{ \textit{unspecified} \};}
-\end{wgText}
+\begin{itemdecl}
+@\wgAdd{inline constexpr \simdEPT{} \simdEP{}\{ \textit{unspecified} \};}@
+\end{itemdecl}
 
 \citep[§28.4.2]{N4659} defines requirements on user-provided function objects.
 This might be the right place to add:
@@ -196,11 +200,12 @@ The intent is to
 \end{enumerate}
 \begin{wgText}[{§28.4.3 [algorithms.parallel.exec]}]
   \addtocounter{Paras}{7}%
-  \color{WgAdd}%
-  \uline{%
+  \wgAdd{
+  %\color{WgAdd}%
+  %\ul{%
   \pnum
   The invocations of element access functions in parallel algorithms invoked with an execution policy object of type \simdEPT are permitted to execute in an unordered fashion in the calling thread, except for the application of user-provided function objects.
-  User-provided function objects are called with an im\-ple\-men\-ta\-tion-defined number of sequence elements combined into a }\underline{\simd[<T, Abi>]}\uline{ object.
+  User-provided function objects are called with an im\-ple\-men\-ta\-tion-defined number of sequence elements combined into a \simd[<T, Abi>] object.
   The type for \type{Abi} is chosen by the implementation.
   It may be different for subsequent applications of the user-provided function in the same parallel algorithm invocation.
   The type for \type T is the decayed type of the sequence elements.
