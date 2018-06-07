@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Finding the right set of traits for \code{simd<T>}}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P0964R1}
+\newcommand\wgDocumentNumber{P0964R2}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{Parallelism TS 2}
 %\newcommand\wgAcknowledgements{ }
@@ -105,14 +105,14 @@ Apply the following change to the Parallelism TS 2 \cite{N4744}:
 \endgroup
 \begin{itemdescr}
   \setcounter{Paras}{11}
-  \pnum The member \type{type} shall be present if and only if
+  \pnum The member \type{type} is present if and only if
   \begin{itemize}
     \item \type T is a \realArithmeticType{}, and
     \item \fixedsizeN is supported (see 9.2.1)\wgAdd{, and}
     \wgItemAdd\wgAdd{every type in the \code{Abis} pack is an ABI tag}.
   \end{itemize}
 
-  \pnum Where present, the member typedef \type{type} shall name an ABI tag type that satisfies
+  \pnum Where present, the member typedef \type{type} names an ABI tag type that satisfies
   \begin{itemize}
     \item \code{simd_size_v<T, type> == N}, and
     \item \simd[<T, type>] is default constructible (see 9.3.1),
@@ -134,7 +134,7 @@ Apply the following change to the Parallelism TS 2 \cite{N4744}:
 \endgroup
 \begin{itemdescr}
   \setcounter{Paras}{14}
-  \pnum\wgAdd{The member \type{type} shall be present if and only if}
+  \pnum\wgAdd{The member \type{type} is present if and only if}
   \begin{itemize}
     \wgItemAdd\wgAdd{\type{V} is either \type{simd<U, Abi0>} or \type{simd_mask<U, Abi0>}, where \type U and \type{Abi0} are deduced from \type V, and}
     \wgItemAdd\wgAdd{\type{T} is a vectorizable type, and}
@@ -142,8 +142,8 @@ Apply the following change to the Parallelism TS 2 \cite{N4744}:
   \end{itemize}
 
   \pnum\wgAdd{%
-    Let \type{Abi1} identify the type \code{deduce_t<T, simd_size_v<U, Abi0>, Abi0>}.
-    Where present, the member typedef \type{type} shall name
+    Let \type{Abi1} denote the type \code{deduce_t<T, simd_size_v<U, Abi0>, Abi0>}.
+    Where present, the member typedef \type{type} names
     \type{simd<T, Abi1>} if \type V is \type{simd<U, Abi0>} or
     \type{simd_mask<T, Abi1>} if \type V is \type{simd_mask<U, Abi0>}.}
 \end{itemdescr}
@@ -153,15 +153,15 @@ Apply the following change to the Parallelism TS 2 \cite{N4744}:
   \wgAdd{template <int N, class V> struct resize_simd \{ using type = \emph{see below}; \};}
 \endgroup
 \begin{itemdescr}
-  \pnum\wgAdd{The member \type{type} shall be present if and only if}
+  \pnum\wgAdd{The member \type{type} is present if and only if}
   \begin{itemize}
     \wgItemAdd\wgAdd{\type{V} is either \type{simd<T, Abi0>} or \type{simd_mask<T, Abi0>}, where \type T and \type{Abi0} are deduced from \type V, and}
     \wgItemAdd\wgAdd{\code{simd_abi::deduce<T, N, Abi0>} has a member type \type{type}.}
   \end{itemize}
 
   \pnum\wgAdd{%
-    Let \type{Abi1} identify the type \code{deduce_t<T, N, Abi0>}.
-    Where present, the member typedef \type{type} shall name \type{simd<T, Abi1>} if \type V is \type{simd<T, Abi0>} or \type{simd_mask<T, Abi1>} if \type V is \type{simd_mask<T, Abi0>}.}
+    Let \type{Abi1} denote the type \code{deduce_t<T, N, Abi0>}.
+    Where present, the member typedef \type{type} names \type{simd<T, Abi1>} if \type V is \type{simd<T, Abi0>} or \type{simd_mask<T, Abi1>} if \type V is \type{simd_mask<T, Abi0>}.}
 \end{itemdescr}
 \end{wgText}
 
