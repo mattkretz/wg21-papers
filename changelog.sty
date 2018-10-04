@@ -1,0 +1,21 @@
+\RequirePackage{pifont}
+
+\newcounter{Changelog@Revision}
+
+\def\changelog@base@docnum#1#2#3#4#5R#6{#2#3#4#5}
+\def\changelog@p@docnum{P\expandafter\changelog@base@docnum\wgDocumentNumber}
+\def\changelog@revision@docnum{\changelog@p@docnum R\arabic{Changelog@Revision}}
+
+\newenvironment{revision}{
+  \subsection{Changes from revision \arabic{Changelog@Revision}}
+  Previous revision: \expandafter\parencite{\changelog@revision@docnum}
+  \begin{itemize}
+    }{
+  \end{itemize}
+  \addtocounter{Changelog@Revision}{1}
+}
+
+\newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
+\newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
+\newcommand\itemheader[1]{\item[] \hfill \textcolor{gray}{\textsc{#1}}}
+
