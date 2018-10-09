@@ -1,32 +1,27 @@
-template <size_t N>
-void epilogue(ContiguousIterator first, ContiguousIterator last,
-              ContiguousIterator::value_type first_value);
-
-template <>
-inline void epilogue<0>(ContiguousIterator, ContiguousIterator,
-                        ContiguousIterator::value_type) {}
-
-template <size_t N>
+template <size_t N, class ContiguousIterator>
 inline void epilogue(ContiguousIterator first, ContiguousIterator last,
-                     ContiguousIterator::value_type first_value) {
-  if (distance(first, last) >= N) {
-    using T = ContiguousIterator::value_type;
-    using V = simd<T, abi_for_size_t<N>>;
-    const V init = V([&](auto i) { return T(i); }) + first_value;
-    store(init, std::addressof(*first), flags::element_aligned);
-    first += V::size();
+                     typename ContiguousIterator::value_type first_value) {
+  if constexpr (N > 0) {
+    if (distance(first, last) >= N) {
+      using T = ContiguousIterator::value_type;
+      using V = simd<T, simd_abi::deduce_t<T, N>>;
+      const V init = V([&](auto i) { return T(i); }) + first_value;
+      store(init, std::addressof(*first), element_aligned);
+      first += V::size();
+    }
+    epilogue<V::size() / 2>(first, last, init[V::size() - 1] + 1);
   }
-  epilogue<V::size() / 2>(first, last, init[V::size() - 1] + 1);
 }
 
+template <class ContiguousIterator>
 void iota(/*!\simdEPT{}*/, ContiguousIterator first, ContiguousIterator last,
-          float first_value) {
+          typename ContiguousIterator::value_type first_value) {
   using T = ContiguousIterator::value_type;
-  using V = simd<T, simd_abi::native>;
+  using V = native_simd<T>;
   V init = V([&](auto i) { return T(i); }) + first_value;
   const V stride = T(V::size());
   for (; distance(first, last) >= V::size(); first += V::size(), init += stride) {
-    store(init, std::addressof(*first), flags::element_aligned);
+    store(init, std::addressof(*first), element_aligned);
   }
   epilogue<V::size() / 2>(first, last, init[V::size() - 1] + 1);
 }

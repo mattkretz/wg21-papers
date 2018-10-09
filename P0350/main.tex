@@ -1,18 +1,13 @@
 \newcommand\wgTitle{Integrating simd with parallel algorithms}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D0350R2}
+\newcommand\wgDocumentNumber{P0350R2}
 \newcommand\wgGroup{LEWG}
-\newcommand\wgAcknowledgements{
-  This work was supported by GSI Helmholtzzentrum für Schwerionenforschung
-  and the Hessian LOEWE initiative through the Helmholtz International Center
-  for FAIR (HIC for FAIR).
-}
 
 \usepackage{vectorpictures}
 \usepackage{typenames}
 \usepackage{mymacros}
 \usepackage{wg21}
-\undef\BreakableUnderscore
+\usepackage{changelog}
 \usepackage{underscore}
 
 \addbibresource{extra.bib}
@@ -20,7 +15,7 @@
 \newcommand\simd[1][]{\type{simd#1}\xspace}
 \newcommand\valuetype{\type{value\textunderscore{}type}\xspace}
 \newcommand\simdcast{\code{simd\textunderscore{}cast}\xspace}
-\newcommand\mask[1][]{\type{mask#1}\xspace}
+\newcommand\mask[1][]{\type{simd\_mask#1}\xspace}
 \newcommand\fixedsizeN{\type{simd\textunderscore{}abi::fixed\textunderscore{}size<N>}\xspace}
 \newcommand\fixedsizescoped{\type{simd\textunderscore{}abi::fixed\textunderscore{}size}\xspace}
 \newcommand\fixedsize{\type{fixed\textunderscore{}size}\xspace}
@@ -30,8 +25,9 @@
 \soulregister\simd7
 \soulregister\simdEP7
 \soulregister\simdEPT7
-
-\newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
+\soulregister\mask7
+\soulregister\true7
+\soulregister\false7
 
 \begin{document}
 \selectlanguage{american}
@@ -40,27 +36,29 @@
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
-\addtocounter{section}{-1}
-\section{Remarks}
-\begin{itemize}
-  \item This documents talks about “vector” types/objects.
-    In general this will not refer to the \std\type{vector} class template.
-    References to the container type will explicitly call out the \code{std} prefix to avoid confusion.
-  \item \citep{P0214R5} is the last paper on \simd.
-\end{itemize}
-
 \section{Changelog}
-\subsection{Changes from R0}
-Previous revision: \parencite{P0350R0}.
-\begin{itemize}
+\begin{revision}
   \item Update to apply against \CC{}17 wording.
   \item Removed executors discussion because the executors design has not left SG1 yet.
   \item Updated example code to reflect changes in P0214.
-\end{itemize}
+\end{revision}
+
+\begin{revision}
+  \item Updated code to match \cite{N4744}.
+  \item Fixed a bug in the \code{for_each} example implementation.
+  \item Improved \code{iota} and \code{for_each} example implementations with constexpr-if.
+  \item Discuss impact on all algorithms.
+\end{revision}
+
+  %\todo Discuss concept requirements.
 
 \section{Straw Polls}
 \subsection{SG1 at Oulu}
 \wgPoll{Ship it to LEWG?}{6 & 6 & 2 & 0 & 0}
+
+\subsection{LEWG at Albuquerque}
+\wgPoll{Forward the paper to LWG?}{1 & 1 & 2 & 1 & 1}
+\noindent$\rightarrow$ Paper needs a revision: LEWG wants a list of affected algorithms and an update to concept requirements.
 
 \input{intro}
 \input{algorithms}

@@ -1,4 +1,5 @@
 \section{Parallel Algorithms}
+\lstset{escapeinside={/*!}{*/}}
 
 \subsection{Example}
 Consider the example in \lst{simd foreach}.
@@ -137,9 +138,104 @@ For both algorithms it would be perfectly valid to implement the epilogue as a s
     \draw[<-] (Mark5.east) -- +(3.0\vNodeWidth,0) |- (F1);
     \draw[<-] (Mark6.east) -- +(3.2\vNodeWidth,0) |- (I0);
   \end{tikzpicture}
-  \caption{Visualization of chunking the \code{foreach} call with $\VSize{T}=4$ in \lst{simd foreach}.}
+  \caption{Visualization of chunking the \code{for_each} call with $\VSize{T}=4$ in \lst{simd foreach}.}
   \label{fig:simd foreach}
 \end{figure}
+
+\subsection{Discussion of algorithms}
+\begin{description}
+  \item[Copies]
+    In general, the \simdEP policy requires algorithms to make a copy from the input sequence.
+    For now, since \simd only supports arithmetic types and \simd does not return lvalue references to its values, it is not observable whether a copy was made.
+    With two exceptions:
+    \begin{itemize}
+      \item Modification of the input sequence via different means than the function parameter(s) will not modify the value of the function parameter(s).
+      \item Using mutable iterators, assignment to the \simd (lvalue reference) parameter of the user-supplied function object will not modify the output sequence until after the function has returned (cf. \lst{simd foreach implementation}).
+    \end{itemize}
+    Note that most non-modifying sequence operations allow modification of the sequence by using a non-const lvalue reference parameter for the user-supplied function object.
+
+  \item[Predicates] Algorithms that take a predicate returning a \bool have two possible vectorization strategies:
+    \begin{enumerate}
+      \item The predicate still returns \bool.
+        In this case, every predicate must execute a \code{simd_mask} reduction.
+        This makes it simple to short-circuit in the algorithm implementation but may unnecessarily restrict the achievable parallelization.
+      \item The predicate returns \code{simd_mask}.
+        In this case \VSize{ForwardIterator::value\_type} reductions can happen in parallel.
+        Short-circuiting is still possible, but requires a \code{simd_mask} reduction on each step (QoI question).
+    \end{enumerate}
+    I recommend to allow both.
+    Let the algorithm switch the strategy depending on the return type of the predicate.
+    Let the user decide on the trade-offs.
+
+  \item[Complexity requirements]
+    For many algorithms, the complexity requirement states “Applies \code{f} \emph{exactly} \code{last - first} times”.
+    In the \simdEP case, the number of applications of \code{f} is reduced by an unspecified factor.
+
+  \item[Sorting]
+    The \code{Compare} function object type is required to return a value that is contextually convertible to \bool.
+    For sorting, it is important that overloads using the \simdEP policy work with \code{simd_mask} instead of \bool.
+    It is not useful for the sort algorithm to know whether all/any/some/none of the compared values are “less than”.
+    It requires a mask object to know the “less than” relation for each individual value.
+\end{description}
+
+\subsection{Design Alternative}
+There are subtle differences in how the \simdEP specializations need to be used
+(e.g. \code{std::generate} currently requires the generator function to return objects that can be assigned to a dereferenced \code{ForwardIt};
+the \simdEP specialization requires the generator function to return objects of type \simd[ForwardIt::value_type]).
+An attempt to fit \simdEPT into the existing wording results in some special-casing in the algorithm specifications.
+This observation leads to the question whether a new execution policy is really the best approach.
+The alternative would be a duplication of algorithms to variants with a \code{simd_} prefix in their name.
+Example:
+\smallskip\begin{lstlisting}[style=Vc]
+simd_for_each(data.begin(), data.end(), [](auto &x) {
+  x *= x;
+});
+\end{lstlisting}
+
+This alternative would not reduce the amount of wording though, since now a lot of the algorithm wording would need to be duplicated.
+However, this would allow a very simple reduction of the number of algorithms that support \simd execution.
+
+\subsection{Affected algorithms}
+The following algorithms have an \code{ExecutionPolicy} overload and can work with a \simdEPT specialization:
+\begin{itemize}
+  \item \code{all_of}, \code{any_of}, \code{none_of}
+  \item \code{for_each}, \code{for_each_n}
+  \item \code{find}, \code{find_if}, \code{find_if_not}
+  \item \code{find_end}
+  \item \code{find_first_of}
+  \item \code{adjacent_find}
+  \item \code{count}, \code{count_if}
+  \item \code{mismatch}
+  \item \code{equal}
+  \item \code{search}, \code{search_n}
+  \item \code{copy}, \code{copy_n} (no real need; can be implicitly vectorized)
+  \item \code{copy_if}
+  \item \code{swap} (no real need; can be implicitly vectorized)
+  \item \code{transform}
+  \item \code{replace}, \code{replace_if}, \code{replace_copy}, \code{replace_copy_if}
+  \item \code{fill}, \code{fill_n} (no real need; can be implicitly vectorized)
+  \item \code{generate}, \code{generate_n}
+  \item \code{remove}, \code{remove_if}, \code{remove_copy}, \code{remove_copy_if}
+  \item \code{unique}, \code{unique_copy}
+  \item \code{reverse}, \code{reverse_copy} (no real need; can be implicitly vectorized)
+  \item \code{rotate}, \code{rotate_copy} (no real need; can be implicitly vectorized)
+  \item \code{is_partitioned}, \code{partition}, \code{stable_partition}, \code{partition_copy}, \code{partition_point}
+  \item \code{sort},\code{stable_sort}, \code{partial_sort}, \code{partial_sort_copy}, \code{is_sorted}, \code{is_sorted_until}
+  \item \code{nth_element}
+  \item \code{merge}, \code{inplace_merge}
+  \item \code{includes}, \code{set_union}, \code{set_intersection}, \code{set_difference}, \code{set_symmetric_difference}
+  \item \code{min_element}, \code{max_element}, \code{minmax_element}
+  \item \code{lexicographical_compare}
+\end{itemize}
+
+The remaining algorithms have no obvious use for the specialization:
+\begin{itemize}
+  \item \code{move} makes no sense until we can create \code{simd<T>} types for pointers (likely) and class types (less likely).
+\end{itemize}
+
+\code{lower_bound}, \code{upper_bound}, \code{equal_range}, and \code{binary_search} may benefit from \simd usage, but currently do not provide \code{ExecutionPolicy} overloads.
+
+I have not considered \code{is_heap} and \code{is_heap_until} yet.
 
 \subsection{Wording for the policy}
 
@@ -150,7 +246,7 @@ Add a new execution policy to \citep[§23.19.2]{N4659}:
   // 23.19.6, parallel and unsequenced execution policy\\
   class parallel_unsequenced_policy;\\
   \\
-  \wgAdd{// 23.19.7, \simd execution policy}\\
+  \wgAdd{// 23.19.7, \simd{} execution policy}\\
   \wgAdd{class \simd{}_policy;}\\
   \\
   // 23.19.\wgRemove{7}\wgAdd{8}, execution policy objects:\\
@@ -167,13 +263,9 @@ Renumber §23.19.7 to §23.19.8 and add §23.19.7 [execpol.simd]:
 @\wgAdd{class \simd{}_policy \{ \textit{unspecified} \};}@
   \end{itemdecl}
   \begin{itemdescr}
-    \wgAdd{
-      %\setcounter{Paras}{1}
-      \pnum The class \simd\type{_policy} is an execution policy type used as a unique type to disambiguate parallel algorithm overloading and indicate that a parallel algorithm's execution may be vectorized using \simd{} for interfacing with user-provided functionality.
+    \pnum\wgAdd{The class \type{simd_policy} is an execution policy type used as a unique type to disambiguate parallel algorithm overloading and indicate that a parallel algorithm's execution may be vectorized using \simd{} for interfacing with user-provided functionality.}
 
-      %\setcounter{Paras}{2}
-      \pnum During the execution of a parallel algorithm with the \simdEPT{} policy, if the invocation of an element access function exits via an uncaught exception, \code{terminate()} shall be called.
-    }
+    \pnum\wgAdd{During the execution of a parallel algorithm with the \simdEPT{} policy, if the invocation of an element access function exits via an uncaught exception, \code{terminate()} shall be called.}
   \end{itemdescr}
 \end{wgText}
 
@@ -187,7 +279,12 @@ This might be the right place to add:
 \begin{wgText}[{§28.4.2 [algorithms.parallel.user]}]
   \addtocounter{Paras}{1}
   \color{WgAdd}
-  \pnum Function objects passed into parallel algorithms instantiated with the \simdEP execution policy shall be callable with any argument of type \simd[<T, Abi>], where \type T is the type obtained from dereferencing the iterator.
+  \pnum Function objects passed into parallel algorithms instantiated with the \simdEP execution policy shall:
+  \begin{itemize}
+    \item be callable with arguments of type \simd[<Iterator::value_type, Abi>], for any ABI tag \code{Abi}, for all arguments that otherwise would be of type \code{Iterator::value_type};
+    \item return objects of type \simd[<Iterator::value_type, Abi>], if the function object is otherwise expected to return objects assignable to a dereferenced \code{Iterator} object;
+    \item return objects of type \mask[<Iterator::value_type, Abi>] or \bool, if the function object is otherwise expected to return \bool.
+  \end{itemize}
 \end{wgText}
 
 The following subsection in \citep[§28.4.3]{N4659} defines the semantics of the execution policies.
@@ -220,6 +317,19 @@ The situation is simpler for the \simdEP policy.
 It is almost equivalent to the \code{seq} policy.
 
 \subsection{Wording for individual algorithms}
+\begin{wgText}[{§28.7 [alg.sorting]}]
+  \setcounter{Paras}{1}%
+    \pnum
+    \code{Compare} is a function object type.
+    The return value of the function call operation applied to an object of type \code{Compare}, when contextually converted to \bool, yields \true if the first argument of the call is less than the second, and \false otherwise.
+    \wgAdd{
+      If the \code{ExecutionPolicy} is \simdEPT, the return type of the function call operation applied to an object of type \code{Compare} is a specialization of \mask.
+      Its $i$-th element in the \mask{} yields \true{} if the value of the $i$-th element of the first argument of the call is less than the corresponding element of the second, and \false{} otherwise.
+    }
+    \code{Compare comp} is used throughout for algorithms assuming an ordering relation.
+    It is assumed that \code{comp} will not apply any non-constant function through the dereferenced iterator.
+
+\end{wgText}
 I have not identified the need for any additional wording in the subsections on the individual algorithms for the \simdEPT at this point.
 
 % vim: sw=2 et ft=tex spell tw=0

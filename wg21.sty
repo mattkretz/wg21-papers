@@ -21,6 +21,9 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{wg21}[2014/05/22 v1.0 Template for WG21 papers]
+\RequirePackage{hyphenat}
+\let\BreakableUnderscore\undefined
+\RequirePackage{mymacros}
 \RequirePackage{ifthen}
     \newboolean{@tocaligned} % the left column of the toc will be aligned (no indention)
     \newboolean{@subfig} % setup for preloaded @subfig package
@@ -108,7 +111,7 @@
 \PassOptionsToPackage{pdftex,hyperfootnotes=false,pdfpagelabels,bookmarksdepth=5}{hyperref}
   \RequirePackage{hyperref}  % backref linktocpage pagebackref
 \pdfcompresslevel=9
-\pdfadjustspacing=1
+\adjustspacing=1
 \PassOptionsToPackage{pdftex}{graphicx}
   \RequirePackage{graphicx}
 
@@ -527,3 +530,11 @@ escapechar=@
 \newcommand\datastructures{data structures\xspace}
 \newcommand\workingset{working set\xspace}
 \newcommand\workingsets{working sets\xspace}
+\RequirePackage{underscore}
+
+\usepackage{pifont}
+
+\newcommand\foralli[1][]{for all $i$ $\in \mathcal{N}_{\code{<#1size()}}\xspace}
+\newcommand\forallmaskedi[1]{%
+  for all selected indices \cite[{[parallel.simd.whereexpr]}]{N4744} $i$\xspace%
+}
