@@ -27,12 +27,6 @@
 
 \usepackage{pifont}
 
-\newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
-\newcommand\forallmaskedi[1]{%
-  for all \code i
-  $\in \{j \in \mathbb{N}_0 | j < \code{size()} ⋀ \code{#1[}j\code{]}\}$%
-  \xspace%
-}
 \newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
 \newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
 \newcommand\itemheader[1]{\item[] \hfill \textcolor{gray}{\textsc{#1}}}
@@ -45,27 +39,68 @@
 
 \pagestyle{scrheadings}
 \section{Introduction}
-\textcite{P0214R6} introduces a type-based expression of data parallelism.
-The paper targets the Parallelism TS 2.
+\cite{N4744} introduces type-based expression of data parallelism.
 Through the TS process we hope to get feedback on a number of issues that were not clear to the committee before hands-on experience.
-This paper collects all the questions and design choices that SG1 / LEWG might want to revisit before moving \simdT into the IS.
+This paper collects the questions and design choices that SG1 / LEWG might want to revisit before moving \simdT into the IS.
 
 \section{Questions}
 
 \subsection{Names of \code{popcount}, \code{find_first}, \code{find_last}}
 \url{https://github.com/mattkretz/wg21-papers/issues/63}
+These need to be consistent and unambiguous with the corresponding functions introduced for builtin types.
 
 \subsection{Names \code{copy_from}, \code{copy_to}}
 \url{https://github.com/mattkretz/wg21-papers/issues/62}
+The names were discussed in SG1 and LEWG.
+If there is no new information via experience, WG21 should not spend any further time on renaming these functions.
+Consequently, this is a call for feedback from usage experience.
+We need arguments why a certain name works or does not work (clarity, ambiguity); no calls for preference.
 
 \subsection{Name of \code{where} function}
 \url{https://github.com/mattkretz/wg21-papers/issues/61}
+The name was discussed in LEWG.
+If there is no new information via experience, WG21 should not spend any further time on renaming this function.
+Consequently, this is a call for feedback from usage experience.
+We need arguments why a certain name works or does not work (clarity, ambiguity); no calls for preference.
 
 \subsection{Name of \simdT misleading?}
 \url{https://github.com/mattkretz/wg21-papers/issues/60}
+The name was discussed in SG1 and LEWG.
+SG1 chose \code{datapar} over \code{simd} and other options.
+LEWG overruled that choice and renamed it to \code{simd}.
+
+We should use the TS to discover the following:
+\begin{itemize}
+  \item Is there interest in implementations that use hardware parallelism that does not map (exclusively) to SIMD instructions \& registers?
+    \begin{flushright}
+      \smaller\color{gray}
+      I believe \code{fixed_size} itself is already a manifestation of such a feature.
+      Furthermore the libc++ and libstdc++ implementations, at least, are investing in ABIs that allow combining N SIMD registers into one \code{simd} type.
+    \end{flushright}
+  \item Do users choose to not use \code{simd}, because it appears too narrowly focused (from its name) on (certain) CPUs?
+    Would such users choose differently if the name would focus on the parallelism it allows instead of a specific hardware implementation of such parallelism?
+\end{itemize}
+
+\subsection{\code{fixed_size} vs. \code{deduce_t}}
+\url{https://github.com/mattkretz/wg21-papers/issues/59}
+Whenever the interface requires a \simd type that has a specific number of elements (typically deduced from one or more native types), we have a choice:
+\begin{itemize}
+  \item Use \fixedsizeN.
+    This is easy to memorize and understand.
+    However, \fixedsizeN may be less efficient if such objects have to pass a function call boundary.
+    Also, absent more implicit conversions, users that prefer native types will have to use an explicit cast.
+  \item Use \code{simd_abi::deduce_t<T, N, Abis...>}.
+    It is less obvious what the exact type will be (native or \fixedsizeN) and the choice will be target-dependent.%
+    \footnote{Note that an implementation might deduce an ABI tag that is not \fixedsizeN for all combinations of \type T and \code N.}
+    This makes it slightly harder to write portable code (typically the logic is portable, it just needs an additional cast for some targets).
+    The portability issue could be reduced by allowing more implicit casts.
+\end{itemize}
 
 \subsection{Return types of split and concat unconditionally \fixedsizeN?}
 \url{https://github.com/mattkretz/wg21-papers/issues/59}
+
+\subsection{Consider more implicit conversions}
+\url{https://github.com/mattkretz/wg21-papers/issues/26} and \url{https://github.com/mattkretz/wg21-papers/issues/3}
 
 \subsection{Allowed template arguments for (\code{static_})\code{simd_cast}}
 \url{https://github.com/mattkretz/wg21-papers/issues/57}
@@ -105,9 +140,6 @@ Options:
     As a variation, safe conversions could be enabled per default and only unsafe conversions would require extra typing.
 
 \end{enumerate}
-
-\subsection{Consider more implicit conversions}
-\url{https://github.com/mattkretz/wg21-papers/issues/26} and \url{https://github.com/mattkretz/wg21-papers/issues/3}
 
 \subsection{Relation Operators}
 \textcite{P0820R1} argues for a substantial change to the definition of relation operators.
