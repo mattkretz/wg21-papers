@@ -1,12 +1,13 @@
 \newcommand\wgTitle{Making operator?: overloadable}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P0917R1}
+\newcommand\wgDocumentNumber{P0917R2}
 \newcommand\wgGroup{EWG}
-%\newcommand\wgTarget{Parallelism TS 2}
+\newcommand\wgTarget{\CC{}23}
 %\newcommand\wgAcknowledgements{ }
 
 \usepackage{mymacros}
 \usepackage{wg21}
+\usepackage{changelog}
 \usepackage{underscore}
 
 \addbibresource{extra.bib}
@@ -25,18 +26,6 @@
 \newcommand\simdEP{\code{execution::}\type{simd}\xspace}
 \newcommand\seqEP{\code{execution::}\type{seq}\xspace}
 
-\usepackage{pifont}
-
-\newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
-\newcommand\forallmaskedi[1]{%
-  for all \code i
-  $\in \{j \in \mathbb{N}_0 | j < \code{size()} ⋀ \code{#1[}j\code{]}\}$%
-  \xspace%
-}
-\newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
-\newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
-\newcommand\itemheader[1]{\item[] \hfill \textcolor{gray}{\textsc{#1}}}
-
 \begin{document}
 \selectlanguage{american}
 \begin{wgTitlepage}
@@ -51,8 +40,14 @@ For the conditional operator, \textcite{StrFaq} writes:
 “There is no fundamental reason to disallow overloading of \code{?:}.
 I just didn't see the need to introduce the special case of overloading a ternary operator.
 Note that a function overloading \code{expr1?expr2:expr3} would not be able to guarantee that only one of \code{expr2} and \code{expr3} was executed.”
+In this paper I want to show a need for overloading the conditional operator.
 
-In this paper I want to show a need for overloading the conditional operator as well as present a possiblity of deferred evaluation of \code{expr2} and \code{expr3}.
+It is important to consider \code{std::common_type} when discussing changes to the conditional operator.
+\code{common_type_t<T, U>} basically is defined as \code{decltype(false ? : T() : U())}.
+Consequently, if the conditional operator supports more types via user-defined overloads, \code{common_type} would automatically support them as well.
+
+A previous revision of this paper discussed how to enable deferred evaluation.
+But since \textcite{P0927R2} is trying to solve deferred evaluation in general, this paper will instead rely on the facilities of \cite{P0927R2}.
 
 \section{Motivation}
 \subsection{Be General}
@@ -62,11 +57,11 @@ Avoid special cases and partial features.” \cite{P0745R0}
 
 \CC{} allows operator overloading for almost all operators.
 Operator-dot overloading is under consideration in the committee \cite{P0352R1,P0416R1}.
-This leaves \code{operator?:} as the last missing piece\footnote{Maybe \code{operator::} as well. I didn't take much time to consider what it would mean, though.}.
+This leaves \code{operator?:} as the last missing piece.
 
 \subsection{Blend Operations}
-The conditional operator is a perfect match for expressing blend operations generically, i.e. so that fundamental types still work with the same syntax.
-Consider \cite{N4744}, where a certain number (determined at compile time) of values of arithmetic type \type T are combined to a single object of type \type{simd<T, Abi>}.
+The conditional operator is a perfect match for expressing blend operations generically, i.e. such that a function template also works with fundamental types.
+Consider \type{simd<T, Abi>} \cite[§9]{N4808}, where a certain number (determined at compile time) of values of arithmetic type \type T are combined to a single object.
 All operators act element-wise and concurrently.
 Thus, the meaning of
 \smallskip\begin{lstlisting}[style=Vc]
@@ -82,11 +77,15 @@ template <class T> T abs(T x) {
   return iif(x < 0, -x, x);
 }
 \end{lstlisting}
-This is less intuitive, since the name is either long or cryptic, and the arguments appear to be arbitrarily ordered (comma doesn't convey semantics such as \code ? and \code : do).
-More importantly, if \code x is a builtin type, the function will not be found via ADL; consequently, user code requires \code{return std::experimental::iif(x < 0, -x, x)} to be generic.
-This is annoying and easily forgotten since ADL works fine for \type{simd} arguments.
+An “inline-if” function is
+\begin{itemize}
+  \item less intuitive, since the name is either long or it is cryptic, and the arguments appear to be arbitrarily ordered (comma doesn't convey semantics such as \code ? and \code : do).
+  \item harder to use in generic code:
+    If \type T is a built-in type, the \code{iif} function will not be found via ADL; consequently, user code requires \code{return std::experimental::iif(x < 0, -x, x)} to be generic.
+    This is annoying and easily forgotten since ADL works fine for \type{simd} arguments.
+\end{itemize}
 
-It is not possible (and not a good idea, in my opinion) to overload \code{if} statements and iteration statements for non-boolean conditions.
+It is not possible (and not a good idea to extend the language in such a way, in my opinion) to overload \code{if} statements and iteration statements for non-boolean conditions.
 Thus, to support any “collection of \bool{}”-like type in conditional expressions using built-in syntax, the conditional operator is the only candidate.
 
 Considering cases where generality of the syntax, i.e. extension from the built-in case to user-defined types, is important, we see that all such use cases will have a type for the condition that is not contextually convertible to \bool because the user-defined condition object stores multiple boolean states.
@@ -98,7 +97,19 @@ Having the conditional operator available makes \CC{} more versatile for such us
 Most sensible uses of the conditional operator will likely be similar to the “blend operations” case discussed for \type{simd} types, though.
 The motivation is not as strong as in the above case, since in most cases substitutability of the code to fundamental types is not a goal.
 
-\subsection{Increased flexibility about participating types}
+\subsection{User-defined numeric types}
+Any library-based numeric type may have a need for overloading \code{operator?:} if the type carries information about the value or even modifies the value (e.g. for \code{std::chrono::duration}).
+Most of those types specialize \type{std::common_type}\footnote{cf. \url{https://codesearch.isocpp.org/cgi-bin/cgi_ppsearch?q=struct+common_type\%3C&search=Search
+}}.
+Examples:
+\begin{itemize}
+  \item \code{std::chrono::duration<Rep, Period>}
+  \item \code{std::chrono::time_point<Clock, Duration>}
+  \item \code{fractional<Numerator, Denominator>} from \cite{P1050R0}
+  \item \code{fixed_point<Rep, Exponent, Radix>} from \cite{P0037R5}
+  \item \code{bounded::integer<minimum, maximum>} from \cite{site.bounded-integer}
+\end{itemize}
+
 Consider the \code{bounded::integer} example (cf. \cite{site.bounded-integer}):
 \smallskip\begin{lstlisting}[style=Vc,escapeinside={/*!}{*/},numbers=left]
 bounded::integer<1, 100> const a = f();
@@ -111,170 +122,158 @@ Line \ref{lst:ok} is what the \code{bounded::integer} library can currently do f
 However, line \ref{lst:notok} is currently not possible since it would require more control by the library over the types involved (arguments and result) with the conditional operator.
 
 Any design that wants to allow different types on the second and third argument (without implicit conversions), and determine a return type from them, requires an overloadable conditional operator.
+Note that user-defined numeric types want a signature such as \code{operator?:(std::Boolean, T1, T2)} in most cases.
+I.e. the idea to only allow non-\bool conditions on \code{operator?:} overloads breaks this use case.
+(I mentioned the idea in the previous revisions and it was also suggested in EWGI discussion).
 
 \subsection{Existing Practice}
-GCC implements support for the conditional operator to allowing blending its vector builtins.
-OpenCL uses the conditional operator for blending operations.
-Allowing overloads of \code{operator?:} in \CC{} enables users to implement blend semantics with the same syntax as provided by GCC and OpenCL.
+GCC implements support for the conditional operator to allowing blending its vector builtins\footnote{\url{https://gcc.gnu.org/onlinedocs/gcc/Vector-Extensions.html}}.
+OpenCL uses the conditional operator for blending operations \cite{spec.opencl1.1}.
+Allowing overloads of \code{operator?:} in \CC{} would enable users and \type{std::simd} to implement blend semantics with the same syntax and semantics as provided by GCC and OpenCL.
 
-\section{Choices}
-The main issue to decide when considering overloading the conditional operator, is deferred evaluation of the second and third expressions.
-[expr.cond]/1 specifies “Only one of the second and third expressions is evaluated”.
-If the signature of overloadable \code{operator?:} were \code{T operator?:(U, T, T)} then all three expressions must be evaluated before calling the user-defined operator.
-To resolve this, the signature could be defined as \code{T operator?:(U, F0, F1)}, where \code{F0} and \code{F1} are callables with return type \code{T}.
-Calling code such as \code{auto x = cond ? a + b : g(a, b)} could then be transformed to \code{auto x = operator?:(cond, [\&]() { return a + b; }, [\&]() { return g(a, b); })}.
+\section{Exploration}
 
-This could be taken one step further:
-Instead of passing a callable, pass an object that is implicitly convertible to \code{T}.
-Its conversion operator invokes the expression.
-This may be easier to use, but it's also easier to use badly (as in invoking the conversion operator multiple times).
-I believe such an approach is too magical, so I will not pursue it further in this paper.
+\subsection{Can a user-defined conditional operator change existing code?}
 
-\textcite{P0927R0} propose an extension that would easily solve the issue.
-Thus, if P0927R0 is adopted, the issue of deferred evaluation is easily resolved and under full control of the developer introducing the operator overload.
+The conditional operator already works in many situations where user-defined types are used.
+A few examples are shown in \fig{udt-cond-examples}.
+\begin{figure}[bht]\begin{lstlisting}
+// most common usage of ?: with UDTs:
+struct Point { float x, y, z; };
+static_assert(is_same_v<Point, decltype(bool() ? Point() : Point())>);
 
-If P0927R0 is not adopted, we have two choices for the signature of the conditional operator overload (cf. Figure \ref{fig:demo}):
-\begin{enumerate}
-  \item\label{simple} The simple approach, which follows the rules of the other operator overloads:\\
-\begin{lstlisting}[style=Vc]
-template <class T, class U>
-MyReturnType<T, U> operator?:(MyCondition<T, U> c, T a, U b) {
-  if (c) {
-    return a;
-  } else {
-    return b;
-  }
-}
+// less common:
+struct A { explicit operator bool(); };
+struct B { operator float(); };
+struct C { operator float(); };
+using X = decltype(A() ? B() : C());  // X = float (GCC, Clang), double (ICC),
+                                      //     ill-formed (MSVC)
+struct D {
+  operator B();
+  operator float();
+};
+using Y = decltype(A() ? B() : D());  // Y = B
+struct E;
+struct F { operator E(); };
+struct E { operator F(); };
+using Z = decltype(A() ? F() : E());  // Z = F (MSVC), ill-formed (GCC, Clang, ICC)
 \end{lstlisting}
-
-    The expression \code{x = c ? f(a, b) : g(a, b)} means \code{x = operator?:(c, f(a, b), g(a, b))}.
-
-  \item\label{deferred} An approach to support deferred evaluation:\\
-\begin{lstlisting}[style=Vc]
-template <class F0, class F1,
-          class T = std::invoke_result_t<F0>,
-          class U = std::invoke_result_t<F1>>
-MyReturnType<T, U> operator?:(MyCondition<T, U> c, F0 a, F1 b) {
-  if (c) {
-    return a();
-  } else {
-    return b();
-  }
-}
-\end{lstlisting}
-
-    The expression \code{x = c ? f(a, b) : g(a, b)} means \code{x = operator?:(c, [\&]() \{ return f(a, b); \}, [\&]() \{ return g(a, b); \})}.
-
-\end{enumerate}
-
-\subsection{Overload Resolution}
-Choice \ref{simple} allows overload resolution on the types for the second and third argument.
-If we want to support overloads using \bool for the first argument, then choosing the overload via the types of the remaining arguments is important.
-
-Choice \ref{deferred} requires considerably more complex overload resolution rules.
-Consider \code{template <class F0, class F1> UDT operator?:(bool, F0, F1)}, where \code{F0} and \code{F1} return a prvalue of type \code{UDT}.
-The built in operator would be viable for \code{some_bool ? udt_object_a : udt_object_b} and the overload, even without transformation of the expressions into lambda.
-I.e. the user-defined operator, requires a constraint that \code{F0} and \code{F1} are callables.
-Assuming we had this, we'd now have to require all uses of the conditional operator to consider both the implicit-lambda wrapper and the direct use of the built in operator for overload resolution.
-Should a viable user-defined conditional operator with an implicit-lambda wrapper then always be prefered over the built in operator?
-It seems this would be required.
-Consequently, it is very important that user-defined conditional operators use exact constraints on the second and third parameter types.
-
-\begin{figure}
-  \centering
-  \begin{minipage}[t]{.7\linewidth}
-    \begin{lstlisting}[style=Vc]
-template <class T0, class T1>
-const auto ternary1(bool c, T0 &&yes, T1 &&no) {
-    if (c) return std::forward<T0>(yes);
-    return std::forward<T1>(no);
-}
-
-template <class F0, class F1>
-const auto ternary2_impl(bool c, F0 &&yes, F1 &&no) {
-    if (c) return yes();
-    return no();
-}
-#define ternary2(c_, yes_, no_)             \
-ternary2_impl((c_), [&]() { return yes_; }, \
-                    [&]() { return no_; })
-
-int a();
-int b();
-
-int f1(bool c) {
-    return ternary1(c, a(), b());
-}
-int f2(bool c) {
-    return ternary2(c, a(), b());
-}
-int f3(bool c) {
-    return c ? a() : b();
-}
-    \end{lstlisting}
-  \end{minipage}\hfill%
-  \begin{minipage}[t]{.25\linewidth}
-    \begin{lstlisting}[language={}]
-f1(bool):
-pushq %rbp
-pushq %rbx
-pushq %rax
-movl %edi, %ebx
-callq a()
-movl %eax, %ebp
-callq b()
-testb %bl, %bl
-cmovnel %ebp, %eax
-addq $8, %rsp
-popq %rbx
-popq %rbp
-retq
-
-f2(bool):
-testb %dil, %dil
-je .LBB1_2
-jmp a()
-.LBB1_2:
-jmp b()
-
-f3(bool):
-testb %dil, %dil
-je .LBB2_2
-jmp a()
-.LBB2_2:
-jmp b()
-    \end{lstlisting}
-  \end{minipage}
-  \caption{Demonstration of the two choices compared to a builtin conditional operator (\code{f3}), cf. \url{https://godbolt.org/g/tpPrVR}}
-  \label{fig:demo}
+\caption{Examples of the conditional operator with UDTs}
+\label{fig:udt-cond-examples}
 \end{figure}
 
-\subsection{Life-time Extension (Non-)Issue}
-Using choice \ref{deferred}, there is a case where life-time extension does not work, where it would otherwise work in the built-in case.
-Consider:
-\smallskip\begin{lstlisting}[style=Vc]
-template <class F0, class F1>
-const auto &operator?:(MyCond c, F0 &&yes, F1 &&no) {
-  if (c) {
-    return yes();
-  }
-  return no();
-}
+Should the user be able to define a conditional operator that takes precedence over the built-in operator?
+Of course, to be consistent with all other operator overloads, \code{operator?:} overloads will require at least one user-defined type in their signature.
+The examples in \fig{udt-cond-examples} seem to motivate maximal freedom in overloading \code{operator?:}; but let's not use implementation divergence for motivation.
 
-const auto &x = c ? a + b : a - b;
-\end{lstlisting}
-In this case the temporary is produced inside the \code{operator?:} function, and thus returning a const-ref returns a reference to a local temporary object.
-Using choice \ref{simple}, the temporary is produced before calling the overloaded operator, and thus lifetime extension would make the last line well-formed.
-The simple solution here is to return \code{auto} instead of \code{const auto \&}, so this issue appears to be rather academic.
+If we allow user-defined \code{operator?:} to be a better match than built-in \code{operator?:}, we open the door to situations where the return type (and value) of the same conditional operator is different at different places in the TU (such as in \url{https://godbolt.org/z/xMMbaE}), as is the case for all other operators already.
+However, \type{common_type} behaves differently, since it can only be specialized once.
+Consequently, if a user-defined conditional operator were allowed to overload combinations that the built-in operator can handle, one could construct examples where \type{common_type<A, B>} and \code{decltype(false ? A() : B())} agree in one part of the TU and disagree in the other part.%
+\footnote{\code{using X = common_type_t<A, B>; /*overload operator?:(bool, A, B)*/ static_assert(is_same_v<common_type_t<A, B>, decltype(false ? A() : B())>);}}
+Note that such pitfalls are not novel.
+All operator (and function) overloads can already be used to construct such inconsistencies (e.g. \fig{operator+}).
 
-\subsection{Allow different types?}
-The operator signature could enforce the types of the second and third expression to be equal, implicitly/explicitly convertible, or arbitrary.
-I believe the most flexible tool for users will be to allow arbitrarily different types.
-Users can put a restriction in place by themselves.
+\begin{figure}[bht]
+  \begin{lstlisting}[style=Vc]
+struct A { operator int() const; };
+struct B { operator float() const; };
 
-\subsection{Is there a need for deferred evaluation?}
-Consider a conceivable implementation of the conditional operator using choice \ref{simple} for \type{simd<T, Abi>}:
-\smallskip\begin{lstlisting}[style=Vc]
+template <class A, class B> struct my_common_type {
+  using type = decltype(A() + B());
+};
+template <class A, class B>
+using my_common_type_t = typename my_common_type<A, B>::type;
+
+using X = my_common_type_t<A, B>;
+static_assert(std::is_same_v<X, my_common_type_t<A, B>>);
+static_assert(std::is_same_v<X, decltype(A() + B())>);
+
+short operator+(A, B);
+static_assert(std::is_same_v<X, my_common_type_t<A, B>>);
+static_assert(std::is_same_v<X, decltype(A() + B())>);  // fails
+  \end{lstlisting}
+  \caption{A pitfall of overloading (cf. \url{https://godbolt.org/z/iqbj1a})}
+  \label{fig:operator+}
+\end{figure}
+
+Nevertheless, because of the connection between \type{common_type} and the conditional operator, I believe we should consider the possibility of disregarding user-defined operators whenever the built-in operator is a candidate.
+It would be nicer to make the declaration of such operator overloads ill-formed.
+But I believe this is impossible since it appears to be a similar problem as definition checking for concepts.
+We could, however, consider to make such operator overload declarations ill-formed NDR.
+
+That said, I believe such a constraint on \code{operator?:} is complicating the language for little gain and might even inhibit a valid use cases.
+I would prefer to make \code{operator?:} just as useful and dangerous as all other overloads.
+Suggested poll: “\code{operator?:} should have special rules to avoid overloading the built-in operator”.
+
+\subsection{Should \type{common_type} ignore user-defined conditional operators?}
+Currently, \code{std::common_type} is specified in terms of the \code{decltype} of the conditional operator.
+Consequently, if the \code{common_type} specification is not changed, the declaration of user-defined conditional operators affects the result of \code{common_type}.
+I strongly believe this is the preferred behavior.
+Either \code{common_type} specializations should extend \code{operator?:} or \code{operator?:} overloads should extend \code{common_type}.
+The inconsistency we currently have from user-defined specializations of \code{common_type} is suboptimal (i.e. a common type is defined, but the conditional operator still is not usable).
+The DRY (“don't repeat yourself”) principle implies we should enable a way for users to extend \code{operator?:} and \code{common_type} with a single definition.
+The more flexible and natural customization point is \code{operator?:}.
+
+%\subsection{Implications for “contextually convertible to \bool” tests}
+%A possible implementation of testing for “contextually convertible to \bool{}” makes use of SFINAE on the conditional operator as shown in \fig{ccb trait}.
+%(“The first expression is contextually converted to \bool.” \cite[{[expr.cond]}]{N4810})
+%\begin{figure}[bht]
+%\begin{lstlisting}
+%template <class T, class = void>
+%  constexpr bool ccb = false;
+%template <class T>
+%  constexpr bool ccb<T, std::void_t<decltype(std::declval<T>() ? 1 : 2)>> = true;
+%\end{lstlisting}
+%\caption{Naïve trait to test whether \type T is contextually convertible to \bool.}
+%  \label{fig:ccb trait}
+%\end{figure}
+%
+%GCC implements an overload of the conditional operator for \code{[[gnu::vector_size(N)]]} types.
+%Consequently, the trait as defined in \fig{ccb trait} does not always produce the correct result.
+%\begin{figure}[bht]
+%\begin{lstlisting}
+%template <class T>
+%  using V [[gnu::vector_size(16)]] = T;
+%
+%bool x[] = {
+%  ccb<bool>,               // true
+%  ccb<int>,                // true
+%  ccb<std::array<int, 4>>, // false
+%  ccb<V<int>>,             // true
+%  ccb<V<unsigned>>,        // true
+%  ccb<V<short>>,           // false
+%};
+%\end{lstlisting}
+%\caption{Results of the trait from \fig{ccb trait} (\url{https://godbolt.org/z/DhTocm}).}
+%  \label{fig:bad ccb}
+%\end{figure}
+%In \fig{bad ccb}, \code{V<int>} is not contextually convertible to \bool --- the \code{ccb} trait as defined in \fig{ccb trait} is incorrect.
+%However, as \fig{better ccb trait} shows, the trait can be adjusted to use a type on the right hand side that is more likely not to trigger any other conditional operator overload.
+%\begin{figure}[bht]
+%\begin{lstlisting}[style=Vc]
+%struct _CcbTest {};
+%template <class T, class = _CcbTest>
+%  constexpr bool ccb = false;
+%template <class T>
+%  constexpr bool ccb<T, decltype(std::declval<T>() ? _CcbTest() : _CcbTest())> = true;
+%\end{lstlisting}
+%  \caption{Safer trait to test whether \type T is contextually convertible to \bool (\url{https://godbolt.org/z/WqT_1B}).}
+%  \label{fig:better ccb trait}
+%\end{figure}
+%
+%Thus, I believe user-defined conditional operators do not break the ability to define a “contextually convertible to \bool{}” trait.
+
+\subsection{Deferred evaluation}
+One of the expected features of the conditional operator is deferred evaluation of the expressions after the question mark.
+However, deferred evaluation is an orthogonal problem, and best handled via an independent proposal such as \cite{P0927R2}.
+A desire to first solve deferred evaluation before deciding on overloading the conditional operator was voiced a few times.
+I strongly believe \code{operator?:} overloading is worthwhile even if \cite{P0927R2} (or a different facility solving that same problem) does not move forward.
+This is because a major part of the motivation for \code{operator?:} overloading is for blend operations.
+Blend operations cannot make use of deferred evaluation and thus can benefit from the simplest way of \code{operator?:} overloading.
+
+Consider a conceivable implementation of the conditional operator for \type{simd<T, Abi>} as shown in \fig{simd ?:}.
+\begin{figure}[bht]
+\begin{lstlisting}[style=Vc]
 template <class T, class Abi>
 simd<T, Abi> operator?:(simd_mask<T, Abi> mask, simd<T, Abi> a, simd<T, Abi> b) {
   if (all_of(mask)) [[unlikely]] {
@@ -286,27 +285,28 @@ simd<T, Abi> operator?:(simd_mask<T, Abi> mask, simd<T, Abi> a, simd<T, Abi> b) 
   return b;
 }
 \end{lstlisting}
-If this code is inlined, the compiler will know how to improve the calling code without the need for explicit deferred evaluation of \code a and \code b.
-Only if the expressions in the second and third argument to the conditional operator have side effects, is the difference important.
+\caption{Simple \code{operator?:} for \type{simd<T, Abi>}}
+  \label{fig:simd ?:}
+\end{figure}
+If this code is inlined\footnote{A reasonable \code{simd} implementation forces inlining for most functions.}, the compiler will know how to improve the calling code without the need for explicit deferred evaluation of \code a and \code b.
+Only if the expressions in the second and third argument to the conditional operator have side effects, is the difference important.\footnote{Side effects in those expressions are likely bugs anyway (printf debugging maybe being an exception)}
 
-Consider a possible implementation of the conditional operator for \code{bounded::integer}:
-\smallskip\begin{lstlisting}[style=Vc]
-template <BoundedInteger T0, BoundedInteger T1>
-common_type_and_value_category_t<T0, T1> operator?:(bool cond, T0 a, T1 b) {
-  return cond ? static_cast<common_type_and_value_category_t<T0, T1>>(a)
-              : static_cast<common_type_and_value_category_t<T0, T1>>(b);
-}
-\end{lstlisting}
-Again, inlining can cover all the important cases (i.e. all but side effects).
+Pure numerical code (thus without side effects) can also optimize a simple conditional operator that does not make use of deferred evaluation.
+For expression templates, \code{operator?:} overloads can and have to implement deferred evaluation themselves anyway.
 
-In the presence of inlining (and link-time optimizations), I would prefer to go with choice \ref{simple}.
-\begin{itemize}
-  \item I believe we do not have to complicate the language to support conditional side effects in overloaded conditional operators.
-  \item Choice \ref{simple} is less of an implementation burden.
-  \item Choice \ref{simple} is simpler to use and understand, even if slightly less powerful.
-  \item Choice \ref{deferred} would break with the overload syntax of all other overloadable operators.
-\end{itemize}
-If a mechanism as suggested in \textcite{P0927R0} is adopted, I'd be strongly in favor of choice \ref{simple} / against choice \ref{deferred}.
+%Consider a possible implementation of the conditional operator for \code{bounded::integer} as shown in \fig{bounded integer ?:}:
+%\begin{figure}[bht]
+%\begin{lstlisting}
+%template <std::Boolean B, BoundedInteger T0, BoundedInteger T1>
+%common_type_and_value_category_t<T0, T1> operator?:(B cond, T0 a, T1 b) {
+%  return cond ? static_cast<common_type_and_value_category_t<T0, T1>>(a)
+%              : static_cast<common_type_and_value_category_t<T0, T1>>(b);
+%}
+%\end{lstlisting}
+%\caption{Simple \code{operator?:} for \type{bounded::integer>}}
+%\label{fig:bounded integer ?:}
+%\end{figure}
+%Again, inlining can cover all the important cases (i.e. all but side effects).
 
 \section{Wording}
 TBD.
