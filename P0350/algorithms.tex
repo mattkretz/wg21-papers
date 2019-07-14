@@ -215,6 +215,13 @@ The following algorithms have an \code{ExecutionPolicy} overload and can work wi
   \item \code{replace}, \code{replace_if}, \code{replace_copy}, \code{replace_copy_if}
   \item \code{fill}, \code{fill_n} (no real need; can be implicitly vectorized)
   \item \code{generate}, \code{generate_n}
+
+    Note that the generator function passed to \code{generate}/\code{generate_n} does not take any arguments and thus has no interface for the algorithm to request a certain ABI tag from the function (template).
+    Consequently, either the user could choose the ABI tag (via the return type) and expect values at the tail (beyond \code{end}) to be discarded.
+    Alternatively, the algorithm could pass an arbitrary (or default- or zero-initialized) data-parallel object to the function.
+    This would serve as communicating the expected return type of the function.
+    See \fig{generate example} for an example.
+    It is possible to allow both variants.
   \item \code{remove}, \code{remove_if}, \code{remove_copy}, \code{remove_copy_if}
   \item \code{unique}, \code{unique_copy}
   \item \code{reverse}, \code{reverse_copy} (no real need; can be implicitly vectorized)
@@ -227,6 +234,24 @@ The following algorithms have an \code{ExecutionPolicy} overload and can work wi
   \item \code{min_element}, \code{max_element}, \code{minmax_element}
   \item \code{lexicographical_compare}
 \end{itemize}
+
+\begin{figure}[bt]
+\begin{lstlisting}
+std::array<float, N> data;
+
+// let the generator function choose the ABI tag and discard N % native_simd<float>::size() values beyond data.end():
+std::generate(std::execution::simd, data.begin(), data.end(), []() {
+  return native_simd<float>();
+});
+
+// Alternative: the algorithm tells the generator function via the argument what data-parallel type it expects to get.
+std::generate(std::execution::simd, data.begin(), data.end(), [](auto x) {
+  return x = 0;
+});
+\end{lstlisting}
+  \caption{Generator function return type example.}
+  \label{fig:generate example}
+\end{figure}
 
 The remaining algorithms have no obvious use for the specialization:
 \begin{itemize}
