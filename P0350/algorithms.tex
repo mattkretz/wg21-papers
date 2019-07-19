@@ -181,7 +181,7 @@ For both algorithms it would be perfectly valid to implement the epilogue as a s
 \subsection{Design Alternative}
 There are subtle differences in how the \simdEP specializations need to be used
 (e.g. \code{std::generate} currently requires the generator function to return objects that can be assigned to a dereferenced \code{ForwardIt};
-the \simdEP specialization requires the generator function to return objects of type \simd[ForwardIt::value_type]).
+the \simdEP specialization requires the generator function to return objects of type \simd[<ForwardIt::value_type>]).
 An attempt to fit \simdEPT into the existing wording results in some special-casing in the algorithm specifications.
 This observation leads to the question whether a new execution policy is really the best approach.
 The alternative would be a duplication of algorithms to variants with a \code{simd_} prefix in their name.
@@ -192,7 +192,7 @@ simd_for_each(data.begin(), data.end(), [](auto &x) {
 });
 \end{lstlisting}
 
-This alternative would not reduce the amount of wording though, since now a lot of the algorithm wording would need to be duplicated.
+This alternative would not reduce the amount of wording/complexity though, since now a lot of the algorithm wording would need to be duplicated.
 However, this would allow a very simple reduction of the number of algorithms that support \simd execution.
 
 \subsection{Affected algorithms}
@@ -216,13 +216,14 @@ The following algorithms have an \code{ExecutionPolicy} overload and can work wi
   \item \code{fill}, \code{fill_n} (no real need; can be implicitly vectorized)
   \item \code{generate}, \code{generate_n}
 
-    Note that the generator function passed to \code{generate}/\code{generate_n} does not take any arguments and thus has no interface for the algorithm to request a certain ABI tag from the function (template).
+    Note that the generator function passed to \code{generate}/\code{generate_n} does not expect any arguments and thus has no interface for the algorithm to request a certain ABI tag from the function (template).
     Consequently, either the user could choose the ABI tag (via the return type) and expect values at the tail (beyond \code{end}) to be discarded.
     Alternatively, the algorithm could pass an arbitrary (or default- or zero-initialized) data-parallel object to the function.
-    This would serve as communicating the expected return type of the function.
+    This would communicate the expected return type of the generator function.
     See \fig{generate example} for an example.
     It is possible to allow both variants.
-  \item \code{remove}, \code{remove_if}, \code{remove_copy}, \code{remove_copy_if}
+  \item \code{remove}, \code{remove_copy} (no real need; can be implicitly vectorized)
+  \item \code{remove_if}, \code{remove_copy_if}
   \item \code{unique}, \code{unique_copy}
   \item \code{reverse}, \code{reverse_copy} (no real need; can be implicitly vectorized)
   \item \code{rotate}, \code{rotate_copy} (no real need; can be implicitly vectorized)
@@ -239,12 +240,14 @@ The following algorithms have an \code{ExecutionPolicy} overload and can work wi
 \begin{lstlisting}
 std::array<float, N> data;
 
-// let the generator function choose the ABI tag and discard N % native_simd<float>::size() values beyond data.end():
+// let the generator function choose the ABI tag and discard
+// N % native_simd<float>::size() values beyond data.end():
 std::generate(std::execution::simd, data.begin(), data.end(), []() {
   return native_simd<float>();
 });
 
-// Alternative: the algorithm tells the generator function via the argument what data-parallel type it expects to get.
+// Alternative: the algorithm tells the generator function via the argument
+// what data-parallel type it expects to get.
 std::generate(std::execution::simd, data.begin(), data.end(), [](auto x) {
   return x = 0;
 });
@@ -262,7 +265,7 @@ The remaining algorithms have no obvious use for the specialization:
 
 I have not considered \code{is_heap} and \code{is_heap_until} yet.
 
-\subsection{Wording for the policy}
+\subsection{Initial wording for the policy}
 
 Add a new execution policy to \citep[§23.19.2]{N4659}:
 \begin{wgText}[{§23.19.2 [execution.syn]}]
