@@ -1,0 +1,62 @@
+\newcommand\wgTitle{Merge data-parallel types from the Parallelism TS 2}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{DXXXXR0}
+\newcommand\wgGroup{SG1}
+\newcommand\wgTarget{\CC{}23}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{changelog}
+\usepackage{underscore}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{simd#1}\xspace}
+\newcommand\simdT{\type{simd<T>}\xspace}
+\newcommand\valuetype{\type{value\_type}\xspace}
+\newcommand\referencetype{\type{reference}\xspace}
+\newcommand\whereexpression{\type{where\_expression}\xspace}
+\newcommand\simdcast{\code{simd\_cast}\xspace}
+\newcommand\mask[1][]{\type{simd\_mask#1}\xspace}
+\newcommand\maskT{\type{simd\_mask<T>}\xspace}
+\newcommand\fixedsizeN{\type{simd\_abi::fixed\_size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{simd\_abi::fixed\_size}\xspace}
+\newcommand\fixedsize{\type{fixed\_size}\xspace}
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  After the Parallelism TS 2 was published early in 2018, and data-parallel types (\simdT) have been implemented and used, and we are receiving feedback, this paper proposes to merge Section 9 of the Parallelism TS 2 into the IS working draft.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\section{Introduction}
+\cite{P0214R9} introduced \simdT and related types and functions into the Parallelism TS 2 Section 9.
+The TS was published early 2018.
+An incomplete and non-conforming (because P0214 evolved) implementation existed for the whole time.
+Short after the GCC 9.1.0 release, a complete implementation of Section 9 of the TS was made available to all GCC users.
+
+\subsection{Related papers}
+\begin{description}
+  \item[\wglink{P0350}] Before publication of the TS, SG1 approved \cite{P0350R0} which did not progress in time in LEWG to make it into the TS.
+    \wglink{P0350} is moving forward independently.
+  \item[\wglink{P0918}] After publication of the TS, SG1 approved \cite{P0918R2} which adds \code{shuffle}, \code{interleave}, \code{sum_to}, \code{multiply_sum_to}, and \code{saturated_simd_cast}.
+    \wglink{P0918} will move forward independently.
+\end{description}
+
+
+\section{Changes after TS feedback}
+\subsection{Conversion constructors}
+\subsection{Missing \code{simd_mask} generator constructor}
+
+\section{Wording}
+\input{wording}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0

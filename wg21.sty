@@ -256,6 +256,9 @@
 
   \renewcommand*{\paragraphformat}{\theparagraph\autodot\enskip}
   \setkomafont{paragraph}{\scshape\addfontfeature{LetterSpace=7}}
+
+  \renewcommand*{\subparagraphformat}{\thesubparagraph\autodot\enskip}
+  \setkomafont{subparagraph}{\scshape\addfontfeature{LetterSpace=7}}
 \fi
 
 % descriptionlabels
@@ -534,7 +537,5 @@ escapechar=@
 
 \usepackage{pifont}
 
-\newcommand\foralli[1][]{for all $i$ $\in \mathcal{N}_{\code{<#1size()}}\xspace}
-\newcommand\forallmaskedi[1]{%
-  for all selected indices \cite[{[parallel.simd.whereexpr]}]{N4744} $i$\xspace%
-}
+\newcommand\foralli[1][]{for all $i$ in the range of \tcode{[0, #1size())}}
+\newcommand\forallmaskedi{for all selected indices $i$}
