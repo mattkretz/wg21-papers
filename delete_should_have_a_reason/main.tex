@@ -1,0 +1,102 @@
+\newcommand\wgTitle{\texttt{= delete} should have a reason}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>, Augustin?, LWG ?}
+\newcommand\wgDocumentNumber{DXXXXR0}
+\newcommand\wgPreviousDocumentNumber{N4186}
+\newcommand\wgGroup{EWG-I}
+\newcommand\wgTarget{\CC{}23}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{changelog}
+\usepackage{underscore}
+
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  Good library implementations care for helpful compiler error messages.
+  Especially in template-heavy code, error messages can be harder to understand than guessing what might be wrong in the code (thanks to the line \& column pointer the compiler provides).
+  The \code{static_assert} message is often used for this purpose but requires to be placed inside a function body and thus cannot be used in cases where SFINAE-friendlyness is important/necessary.
+  A SFINAE-friendly approach is to provide a deleted overload that catches the invalid invocations.
+  If \code{= delete(“had a reason”)} that could help library implementers who want to be helpful to their users.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\section{Introduction}
+
+\subsection{Previous work}
+N4186 was reviewed in Urbana-Champaign 2014 and the summary on the wiki says “Reviewed, further work encouraged”.
+The main concern in the review at the time was:
+\begin{quote}{}
+“I have the impression that we're heading towards a fully configurable language where for every single thing that could be ill-formed we'll have to provide this hook.
+I don't think that's the right way to go for designing a language.”
+\end{quote}
+Since then we have voted \wglink{P1301R4} (\code{[[nodiscard(“should have a reason”)]]}) into the IS.
+And it seems the prediction is right.
+However, the question whether “thats' the right way to go for designing a language” did not get a new answer/idea in the meantime.
+To the contrary, adding parenthesis and a string is the existing practice throughout \CC{} for adding custom diagnostic messages (at least for attributes).
+
+\section{Existing practice}
+clang's \code{__attribute__((enable_if(condition))) __attribute__((unavailable(“message”)))} achieves what a concepts requires clause together with a \code{= delete(“message”)} should do.
+
+GCC's warning attributes and \code{\#pragma}.
+
+ICC, MSVC?
+
+\code{\#warning}
+
+\section{Alternative approach}
+\begin{lstlisting}[style=Vc]
+[[diag("this turns into a warning")]];
+
+[[diag("f only takes int and does not allow implicit conversions.")]]
+template <class T> void f(T) = delete;
+
+void f(int);
+
+[[diag("oh well, you really should convert to int manually.")]]
+void f(short);
+
+void g() {
+  f(1);        // ok
+  f(short(1)); // "warning: oh well, you really should convert to int manually."
+  f(1.);       // ill-formed, printing "error: f only takes int and does not allow implicit conversions."
+}
+
+constexpr int h(int i) {
+  if (std::is_constant_evaluated()) {
+    return i + 1;
+  }
+  [[diag("TODO: an optimized implementation at runtime is missing")]];
+  return 1;
+}
+
+constexpr int a = h(1);  // no diagnostics
+\end{lstlisting}
+
+Pros:
+\begin{itemize}
+  \item Implementations may ignore the attribute if they believe those messages are useless noise for their users.
+  \item An attribute provides a generic facility to provide custom diagnostics in more places than only deleted functions.
+\end{itemize}
+Cons:
+\begin{itemize}
+  \item Potentially, it is unclear when a warning or error is intended.
+    Maybe it is better to add two attributes \code{warn} and \code{fail} (bikesheddable, of course) instead.
+    However, it is unclear whether \code{[[fail("msg")]]} should make the expression it appertains to ill-formed.
+    This would make it problematic for an implementation to ignore the attribute.
+  \item More verbose than extending \code{= delete("msg")}
+  \item The attribute is far apart from the \code{= delete}.
+\end{itemize}
+
+\section{Wording}
+is waiting for guidance
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
