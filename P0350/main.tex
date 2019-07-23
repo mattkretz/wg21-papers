@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Integrating simd with parallel algorithms}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D0350R3}
+\newcommand\wgDocumentNumber{P0350R3}
 \newcommand\wgGroup{LEWG}
 
 \usepackage{vectorpictures}
@@ -36,36 +36,8 @@
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
-\section{Changelog}
-\begin{revision}
-  \item Update to apply against \CC{}17 wording.
-  \item Removed executors discussion because the executors design has not left SG1 yet.
-  \item Updated example code to reflect changes in P0214.
-\end{revision}
-
-\begin{revision}
-  \item Updated code to match \cite{N4744}.
-  \item Fixed a bug in the \code{for_each} example implementation.
-  \item Improved \code{iota} and \code{for_each} example implementations with constexpr-if.
-  \item Discuss impact on all algorithms.
-\end{revision}
-
-\begin{revision}
-  \item Discuss ABI tag of \code{std::generate} callables.
-  \item Add a Tony Table.
-  \item Note that \code{remove} and \code{remove_copy} are implicitly vectorizable.
-\end{revision}
-
-  %\todo Discuss concept requirements.
-
-\section{Straw Polls}
-\subsection{SG1 at Oulu}
-\wgPoll{Ship it to LEWG?}{6 & 6 & 2 & 0 & 0}
-
-\subsection{LEWG at Albuquerque}
-\wgPoll{Forward the paper to LWG?}{1 & 1 & 2 & 1 & 1}
-\noindent$\rightarrow$ Paper needs a revision: LEWG wants a list of affected algorithms and an update to concept requirements.
-
+\input{changelog}
+\input{strawpolls}
 \input{intro}
 \input{algorithms}
 
