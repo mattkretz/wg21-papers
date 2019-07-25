@@ -105,6 +105,37 @@ Whenever the interface requires a \simd type that has a specific number of eleme
 \subsection{Allowed template arguments for (\code{static_})\code{simd_cast}}
 \url{https://github.com/mattkretz/wg21-papers/issues/57}
 
+\subsection{Should there really be no default for the load/store flags}
+\begin{lstlisting}[numbers=left]
+std::simd<float> v(addr, std::vector_aligned); /*! \label{lstline:vector_aligned} */
+v.copy_from(addr + 1, std::element_aligned); /*! \label{lstline:load element_aligned} */
+v.copy_to(dest, std::element_aligned); /*! \label{lstline:store element_aligned} */
+\end{lstlisting}
+Line \ref{lstline:vector_aligned} supplies an optimization hint.
+Line \ref{lstline:load element_aligned} says what really?
+“Please don't crash.
+I'm sure this is not a vector aligned access\footnote{Not true, it still is vector aligned if \code{simd<float>::size() == 1}}.”
+line \ref{lstline:store element_aligned} says:
+“I don't know whether it's vector aligned or not.
+Compiler if you know more, please optimize, otherwise just don't make it crash.”
+
+Since \CC{}20, we have another option:
+\begin{lstlisting}[numbers=left]
+std::simd<float> v(std::assume_aligned<std::memory_alignment_v<std::simd<float>>>(addr)); /*! \label{lstline:assume_aligned} */
+v.copy_from(addr + 1); /*! \label{lstline:load element_aligned} */
+v.copy_to(dest); /*! \label{lstline:store element_aligned} */
+\end{lstlisting}
+This seems to compose well, except that line \ref{lstline:assume_aligned} is rather long for a common pattern in this interface.
+Also, this removes implementation freedom because the library cannot statically determine the alignment properties of the pointer.
+
+Consequently, I suggest to keep the load/store flags as in the TS but default them to \code{element_aligned}.
+I.e.:
+\begin{lstlisting}[numbers=left]
+std::simd<float> v(addr, std::vector_aligned);
+v.copy_from(addr + 1);
+v.copy_to(dest);
+\end{lstlisting}
+
 \subsection{Should converting loads/stores be safer wrt. conversions}
 \url{https://github.com/mattkretz/wg21-papers/issues/34}
 
