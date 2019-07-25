@@ -107,9 +107,9 @@ Whenever the interface requires a \simd type that has a specific number of eleme
 
 \subsection{Should there really be no default for the load/store flags}
 \begin{lstlisting}[numbers=left]
-std::simd<float> v(addr, std::vector_aligned); /*! \label{lstline:vector_aligned} */
-v.copy_from(addr + 1, std::element_aligned); /*! \label{lstline:load element_aligned} */
-v.copy_to(dest, std::element_aligned); /*! \label{lstline:store element_aligned} */
+std::simd<float> v(addr, std::vector_aligned); @\label{lstline:vector_aligned}@
+v.copy_from(addr + 1, std::element_aligned); @\label{lstline:load element_aligned}@
+v.copy_to(dest, std::element_aligned); @\label{lstline:store element_aligned}@
 \end{lstlisting}
 Line \ref{lstline:vector_aligned} supplies an optimization hint.
 Line \ref{lstline:load element_aligned} says what really?
@@ -121,9 +121,9 @@ Compiler if you know more, please optimize, otherwise just don't make it crash.â
 
 Since \CC{}20, we have another option:
 \begin{lstlisting}[numbers=left]
-std::simd<float> v(std::assume_aligned<std::memory_alignment_v<std::simd<float>>>(addr)); /*! \label{lstline:assume_aligned} */
-v.copy_from(addr + 1); /*! \label{lstline:load element_aligned} */
-v.copy_to(dest); /*! \label{lstline:store element_aligned} */
+std::simd<float> v(std::assume_aligned<std::memory_alignment_v<std::simd<float>>>(addr)); @\label{lstline:assume_aligned}@
+v.copy_from(addr + 1);
+v.copy_to(dest);
 \end{lstlisting}
 This seems to compose well, except that line \ref{lstline:assume_aligned} is rather long for a common pattern in this interface.
 Also, this removes implementation freedom because the library cannot statically determine the alignment properties of the pointer.
