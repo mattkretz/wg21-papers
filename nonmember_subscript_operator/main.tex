@@ -1,0 +1,172 @@
+\newcommand\wgTitle{Non-Member Subscript Operator}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{DXXXXR0}
+\newcommand\wgGroup{EWG-I}
+\newcommand\wgTarget{\CC{}23}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+
+\hypersetup{
+  pdfkeywords={C++,operator overloading,subscripting}
+}
+
+\newlength\myIndent
+\begin{document}
+\begin{wgTitlepage}
+  Currently the subscript operator can only be overloaded as a member function.
+  This paper explains use-cases for a non-member overload and makes a suggestion
+  for extending the standard accordingly.
+\end{wgTitlepage}
+
+\section{Problem}
+The subscript operator is currently only overloadable via a member function.
+Many other operators additionally allow overloads via non\hyp member functions.
+That the subscript operator does not allow non\hyp member overloads appears like an arbitrary decision, apparently motivated by a conservative approach, to only add features when the use\hyp cases are clear.
+
+Therefore, for the rest of this section I will give examples for non\hyp member subscript operators.
+In general, non\hyp member subscript is only needed if the class to be subscripted is independent of the type used for the subscript argument.
+Consequently, the examples are very similar:
+A generic container class only implements the \type{size\_t} subscript operator.
+A new class type (or enumeration type) then provides a good use\hyp case for an additional subscript overload for one or more container classes.
+
+\subsection{Vector load/store/gather/scatter on std containers}
+The use\hyp case that got me started was the design of a gather/scatter API for SIMD vector types.
+Consider the classical container indexing operation:
+\smallskip\begin{lstlisting}[style=Vc]
+std::vector<float> data = ...;
+int i = ...;
+float x = data[i];
+\end{lstlisting}
+If I want to carry this syntax over to data\hyp parallel types (I called them \type{int4} and \type{float4} for this example) I would want to write:
+\smallskip\begin{lstlisting}[style=Vc]
+std::vector<float> data = ...;
+int4 i = ...;
+float4 x = data[i];
+\end{lstlisting}
+This expression intuitively\footnote{All operators on data-parallel types act element-wise.} asks for four loads from \code{data} at \code{data[i[0]]}, \code{data[i[1]]}, \code{data[i[2]]}, and \code{data[i[3]]}.
+
+The reverse operation is just as useful (scatter):
+\smallskip\begin{lstlisting}[style=Vc]
+std::vector<float> data = ...;
+int4 i = ...;
+float4 x = ...;
+data[i] = x;
+\end{lstlisting}
+
+\subsection{Vector load/store subscripts}
+\begin{lstlisting}[style=Vc]
+std::vector<float> data = ...;
+subsr<simd<float>> i = 3; // the number of elements is given by simd<float>::size()
+auto x = data[i];
+// decltype(x) -> simd<float>
+\end{lstlisting}
+
+\TODO{
+\todoitem needs non-fundamental types in the operator[] parameter type, thus a dependency on the type
+\todoitem it makes a lot of sense to delay such declarations to somewhere later in the program to avoid pulling in all possible useful operator[] declarations
+}
+
+\subsection{Subscripting with scoped enumerations}
+\TODO{
+  \todoitem This would better use \type{uint32\_t} as base for the enum and thus avoid the \code{ColorValues} array altogether.  The example is not very motivating this way.
+}
+
+\begin{lstlisting}[style=Vc]
+enum class Color : char {
+  Red,
+  Green,
+  Blue
+};
+
+using ColorArray = std::array<std::uint32_t, 3>;
+const ColorArray ColorValues = {{
+  0xFFFF0000,
+  0xFF00FF00,
+  0xFF0000FF,
+}};
+
+auto value = ColorValues[Color::Red]; // error: no implicit conversion
+
+std::uint32_t operator[](const ColorArray &values, Color c) {
+  return values[static_cast<std::size_t>(c)];
+}
+
+auto value = ColorValues[Color::Red]; // now it works
+\end{lstlisting}
+
+\section{Implementation}
+Implementing non-member subscript overloads for GCC was as simple as removing one line of code (a special case).
+
+\section{Wording}
+
+The wording for non\hyp member subscript operators can be adopted from the wording for binary operators (§13.5.2 [over.binary]):
+
+\begin{wgText}{§13.5.5 [over.sub]}
+  operator[] shall be\wgAdd{ implemented either by} a non-static member function with\wgRemove{ exactly} one parameter\wgAdd{ or by a non-member function with two parameters}.
+  It implements the subscripting syntax\\
+  \hspace*{4em}\wgGrammar{postfix-expression \wgIdentifier [ expression \wgIdentifier ]}\\
+  \hspace*{2em}or\\
+  \hspace*{4em}\wgGrammar{postfix-expression \wgIdentifier [ braced-init-list \wgIdentifier ]}\\
+
+  Thus, a subscripting expression \texttt{x[y]} is interpreted as\wgAdd{ either}
+  \texttt{x.operator[](y)} \wgRemove{for a class object \texttt{x} of type \texttt{T} if \texttt{T::operator[](T1)} exists}\wgAdd{or \texttt{operator[](x, y)}}\wgRemove{
+  and if the operator is selected as the best match function by the overload resolution mechanism (13.3.3)}.\wgAdd{
+  If both forms of the operator function have been declared, the rules in 13.3.1.2 determine which, if any, interpretation is used.}
+  [ \textit{Example:}\\
+    \texttt{
+      \settowidth{\myIndent}{X}%
+      struct X \{\\
+      \hspace*{2\myIndent}Z operator[](std::initializer\_list<int>);\\
+      \};\\
+      X x;\\
+      x[\{1,2,3\}] = 7;\hspace*{7\myIndent}// \textrm{\itshape OK: meaning} x.operator[](\{1,2,3\})\\
+      int a[10];\\
+      a[\{1,2,3\}] = 7;\hspace*{7\myIndent}// \textrm{\itshape error: built-in subscript operator}\\
+    }
+  \textit{— end example} ]
+\end{wgText}
+
+In addition, Table 11 in §13.3.1.2 [over.match.oper] mentions the subscript operator and needs to be adjusted:
+\begin{wgText}{§13.3.1.2 [over.match.oper]}
+  \centering Table 11 — Relationship between operator and function call notation
+
+  \hfil\begin{tabular}{|l|l|l|l|}
+    \hline
+    \bfseries Subclause & \bfseries Expression & \bfseries As member function & \bfseries As non-member function \\
+    \hline
+    \hline
+    13.5.1 & @a   & (a).operator@()   & operator@(a) \\
+    13.5.2 & a@b  & (a).operator@(b)  & operator@(a, b) \\
+    13.5.3 & a=b  & (a).operator=(b)  & \\
+    13.5.5 & a[b] & (a).operator[](b) & \wgAdd{operator[](a, b)} \\
+    13.5.6 & a->  & (a).operator->()  & \\
+    13.5.7 & a@   & (a).operator@(0)  & operator@(a, 0) \\
+    \hline
+  \end{tabular}
+\end{wgText}
+
+The following paragraph in [over.match.oper] needs to discuss the subscript operator in addition to unary and binary operators:
+\begin{wgText}{§13.3.1.2 [over.match.oper]}
+  For a unary operator \texttt{@} with an operand of a type whose cv-unqualified version is \texttt{T1}, for a binary operator \texttt{@} with a left operand of a type whose cv-unqualified version is \texttt{T1} and a right operand of a type whose cv-unqualified version is \texttt{T2}\wgAdd{, and for a subscript operator (where in the following \texttt{@} identifies \texttt{[]}) with a left operand of a type whose cv-unqualified version is \texttt{T1} and subscript operand of a type whose cv-unqualified version is \texttt{T2}}, three sets of candidate functions, designated \emph{member candidates}, \emph{non-member candidates} and \emph{built-in candidates}, are constructed as follows:
+  \begin{itemize}
+    \item If \texttt{T1} is a complete class type or a class currently being defined, the set of member candidates is the result of the qualified lookup of \texttt{T1::operator@} (13.3.1.1.1); otherwise, the set of member candidates is empty.
+    \item The set of non-member candidates is the result of the unqualified lookup of \texttt{operator@} in the context of the expression according to the usual rules for name lookup in unqualified function calls (3.4.2) except that all member functions are ignored.
+      However, if no operand has a class type, only those non-member functions in the lookup set that have a first parameter of type \texttt{T1} or “reference to (possibly cv-qualified) \texttt{T1}”, when \texttt{T1} is an enumeration type, or (if there is a right operand) a second parameter of type \texttt{T2} or “reference to (possibly cv-qualified) \texttt{T2}”, when \texttt{T2} is an enumeration type, are candidate functions.
+    \item For the operator \texttt{,}, the unary operator \texttt{\&}, or the operator \texttt{->}, the built-in candidates set is empty.
+      For all other operators, the built-in candidates include all of the candidate operator functions defined in 13.6 that, compared to the given operator,
+      \begin{itemize}
+        \item have the same operator name, and
+        \item accept the same number of operands, and
+        \item accept operand types to which the given operand or operands can be converted according to 13.3.3.1, and
+        \item do not have the same parameter-type-list as any non-member candidate that is not a function template specialization.
+      \end{itemize}
+  \end{itemize}
+\end{wgText}
+
+\section{Evaluation}
+
+Since, currently the declaration of non\hyp member subscript operators is ill\hyp formed, there are no backwards compatibility issues to expect.
+
+
+\end{document}
