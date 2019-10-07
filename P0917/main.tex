@@ -1,7 +1,7 @@
 \newcommand\wgTitle{Making operator?: overloadable}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P0917R2}
-\newcommand\wgGroup{EWG}
+\newcommand\wgDocumentNumber{P0917R3}
+\newcommand\wgGroup{EWG-I}
 \newcommand\wgTarget{\CC{}23}
 %\newcommand\wgAcknowledgements{ }
 
@@ -25,6 +25,21 @@
 \newcommand\fixedsize{\type{fixed\_size}\xspace}
 \newcommand\simdEP{\code{execution::}\type{simd}\xspace}
 \newcommand\seqEP{\code{execution::}\type{seq}\xspace}
+
+\newenvironment{tonytable}[1]{
+\renewcommand\tablename{Tony Table}
+%\newcounter{TonyTable}
+%\renewcommand\thetable{\arabic{TonyTable}\stepcounter{TonyTable}}
+\begin{table}[h]
+\caption{#1}
+\begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
+before&after\\
+\hline
+}{
+\end{tabular}
+\end{table}
+\renewcommand\tablename{Table}
+}
 
 \begin{document}
 \selectlanguage{american}
@@ -50,17 +65,35 @@ A previous revision of this paper discussed how to enable deferred evaluation.
 But since \textcite{P0927R2} is trying to solve deferred evaluation in general, this paper will instead rely on the facilities of \cite{P0927R2}.
 
 \section{Motivation}
-\subsection{Be General}
-“Don’t restrict what is inherent.
-Don’t arbitrarily restrict a complete set of uses.
-Avoid special cases and partial features.” \cite{P0745R0}
+\subsection{Design Principles}
+\begin{description}
+  \item[Be General] “Don’t restrict what is inherent.
+    Don’t arbitrarily restrict a complete set of uses.
+    Avoid special cases and partial features.” \cite{P0745R0}
 
-\CC{} allows operator overloading for almost all operators.
-Operator-dot overloading is under consideration in the committee \cite{P0352R1,P0416R1}.
-This leaves \code{operator?:} as the last missing piece.
+    \CC{} allows operator overloading for almost all operators.
+    That \code{operator?:} cannot be overloaded is an arbitrary restriction (esp. in the face of \code{operator\&\&} and \code{operator\|\|}).
+    More importantly, the conditional operator naturally generalizes to a blend operation when applied element-wise (i.e. multiple booleans as condition).
+
+  \item[Be Consistent] “Don’t make similar things different, including in spelling, behavior, or capability.
+    Don’t make different things appear similar when they have different behavior or capability.”
+
+    Currently user-defined types that are interconvertible cannot be used with the conditional operator and require a function instead.
+    Interconvertible types are often a bad idea, except when the goal is to model built-in integer types.
+    I.e. without an overloadable \code{operator?:} it is impossible to write user-defined types that are a drop-in replacement of the built-in types.
+
+  \item[Be orthogonal] “Avoid arbitrary coupling.
+    Let features be used freely in combination.”
+
+    The built-in conditional operator only evaluates the expression chosen by the predicate.
+    Lazy evaluation is an orthogonal problem to solve and should not be tied to a solution for overloading the conditional operator.
+    It is needed just as much for \code{operator\&\&} and \code{operator||} as it would be needed for \code{operator?:}.
+    Whether adding the ability to overload \code{operator?:} should wait for lazy evaluation to become available is not about orthogonality but about hand-holding our users\footnote{Which is what coding guidelines are used for. With great power comes great responsibility.}.
+\end{description}
 
 \subsection{Blend Operations}
-The conditional operator is a perfect match for expressing blend operations generically, i.e. such that a function template also works with fundamental types.
+The conditional operator is a perfect match for expressing blend operations generically.
+I.e. a function template using the conditional operator uses blending of objects of user-defined types but can also use fundamental types, where blending means boolean selection of scalar values.
 Consider \type{simd<T, Abi>} \cite[§9]{N4808}, where a certain number (determined at compile time) of values of arithmetic type \type T are combined to a single object.
 All operators act element-wise and concurrently.
 Thus, the meaning of
@@ -91,11 +124,40 @@ Thus, to support any “collection of \bool{}”-like type in conditional expres
 Considering cases where generality of the syntax, i.e. extension from the built-in case to user-defined types, is important, we see that all such use cases will have a type for the condition that is not contextually convertible to \bool because the user-defined condition object stores multiple boolean states.
 Overloading the conditional operator is thus most interesting for stating conditional evaluation of multiple data sets without imposing an order and thus enabling parallelization.
 
+\begin{tonytable}
+{generic \code{abs} function supporting \code{simd}}
+\begin{lstlisting}[style=Vc]
+template <class T>
+  void abs(T x)
+{
+  if constexpr (std::is_simd_v<T>)
+    {
+      where(x < 0, x) = -x;
+      return x;
+    }
+  else
+    return x < 0 ? -x : x;
+}
+\end{lstlisting}
+&
+\begin{lstlisting}[style=Vc]
+template <class T>
+  void abs(T x)
+{
+  return x < 0 ? -x : x;
+}
+\end{lstlisting}
+\end{tonytable}
+
 \subsection{Embedded Domain Specific Languages}
 Embedded domain specific languages in \CC{} often redefine operators for user-defined types to create a new language embedded into \CC{}.
 Having the conditional operator available makes \CC{} more versatile for such uses.
-Most sensible uses of the conditional operator will likely be similar to the “blend operations” case discussed for \type{simd} types, though.
-The motivation is not as strong as in the above case, since in most cases substitutability of the code to fundamental types is not a goal.
+%Most sensible uses of the conditional operator will likely be similar to the “blend operations” case discussed for \type{simd} types, though.
+%The motivation is not as strong as in the above case, since in most cases substitutability of the code to fundamental types is not a goal.
+
+As existing practice consider Boost.YAP:
+“The main objective of Boost.YAP is to be an easy-to-use and easy-to-understand library for using the expression template programming technique.”\footnote{\url{https://boostorg.github.io/yap/doc/html/boost_yap/rationale.html}}
+YAP “defines a 3-parameter function \code{if_else()} that acts as an analogue to the ternary operator (\code{?:}), since the ternary operator is not user-overloadable.”\footnote{\url{https://boostorg.github.io/yap/doc/html/BOOST_YAP_USER_EX_idm15635.html}}
 
 \subsection{User-defined numeric types}
 Any library-based numeric type may have a need for overloading \code{operator?:} if the type carries information about the value or even modifies the value (e.g. for \code{std::chrono::duration}).
@@ -125,6 +187,47 @@ Any design that wants to allow different types on the second and third argument 
 Note that user-defined numeric types want a signature such as \code{operator?:(std::Boolean, T1, T2)} in most cases.
 I.e. the idea to only allow non-\bool conditions on \code{operator?:} overloads breaks this use case.
 (I mentioned the idea in the previous revisions and it was also suggested in EWGI discussion).
+
+\begin{tonytable}
+{bounded::integer now and with overloadable \code{operator?:}}
+\begin{lstlisting}[style=Vc]
+bounded::integer<1, 100> const a = f();
+bounded::integer<-3, 7> const b = g();
+auto c = BOUNDED_CONDITIONAL(
+           some_condition, a, b);
+\end{lstlisting}
+&
+\begin{lstlisting}[style=Vc]
+bounded::integer<1, 100> const a = f();
+bounded::integer<-3, 7> const b = g();
+auto c = some_condition ? a : b;
+\end{lstlisting}
+\end{tonytable}
+
+\begin{tonytable}
+{supporting bounded::integer in a generic function}
+\begin{lstlisting}[style=Vc]
+template<class T, class U>
+  void f(bool cond, T a, U b)
+{
+  if constexpr (
+      is_bounded_integer<T>::value ||
+      is_bounded_integer<U>::value)
+    g(BOUNDED_CONDITIONAL(
+      some_condition, a, b));
+  else
+    g(cond ? a : b);
+}
+\end{lstlisting}
+&
+\begin{lstlisting}[style=Vc]
+template<class T, class U>
+  void f(bool cond, T a, U b)
+{
+  g(cond ? a : b);
+}
+\end{lstlisting}
+\end{tonytable}
 
 \subsection{Existing Practice}
 GCC implements support for the conditional operator to allowing blending its vector builtins\footnote{\url{https://gcc.gnu.org/onlinedocs/gcc/Vector-Extensions.html}}.
@@ -201,7 +304,7 @@ It would be nicer to make the declaration of such operator overloads ill-formed.
 But I believe this is impossible since it appears to be a similar problem as definition checking for concepts.
 We could, however, consider to make such operator overload declarations ill-formed NDR.
 
-That said, I believe such a constraint on \code{operator?:} is complicating the language for little gain and might even inhibit a valid use cases.
+That said, I believe such a constraint on \code{operator?:} is complicating the language for little gain and might even inhibit valid use cases.
 I would prefer to make \code{operator?:} just as useful and dangerous as all other overloads.
 Suggested poll: “\code{operator?:} should have special rules to avoid overloading the built-in operator”.
 
@@ -213,6 +316,46 @@ Either \code{common_type} specializations should extend \code{operator?:} or \co
 The inconsistency we currently have from user-defined specializations of \code{common_type} is suboptimal (i.e. a common type is defined, but the conditional operator still is not usable).
 The DRY (“don't repeat yourself”) principle implies we should enable a way for users to extend \code{operator?:} and \code{common_type} with a single definition.
 The more flexible and natural customization point is \code{operator?:}.
+
+\subsection{Defaulted conditional operator overload}
+In most scalar cases, the implementation of the conditional operator is trivial (i.e. return either \code{b} or \code{c}, depending on \code{a} for \code{a ? b : c}).
+The interesting choice when overloading the conditional operator is the return type.
+Thus defaulting the operator appears like a logic step.
+
+When the implementation is defaulted, it is simple to make these operators implement lazy evaluation.
+Consider:
+\smallskip\begin{lstlisting}[style=Vc]
+R operator?:(bool a, B b, C c) = default;
+...
+R x = a ? b : c;
+\end{lstlisting}
+The definition of this operator could mean the equivalent of
+\smallskip\begin{lstlisting}[style=Vc]
+R x = a ? static_cast<R>(b) : static_cast<R>(c);
+\end{lstlisting}
+and thus implement lazy evaluation.
+Noting that the built-in conditional operator accepts arguments that are “contextually convertible to \bool”, we see that using \bool in the \code{operator?:} defintion above is not the perfect choice.
+We would need to use a concept such as instead of \bool:
+\smallskip\begin{lstlisting}[style=Vc]
+template<class B>
+  concept contextual_boolean = std::is_constructible_v<bool, B>;
+\end{lstlisting}
+Alternatively, a defaulted \code{operator?:} could omit the first argument if it should accept anything contextually convertible to \bool:
+\smallskip\begin{lstlisting}[style=Vc]
+R operator?:(B b, C c) = default;
+...
+R x = a ? b : c;
+\end{lstlisting}
+
+A non-defaulted \code{operator?:} would behave like any other operator overload and need an orthogonal mechanism for lazy evaluation.
+
+\subsection{Synthesizing the conditional operator from \code{common_type} specializations}
+An obvious idea from the above discussion is to simply synthesize a conditional operator when \code{common_type} is defined, but \code{?:} is not usable.
+Basically \code{a ? b : c} gets turned into \code{a ? static_cast<std::common_type_t<decltype(b), decltype(c)>>(b) : static_cast<std::common_type_t<decltype(b), decltype(c)>>(c)}.
+
+Note that this would be an incomplete solution as it would not generalize to non-boolean cases / blend operations.
+Also, implementing expression templates via this solution should be possible but be awkward:
+The common type of two expressions would have to be defined as a “conditional expression” on two operands.
 
 %\subsection{Implications for “contextually convertible to \bool” tests}
 %A possible implementation of testing for “contextually convertible to \bool{}” makes use of SFINAE on the conditional operator as shown in \fig{ccb trait}.
@@ -307,6 +450,29 @@ For expression templates, \code{operator?:} overloads can and have to implement 
 %\label{fig:bounded integer ?:}
 %\end{figure}
 %Again, inlining can cover all the important cases (i.e. all but side effects).
+
+\subsection{Partial feature until lazy evaluation lands}
+There has been concern that we should not add another feature to the language that would get an immediate entry into coding guidelines forbidding its use in most situations.
+The concern is that, similar to \code{operator\&\&} and \code{operator||}, the conditional operator should not be used because it does not implement the same lazy evaluation semantics as the builtt-in operators do.
+Those guidelines are correct for the great majority of cases, except for the few cases where lazy evaluation is irrelevant and it is okay to overload \code{\&\&} and \code{||} even without lazy evaluation (examples are \code{valarray} and \code{simd}).
+So the language should rather be restricted to avoid errors from users that do not follow guidelines.
+
+As a committee we could follow that reasoning and still provide an overloadable conditional operator.
+It would have to be restricted to non-boolean conditions, i.e. \code{!std::is_constructible_v<bool, T>}.
+
+This would enable the blend use cases but leave many valid use cases (expression templates, \code{bounded::integer}) on the floor.
+It would be possible to extend \code{operator?:} to boolean conditions once lazy evaluation is added to the language.
+
+\section{Suggested Polls}
+\wgPoll{Pursue defaulted \code{operator?:}}{&&&&}
+
+\wgPoll{Pursue 2-argument defaulted \code{operator?:}}{&&&&}
+
+\wgPoll{Pursue 3-argument defaulted \code{operator?:} turning \bool into contextually convertible to \bool}{&&&&}
+
+\wgPoll{Make \code{operator?:} overloadable but require non-boolean condition until lazy eval lands}{&&&&}
+
+\wgPoll{Unrestricted \code{operator?:} overloads, trusting our users to use it responsibly}{&&&&}
 
 \section{Wording}
 TBD.

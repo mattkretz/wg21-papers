@@ -11,10 +11,14 @@
 \end{revision}
 
 \begin{revision}
-  \todo Add Tony tables.
-  \todo Discuss GCC implementation.
-  \todo Try to be clearer about generality, consistency, and orthogonality of this proposal.
-  \todo Add \code{boost::yap}\footnote{\url{https://boostorg.github.io/yap/doc/html/BOOST_YAP_USER_EX_idm15635.html}} as another existing library that is missing the ability to overload \code{?:}.
+  \item Add Tony tables.
+  \item Explore defaulting \code{operator?:}.
+  \item Discuss synthesizing \code{operator?:} from \code{common_type}.
+  \item Define a \code{contextual_boolean} concept, that most overloads should use instead of a naïve \bool parameter.
+  \item Try to be clearer about generality, consistency, and orthogonality of this proposal.
+  \item Add \code{boost::yap} as another existing library that is missing the ability to overload \code{?:}.
+  %\todo Add a tony table for the design choice “specialize \code{common_type}” vs. “define conditional operator overload”.
+  %\todo Discuss GCC implementation.
 \end{revision}
 
   %\todo Discuss implications for “contextually convertible to \bool” implementations.
