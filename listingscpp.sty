@@ -135,9 +135,10 @@ showstringspaces=false
 \lstdefinestyle{alert}{basicstyle=\ttfamily\bfseries\color{darkred},identifierstyle=\color{darkred}}
 \newcommand{\lstalert}[1]{\alert{\underbar{\lstinline[style=alert]#1}}}
 
-\lstdefinestyle{Vc}{morekeywords=[5]{simd,simd_mask,native_simd,fixed_size_simd,native_simd_mask,fixed_size_simd_mask},
+\lstdefinestyle{Vc}{%
+  morekeywords=[5]{simd,simd_mask,native_simd,fixed_size_simd,native_simd_mask,fixed_size_simd_mask},
   morekeywords=[8]{error,Error,wrong,MemoryAlignment},
-  morekeywords=[3]{foreach_bit}
+  morekeywords=[3]{foreach_bit,simd_cast,static_simd_cast}
 }
 
 \lstdefinestyle{VcHighlight}
