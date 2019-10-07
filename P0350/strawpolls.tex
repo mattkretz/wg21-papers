@@ -6,3 +6,14 @@
 \wgPoll{Forward the paper to LWG?}{1 & 1 & 2 & 1 & 1}
 \noindent$\rightarrow$ Paper needs a revision: LEWG wants a list of affected algorithms and an update to concept requirements.
 
+\subsection{LEWG at Cologne 2019}
+\wgPoll{Prefer expressing simd execution via policy tag (not newly named algorithms, \code{std::simd_transform}, etc).}
+{4&9&3&0&0}
+
+\wgUnanimous{What do we do with predicates?
+(Roughly option 2 from the paper, be mindful of the amount of wording that is thrown out of conformance.)}
+
+\wgPoll{Require that this goes first into \code{std::ranges} algorithms (which haven’t been parallelized yet).}
+{0&2&7&5&2}
+
+Revise and come back.
