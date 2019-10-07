@@ -63,8 +63,8 @@
 \colorlet{WgAdd}{black}
 \colorlet{WgRem}{black}
 \else
-\colorlet{WgAdd}{green!40!black}
-\colorlet{WgRem}{red!40!black}
+\colorlet{WgAdd}{green!65!blue!80!black}
+\colorlet{WgRem}{red!80!black}
 \fi
 \soulregister{\code}{1}
 \soulregister{\type}{1}
@@ -73,16 +73,22 @@
 \newcommand\wgRem[1]{{\color{WgRem}\st{#1}}}
 \newcommand\wgItemAdd{\color{WgAdd}\item[\ul{\mbox{ \textbullet }}]\hspace*{-\labelsep}\ul{\mbox{\hspace*{\labelsep}}}}
 \newcommand\wgItemRem{\color{WgRem}\item[\st{\mbox{ \textbullet }}]\hspace*{-\labelsep}\st{\mbox{\hspace*{\labelsep}}}}
+\newenvironment{wgBAdd}{\color{WgAdd}}{\color{black}}
+\newenvironment{wgBRem}{\color{WgRem}}{\color{black}}
 \newenvironment{wgText}[1][]{
   \begingroup
   \lstset{%
-      numbers=none,
-      backgroundcolor=,
-      fillcolor=,
-      texcl=true,
-      frame=none,
-      commentstyle={\rmfamily\itshape\color{comments}},
-      basicstyle={\ttfamily\smaller[1]}%
+    language=,
+    numbers=none,
+    backgroundcolor=,
+    fillcolor=,
+    texcl=true,
+    frame=none,
+    commentstyle={\rmfamily\itshape},
+    basicstyle={\ttfamily\bfseries\smaller[1]},
+    moredelim=**[is][\color{WgAdd}]{|+}{+|},
+    moredelim=**[is][\color{WgRem}]{|-}{-|},
+    moredelim=**[is][\itshape]{|/}{/|}
   }
   \let\type=\code
   \rmfamily\smaller[1]

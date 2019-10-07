@@ -108,6 +108,8 @@ inline namespace parallelism_v2 {
   // \ref{simd.casts}, Casts
   template<class T, class U, class Abi> @\seebelow@ simd_cast(const simd<U, Abi>&) noexcept;
   template<class T, class U, class Abi> @\seebelow@ static_simd_cast(const simd<U, Abi>&) noexcept;
+  |+template<class T, class U, class Abi> |/see below/| simd_cast(const simd_mask<U, Abi>&) noexcept;+|
+  |+template<class T, class U, class Abi> |/see below/| static_simd_cast(const simd_mask<U, Abi>&) noexcept;+|
 
   template<class T, class Abi>
     fixed_size_simd<T, simd_size_v<T, Abi>>
@@ -1452,6 +1454,33 @@ template<class T, class U, class Abi> @\seebelow@ static_simd_cast(const simd<U,
     \item otherwise, \tcode{simd<T, simd_abi::fixed_size<simd<U, Abi>::size()>>}.
   \end{itemize}
 \end{itemdescr}
+
+\begin{wgBAdd}
+\begin{itemdecl}
+|+template<class T, class U, class Abi> |/see below/| simd_cast(const simd_mask<U, Abi>& x) noexcept;
+template<class T, class U, class Abi> |/see below/| static_simd_cast(const simd_mask<U, Abi>& x) noexcept;+|
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\returns
+  A \tcode{simd_mask} object with the $i^\text{th}$ element initialized to \tcode{x[$i$]} \foralli.
+
+  \pnum\remarks
+  The functions shall not participate in overload resolution unless either
+  \begin{itemize}
+    \item \tcode{is_simd_mask_v<T>} is \tcode{false}, or
+    \item \tcode{T::size() == simd_size_v<U, Abi>} is \tcode{true}.
+  \end{itemize}
+
+  \pnum
+  The return type is
+  \begin{itemize}
+    \item \tcode{T} if \tcode{is_simd_mask_v<T>} is \tcode{true};
+    \item otherwise, \tcode{simd_mask<T, Abi>} if either \tcode{U} is the same type as \tcode{T} or \tcode{make_signed_t<U>} is the same type as \tcode{make_signed_t<T>};
+    \item otherwise, \tcode{simd_mask<T, simd_abi::fixed_size<simd_size_v<U, Abi>>>}
+  \end{itemize}
+\end{itemdescr}
+\end{wgBAdd}
 
 \begin{itemdecl}
 template<class T, class Abi>

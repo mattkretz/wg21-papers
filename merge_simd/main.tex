@@ -54,6 +54,18 @@ Short after the GCC 9.1.0 release, a complete implementation of Section 9 of the
 \section{Changes after TS feedback}
 \subsection{Conversion constructors}
 \subsection{Missing \code{simd_mask} generator constructor}
+\subsection{Add missing casts for \code{simd_mask}}
+The \code{simd_cast} and \code{static_simd_cast} overloads for \code{simd_mask} were forgotten for the TS.
+Without those casts (and no casts via constructors) mixing different arithmetic types is painful.
+There is no motivation for forbidding casts on \code{simd_mask}.
+
+Therefore add the following overloads:
+\begin{wgText}
+\begin{codeblock}
+  template<class T, class U, class Abi> @\seebelow@ simd_cast(const simd_mask<U, Abi>&) noexcept;
+  template<class T, class U, class Abi> @\seebelow@ static_simd_cast(const simd_mask<U, Abi>&) noexcept;
+\end{codeblock}
+\end{wgText}
 
 \section{Wording}
 \input{wording}
