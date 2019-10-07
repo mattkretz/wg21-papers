@@ -106,6 +106,18 @@ Therefore add the following overloads:
 \end{codeblock}
 \end{wgText}
 
+\subsection{\code{element_reference} is overspecified}
+\code{element_reference} is spelled out in a lot of detail.
+It may be better to define its requirements in a table instead.
+
+This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
+
+\subsection{Clean up math function overloads}
+The wording that produces \code{simd} overloads misses a few cases and leaves room for ambiguity.
+There is also no explicit mention of integral overloads that are supported in \code{<cmath>} (e.g. \code{std::cos(1)} calling \code{std::cos(double)}).
+
+This needs more work and is not reflected in the wording at this point.
+
 \section{Wording}
 \input{wording}
 
