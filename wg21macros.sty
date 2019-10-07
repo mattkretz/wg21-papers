@@ -71,6 +71,7 @@
 \newcommand\wgAdd[1]{{\color{WgAdd}\ul{#1}}}
 \newcommand\wgRemove[1]{{\color{WgRem}\st{#1}}} % deprecated
 \newcommand\wgRem[1]{{\color{WgRem}\st{#1}}}
+\newcommand\wgChange[2]{\wgRem{#1}\wgAdd{#2}}
 \newcommand\wgItemAdd{\color{WgAdd}\item[\ul{\mbox{ \textbullet }}]\hspace*{-\labelsep}\ul{\mbox{\hspace*{\labelsep}}}}
 \newcommand\wgItemRem{\color{WgRem}\item[\st{\mbox{ \textbullet }}]\hspace*{-\labelsep}\st{\mbox{\hspace*{\labelsep}}}}
 \newenvironment{wgBAdd}{\color{WgAdd}}{\color{black}}
@@ -78,14 +79,20 @@
 \newenvironment{wgText}[1][]{
   \begingroup
   \lstset{%
-    language=,
+    language=C++,
+    keywordstyle=,
+    stringstyle=,
+    xleftmargin=1em,
+    showstringspaces=false,
+    columns=flexible,
+    keepspaces=true,
     numbers=none,
     backgroundcolor=,
     fillcolor=,
     texcl=true,
     frame=none,
     commentstyle={\rmfamily\itshape},
-    basicstyle={\ttfamily\bfseries\smaller[1]},
+    basicstyle={\ttfamily\smaller[1]},
     moredelim=**[is][\color{WgAdd}]{|+}{+|},
     moredelim=**[is][\color{WgRem}]{|-}{-|},
     moredelim=**[is][\itshape]{|/}{/|}

@@ -1688,10 +1688,11 @@ public:
 
   simd_mask() noexcept = default;
 
-  // \ref{simd.mask.ctor}, Constructors
+  // \ref{simd.mask.ctor}, \wgChange{C}{\tcode{simd_mask} c}onstructors
   explicit simd_mask(value_type) noexcept;
   template<class U>
     simd_mask(const simd_mask<U, simd_abi::fixed_size<size()>>&) noexcept;
+  |+template<class G> explicit simd_mask(G&& gen) noexcept;+|
   template<class Flags> simd_mask(const value_type* mem, Flags);
 
   // \ref{simd.mask.copy}, Copy functions
@@ -1790,6 +1791,24 @@ template<class U> simd_mask(const simd_mask<U, simd_abi::fixed_size<size()>>& x)
   \pnum\remarks
   This constructor shall not participate in overload resolution unless \tcode{abi_type} is \tcode{simd_abi::fixed_size<size()>}.
 \end{itemdescr}
+
+\begin{wgBAdd}
+\begin{itemdecl}
+|+template<class G> simd_mask(G&& gen) noexcept;+|
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\effects
+  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{gen(integral_constant<size_t, i>())}.
+
+  \pnum\remarks
+  This constructor shall not participate in overload resolution unless \tcode{static_cast<bool>(gen(integral_constant<size_t, i>()))} is well-formed \foralli.
+
+  \pnum
+  The calls to \tcode{gen} are unsequenced with respect to each other.
+  Vectorization-unsafe standard library functions may not be invoked by \tcode{gen} (\ref{algorithms.parallel.exec}).
+\end{itemdescr}
+\end{wgBAdd}
 
 \begin{itemdecl}
 template<class Flags> simd_mask(const value_type* mem, Flags);

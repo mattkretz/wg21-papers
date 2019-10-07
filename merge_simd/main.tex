@@ -54,6 +54,50 @@ Short after the GCC 9.1.0 release, a complete implementation of Section 9 of the
 \section{Changes after TS feedback}
 \subsection{Conversion constructors}
 \subsection{Missing \code{simd_mask} generator constructor}
+The \code{simd} generator constructor is very useful for initializing objects from scalars in a portable (different \code{size()}) fashion.
+The need for a similar constructor for \code{simd_mask} is less frequent, but if only for consistency, there should be one.
+Besides consistency, it is also useful, of course.
+Consider a predicate function that is given without \code{simd} interface (e.g. from a library).
+How do you construct a \code{simd_mask} from it?
+With a generator constructor it is easy:
+\medskip\begin{lstlisting}[style=Vc]
+simd<T> f(simd<T> x, Predicate p) {
+  const simd_mask<T> k([&](auto i) { return p(x[i]); });
+  where(k, x) = 0;
+  return x;
+}
+\end{lstlisting}
+Without the generator constructor one has to write e.g.:
+\medskip\begin{lstlisting}[style=Vc]
+simd<T> f(simd<T> x, Predicate p) {
+  simd_mask<T> k;
+  for (size_t i = 0; i < simd<T>::size(); ++i) {
+    k[i] = p(x[i]);
+  }
+  where(k, x) = 0;
+  return x;
+}
+\end{lstlisting}
+The latter solution makes it hard to initialize the \code{simd_mask} as \code{const}, is more verbose, is harder to optimize, and cannot use the sequencing properties the generator constructor allows.
+
+Therefore add:
+\begin{wgText}
+\begin{itemdecl}
+template<class G> simd_mask(G&& gen) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\effects
+  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{gen(integral_constant<size_t, i>())}.
+
+  \pnum\remarks
+  This constructor shall not participate in overload resolution unless \tcode{static_cast<bool>(gen(integral_constant<size_t, i>()))} is well-formed \foralli.
+
+  \pnum
+  The calls to \tcode{gen} are unsequenced with respect to each other. Vectorization-unsafe standard library functions may not be invoked by \tcode{gen} (\ref{algorithms.parallel.exec}).
+\end{itemdescr}
+\end{wgText}
+
 \subsection{Add missing casts for \code{simd_mask}}
 The \code{simd_cast} and \code{static_simd_cast} overloads for \code{simd_mask} were forgotten for the TS.
 Without those casts (and no casts via constructors) mixing different arithmetic types is painful.
