@@ -12,7 +12,7 @@ This repository holds the LuaLaTeX sources for my papers to the C++ committee.
 | [P0917](https://wg21.link/p0917) | [D0917](https://web-docs.gsi.de/~mkretz/D0917.pdf) | Making operator?: overloadable            | EWG-I                      |
 | [P0964](https://wg21.link/p0964) | [D0964](https://web-docs.gsi.de/~mkretz/D0964.pdf) | Finding the right set of traits for `simd<T>` | finished               |
 | TODO                             | TODO                                               | `= delete` should have a reason           | drafting                   |
-| TODO                             | TODO                                               | Expected feedback on simd in TS           | drafting                   |
+| [P1915](https://wg21.link/p1915) | [D1915](https://web-docs.gsi.de/~mkretz/D1915.pdf) | Expected feedback on simd in TS           | drafting                   |
 | TODO                             | TODO                                               | Merge data-parallel types from the Parallelism TS 2 | drafting                   |
 | TODO                             | TODO                                               | Non-member subscript operator             | drafting                   |
 

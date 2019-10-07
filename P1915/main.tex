@@ -1,0 +1,264 @@
+\newcommand\wgTitle{Expected Feedback from \code{simd} in the Parallelism TS 2}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{P1915R0}
+\newcommand\wgGroup{SG1 / LEWG}
+%\newcommand\wgTarget{Parallelism TS 2}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{underscore}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{simd#1}\xspace}
+\newcommand\simdT{\type{simd<T>}\xspace}
+\newcommand\valuetype{\type{value\_type}\xspace}
+\newcommand\referencetype{\type{reference}\xspace}
+\newcommand\whereexpression{\type{where\_expression}\xspace}
+\newcommand\simdcast{\code{simd\_cast}\xspace}
+\newcommand\mask[1][]{\type{simd\_mask#1}\xspace}
+\newcommand\maskT{\type{simd\_mask<T>}\xspace}
+\newcommand\fixedsizeN{\type{simd\_abi::fixed\_size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{simd\_abi::fixed\_size}\xspace}
+\newcommand\fixedsize{\type{fixed\_size}\xspace}
+\newcommand\simdEP{\code{execution::}\type{simd}\xspace}
+\newcommand\seqEP{\code{execution::}\type{seq}\xspace}
+
+\usepackage{pifont}
+
+\newcommand\chck{\item[\color{black}\ensuremath{\checkmark}]}
+\newcommand\todo{\item[\color{black}\ding{46}] \color{gray}}
+\newcommand\itemheader[1]{\item[] \hfill \textcolor{gray}{\textsc{#1}}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper collects the questions (and some comments) we hope to answer via the TS process.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+\section{Introduction}
+\textcite{pts2} introduced data-parallel types to the standard library.
+Through the TS process we hope to get feedback on a number of issues that the committee was not comfortable to decide on before hands-on experience with the current choices.
+This paper collects the questions and design choices that SG1 / LEWG might want to revisit before moving \simdT into the IS.
+
+\section{Questions}
+
+For every question, there is a link to a GitHub issue which can be used by anyone to give feedback.
+
+\newcounter{ghfbnum}
+\newcommand\ghfeedback{
+  \addtocounter{ghfbnum}{1}%
+  \begin{flushright}
+    \url{https://github.com/mattkretz/std-simd-feedback/issues/\arabic{ghfbnum}}
+  \end{flushright}}
+
+\subsection{Name and UB of \code{popcount}, \code{find_first_set}, \code{find_last_set}} \ghfeedback
+These need to be consistent and unambiguous with the corresponding functions introduced for builtin types
+(\code{countl_zero}, \code{countl_one}, \code{countr_zero}, \code{countr_one}, \code{popcount}).
+Note that there are two variants of these functions that are relevant to \simdT:
+\begin{enumerate}
+  \item Counting the number of entries in a \maskT.
+    This returns a scalar integer or a \code{std::bitset}.
+  \item Element-wise counting the number of 1 bits in a \simdT.
+    This returns a \simd[<int>].
+\end{enumerate}
+The former is present in \textcite{pts2}.
+The latter should be added, now that the [bit.count] functions are present in \CC{}20.
+
+The \code{count[lr]_(zero|one)} functions in \CC{}20 are slightly different from \code{find_(first|last)_set}.
+The latter return in what place the first \true value in the mask appears.
+However, if there is none, the behavior is undefined.
+The corresponding \code{count[lr]_zero} functions count the number of consecutive \false values starting from the left or right and thus do not invoke undefined behavior.
+
+\subsection{Names \code{copy_from}, \code{copy_to}} \ghfeedback
+The names were discussed in SG1 and LEWG.
+If there is no new information via experience, WG21 should not spend any further time on renaming these functions.
+Consequently, this is a call for feedback from usage experience.
+We need arguments why a certain name works or does not work (clarity, ambiguity); no calls for preference.
+I.e. a code snippet where the \code{copy_to}/\code{copy_from} names are an issue would be new information.
+That I, who is used to the load \& store terms, regularly start typing \code{.load} or \code{.store} is irrelevant.
+
+\subsection{Name of \code{where} function} \ghfeedback
+The name was discussed in LEWG.
+If there is no new information via experience, WG21 should not spend any further time on renaming this function.
+Consequently, this is a call for feedback from usage experience.
+We need arguments why a certain name works or does not work (clarity, ambiguity); no calls for preference.
+
+Note that if \textcite{P0917R2} gets adopted, the \code{where} function could possibly removed in favor of conditional expressions for blending.
+
+\subsection{Name of \simdT misleading?} \ghfeedback
+The name was discussed in SG1 and LEWG.
+SG1 chose \code{datapar} over \code{simd} and other options.
+LEWG overruled that choice and renamed it to \code{simd}.
+
+We should use the TS to discover the following:
+\begin{itemize}
+  \item Is there interest in implementations that use hardware parallelism that does not map (exclusively) to SIMD instructions \& registers?
+    \begin{flushright}
+      \smaller\color{gray}
+      I believe \code{fixed_size} itself is already a manifestation of such a feature.
+      A single \code{fixed_size} object may map to multiple registers and thus operations on the object do not actually execute as a \emph{single instruction} on multiple data.
+    \end{flushright}
+  \item Do users choose to not use \code{simd}, because it appears too narrowly focused (from its name) on (certain) CPUs?
+    Would such users choose differently if the name would focus on the parallelism it allows instead of a specific hardware implementation of such parallelism?
+\end{itemize}
+
+\subsection{\code{fixed_size} vs. \code{deduce_t}} \ghfeedback
+Whenever the interface requires a \simd type that has a specific number of elements (typically deduced from one or more native types), we have a choice:
+\begin{itemize}
+  \item Use \fixedsizeN.
+    This is easy to memorize and understand.
+    However, \fixedsizeN may be less efficient if such objects have to pass a function call boundary.
+    Also, absent more implicit conversions, users that prefer native types will have to use an explicit cast.
+  \item Use \code{simd_abi::deduce_t<T, N, Abis...>}.
+    It is less obvious what the exact type will be (implementation-defined or \fixedsizeN) and the choice will be target-dependent.%
+    \footnote{Note that an implementation might deduce an ABI tag that is not \fixedsizeN for all combinations of \type T and \code N.}
+    This makes it slightly harder to write portable code (typically the logic is portable, it just needs an additional cast for some targets).
+    The portability issue could be reduced by allowing more implicit casts.
+\end{itemize}
+
+The current situation is inconsistent:
+\code{simd_cast<\emph{vectorizable_type}>} produces \code{fixed_size} whereas \code{split} and \code{concat} use \code{deduce_t}.
+Consequently WG21 might want to do either one of:
+\begin{enumerate}
+  \item Modify the return types of split and concat to unconditionally use \fixedsizeN.
+  \item Modify \code{simd_cast} to use \code{rebind_simd} and thus \code{deduce_t}.
+\end{enumerate}
+
+\subsection{Allowed template arguments for (\code{static_})\code{simd_cast}} \ghfeedback
+
+\code{static_simd_cast} and \code{simd_cast} in the TS support specifying either a \code{value_type} or a \code{simd} type.
+Any feedback on casts is interesting.
+Certainly, the omission of casting \maskT is a must-fix, in my opinion.
+
+\subsection{Consider more implicit conversions} \ghfeedback
+Links to public discussion relevant to the issue before finalizing the TS design:
+\begin{itemize}
+  \item \url{https://github.com/mattkretz/wg21-papers/issues/26} and
+  \item \url{https://github.com/mattkretz/wg21-papers/issues/3}.
+\end{itemize}
+
+The status quo of the TS:
+\begin{itemize}
+  \item \code{simd_mask<T0, A0>} is implictly convertible to \code{simd_mask<T1, A1>} if both \code{A0} and \code{A1} are \code{fixed_size<N>} (same \code{N}).
+  \item \code{simd<T0, A0>} is implictly convertible to \code{simd<T1, A1>} if
+    \begin{itemize}
+      \item both \code{A0} and \code{A1} are \code{fixed_size<N>} (same \code{N}), and
+      \item converting \code{T0} to \code{T1} preserves the value of \emph{all} possible values of \code{T0}.
+    \end{itemize}
+\end{itemize}
+
+As a consequence, the example in \lst{missing mask conversion} is too hard to write.
+
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:missing mask conversion,caption={
+  Conversion verbosity
+}]
+// set x[i] = 0 where y[i] is even
+simd<float, Abi> zero_even(simd<float, Abi> x) {
+  auto y = std::static_simd_cast<int>(x);
+  //where((y & 1) == 0, x) = 0; // error unless Abi is fixed_size
+  //where(std::static_simd_cast<float>(y & 1) == 0, x) = 0; // error unless Abi is fixed_size
+  where(std::static_simd_cast<simd<float, Abi>>(y & 1) == 0, x) = 0; // works
+  return x;
+}
+
+// scalar equivalent:
+float zero_even(float x) {
+  return ((static_cast<int>(x) & 1) == 0) ? 0 : x;
+}
+
+// How it should be for simd (also needs P0917R2):
+simd<float, Abi> zero_even(simd<float, Abi> x) {
+  return ((std::static_simd_cast<int>(x) & 1) == 0) ? 0 : x;
+}
+\end{lstlisting}
+
+For the TS, the committee preferred to rather be too strict and discover the need for more implicit conversions through the TS process.
+Therefore it is important to submit enumerate the cases where implicit conversions would be helpful.
+
+\subsection{No default for the load/store flags} \ghfeedback
+Consider:
+\medskip\begin{lstlisting}[style=Vc,numbers=left]
+std::simd<float> v(addr, std::vector_aligned); @\label{lstline:vector_aligned}@
+v.copy_from(addr + 1, std::element_aligned); @\label{lstline:load element_aligned}@
+v.copy_to(dest, std::element_aligned); @\label{lstline:store element_aligned}@
+\end{lstlisting}
+Line~\ref{lstline:vector_aligned} supplies an optimization hint to the load operation.
+Line~\ref{lstline:load element_aligned} says what really?
+“Please don't crash.
+I know this is not a vector aligned access\footnote{Of course, vector aligned is equivalent to element aligned if \code{simd<float>::size() == 1}}.”
+Line~\ref{lstline:store element_aligned} says:
+“I don't know whether it's vector aligned or not.
+Compiler, if you know more, please optimize, otherwise just don't make it crash.”
+(To clarify, the difference between lines~\ref{lstline:load element_aligned} and~\ref{lstline:store element_aligned} is what line~\ref{lstline:vector_aligned} says about the alignment of \code{addr}.)
+In both cases of \code{element_aligned} access, the developer requested a behavior we take as given in all other situations.
+Why do we force to spell it out in this case?
+
+Since \CC{}20, we also have another option:
+\medskip\begin{lstlisting}[numbers=left]
+std::simd<float> v(std::assume_aligned<std::memory_alignment_v<std::simd<float>>>(addr)); @\label{lstline:assume_aligned}@
+v.copy_from(addr + 1);
+v.copy_to(dest);
+\end{lstlisting}
+This seems to compose well, except that line \ref{lstline:assume_aligned} is rather long for a common pattern in this interface.
+Also, this removes implementation freedom because the library cannot statically determine the alignment properties of the pointer.
+
+Consequently, I suggest to keep the load/store flags as in the TS but default them to \code{element_aligned}.
+I.e.:
+\medskip\begin{lstlisting}[numbers=left]
+std::simd<float> v(addr, std::vector_aligned);
+v.copy_from(addr + 1);
+v.copy_to(dest);
+\end{lstlisting}
+
+\subsection{Should converting loads/stores be safer wrt. conversions} \ghfeedback
+Since implicit conversions on broadcasts are restricted to value-preserving conversions, the load/store interface is inconsistent with this strictness.
+I.e.:
+\medskip\begin{lstlisting}[style=Vc]
+using V = simd<float>;
+V(1.);  // error, double -> float conversion is not value-preserving
+V(short(1));  // good, short -> float is value-preserving
+double mem[V::size()] = {1.};
+V(mem, flags::element_aligned);  // converting load, compiles (but shouldn't?)
+short mem[V::size()] = {1};
+V(mem, flags::element_aligned);  // value-preserving conversion, compiles
+\end{lstlisting}
+
+The conversion is not obvious when you look at the line of code that requests the load.
+
+Options:
+\begin{enumerate}
+  \item Drop converting loads and stores.
+    (That would be unfortunate, since doing converting loads and stores efficiently and portably is potentially a hard problem.)
+
+  \item Use different functions, e.g. \code{v.copy_from(mem, flags)} requires \code{mem} to be a \valuetype array. \code{v.memload_cvt_safe(mem, flags)} allows value-preserving conversions.
+    \code{v.memload_cvt_unsafe(mem, flags)} allows all conversions.
+
+  \item Use a flag to enable conversions (without cvt flag, no conversions are allowed), e.g.
+    \begin{lstlisting}[style=Vc]
+    V(mem, flags::element_aligned | flags::safe_cvt);
+    V(mem, flags::element_aligned | flags::any_cvt);
+    V(mem, flags::element_aligned | flags::saturating_cvt);  // new feature
+    \end{lstlisting}
+    As a variation, safe conversions could be enabled per default and only unsafe conversions would require extra typing.
+
+\end{enumerate}
+
+\subsection{Relation Operators} \ghfeedback
+\textcite{P0820R1} argues for a substantial change to the definition of relation operators.
+\textcite{P0851R0} presents the reason for the status quo.
+The choices were:
+\begin{enumerate}
+  \item All relops are defined and return \mask (status quo).
+  \item Compares returning \mask are provided via new functions (member vs. non-member?)
+    \begin{enumerate}
+      \item No relops are defined.
+      \item \code{operator==} and \code{operator!=} are defined and return \bool.
+    \end{enumerate}
+\end{enumerate}
+If there is new information showing that the current behavior is problematic and a different behavior is more useful the discussion should be reopened.
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
