@@ -68,9 +68,9 @@
 \fi
 \soulregister{\code}{1}
 \soulregister{\type}{1}
-\newcommand\wgAdd[1]{{\color{WgAdd}\ul{#1}}}
-\newcommand\wgRemove[1]{{\color{WgRem}\st{#1}}} % deprecated
-\newcommand\wgRem[1]{{\color{WgRem}\st{#1}}}
+\newcommand\wgAdd[1]{\textcolor{WgAdd}{\ul{#1}}}
+\newcommand\wgRemove[1]{\textcolor{WgRem}{\st{#1}}} % deprecated
+\newcommand\wgRem[1]{\textcolor{WgRem}{\st{#1}}}
 \newcommand\wgChange[2]{\wgRem{#1}\wgAdd{#2}}
 \newcommand\wgItemAdd{\color{WgAdd}\item[\ul{\mbox{ \textbullet }}]\hspace*{-\labelsep}\ul{\mbox{\hspace*{\labelsep}}}}
 \newcommand\wgItemRem{\color{WgRem}\item[\st{\mbox{ \textbullet }}]\hspace*{-\labelsep}\st{\mbox{\hspace*{\labelsep}}}}
