@@ -15,8 +15,8 @@
 \begin{document}
 \begin{wgTitlepage}
   Currently the subscript operator can only be overloaded as a member function.
-  This paper explains use-cases for a non-member overload and makes a suggestion
-  for extending the standard accordingly.
+  This paper explores use-cases for a non-member overload and proposes to extend
+  the standard accordingly.
 \end{wgTitlepage}
 
 \section{Problem}
@@ -28,44 +28,47 @@ Therefore, for the rest of this section I will give examples for non\hyp member 
 In general, non\hyp member subscript is only needed if the class to be subscripted is independent of the type used for the subscript argument.
 Consequently, the examples are very similar:
 A generic container class only implements the \type{size\_t} subscript operator.
-A new class type (or enumeration type) then provides a good use\hyp case for an additional subscript overload for one or more container classes.
+A user-defined type subsequently provides a good use\hyp case for an additional subscript overload for one or more container classes.
 
 \subsection{Vector load/store/gather/scatter on std containers}
 The use\hyp case that got me started was the design of a gather/scatter API for SIMD vector types.
 Consider the classical container indexing operation:
-\smallskip\begin{lstlisting}[style=Vc]
-std::vector<float> data = ...;
+\smallskip\begin{lstlisting}
+std::vector<int> data = ...;
 int i = ...;
-float x = data[i];
+int x = data[i];
 \end{lstlisting}
-If I want to carry this syntax over to data\hyp parallel types (I called them \type{int4} and \type{float4} for this example) I would want to write:
-\smallskip\begin{lstlisting}[style=Vc]
-std::vector<float> data = ...;
-int4 i = ...;
-float4 x = data[i];
+If I want to carry this syntax over to data\hyp parallel types I would like to write:
+\smallskip\begin{lstlisting}
+std::vector<int> data = ...;
+std::simd<int> i = ...;
+auto x = data[i];
+static_assert(std::is_simd_v<decltype(x)>);
 \end{lstlisting}
 This expression intuitively\footnote{All operators on data-parallel types act element-wise.} asks for four loads from \code{data} at \code{data[i[0]]}, \code{data[i[1]]}, \code{data[i[2]]}, and \code{data[i[3]]}.
 
 The reverse operation is just as useful (scatter):
-\smallskip\begin{lstlisting}[style=Vc]
-std::vector<float> data = ...;
-int4 i = ...;
-float4 x = ...;
+\smallskip\begin{lstlisting}
+std::vector<int> data = ...;
+std::simd<int> i = ...;
+std::simd<int> x = ...;
 data[i] = x;
 \end{lstlisting}
 
 \subsection{Vector load/store subscripts}
-\begin{lstlisting}[style=Vc]
-std::vector<float> data = ...;
-subsr<simd<float>> i = 3; // the number of elements is given by simd<float>::size()
+\begin{lstlisting}[morekeywords={[5]idx}]
+std::vector<int> data = ...;
+std::idx<std::simd<int>> i = 3; // the number of elements is given by simd<int>::size()
 auto x = data[i];
-// decltype(x) -> simd<float>
+// decltype(x) -> simd<int>
 \end{lstlisting}
 
 \TODO{
 \todoitem needs non-fundamental types in the operator[] parameter type, thus a dependency on the type
 \todoitem it makes a lot of sense to delay such declarations to somewhere later in the program to avoid pulling in all possible useful operator[] declarations
 }
+
+Obviously, this pattern is just as useful outside of standard library implementations, where a non-\code{std} object storing multiple indices is used for gather \& scatter subscripting.
 
 \subsection{Subscripting with scoped enumerations}
 \TODO{
