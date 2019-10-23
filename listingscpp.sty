@@ -22,10 +22,17 @@ keywords=[3]{while,for,do},
 %operators
 keywords=[4]{typeof,operator,typeid,sizeof,alignof,alignas,decltype,noexcept},
 %types
-keywords=[5]{int,long,short,char,void,signed,unsigned,float,double,
-  virtual,explicit,export,bool,
+keywords=[12]{
+  int,long,short,char,void,signed,unsigned,float,double,bool,wchar_t,char8_t,
+  char16_t,char32_t
+},
+keywords=[5]{array,deque,vector,map,unordered_map,
+  simd,simd_mask,native_simd,fixed_size_simd,native_simd_mask,fixed_size_simd_mask,
+  memory_alignment,element_aligned_tag,vector_aligned_tag,overaligned_tag,deduce,deduce_t,
+  is_simd,is_simd_mask,is_abi_tag,is_simd_flag_type,
   shared_ptr,unique_ptr,weak_ptr,
-  size_t,ssize_t,off_t,wchar_t,ptrdiff_t,sig_atomic_t,fpos_t,
+  size_t,ssize_t,off_t,
+  ptrdiff_t,sig_atomic_t,fpos_t,
   clock_t,time_t,va_list,jmp_buf,FILE,DIR,div_t,ldiv_t,
   mbstate_t,wctrans_t,wint_t,wctype_t,
   int8_t,int16_t,int32_t,int64_t,
@@ -35,22 +42,26 @@ keywords=[5]{int,long,short,char,void,signed,unsigned,float,double,
   int_fast8_t,int_fast16_t,int_fast32_t,int_fast64_t,
   uint_fast8_t,uint_fast16_t,uint_fast32_t,uint_fast64_t,
   intptr_t,uintptr_t,intmax_t,uintmax_t,
-  __m128,__m128i,__m128d,_M128,_M128I,_M128D,
-  __m256,__m256i,__m256d,_M256,_M256I,_M256D,
-  __m512,__m512i,__m512d,_M512,_M512I,_M512D},
+  __m128,__m128i,__m128d, __m256,__m256i,__m256d, __m512,__m512i,__m512d},
 %structure
 keywords=[6]{struct,union,enum,typedef,class,typename,template,namespace},
 %storage class
-keywords=[7]{static,register,auto,volatile,extern,const,constexpr,
-  __attribute__,inline,restrict,__restrict__,mutable},
+keywords=[7]{static,register,auto,volatile,extern,const,constexpr,virtual,
+  explicit,export,inline,restrict,__restrict__,mutable},
 %constants
-keywords=[8]{M_PI,true,false,nullptr},
+keywords=[8]{M_PI,true,false,nullptr,memory_alignment_v,max_fixed_size,
+  is_simd_v,is_simd_mask_v,is_abi_tag_v,is_simd_flag_type_v,
+  element_aligned,vector_aligned,overaligned,simd_size_v},
 %access
 keywords=[9]{public,protected,private},
 %exceptions
 keywords=[10]{throw,try,catch},
 %casts
-keywords=[11]{const_cast,static_cast,dynamic_cast,reinterpret_cast,static_pointer_cast,const_pointer_cast,dynamic_pointer_cast},
+keywords=[11]{const_cast,static_cast,dynamic_cast,reinterpret_cast,static_pointer_cast,
+  const_pointer_cast,dynamic_pointer_cast,simd_cast,static_simd_cast},
+moredelim=**[s][\color{directives}\bfseries]{[[}{]]},
+moredelim=**[s][\color{directives}\bfseries]{__attribute__((}{))},
+moredelim=**[s][\color{types}]{std}{::},
 moredelim=*[directive]\#,
 directives={define,elif,else,endif,error,if,ifdef,ifndef,line,
 include,pragma,undef,warning}
@@ -60,14 +71,16 @@ include,pragma,undef,warning}
 \definecolor{identifier}{cmyk}{0, 0, 0, 1}
 \definecolor{constants}{cmyk}{0, 0, 0, 1}
 \definecolor{types}{gray}{0.2}
+\definecolor{storageclass}{gray}{0.2}
 \definecolor{codekeywords}{gray}{0.2}
 \definecolor{strings}{cmyk}{0, 0, 0, 0.9}
 \definecolor{directives}{cmyk}{0, 0, 0, 1}
 \definecolor{comments}{cmyk}{0, 0, 0, 0.7}
 \else
 \definecolor{identifier}{rgb}{0, 0, 0}
-\definecolor{constants}{rgb}{0.6, 0, 0}
-\definecolor{types}{cmyk}{0.8, 0, 1.0, 0.4}
+\definecolor{constants}{rgb}{0.3, 0, 0}
+\definecolor{types}{cmyk}{0.8, 0, 0.0, 0.5}
+\definecolor{storageclass}{cmyk}{0.8, 0, 1.0, 0.4}
 \definecolor{codekeywords}{cmyk}{0, 0, 1, 0.6}
 \definecolor{strings}{rgb}{0.5, 0, 0.5}
 \definecolor{directives}{rgb}{0, 0, 0.6}
@@ -77,7 +90,8 @@ include,pragma,undef,warning}
 \mode<handout>{
 \definecolor{identifier}{rgb}{0, 0, 0}
 \definecolor{constants}{rgb}{0.3, 0, 0}
-\definecolor{types}{rgb}{0, 0.2, 0}
+\definecolor{types}{rgb}{0, 0.1, 0}
+\definecolor{storageclass}{rgb}{0, 0.2, 0}
 \definecolor{codekeywords}{rgb}{0.2, 0.2, 0}
 \definecolor{strings}{rgb}{0.2, 0, 0.2}
 \definecolor{directives}{rgb}{0, 0, 0.3}
@@ -89,7 +103,8 @@ include,pragma,undef,warning}
 \usebeamercolor{example text}
 \usebeamercolor{local structure}
 \colorlet{identifier}{normal text.fg}
-\colorlet{types}{example text.fg!75!normal text.fg}
+\colorlet{types}{example text.fg!25!normal text.fg}
+\colorlet{storageclass}{example text.fg!75!normal text.fg}
 \colorlet{constants}{alerted text.fg!75!normal text.fg}
 \colorlet{codekeywords}{local structure.fg!75!normal text.fg}
 \colorlet{comments}{local structure.fg!75!normal text.fg}
@@ -119,11 +134,13 @@ keywordstyle=[3]\color{codekeywords}\bfseries,
 %operators
 keywordstyle=[4]\color{codekeywords}\bfseries,
 %types
-keywordstyle=[5]\color{types}\bfseries,
+keywordstyle=[5]\color{types},
+%built-in types
+keywordstyle=[12]\color{types}\bfseries,
 %structure
-keywordstyle=[6]\color{types}\bfseries,
+keywordstyle=[6]\color{storageclass}\bfseries,
 %storage class
-keywordstyle=[7]\color{types}\bfseries,
+keywordstyle=[7]\color{storageclass}\bfseries,
 %constants
 keywordstyle=[8]\color{constants},
 %exceptions
@@ -135,11 +152,7 @@ showstringspaces=false
 \lstdefinestyle{alert}{basicstyle=\ttfamily\bfseries\color{darkred},identifierstyle=\color{darkred}}
 \newcommand{\lstalert}[1]{\alert{\underbar{\lstinline[style=alert]#1}}}
 
-\lstdefinestyle{Vc}{%
-  morekeywords=[5]{simd,simd_mask,native_simd,fixed_size_simd,native_simd_mask,fixed_size_simd_mask},
-  morekeywords=[8]{error,Error,wrong,MemoryAlignment},
-  morekeywords=[3]{foreach_bit,simd_cast,static_simd_cast}
-}
+\lstdefinestyle{Vc}{}
 
 \lstdefinestyle{VcHighlight}
 {
