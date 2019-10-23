@@ -13,8 +13,8 @@ This repository holds the LuaLaTeX sources for my papers to the C++ committee.
 | [P0964](https://wg21.link/p0964) | [D0964](https://web-docs.gsi.de/~mkretz/D0964.pdf) | Finding the right set of traits for `simd<T>` | finished               |
 | TODO                             | TODO                                               | `= delete` should have a reason           | drafting                   |
 | [P1915](https://wg21.link/p1915) | [D1915](https://web-docs.gsi.de/~mkretz/D1915.pdf) | Expected feedback on simd in TS           | drafting                   |
-| [P1928](https://wg21.link/p1928) | [D1928](https://web-docs.gsi.de/~mkretz/D1928.pdf) | Merge data-parallel types from the Parallelism TS 2 | drafting                   |
-| TODO                             | TODO                                               | Non-member subscript operator             | drafting                   |
+| [P1928](https://wg21.link/p1928) | [D1928](https://web-docs.gsi.de/~mkretz/D1928.pdf) | Merge data-parallel types from the Parallelism TS 2 | drafting         |
+| TODO                             | [DNMSO](https://web-docs.gsi.de/~mkretz/DNMSO.pdf) | Non-member subscript operator             | drafting                   |
 
 
 To build the papers you need make, LuaLaTeX (only tested with a recent TeXLive distribution), and Biber.
