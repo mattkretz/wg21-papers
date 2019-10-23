@@ -1,5 +1,12 @@
 aux-md5sums
 *.aux
+draft.bbl
+draft.bcf
+draft.blg
+draft.log
+draft.out
+draft.run.xml
+draft.toc
 final.auxlock
 final.bbl
 final.blg
@@ -12,6 +19,7 @@ final.toc
 final.bcf
 final.run.xml
 D????R?.pdf
+D????R?_draft.pdf
 D????R?_mobile.pdf
 P????R?.pdf
 P????R?_mobile.pdf
