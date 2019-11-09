@@ -28,3 +28,28 @@
 \wgPoll
 {Continue spending committee time on this versus other proposals, given that time is limited?}
 {1&9&5&0&0}
+
+\subsection{EWGI in Belfast 2019}
+
+\wgPoll{Pursue defaulted operator?:}
+{0&3&6&3&1}
+
+\wgPoll{Pursue 2-argument defaulted operator?:}
+{2&3&2&5&2}
+
+\wgPoll{Make operator?: overloadable with a requirement of a non-boolean condition}
+(because of missing lazy eval)
+{0&5&4&3&0}
+
+\wgPoll{Unrestricted operator?: overloads, trusting our users to use it responsibly}
+{5&6&3&0&0}
+
+\wgPoll{Forward to EWG}
+{3&8&1&0&0}
+
+Specific requests:
+\begin{itemize}
+  \item Discuss whether we still want \code{common_type} (also with multiple types) to derive its answer from user-defined conditional operators.
+    Or rather, reproduce the intent of \code{common_type}.
+  \item Explore \code{= delete;} to go with defaulting.
+\end{itemize}
