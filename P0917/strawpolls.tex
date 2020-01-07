@@ -37,8 +37,7 @@
 \wgPoll{Pursue 2-argument defaulted operator?:}
 {2&3&2&5&2}
 
-\wgPoll{Make operator?: overloadable with a requirement of a non-boolean condition}
-(because of missing lazy eval)
+\wgPoll{Make operator?: overloadable with a requirement of a non-boolean condition (because of missing lazy eval)}
 {0&5&4&3&0}
 
 \wgPoll{Unrestricted operator?: overloads, trusting our users to use it responsibly}
@@ -50,6 +49,6 @@
 Specific requests:
 \begin{itemize}
   \item Discuss whether we still want \code{common_type} (also with multiple types) to derive its answer from user-defined conditional operators.
-    Or rather, reproduce the intent of \code{common_type}.
+    For context, state the intent of \code{common_type}.
   \item Explore \code{= delete;} to go with defaulting.
 \end{itemize}
