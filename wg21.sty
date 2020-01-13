@@ -425,10 +425,18 @@
 \setmainfont[Ligatures=TeX,
              SmallCapsFeatures={Numbers={Monospaced,OldStyle}}]{TeXGyreTermes}
 \setsansfont[Ligatures=TeX,
+             BoldFont={LatoRegular},
+             ItalicFont={LatoLightItalic},
+             BoldItalicFont={LatoItalic},
              SmallCapsFont={TeXGyreAdventor},
-             SmallCapsFeatures={Letters=SmallCaps,Scale=MatchLowercase,Numbers={Proportional}}]{SwitzeraADFLight}
+             SmallCapsFeatures={Letters=SmallCaps,Scale=MatchLowercase,Numbers={Proportional}}]{LatoLight}
 \setmonofont[Ligatures=NoCommon,
-             FakeStretch=0.87]{TeXGyreCursor}
+             BoldFont={SourceCodeProRegular},
+             ItalicFont={SourceCodeProLightItalic},
+             BoldItalicFont={SourceCodeProItalic},
+             SmallCapsFont={Latin Modern Mono Caps},
+             SmallCapsFeatures={Letters=SmallCaps,Scale=MatchLowercase,Numbers={Proportional}},
+             FakeStretch=0.86]{SourceCodeProLight}
 
 % Math fonts:
 \usepackage{unicode-math}
