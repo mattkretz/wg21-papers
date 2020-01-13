@@ -26,8 +26,12 @@ keywords=[12]{
   int,long,short,char,void,signed,unsigned,float,double,bool,wchar_t,char8_t,
   char16_t,char32_t
 },
-keywords=[5]{array,deque,vector,map,unordered_map,
+keywords=[5]{array,deque,vector,map,unordered_map,common_type,common_type_t,
+  floating_point,integral,boolean,
+  type,
   simd,simd_mask,native_simd,fixed_size_simd,native_simd_mask,fixed_size_simd_mask,
+  duration,time_point,integer,fractional,fixed_point,is_bounded_integer,rational,
+  A,B,C,D,E,F,G,R,T,U,X,Y,Z,Point,Abi,
   memory_alignment,element_aligned_tag,vector_aligned_tag,overaligned_tag,deduce,deduce_t,
   is_simd,is_simd_mask,is_abi_tag,is_simd_flag_type,
   shared_ptr,unique_ptr,weak_ptr,
@@ -50,6 +54,7 @@ keywords=[7]{static,register,auto,volatile,extern,const,constexpr,virtual,
   explicit,export,inline,restrict,__restrict__,mutable},
 %constants
 keywords=[8]{M_PI,true,false,nullptr,memory_alignment_v,max_fixed_size,
+  is_same_v,value,
   is_simd_v,is_simd_mask_v,is_abi_tag_v,is_simd_flag_type_v,
   element_aligned,vector_aligned,overaligned,simd_size_v},
 %access
@@ -62,6 +67,7 @@ keywords=[11]{const_cast,static_cast,dynamic_cast,reinterpret_cast,static_pointe
 moredelim=**[s][\color{directives}\bfseries]{[[}{]]},
 moredelim=**[s][\color{directives}\bfseries]{__attribute__((}{))},
 moredelim=**[s][\color{types}]{std}{::},
+moredelim=**[s][\color{types}]{bounded:}{:},
 moredelim=*[directive]\#,
 directives={define,elif,else,endif,error,if,ifdef,ifndef,line,
 include,pragma,undef,warning}
