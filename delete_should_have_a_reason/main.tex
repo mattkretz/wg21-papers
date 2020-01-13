@@ -88,7 +88,7 @@ Pros:
 Cons:
 \begin{itemize}
   \item Potentially, it is unclear when a warning or error is intended.
-    Maybe it is better to add two attributes \code{warn} and \code{fail} (bikesheddable, of course) instead.
+    Maybe it is better to add two attributes \code{warn} and \code{fail} (the names still need some reflection, of course) instead.
     However, it is unclear whether \code{[[fail("msg")]]} should make the expression it appertains to ill-formed.
     This would make it problematic for an implementation to ignore the attribute.
   \item More verbose than extending \code{= delete("msg")}
