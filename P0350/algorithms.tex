@@ -149,7 +149,7 @@ For both algorithms it would be perfectly valid to implement the epilogue as a s
     For now, since \simd only supports arithmetic types and \simd does not return lvalue references to its values, it is not observable whether a copy was made.
     With two exceptions:
     \begin{itemize}
-      \item Modification of the input sequence via different means than the function parameter(s) will not modify the value of the function parameter(s).
+      \item Modification of the input sequence via different means than the function parameter(s), which is UB anyway, will not modify the value of the function parameter(s).
       \item Using mutable iterators, assignment to the \simd (lvalue reference) parameter of the user-supplied function object will not modify the output sequence until after the function has returned (cf. \lst{simd foreach implementation}).
     \end{itemize}
     Note that most non-modifying sequence operations allow modification of the sequence by using a non-const lvalue reference parameter for the user-supplied function object.
@@ -163,9 +163,10 @@ For both algorithms it would be perfectly valid to implement the epilogue as a s
         In this case \VSize{ForwardIterator::value\_type} reductions can happen in parallel.
         Short-circuiting is still possible, but requires a \code{simd_mask} reduction on each step (QoI question).
     \end{enumerate}
-    I recommend to allow both.
-    Let the algorithm switch the strategy depending on the return type of the predicate.
-    Let the user decide on the trade-offs.
+    It would also be possible to allow both and let the algorithm switch the strategy depending on the return type of the predicate.
+
+    In Cologne 2019, LEWG unanimously recommended to exclusively go with predicates returning \code{simd_mask}:
+    The use of \bool would effectively change the algorithms.
 
   \item[Complexity requirements]
     For many algorithms, the complexity requirement states “Applies \code{f} \emph{exactly} \code{last - first} times”.
@@ -179,6 +180,9 @@ For both algorithms it would be perfectly valid to implement the epilogue as a s
 \end{description}
 
 \subsection{Design Alternative}
+In Cologne 2019, LEWG recommended to not pursue this design alternative.
+It is still provided in this paper for completeness.
+
 There are subtle differences in how the \simdEP specializations need to be used
 (e.g. \code{std::generate} currently requires the generator function to return objects that can be assigned to a dereferenced \code{ForwardIt};
 the \simdEP specialization requires the generator function to return objects of type \simd[<ForwardIt::value_type>]).
@@ -214,14 +218,7 @@ The following algorithms have an \code{ExecutionPolicy} overload and can work wi
   \item \code{transform}
   \item \code{replace}, \code{replace_if}, \code{replace_copy}, \code{replace_copy_if}
   \item \code{fill}, \code{fill_n} (no real need; can be implicitly vectorized)
-  \item \code{generate}, \code{generate_n}
-
-    Note that the generator function passed to \code{generate}/\code{generate_n} does not expect any arguments and thus has no interface for the algorithm to request a certain ABI tag from the function (template).
-    Consequently, either the user could choose the ABI tag (via the return type) and expect values at the tail (beyond \code{end}) to be discarded.
-    Alternatively, the algorithm could pass an arbitrary (or default- or zero-initialized) data-parallel object to the function.
-    This would communicate the expected return type of the generator function.
-    See \fig{generate example} for an example.
-    It is possible to allow both variants.
+  \item \code{generate}, \code{generate_n} (see \sect{generate})
   \item \code{remove}, \code{remove_copy} (no real need; can be implicitly vectorized)
   \item \code{remove_if}, \code{remove_copy_if}
   \item \code{unique}, \code{unique_copy}
@@ -234,27 +231,8 @@ The following algorithms have an \code{ExecutionPolicy} overload and can work wi
   \item \code{includes}, \code{set_union}, \code{set_intersection}, \code{set_difference}, \code{set_symmetric_difference}
   \item \code{min_element}, \code{max_element}, \code{minmax_element}
   \item \code{lexicographical_compare}
+  \item \code{is_heap}, \code{is_heap_until}, \code{make_heap}, \code{push_heap}, \code{pop_heap}, and \code{sort_heap} (The comparison function object can use \code{simd} and \code{simd_mask}.)
 \end{itemize}
-
-\begin{figure}[bt]
-\begin{lstlisting}
-std::array<float, N> data;
-
-// let the generator function choose the ABI tag and discard
-// N % native_simd<float>::size() values beyond data.end():
-std::generate(std::execution::simd, data.begin(), data.end(), []() {
-  return native_simd<float>();
-});
-
-// Alternative: the algorithm tells the generator function via the argument
-// what data-parallel type it expects to get.
-std::generate(std::execution::simd, data.begin(), data.end(), [](auto x) {
-  return x = 0;
-});
-\end{lstlisting}
-  \caption{Generator function return type example.}
-  \label{fig:generate example}
-\end{figure}
 
 The remaining algorithms have no obvious use for the specialization:
 \begin{itemize}
@@ -263,29 +241,74 @@ The remaining algorithms have no obvious use for the specialization:
 
 \code{lower_bound}, \code{upper_bound}, \code{equal_range}, and \code{binary_search} may benefit from \simd usage, but currently do not provide \code{ExecutionPolicy} overloads.
 
-I have not considered \code{is_heap} and \code{is_heap_until} yet.
+\subsection{The \code{generate} algorithm}\label{sec:generate}
+The generator function passed to \code{generate}/\code{generate_n} does not expect any arguments and thus has no interface for the algorithm to request a certain ABI tag from the function (template).
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:generate example,caption={
+Use \code{std::generate} to fill a container with random numbers.
+}]
+std::vector<float> v;
+
+// 0. Existing (scalar) interface
+std::generate(v.begin(), v.end(), [&]() { return 0.f; })
+
+// 1. Choose ABI via template parameter
+// template <class Gen>
+// void generate(/*...*/, Gen g) { g.template operator()<native_simd<float>>(); }
+std::generate(v.begin(), v.end(), []<typename T>() { return T(); });
+
+// 2. Choose ABI via return type
+// template <class Gen>
+// void generate(/*...*/, Gen g) {
+//   auto x = g(); // discard if x has more values than needed
+// }
+std::generate(v.begin(), v.end(), []() { return native_simd<float>(); });
+
+// 3. Choose ABI via unused parameter
+// template <class Gen>
+// void generate(/*...*/, Gen g) {
+//   constexpr native_simd<float>* tag = nullptr;
+//   g(tag);
+// }
+std::generate(v.begin(), v.end(), []<typename T>(T*) { return T(); });
+\end{lstlisting}
+Consequently, there are three ideas how to make it work for \code{simd}:
+\begin{enumerate}
+\item Require the generator function object to take a template argument (no function arguments).
+\item Let the algorithm implementation cope with the return type defined by the generator function object.
+  It may have to discard values if the number of values in the range is not a multiple of the number of values in the return type.
+\item Pass a parameter that is not used other than for deducing the expected return type of the generator function object.
+\end{enumerate}
+See \lst{generate example} for examples.
+
+Ideas 1 and 3 require the user to supply a type with a template call operator.
+Idea 2 may lead the user to unintentionally drop generated values.
+For the user, idea 3 requires to write boilerplate with no apparent use: it's an implementation detail shining through.
+Idea 1 was preferred in the discussion in LEWG in Cologne 2019.
+However, it is still unclear whether the need for explicit instantiation of the call operator in the standard library implementation is acceptable.
+There is no apparent technical reason not to use this variant.
 
 \subsection{Initial wording for the policy}
 
-Add a new execution policy to \citep[§23.19.2]{N4659}:
-\begin{wgText}[{§23.19.2 [execution.syn]}]
+Add a new execution policy to \citep[§20.18.2]{N4842}:
+\begin{wgText}[{§20.18.2 [execution.syn]}]
   \begingroup
   \ttfamily
-  // 23.19.6, parallel and unsequenced execution policy\\
-  class parallel_unsequenced_policy;\\
+  // 20.18.7, unsequenced execution policy\\
+  class unsequenced_policy;\\
   \\
-  \wgAdd{// 23.19.7, \simd{} execution policy}\\
+  \wgAdd{// 20.18.8, \simd{} execution policy}\\
   \wgAdd{class \simd{}_policy;}\\
   \\
-  // 23.19.\wgRemove{7}\wgAdd{8}, execution policy objects:\\
+  // 20.18.\wgRemove{8}\wgAdd{9}, execution policy objects:\\
   inline constexpr sequenced_policy seq\{ \textit{unspecified} \};\\
   inline constexpr parallel_policy par\{ \textit{unspecified} \};\\
   inline constexpr parallel_unsequenced_policy par_unseq\{ \textit{unspecified} \};\\
+  inline constexpr unsequenced_policy unseq\{ \textit{unspecified} \};\\
   \wgAdd{inline constexpr \simd{}_policy \simd\{ \textit{unspecified} \};}
   \endgroup
 \end{wgText}
 
-Renumber §23.19.7 to §23.19.8 and add §23.19.7 [execpol.simd]:
+Renumber §20.18.8 to §20.18.9 and add §20.18.8 [execpol.simd]:
 \begin{wgText}
   \begin{itemdecl}
 @\wgAdd{class \simd{}_policy \{ \textit{unspecified} \};}@
@@ -297,15 +320,16 @@ Renumber §23.19.7 to §23.19.8 and add §23.19.7 [execpol.simd]:
   \end{itemdescr}
 \end{wgText}
 
-Add to §23.19.8 [execpol.objects]:
+Add to §20.18.9 [execpol.objects]:
 \begin{itemdecl}
 @\wgAdd{inline constexpr \simdEPT{} \simdEP{}\{ \textit{unspecified} \};}@
 \end{itemdecl}
 
-\citep[§28.4.2]{N4659} defines requirements on user-provided function objects.
+\bigskip
+\citep[§25.3.2]{N4842} defines requirements on user-provided function objects.
 This might be the right place to add:
-\begin{wgText}[{§28.4.2 [algorithms.parallel.user]}]
-  \addtocounter{Paras}{1}
+\begin{wgText}[{§25.3.2 [algorithms.parallel.user]}]
+  \setcounter{Paras}{1}
   \color{WgAdd}
   \pnum Function objects passed into parallel algorithms instantiated with the \simdEP execution policy shall:
   \begin{itemize}
@@ -315,7 +339,7 @@ This might be the right place to add:
   \end{itemize}
 \end{wgText}
 
-The following subsection in \citep[§28.4.3]{N4659} defines the semantics of the execution policies.
+The following subsection in \citep[§25.3.3]{N4842} defines the semantics of the execution policies.
 A new paragraph for \simdEP is needed.
 The intent is to
 \begin{enumerate}
@@ -323,11 +347,9 @@ The intent is to
   \item allow implementations to assume unordered access for all internal element access functions (most importantly loads and stores),
   \item apply user-provided function objects in the order the \simd chunks are created from sequential iteration over the iterator(s).
 \end{enumerate}
-\begin{wgText}[{§28.4.3 [algorithms.parallel.exec]}]
-  \addtocounter{Paras}{7}%
-  \wgAdd{
-  %\color{WgAdd}%
-  %\ul{%
+\begin{wgText}[{§25.3.3 [algorithms.parallel.exec]}]
+  \setcounter{Paras}{7}%
+  \color{WgAdd}
   \pnum
   The invocations of element access functions in parallel algorithms invoked with an execution policy object of type \simdEPT are permitted to execute in an unordered fashion in the calling thread, except for the application of user-provided function objects.
   User-provided function objects are called with an im\-ple\-men\-ta\-tion-defined number of sequence elements combined into a \simd[<T, Abi>] object.
@@ -336,16 +358,15 @@ The intent is to
   The type for \type T is the decayed type of the sequence elements.
   The order of elements in the \simd object is equal to the order of the corresponding elements in the sequence argument.
   The invocation order of user-provided function objects is sequential.
-}
 \end{wgText}
 
 \newcommand\tmp{[algorithms.parallel.exceptions]}
-It is my understanding that we do not want to add anything to \citep[§28.4.4 \tmp{}]{N4659} at this point.
+It is my understanding that we do not want to add anything to \citep[§25.3.4 \tmp{}]{N4842} at this point.
 The situation is simpler for the \simdEP policy.
 It is almost equivalent to the \code{seq} policy.
 
 \subsection{Wording for individual algorithms}
-\begin{wgText}[{§28.7 [alg.sorting]}]
+\begin{wgText}[{§25.7 [alg.sorting]}]
   \setcounter{Paras}{1}%
     \pnum
     \code{Compare} is a function object type.
@@ -358,6 +379,7 @@ It is almost equivalent to the \code{seq} policy.
     It is assumed that \code{comp} will not apply any non-constant function through the dereferenced iterator.
 
 \end{wgText}
-I have not identified the need for any additional wording in the subsections on the individual algorithms for the \simdEPT at this point.
+
+Further wording work is necessary where individual algorithms refer to boolean results from predicates. (E.g. \code{all_of} returns \code{false} if \code{any_of(}$E$\code{)} is \false\ldots)
 
 % vim: sw=2 et ft=tex spell tw=0
