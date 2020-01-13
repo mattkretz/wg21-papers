@@ -12,13 +12,10 @@ The execution order of the chunks retains the sequential semantics of the non-pa
 As a consequence, the applicability of the execution policy is limited to iterators where \code{Iterator::value_type} is a vectorizable type \cite[{[parallel.simd.general]}]{N4744}.
 A future extension of \simd may lift this restriction by allowing certain (or all) user-defined types as first template argument to \simd.
 A different conceivable extensions is a recursive destructuring applied inside the algorithm, subsequent creation of a corresponding number of \simd objects, and a call to the function object with a corresponding number of arguments.
-(E.g. application of an algorithm on \code{std::vector<std::pair<float, float>>} calls the function object with \code{simd<float>, simd<\MayBreak{}float>} instead of \code{simd<std::pair<float, float>>}.)
+(E.g. application of an algorithm on \code{std::vector<std::pair<float, float>>} calls the function object with \code{simd<float>, simd<\MayBreak{}float>} instead of \code{simd<std::\MayBreak{}pair<\MayBreak{}float, float>>}.)
 
-\begin{table}[bt]
-\begin{tabular}{|p{.45\textwidth}|p{.45\textwidth}|}
-  before & \href{https://godbolt.org/z/5VBv6k}{after (with optimized epilogue)} \\
-  \hline\smaller
-  \begin{lstlisting}[linewidth=.45\textwidth]
+\begin{tonytable}{Transformation of an array. c.f. \url{https://godbolt.org/z/mEL3CK}}
+  \smaller\begin{lstlisting}[linewidth=.45\textwidth]
 using V = stdx::native_simd<float>;
 constexpr int N = 60;
 
@@ -27,6 +24,7 @@ template <class T> T something(T);
 auto f(const std::array<float, N>& data)
 {
   std::array<float, N> output;
+
   size_t i = 0;
   for (; i + V::size() <= N; i += V::size()) {
     V x(&data[i], stdx::element_aligned);
@@ -36,9 +34,12 @@ auto f(const std::array<float, N>& data)
   for (; i < N; ++i) {
     output[i] = something(data[i] + 1);
   }
+
   return output;
 }
-\end{lstlisting} & \smaller\begin{lstlisting}[linewidth=.45\textwidth]
+  \end{lstlisting}
+  &
+  \smaller\begin{lstlisting}[linewidth=.45\textwidth]
 using V = stdx::native_simd<float>;
 constexpr int N = 60;
 
@@ -47,14 +48,18 @@ template <class T> T something(T);
 auto f(const std::array<float, N>& data)
 {
   std::array<float, N> output;
+
   stdx::transform(std::execution::simd,
     data.begin(), data.end(), output.begin(),
     [](auto x) {
       return something(x + 1);
     });
+
+
+
+
+
   return output;
 }
   \end{lstlisting}
-\end{tabular}
-\caption{Tony Table}
-\end{table}
+\end{tonytable}

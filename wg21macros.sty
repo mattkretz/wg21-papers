@@ -289,6 +289,21 @@
   \bigskip
 }
 
+\newenvironment{tonytable}[1]{
+\renewcommand\tablename{Tony Table}
+%\newcounter{TonyTable}
+%\renewcommand\thetable{\arabic{TonyTable}\stepcounter{TonyTable}}
+\begin{table}[h]
+\caption{#1}
+\begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
+before&with \wgDocumentNumber\\
+\hline
+}{
+\end{tabular}
+\end{table}
+\renewcommand\tablename{Table}
+}
+
 \newcommand\UnaryTypeTrait{\texttt{UnaryTypeTrait}\xspace}
 \newcommand\BinaryTypeTrait{\texttt{BinaryTypeTrait}\xspace}
 \newcommand\BaseCharacteristic{\texttt{BaseCharacteristic}\xspace}
