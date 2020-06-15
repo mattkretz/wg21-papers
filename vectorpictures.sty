@@ -1,6 +1,24 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{vectorpictures}[2010/06/30 v0.1 TikZ pictures for SIMD vectors]
 \RequirePackage{tikz}
+% \vInit[width]
+% \vResetNames
+% \vTranslate{dx,dy}
+% \vOperations[count]{symbol}
+% \vOperationsWithWidth[count]{symbol}{width}
+% \vOperationsX{y positions}{symbol}
+% \vSpecialNode{width}{content}
+% \vMemoryNode{height}
+% \vMemoryMark[opacity]{height}{list of positions}
+% \vArrows{From/To,From/To,...}
+% \vArrowsStraight{From/To,From/To,...}
+% \vArrowsL[distance]{From/To,From/To,...}
+% \vCaption[width]{text}
+% \vTextNode{text}
+% \vNode{a, b, c}
+% \vMaskNode{a, b, c}
+% \vMaskedNode{a, b, c}
+% \vSqrt
 
 %\pdfpageattr{/Group <</S /Transparency /I true /CS /DeviceRGB>>}
 
@@ -20,6 +38,7 @@
 
 \newlength{\vNodeSize}
 \newlength{\vNodeWidth}
+\newlength{\vTmpLength}
 \newlength{\vNodeHeight}
 
 \colorlet{vTextColor}{white}
@@ -304,6 +323,23 @@ minimum height=\vNodeHeight,minimum width=\vNodeWidth]
   \path let \p1 = (p) in coordinate (p) at (\x1+2\vNodeWidth,\y1+\arabic{vectornodeindexinner}\vNodeHeight);
 }
 
+\newcommand{\vMaskedNode}[1]{
+  \addtocounter{vectornodeindexouter}{1}%
+  \setcounter{vectoropcounter}{0}%
+  \setcounter{vectornodeindexinner}{0}%
+  \edef\v@FirstNodeName{\Alph{vectornodeindexouter}0}%
+  \foreach \active/\name in {#1}{
+    \coordinate (p) at ($(p)+(0,-\vNodeHeight)$);
+    \global\edef\v@LastNodeName{\Alph{vectornodeindexouter}\arabic{vectornodeindexinner}}%
+    \draw[nodes=mask node \active] (p)
+    node[name=\v@LastNodeName] {\name};%
+    \addtocounter{vectornodeindexinner}{1}%
+  }
+  %\v@DrawNodeFrame
+  \vNodeShadow
+  \path let \p1 = (p) in coordinate (p) at (\x1+2\vNodeWidth,\y1+\arabic{vectornodeindexinner}\vNodeHeight);
+}
+
 \newcommand{\vInit}[1][3em]{%
   \setlength\vNodeHeight{3ex}%
   \setlength\vNodeWidth{#1}%
@@ -326,6 +362,13 @@ minimum height=\vNodeHeight,minimum width=\vNodeWidth]
 \addtocounter{vectoropcounter}{1}%
 \v@TextShadow{#2}
 }}
+\newcommand\vOperationsWithWidth[3][\arabic{vectornodeindexinner}]{
+  \setlength\vTmpLength{\vNodeWidth}
+  \setlength\vNodeWidth{#3}
+  \vOperations[#1]{#2}
+  \setlength\vNodeWidth{\vTmpLength}
+  %\path let \p1 = (p) in coordinate (p) at (\x1+#3-\vNodeWidth,\y1);
+}
 \newcommand{\vOperationsX}[2]{
 \foreach \pos in {#1}{
 \path let \p1 = (p) in coordinate (op) at (\x1-\vNodeWidth,\y1-\pos\vNodeHeight);
