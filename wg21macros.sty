@@ -289,10 +289,13 @@
   \bigskip
 }
 
+\newcounter{TonyTable}
 \newenvironment{tonytable}[1]{
 \renewcommand\tablename{Tony Table}
-%\newcounter{TonyTable}
-%\renewcommand\thetable{\arabic{TonyTable}\stepcounter{TonyTable}}
+\let\prevthetable\thetable
+\addtocounter{table}{-1}
+\stepcounter{TonyTable}
+\renewcommand\thetable{\arabic{TonyTable}}
 \begin{table}[h]
 \caption{#1}
 \begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
@@ -301,6 +304,7 @@ before&with \wgDocumentNumber\\
 }{
 \end{tabular}
 \end{table}
+\let\thetable\prevthetable
 \renewcommand\tablename{Table}
 }
 
