@@ -107,7 +107,7 @@ Locally\footnote{This is somewhat similar to providing make_unique in C++11.} ad
 \begin{lstlisting}[style=Vc]
 //linalg.h - external code, cannot be modified
 namespace linalg {
-  class matrix {
+  struct matrix {
     float & operator()(size_t row, size_t col);
   };
 }
