@@ -25,8 +25,8 @@ Many other operators additionally allow overloads via non\hyp member functions.
 That the subscript operator does not allow non\hyp member overloads appears like an arbitrary decision, apparently motivated by a conservative approach, to only add features when the use\hyp cases are clear.
 
 Therefore, for the rest of this section I will give examples for non\hyp member subscript operators.
-In general, non\hyp member subscript is only needed if the class to be subscripted is independent of the type used for the subscript argument.
-Consequently, the examples are very similar:
+In general, non\hyp member subscript is needed if the class to be subscripted is independent of the type used for the subscript argument or if modifications of the subscripted type are not possible.
+Consequently, several examples are very similar:
 A generic container class only implements the \type{size\_t} subscript operator.
 A user-defined type subsequently provides a good use\hyp case for an additional subscript overload for one or more container classes.
 
@@ -96,6 +96,33 @@ std::uint32_t operator[](const ColorArray &values, Color c) {
 }
 
 auto value = ColorValues[Color::Red]; // now it works
+\end{lstlisting}
+
+\subsection{Compatiblity layer}
+Once P2128 is adopted, providing multi\hyp dimensional subscript operators for linear algebra (linalg) types (e.g. matrices) will be possible.
+It is to be expected that linalg\hyp libaries will start providing these subscript operators, though adoption will be lagging until the respective C++ standard is in widespread use.
+Therefore, early adopters likely won't benefit from P2128, unless they maintain their own linalg\hyp library.
+Locally\footnote{This is somewhat similar to providing make_unique in C++11.} adding a non\hyp member subscript operator will allow early adopters to enable a more natural syntax until P2128 is in widespread use.
+
+\begin{lstlisting}[style=Vc]
+//linalg.h - external code, cannot be modified
+namespace linalg {
+  struct matrix {
+    float & operator()(size_t row, size_t col);
+  };
+}
+
+//utils.h - local utility header
+namespace linalg {
+  //! @attention to be removed once linalg provides multi-dim subscript
+  inline float & operator[](matrix &self, size_t row, size_t col) {
+    return self(row, col);
+  }
+}
+
+linalg::matrix mat = ...;
+mat[3, 3] = 1;
+
 \end{lstlisting}
 
 \section{Implementation}
