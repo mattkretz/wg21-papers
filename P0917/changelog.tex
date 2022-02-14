@@ -1,7 +1,7 @@
 \section{Changelog}
 \begin{revision}
   \item Added \code{bounded::integer} motivation and example.
-  \item Added a reference to \cite{P0927R0}; making a stronger case for the simple choice.
+  \item Added a reference to P0927R0; making a stronger case for the simple choice.
 \end{revision}
 
 \begin{revision}
@@ -19,6 +19,15 @@
   \item Add \code{boost::yap} as another existing library that is missing the ability to overload \code{?:}.
   %\todo Add a tony table for the design choice “specialize \code{common_type}” vs. “define conditional operator overload”.
   %\todo Discuss GCC implementation.
+\end{revision}
+
+\begin{revision}
+  \todo Explore: \code{operator?:} for contextual-bool automatically uses \code{common_type} and cannot be overloaded otherwise.
+        It does deferred evaluation.
+        Non-boolean conditions (i.e. the type of the first argument is not contextually convertible to \bool) can be overloaded and are therefore a normal function call without deferred evaluation.
+  \todo \code{auto operator?:(T, U) = default} could mean \code{common_type_t<T, U> operator?:(...)}, i.e. synthesize a builtin operator using \code{common_tpye} for the return type.
+  \todo Explore: Definition of \code{operator?:(Cond, A, B)} automatically synthesizes \code{operator?:(Cond, B, A)} calling the former.
+        (Note, there are no compatibility issues like for defaulted compares.)
 \end{revision}
 
   %\todo Discuss implications for “contextually convertible to \bool” implementations.
