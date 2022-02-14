@@ -24,5 +24,15 @@
   \item Settle on \code{simd_mask} predicates.
 \end{revision}
 
+\begin{revision}
+  \todo Discuss algorithms in \code{<numeric>}. (transform_reduce is a bit more involved because of different value_types)
+  \todo Mention \code{<memory>} algorithms (they don't call user-defined code).
+  \todo Add pointer to P0214 for motivation.
+  \todo Fix mention of \code{swap_ranges}, which was \code{swap} before.
+  \todo Add C++20's \code{shift_left} and \code{shift_right}.
+  \todo \code{make_heap}, \code{push_heap}, \code{pop_heap}, and \code{sort_heap} have no execution policy overload. Do fix.
+  \todo Discuss permission to fall back to sequential execution (i.e. T vs. simd<T, scalar>).
+\end{revision}
+
   %\todo Discuss that the “drop \code{generate}” option is really unfortunate wrt. random number usage.
   %\todo Discuss concept requirements.

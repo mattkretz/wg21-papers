@@ -352,7 +352,7 @@ The intent is to
   \color{WgAdd}
   \pnum
   The invocations of element access functions in parallel algorithms invoked with an execution policy object of type \simdEPT are permitted to execute in an unordered fashion in the calling thread, except for the application of user-provided function objects.
-  User-provided function objects are called with an im\-ple\-men\-ta\-tion-defined number of sequence elements combined into a \simd[<T, Abi>] object.
+  User-provided function objects are called with an unspecified number of sequence elements combined into a \simd[<T, Abi>] object.
   The type for \type{Abi} is chosen by the implementation.
   It may be different for subsequent applications of the user-provided function in the same parallel algorithm invocation.
   The type for \type T is the decayed type of the sequence elements.
