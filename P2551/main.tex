@@ -1,0 +1,88 @@
+\newcommand\wgTitle{Clarify intent of P1841 numeric traits}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>\\Jonathan Wakely <cxx@kayari.org>}
+\newcommand\wgDocumentNumber{D2551R0}
+\newcommand\wgGroup{LEWG}
+\newcommand\wgTarget{\CC{}23}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{changelog}
+\usepackage{underscore}
+
+\addbibresource{extra.bib}
+
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  A list of design-related questions after implementation of \cite{P1841R2} “Wording for Individually Specializable Numeric Traits”.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\section{Introduction}
+\cite{P1841R2} provides wording for numeric traits.
+The last design paper was \cite{P0437R1} with additions from \cite{P1370R1}.
+
+\section{Design Questions}
+\begin{enumerate}
+  \item When exactly is a trait disabled for a given numeric type?
+  It seems the intent was for the \code{value} member to be defined whenever a representation for the desired constant exists.
+  The wording needs to clarify whether any behavioral aspects play a role.
+  For example, a \code{denorm_min} may be enabled independent of whether the execution environment flushes denormals to zero / treats denormals as zero.
+  Even in the case of a processor that unconditionally zeros denormals; as long as a representation exists, is the trait enabled?
+  Conversely, if a representation does not exist, is the trait disabled?
+  Specifically, \code{denorm_min} should never have the value of \code{norm_min}?
+
+  \item Please clarify whether we want to treat \code{bool} as a numeric type and enable the traits accordingly.
+  The current wording in \cite{P1841R2} enables the traits for \code{bool}, which is consistent with \code{std::numeric_limits}.
+  \code{std::numeric_limits<bool>} will still exist if needed.
+  Numeric code does not use \code{bool} as a numeric type, despite it being technically an “arithmetic type” in the core language.
+
+  \item Many of the numeric traits are motivated by floating-point and make little sense for integral types.
+  Is it intended that all of the following numeric traits are enabled also for integral types?
+  \begin{itemize}
+    \item \code{denorm_min}
+    \item \code{epsilon}
+    \item \code{norm_min}
+    \item \code{reciprocal_overflow_threshold}
+    \item \code{round_error}
+    \item \code{max_exponent}
+    \item \code{max_exponent10}
+    \item \code{min_exponent}
+    \item \code{min_exponent10}
+  \end{itemize}
+
+  \item reciprocal_overflow_threshold yields a subnormal number for IEC559 types.
+  How should this value change wrt. treat-denormals-as-zero?
+  I.e. in a situation where the hardware treats subnormal operands as zero you get 1/0 -> inf, which does overflow.
+  In which case it doesn't match the specification anymore (“The smallest positive value $x$ of type \type{T} such that \code{T(1)}$/x$ does not overflow”).
+  This trait is specified by a behavior and as such may depend on processor state.
+  As a compile-time constant this value must be independent from runtime behavior.
+  But what is the correct value?
+
+  \item \code{numeric_limits::max_digits10} is 0 for integral types.
+  Is \code{max_digits10_v<int>} supposed to yield \code{digits10_v<int> + 1}?
+  Or should it only be specialized for floating-point?
+\end{enumerate}
+
+\section{Suggested Straw Polls}
+\wgPoll{Whether a numeric trait is enabled is independent of processor behavior and only reflects whether a representation for the requested trait exists (ignoring \code{reciprocal_overflow_threshold}).}{&&&&}
+
+\wgPoll{All numeric traits for \code{bool} should be disabled.}{&&&&}
+
+\wgPoll{The numeric traits listed item 3 in \wgDocumentNumber{} should be disabled for integral types.}{&&&&}
+
+\wgPoll{\code{reciprocal_overflow_threshold} should be independent of processor behavior and only reflect the value range of possible representations of the given type.}{&&&&}
+
+\wgPoll{\code{reciprocal_overflow_threshold} should reflect processor behavior if it is known at compile-time (e.g. the target hardware unconditionally treats denormals as zero), otherwise it should reflect the value range of possible representations of the given type.}{&&&&}
+
+\wgPoll{\code{max_digits10} should deviate from \code{numeric_limits} and yields \code{digits10_v<T> + 1}.}{&&&&}
+
+%\input{changelog}
+%\input{strawpolls}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
