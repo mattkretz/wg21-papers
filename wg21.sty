@@ -21,6 +21,10 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{wg21}[2014/05/22 v1.0 Template for WG21 papers]
+% fix floatrow \count error
+\RequirePackage{etex}
+\reserveinserts{20}
+\RequirePackage{floatrow}
 \RequirePackage{hyphenat}
 \let\BreakableUnderscore\undefined
 \RequirePackage{mymacros}
@@ -38,10 +42,6 @@
 \DeclareOption{nosubfig}{\setboolean{@subfig}{false}}
 \DeclareOption{nodottedtoc}{\setboolean{@dottedtoc}{false}}
 \ProcessOptions\relax
-
-% fix floatrow \count error
-\usepackage{etex}
-\reserveinserts{20}
 
 % subfig-related stuff
 \@ifpackageloaded{subfig}%
@@ -455,7 +455,6 @@
 \usetikzlibrary{calc,fit,positioning}
 
 \usepackage{caption}
-\usepackage{floatrow}
 \captionsetup{
   font=sf,
   labelfont={sf,color={halfgray},bf}
