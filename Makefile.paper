@@ -46,17 +46,18 @@ upload: $(NAME).pdf
 	@echo .
 
 loop-internal:
-	@while true; do \
+	@screenTitle() { echo $$TERM|grep -q screen && printf '\ek%s\e\\' "$$*"; }; \
+	while true; do \
 	  while true; do \
-	    printf '\ekLaTeX waiting: $(loopinternaltarget)\e\\'; \
+	    screenTitle 'LaTeX waiting: $(loopinternaltarget)'; \
 	    if ! $(MAKE) -q $(loopinternaltarget).pdf>/dev/null; then \
-	      printf '\ekLaTeX build: $(loopinternaltarget)\e\\'; \
+	      screenTitle 'LaTeX build: $(loopinternaltarget)'; \
 	      ls -lt $(ALL_DEPS) | head -n1 > ._stamp; \
 	      nice ionice -c idle $(MAKE) $(loopinternaltarget).pdf || break; \
 	    fi; \
 	    sleep 1s; \
 	  done; \
-	  printf '\ekfailed\e\\'; \
+	  screenTitle 'failed'; \
 	  kdialog --passivepopup "LaTeX ($(NAME)) failed" 1; \
 	  echo -e '\a'; \
 	  ls -lt $(ALL_DEPS) $(MORE_DEPS) | head -n1 > ._stamp.new; \
@@ -117,14 +118,15 @@ final-figure%.pdf: final.tex $(ALL_DEPS)
 	$(PDFLATEX) --halt-on-error --interaction=nonstopmode --jobname "final-figure$*" "\def\tikzexternalrealjob{final}\input{final}"
 
 autocommit:
-	@printf '\ekautocommit\e\\'
-	@while true; do \
+	@screenTitle() { echo $$TERM|grep -q screen && printf '\ek%s\e\\' "$$*"; }; \
+	screenTitle 'autocommit' \
+	while true; do \
 	  git commit -am "auto: `git status --porcelain|grep -v '^??'|cut -c4-|paste -s -d' '`" && \
-	  printf '\ekcommitted\e\\' && \
+	  screenTitle 'committed' && \
 	  git push && \
-	  printf '\ekcommitted & pushed\e\\'; \
+	  screenTitle 'committed & pushed'; \
 	  sleep 5s; \
-	  printf '\ekautocommit\e\\'; \
+	  screenTitle 'autocommit'; \
 	  sleep 55s; \
 	done
 
