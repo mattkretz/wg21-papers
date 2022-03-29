@@ -1,0 +1,168 @@
+\newcommand\wgTitle{A minimal ADL restriction to avoid ill-formed template instantiation}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{DMADLR0}
+\newcommand\wgGroup{EWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{changelog}
+\usepackage{underscore}
+
+\addbibresource{extra.bib}
+
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  I researched and tested a minimal change to ADL to avoid ill-formed instantiations of 
+  templates through ADL. This paper presents the idea and a call for potential 
+  counter-examples.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+%\input{changelog}
+
+%\input{strawpolls}
+
+\section{Introduction}
+
+Consider the innocent-looking code in \lst{example1} (as posted to the core reflector by 
+Jonathan Wakely\footnote{\url{http://lists.isocpp.org/core/2021/06/11161.php}}).
+\begin{lstlisting}[style=Vc,float,label=lst:example1,caption={
+Ill-formed instantiation of \type{Wrap<Incomplete>} because of ADL
+}]
+struct Incomplete;
+template <typename T> struct Wrap { T t; };
+
+template <typename Unused>
+struct Testable
+{
+  explicit operator bool() const { return true; }
+};
+
+int main()
+{
+  Testable<Incomplete> l;
+  if (l) // OK
+    return 1;
+  if (!(bool)l) // OK
+    return 0;
+  if (!l) // OK
+    return 0;
+
+  Testable<Wrap<Incomplete>> l2;
+  if (l2) // OK
+    return 1;
+  if (!(bool)l2) // OK
+    return 0;
+  if (!l2) // ERROR
+    return 0;
+}
+\end{lstlisting}
+
+The expression \code{!l2} requires instantiation of \type{Wrap<Incomplete>}, which makes 
+the code ill-formed. The compiler must consider \type{Testable<Wrap<Incomplete>>}, 
+\type{Wrap<In\-com\-plete>}, and \type{Incomplete} as associated entities. Consequently, a 
+lookup of all \code{opera\-tor!} names in these associated entities is required (to look 
+for hidden friends). This lookup is only possible when all template specializations are 
+instantiated. In this example
+\type{Testable<Wrap<Incomplete>>} must already have been successfully instantiated 
+(otherwise the declaration of \code{l2} would have been ill-formed) and only 
+\type{Wrap<Incomplete>} is still missing. However, instantiation of 
+\type{Wrap<Incomplete>} is ill-formed because its data member has an incomplete type.
+
+\TODO{\item What part of the standard allows ignoring ADL for incomplete types?}
+
+The expression \code{!l}, on the other hand, is well-formed since ADL lookup inside the 
+incomplete type \type{Incomplete} is forgone. Consequently, a later definition of 
+\type{Incomplete} as
+\medskip\begin{lstlisting}[style=Vc]
+struct Incomplete {
+  friend bool operator!(Testable<Incomplete>) { return true; }
+}
+\end{lstlisting}
+can change the value of the expression \code{!l}.
+
+What are the chances to find a hidden friend \code{operator!} in \type{Wrap<Incomplete>} 
+which wins in overload resolution when the argument is a 
+\type{Testable<Wrap<Incomplete>>}? What if ADL was less eager in trying to instantiate 
+templates with incomplete types as template parameter? Would we really break any code 
+other than contrived examples that are only written to demonstrate this specific example?
+
+To complete the picture, note that the issue is not specific to operators (e.g. 
+\lst{example2} as presented by \textcite{P2538R0}). However, for operators there's no 
+simple “always fully qualify your calls” rule to avoid ADL.
+
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:example2,caption={
+Minimal example triggering ill-formed instantiation
+}]
+template<class T> struct Holder { T t; };
+struct Incomplete;
+Holder<Incomplete> *p;
+int f(Holder<Incomplete>*);
+int x = f(p);    // error: Holder<Incomplete> is an associated entity
+int y = ::f(p);  // ok: no ADL
+\end{lstlisting}
+
+\section{Solution Idea}
+The goal is to minimize instantiation of templates via ADL. Because, if a given associated 
+entity has not been instantiated at this point in the translation, then the user might 
+have avoided instantiation intentionally as it would be ill-formed.
+
+The case where instantiation via ADL lookup is still required is:
+\medskip\begin{lstlisting}[style=Vc]
+template <typename T>
+struct A {
+  void f(const A&);
+};
+
+void g(const A<int>& a) {
+  f(a);
+}
+\end{lstlisting}
+Note that in most cases \type{A<int>} would already have been instantiated, like in:
+\medskip\begin{lstlisting}[style=Vc]
+  A<int> a;
+  f(a);
+\end{lstlisting}
+
+But beyond this, ADL should not instantiate templates. Specifically, template arguments, 
+
+(In the following I will use the term \emph{not-yet-instantiated template} to talk about 
+class templates that have not been instantiated at the given point in the translation 
+unit.)
+
+The goal is to avoid instantiation of templates which might be ill-formed due to an 
+incomplete type or a not-yet-instantiated template in the template argument list. Of 
+course, an incomplete type in the template argument list does not necessarily imply 
+instantiation will be ill-formed (e.g. \lst{wrap2}), but it is (so far) the best heuristic 
+I found.
+\begin{lstlisting}[style=Vc,float,label=lst:wrap2,caption={
+Different definition of \type{Wrap} which doesn't make the initial example ill-formed.
+}]
+template <typename T> struct Wrap { T* t; };
+\end{lstlisting}
+Therefore, when iterating/recursing through the associated entities instantiate templates 
+only if all template arguments are complete types and already instantiated, in case of 
+template specializations. Consequently, \type{Wrap<Incomplete>} would not be considered 
+for ADL as long as \type{Incomplete} is incomplete. The same would be true for 
+\type{Wrap<Wrap<Incomplete>>}, since \type{Wrap<Incomplete>} is a template specialization 
+that has not been instantiated yet.
+
+The alternative solution would require the implementation to instantiate templates 
+tentatively. This would place a huge burden on implementations: The instantation depth 
+might be very deep, before the condition is found which requires a rollback of the 
+instantation.
+
+\section{Implementation Experience}
+I implemented the presented idea for GCC and found no code breakage up to now.
+
+\section{Suggested Straw Polls}
+\wgPoll{Ship it!}{&&&&}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=90 formatoptions=trowan2
