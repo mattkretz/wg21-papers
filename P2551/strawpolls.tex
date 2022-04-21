@@ -1,8 +1,21 @@
 \section{Straw Polls}
-%\subsection{SG1 at Jacksonville 2018}
-%\wgUnanimous{Proceed to LEWG?}
+\subsection{LEWG telecon 2022-03-29}
+\wgPoll
+{Numeric traits can deviate from \code{numeric_limits}.}
+{13&8&0&0&0}
 
-%\subsection{LEWG at Rapperswil 2018}
-%\wgPoll
-%{Temperature of the room: LEWG supports overload of ?:}
-%{2&5&1&1&2}
+\wgPoll
+{Numeric traits should be based on representation rather than behavior (ignoring \code{reciprocal_overflow_threshold}).}
+{7&5&2&0&0}
+
+\wgPoll
+{All numeric traits for bool should be disabled.}
+{12&6&1&0&0}
+
+\wgPoll
+{The numeric traits that are not meaningful for \code{numeric_limits} (\code{denorm_min}, \code{epsilon}, etc) should be disabled for integral types.}
+{14&3&0&0&0}
+
+\wgPoll
+{\code{max_digits10} should deviate from \code{numeric_limits} and yields \code{digits10_v + 1}.}
+{6&5&2&0&0}
