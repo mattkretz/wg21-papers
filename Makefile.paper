@@ -46,7 +46,7 @@ upload: $(NAME).pdf
 	@echo .
 
 loop-internal:
-	@screenTitle() { echo $$TERM|grep -q screen && printf '\ek%s\e\\' "$$*"; }; \
+	@screenTitle() { case "$$TERM" in screen*|tmux*) printf '\ek%s\e\\' "$$*";; *) printf '\e]1;%s:q\a' "$$*";; esac }; \
 	while true; do \
 	  while true; do \
 	    screenTitle 'LaTeX waiting: $(loopinternaltarget)'; \
