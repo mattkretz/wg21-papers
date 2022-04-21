@@ -22,6 +22,8 @@
 
 \pagestyle{scrheadings}
 
+\addtocounter{section}{-1}
+\input{changelog}
 \section{Introduction}
 \cite{P1841R2} provides wording for numeric traits.
 The last design paper was \cite{P0437R1} with additions from \cite{P1370R1}.
@@ -37,10 +39,20 @@ The question on \code{reciprocal_overflow_threshold} was deferred to let the aut
 
   \item Decision already taken in LEWG.
 
-  \item reciprocal_overflow_threshold yields a subnormal number for IEC559 types.
+  \item \code{reciprocal_overflow_threshold} is currently defined as:
+  \begin{wgText}[{P1841R2 [num.traits.val]}]
+\begin{itemdecl}
+  template <class T> struct reciprocal_overflow_threshold<T> { @\emph{see below}@ };
+\end{itemdecl}
+\begin{itemdescr}
+\setcounter{Paras}{8}
+  \pnum The smallest positive value $x$ of type \type{T} such that \code{T(1)}$/x$ does not overflow.
+\end{itemdescr}
+  \end{wgText}
+  This yields a subnormal number for IEC559 types.
   How should this value change wrt. treat-denormals-as-zero?
   I.e. in a situation where the hardware treats subnormal operands as zero you get 1/0 -> inf, which does overflow.
-  In which case it doesn't match the specification anymore (“The smallest positive value $x$ of type \type{T} such that \code{T(1)}$/x$ does not overflow”).
+  In which case it doesn't match the specification anymore.
   This trait is specified by a behavior and as such may depend on processor state.
   As a compile-time constant this value must be independent from runtime behavior.
   But what is the correct value?
@@ -66,11 +78,10 @@ The question on \code{reciprocal_overflow_threshold} was deferred to let the aut
 
 \noindent If the above poll doesn't reach consensus:\\
 
-\wgPoll{Specify behavior of \code{1 / reciprocal_overflow_threshold} only for constant expressions.}{&&&&}
+\wgPoll{Specify the behavior of \code{1 / reciprocal_overflow_threshold} only for constant expressions.}{&&&&}
 
 \wgPoll{Require \code{reciprocal_overflow_threshold} to be a normal number.}{&&&&}
 
-\input{changelog}
 \input{strawpolls}
 
 
