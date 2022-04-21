@@ -98,13 +98,13 @@
     moredelim=**[is][\itshape]{|/}{/|}
   }
   \let\type=\code
-  \rmfamily\smaller[1]
-  \par\noindent\hrulefill #1\\
+  \par\rmfamily\smaller[1]\noindent\hrulefill\hspace{1ex} #1
+  \par\vskip.5\baselineskip\noindent%
 }
-{
-  \par\noindent\hrulefill
-  \endgroup\par
-  \vskip1\baselineskip plus 2\baselineskip
+{%
+  \par\noindent\hrulefill%
+  \endgroup\par%
+  \vskip.5\baselineskip plus 2\baselineskip%
 }
 
 %%--------------------------------------------------

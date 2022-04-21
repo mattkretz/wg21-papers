@@ -13,13 +13,14 @@
 \addbibresource{extra.bib}
 
 \newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+\newcommand\notyetinstantiated{not\hyp{}yet\hyp{}instantiated\hyp{}templates\xspace}
 
 \begin{document}
 \selectlanguage{american}
 \begin{wgTitlepage}
   I researched and tested a minimal change to ADL to avoid ill-formed instantiations of 
-  templates through ADL. This paper presents the idea and a call for potential 
-  counter-examples.
+  templates through ADL. This paper presents the idea and a call for examples which would 
+  get broken.
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
@@ -64,34 +65,38 @@ int main()
 }
 \end{lstlisting}
 
-The expression \code{!l2} requires instantiation of \type{Wrap<Incomplete>}, which makes 
-the code ill-formed. The compiler must consider \type{Testable<Wrap<Incomplete>>}, 
-\type{Wrap<In\-com\-plete>}, and \type{Incomplete} as associated entities. Consequently, a 
-lookup of all \code{opera\-tor!} names in these associated entities is required (to look 
-for hidden friends). This lookup is only possible when all template specializations are 
-instantiated. In this example
-\type{Testable<Wrap<Incomplete>>} must already have been successfully instantiated 
-(otherwise the declaration of \code{l2} would have been ill-formed) and only 
-\type{Wrap<Incomplete>} is still missing. However, instantiation of 
-\type{Wrap<Incomplete>} is ill-formed because its data member has an incomplete type.
+The expression \code{!l2} leads to name lookup of \code{operator!}. The associated 
+entities are \type{Testable<Wrap<Incomplete>>}, \type{Wrap<In\-com\-plete>}, and 
+\type{Incomplete}.
+In this example \type{Testable<Wrap<Incomplete>>} must already have been successfully 
+instantiated, otherwise the declaration of \code{l2} would have been ill-formed.
+The type \type{Incomplete} is incomplete and the failure to look for \code{operator!} 
+inside \type{Incomplete} is ignored.
+The type \type{Wrap<Incomplete>} is a template specialization which has not been 
+instantiated at this point in the translation. But instead of treating the type like the 
+incomplete \type{Incomplete} type, the compiler attempts to instantiate the 
+specialization, which leads to an ill-formed definition of its data member since it has 
+incomplete type.
 
-\TODO{\item What part of the standard allows ignoring ADL for incomplete types?}
+\TODO{
+  \todo Where does the standard allow ignoring ADL for incomplete types?
+  \todo Where does the standard require instantiation for ADL?
+}
 
-The expression \code{!l}, on the other hand, is well-formed since ADL lookup inside the 
-incomplete type \type{Incomplete} is forgone. Consequently, a later definition of 
-\type{Incomplete} as
+The expression \code{!l} is well-formed since ADL ignores incomplete types. Consequently, 
+a later definition of \type{Incomplete} as
 \medskip\begin{lstlisting}[style=Vc]
 struct Incomplete {
   friend bool operator!(Testable<Incomplete>) { return true; }
 }
 \end{lstlisting}
-can change the value of the expression \code{!l}.
+changes the value of the expression \code{!l}.
 
-What are the chances to find a hidden friend \code{operator!} in \type{Wrap<Incomplete>} 
-which wins in overload resolution when the argument is a 
-\type{Testable<Wrap<Incomplete>>}? What if ADL was less eager in trying to instantiate 
-templates with incomplete types as template parameter? Would we really break any code 
-other than contrived examples that are only written to demonstrate this specific example?
+Why does the standard allow incomplete types (i.e. not require completion) as associated 
+entities even though they can be used to violate the ODR? Isn't the same reasoning 
+applicable to templates that have not be instantiated yet? And what are the use cases for 
+defining a hidden friend in \type{Wrap<Incomplete>} which wins in overload resolution when 
+the argument is a \type{Testable<Wrap<Incomplete>>}?
 
 To complete the picture, note that the issue is not specific to operators (e.g. 
 \lst{example2} as presented by \textcite{P2538R0}). However, for operators there's no 
@@ -108,55 +113,140 @@ int x = f(p);    // error: Holder<Incomplete> is an associated entity
 int y = ::f(p);  // ok: no ADL
 \end{lstlisting}
 
-\section{Solution Idea}
-The goal is to minimize instantiation of templates via ADL. Because, if a given associated 
-entity has not been instantiated at this point in the translation, then the user might 
-have avoided instantiation intentionally as it would be ill-formed.
+\subsection{History}
 
-The case where instantiation via ADL lookup is still required is:
-\medskip\begin{lstlisting}[style=Vc]
+In this context it may be interesting to consider that template instantiation via ADL had 
+not been implemented in compilers for a long time. Template instantiation vial ADL works 
+since GCC 4.5.0 (April 2010), Clang 3.1.0 (May 2012), and since an ICC release between ICC 
+14 and 16\footnote{I have only been able to test with the compilers available on Compiler 
+   Explorer}.
+
+\pagebreak
+
+\section{Solution idea}
+
+Let's therefore consider a simple solution to make ADL avoid the above situations:\\
+\emph{Don't instantiate templates via ADL} (with maybe one or two exceptions).
+
+\textsc{Rationale:} If a given associated entity has not been instantiated at this point 
+in the translation, the user might have avoided instantiation intentionally as it would be 
+ill-formed.
+
+If I interpret the current wording correctly, the reason compilers instantiate templates 
+via ADL is [temp.inst] p2:
+\begin{wgText}[{[temp.inst] p2}]
+Unless a class template specialization is a declared specialization, the class template 
+specialization is implicitly instantiated when the specialization is referenced in a 
+context that requires a completely-defined object type or when the completeness of the 
+class type affects the semantics of the program.
+\end{wgText}
+In basically all cases, the completeness of the class type does not affect the semantics 
+of the program, though. But the compiler cannot know that instantiation is unnecessary 
+until it instantiated the template.
+
+
+\subsection{Necessary instantiation}
+
+The one case where instantiation via ADL is still required is shown in 
+\lst{needsInstantiation}.
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:needsInstantiation,caption={
+Requires instantiation or reasonable code could break.
+}]
 template <typename T>
 struct A {
-  void f(const A&);
+  friend void f(const A&);
 };
 
-void g(const A<int>& a) {
-  f(a);
+void g(const A<int>& x) {
+  f(x);
 }
 \end{lstlisting}
-Note that in most cases \type{A<int>} would already have been instantiated, like in:
-\medskip\begin{lstlisting}[style=Vc]
-  A<int> a;
-  f(a);
-\end{lstlisting}
+The situation in \lst{needsInstantiation} is unlikely, but certainly not 
+impossible\footnote{\url{https://gcc.gnu.org/PR34870} lead to GCC instantiating templates 
+via ADL}, since almost every other use of the lvalue \code{x} would lead to instantiation.
 
-But beyond this, ADL should not instantiate templates. Specifically, template arguments, 
+Therefore, given an argument of reference to \code{T}, ADL should instantiate \code{T} and 
+its bases but none of its template arguments.
 
-(In the following I will use the term \emph{not-yet-instantiated template} to talk about 
-class templates that have not been instantiated at the given point in the translation 
-unit.)
+\subsection{Namespaces of base classes}
 
-The goal is to avoid instantiation of templates which might be ill-formed due to an 
-incomplete type or a not-yet-instantiated template in the template argument list. Of 
-course, an incomplete type in the template argument list does not necessarily imply 
-instantiation will be ill-formed (e.g. \lst{wrap2}), but it is (so far) the best heuristic 
-I found.
-\begin{lstlisting}[style=Vc,float,label=lst:wrap2,caption={
-Different definition of \type{Wrap} which doesn't make the initial example ill-formed.
+Consider \lst{baseNamespace} which defines a base class in a different namespace 
+(\code{A}) than the derived class template.
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:baseNamespace,caption={
+ADL in namespace of base class
 }]
-template <typename T> struct Wrap { T* t; };
-\end{lstlisting}
-Therefore, when iterating/recursing through the associated entities instantiate templates 
-only if all template arguments are complete types and already instantiated, in case of 
-template specializations. Consequently, \type{Wrap<Incomplete>} would not be considered 
-for ADL as long as \type{Incomplete} is incomplete. The same would be true for 
-\type{Wrap<Wrap<Incomplete>>}, since \type{Wrap<Incomplete>} is a template specialization 
-that has not been instantiated yet.
+namespace A {
+  class B {};
+  void f(B*);
+}
+void f(void*);
 
+template <class T> class C : public A::B {};
+
+void g(C<int>* p) {
+  f(p); // calls ::f
+  A::B* other_ptr = p;
+  f(p); // calls A::f
+}
+
+// analogue situation with incomplete types:
+class I;
+void g0(I* p) { f(p); } // calls ::f
+class I : public A::B {};
+void g1(I* p) { f(p); } // calls A::f
+\end{lstlisting}
+In order for ADL to consider \code{A} as associated namespace when an argument of type 
+\code{C<int>*} is used, the base types of the class template need to be know. However, if 
+ADL were not to instantiate \code{C<int>} anymore, the behavior would depend on the 
+preceding code, whether \code{C<int>} had already been instantiated or not. The analogue 
+issue for an incomplete type \code{I} exhibits the same behavior change in ADL after 
+defining \code{I}. However, for the incomplete type it is more obvious why the base types' 
+namespaces are not considered (“You didn't say that \code{A::B} is a base!”).
+
+Note that overload resolution still has to instantiate class templates to find bases, as 
+shown in \lst{instantiateOverloadResolution}.
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:instantiateOverloadResolution,caption={
+Class template instantiation on overload resolution
+}]
+class B0 {};
+namespace A {
+  class B : public B0 {};
+  void f(B*);
+}
+void f(void*);
+void f(B0*);
+
+template <class T> class C : public A::B {};
+
+void g(C<int>* p) {
+  f(p); // calls ::f(B0*), i.e. overload resolution works unchanged
+  f(p); // calls A::f(A::B*)
+}
+\end{lstlisting}
+It is an open question whether template instantiation via ADL on arguments of pointer type 
+is enough of a problem to warrant the surprising behavior of 
+\lst{instantiateOverloadResolution} (vs. the surprising behavior of \lst{example2}). As a 
+less drastic change to ADL, given an argument of pointer to \code{T}, ADL instantiates 
+\code{T} and its bases but none of its template arguments.
+
+Beyond references and pointers, as far as I have seen, there is little use in ADL 
+instantiating templates. Therefore, when iterating/recursing through the associated entities treat 
+\notyetinstantiated like incomplete types.
+
+\section{Alternative solutions}
+
+\subsection{Tentative instantiation}
 The alternative solution would require the implementation to instantiate templates 
-tentatively. This would place a huge burden on implementations: The instantation depth 
+tentatively. This would place a huge burden on implementations: The instantiation depth 
 might be very deep, before the condition is found which requires a rollback of the 
-instantation.
+instantiation.
+
+\subsection{Inhibit instantiation if a template parameter is incomplete}
+
+This would cover some of the cases where ADL appears too eager. However, only minor 
+variations of such examples would instantiate the class templates again, leading to the 
+same errors we were trying to fix. The solution would thus appear to be rather fragile and 
+potentially more confusing than helpful.
 
 \section{Implementation Experience}
 I implemented the presented idea for GCC and found no code breakage up to now.
