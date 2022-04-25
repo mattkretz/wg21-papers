@@ -422,21 +422,26 @@
 \renewcommand{\familydefault}{\sfdefault}
 
 %TeXGyrePagella / SwitzeraADFLight
-\setmainfont[Ligatures=TeX,
-             SmallCapsFeatures={Numbers={Monospaced,OldStyle}}]{TeXGyreTermes}
-\setsansfont[Ligatures=TeX,
-             BoldFont={LatoRegular},
-             ItalicFont={LatoLightItalic},
-             BoldItalicFont={LatoItalic},
-             SmallCapsFont={TeXGyreAdventor},
-             SmallCapsFeatures={Letters=SmallCaps,Scale=MatchLowercase,Numbers={Proportional}}]{LatoLight}
-\setmonofont[Ligatures=NoCommon,
-             BoldFont={SourceCodeProRegular},
-             ItalicFont={SourceCodeProLightItalic},
-             BoldItalicFont={SourceCodeProItalic},
-             SmallCapsFont={Latin Modern Mono Caps},
-             SmallCapsFeatures={Letters=SmallCaps,Scale=MatchLowercase,Numbers={Proportional}},
-             FakeStretch=0.86]{SourceCodeProLight}
+\setmainfont{TeXGyreTermes}[
+  Ligatures=TeX,
+  SmallCapsFeatures={Numbers={Monospaced,OldStyle}}
+]
+\setsansfont{LatoLight}[
+  Ligatures=TeX,
+  BoldFont={LatoRegular},
+  ItalicFont={LatoLightItalic},
+  BoldItalicFont={LatoItalic},
+  SmallCapsFont={TeXGyreAdventor},
+  SmallCapsFeatures={Letters=SmallCaps,Scale=MatchLowercase,Numbers={Proportional}}
+]
+\setmonofont{firacodenerdfontcompletemlight}[
+  Scale=MatchLowercase,
+  LetterSpace=-5,
+  AutoFakeSlant,
+  BoldFont={firacodenerdfontcompletembold},
+  SmallCapsFont={Latin Modern Mono Caps},
+  SmallCapsFeatures={Letters=SmallCaps,Scale=MatchLowercase,Numbers={Proportional}}
+]
 
 % Math fonts:
 \usepackage{unicode-math}

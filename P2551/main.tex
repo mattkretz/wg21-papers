@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Clarify intent of P1841 numeric traits}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>\\Jonathan Wakely <cxx@kayari.org>}
-\newcommand\wgDocumentNumber{D2551R1}
+\newcommand\wgDocumentNumber{P2551R1}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}23}
 %\newcommand\wgAcknowledgements{ }
@@ -65,8 +65,17 @@ The question on \code{reciprocal_overflow_threshold} was deferred to let the aut
   \item P1370R1 presented an algorithm to determine the value and it does not yield the “\emph{smallest} positive value $x$ of type \type{T} such that \code{T(1)}$/x$ does not overflow”.
   \item The P1370R1 algorithm seems to ensure that the value is never subnormal.
     Thus, the specification should have been “The smallest positive \emph{normal} value $x$ of type \type{T} such that \code{T(1)}$/x$ does not overflow”
-  \item If \code{reciprocal_overflow_threshold} is limited to normal values we're not sure who would use the \code{reciprocal_overflow_threshold} constant.
-    It seems simpler and safer to remove the constant from P1841.
+  \item Since the actual reciprocal overflow threshold depends on runtime state, we're not sure who would/should use a compile-time constant.
+    It seems simpler and safer to remove \code{reciprocal_overflow_threshold} from P1841.
+    Mark wrote:
+    \begin{quote}
+    I would prefer to remove \code{reciprocal_overflow_threshold} entirely.  The
+    intent of the feature was to describe actual computer behavior at run
+    time, so that library authors could write generic code.  However, we
+    can't do that with traits.  For example, traits can't change value based
+    on compiler flags.  I wish I had realized that better when proposing
+    the feature.
+    \end{quote}
   \end{itemize}
 
   \item Decision already taken in LEWG.
