@@ -115,34 +115,42 @@ int y = ::f(p);  // ok: no ADL
 
 \subsection{History}
 
-In this context it may be interesting to consider that template instantiation via ADL had 
-not been implemented in compilers for a long time. Template instantiation vial ADL works 
-since GCC 4.5.0 (April 2010), Clang 3.1.0 (May 2012), and since an ICC release between ICC 
-14 and 16\footnote{I have only been able to test with the compilers available on Compiler 
-   Explorer}.
+To understand how much code might be affected by a breaking change in this area, it is 
+helpful to know that template instantiation via ADL had not been implemented in compilers 
+for a long time. Template instantiation vial ADL works since GCC 4.5.0 (April 2010), Clang 
+3.1.0 (May 2012), and since an ICC release between ICC 14 and 16\footnote{I have only been 
+  able to test with the compilers available on Compiler Explorer}.
 
 \pagebreak
 
 \section{Solution idea}
 
-Let's therefore consider a simple solution to make ADL avoid the above situations:\\
+Let us consider a simple solution to make ADL avoid the above situations:\\
 \emph{Don't instantiate templates via ADL} (with maybe one or two exceptions).
 
 \textsc{Rationale:} If a given associated entity has not been instantiated at this point 
-in the translation, the user might have avoided instantiation intentionally as it would be 
-ill-formed.
+in the translation,
+\begin{enumerate}
+\item the user might have avoided instantiation intentionally since instantiation would be 
+ill-formed; and
+\item the type was not important enough up to this point that instantiation was necessary 
+--- the chances for it to make a semantic difference are very small ---.
+\end{enumerate}
 
 If I interpret the current wording correctly, the reason compilers instantiate templates 
 via ADL is [temp.inst] p2:
-\begin{wgText}[{[temp.inst] p2}]
-Unless a class template specialization is a declared specialization, the class template 
-specialization is implicitly instantiated when the specialization is referenced in a 
-context that requires a completely-defined object type or when the completeness of the 
-class type affects the semantics of the program.
+\begin{wgText}[{[temp.inst]}]
+
+\setcounter{Paras}{1}
+\pnum Unless a class template specialization is a declared specialization, the class 
+template specialization is implicitly instantiated when the specialization is referenced 
+in a context that requires a completely-defined object type or when the completeness of 
+the class type affects the semantics of the program. [\ldots]
+
 \end{wgText}
 In basically all cases, the completeness of the class type does not affect the semantics 
 of the program, though. But the compiler cannot know that instantiation is unnecessary 
-until it instantiated the template.
+until after it instantiated the template.
 
 
 \subsection{Necessary instantiation}
