@@ -32,7 +32,8 @@
 \section{Introduction}
 
 Consider the innocent-looking code in \lst{example1} (as posted to the core reflector by 
-Jonathan Wakely\footnote{\url{http://lists.isocpp.org/core/2021/06/11161.php}}).
+Jonathan Wakely\footnote{\url{http://lists.isocpp.org/core/2021/06/11161.php} (the basic 
+idea of this paper was already hinted at in the resulting discussion thread)}).
 \begin{lstlisting}[style=Vc,float,label=lst:example1,caption={
 Ill-formed instantiation of \type{Wrap<Incomplete>} because of ADL
 }]
@@ -78,11 +79,6 @@ incomplete \type{Incomplete} type, the compiler attempts to instantiate the
 specialization, which leads to an ill-formed definition of its data member since it has 
 incomplete type.
 
-\TODO{
-  \todo Where does the standard allow ignoring ADL for incomplete types?
-  \todo Where does the standard require instantiation for ADL?
-}
-
 The expression \code{!l} is well-formed since ADL ignores incomplete types. Consequently, 
 a later definition of \type{Incomplete} as
 \medskip\begin{lstlisting}[style=Vc]
@@ -126,7 +122,7 @@ for a long time. Template instantiation vial ADL works since GCC 4.5.0 (April 20
 \section{Solution idea}
 
 Let us consider a simple solution to make ADL avoid the above situations:\\
-\emph{Don't instantiate templates via ADL} (with maybe one or two exceptions).
+\emph{Don't instantiate templates via ADL} (with one or two exceptions).
 
 \textsc{Rationale:} If a given associated entity has not been instantiated at this point 
 in the translation,
@@ -134,7 +130,7 @@ in the translation,
 \item the user might have avoided instantiation intentionally since instantiation would be 
 ill-formed; and
 \item the type was not important enough up to this point that instantiation was necessary 
---- the chances for it to make a semantic difference are very small ---.
+--- the chances for it to make a semantic difference are small ---.
 \end{enumerate}
 
 If I interpret the current wording correctly, the reason compilers instantiate templates 
@@ -214,7 +210,7 @@ namespaces are not considered (“You didn't say that \code{A::B} is a base!”)
 Note that overload resolution still has to instantiate class templates to find bases, as 
 shown in \lst{instantiateOverloadResolution}.
 \begin{lstlisting}[style=Vc,numbers=left,float,label=lst:instantiateOverloadResolution,caption={
-Class template instantiation on overload resolution
+Class template instantiation on overload resolution if ADL does not instantiate \code{C<int>}
 }]
 class B0 {};
 namespace A {
@@ -227,34 +223,41 @@ void f(B0*);
 template <class T> class C : public A::B {};
 
 void g(C<int>* p) {
-  f(p); // calls ::f(B0*), i.e. overload resolution works unchanged
+  f(p); // calls ::f(B0*)
+        // candidates: ::f(void*) and ::f(B0*), overload resolution instantiates
+        // C<int> and picks ::f(B0*), i.e. overload resolution works unchanged
   f(p); // calls A::f(A::B*)
+        // because ADL now finds the additional candidate A::f(A::B*)
 }
 \end{lstlisting}
 It is an open question whether template instantiation via ADL on arguments of pointer type 
 is enough of a problem to warrant the surprising behavior of 
 \lst{instantiateOverloadResolution} (vs. the surprising behavior of \lst{example2}). As a 
-less drastic change to ADL, given an argument of pointer to \code{T}, ADL instantiates 
-\code{T} and its bases but none of its template arguments.
+more conservative change to ADL, given an argument of pointer to \code{T}, let ADL 
+instantiate \code{T} and its bases but none of its template arguments.
 
-Beyond references and pointers, as far as I have seen, there is little use in ADL 
-instantiating templates. Therefore, when iterating/recursing through the associated entities treat 
-\notyetinstantiated like incomplete types.
+Beyond references and pointers --- as far as I have seen --- there is little use in ADL 
+instantiating templates. I recommend to modify [basic.lookup.argdep] and/or [temp.inst] to 
+treat \notyetinstantiated types like incomplete types except if the \notyetinstantiated 
+type is the type of the function argument.
 
 \section{Alternative solutions}
 
 \subsection{Tentative instantiation}
-The alternative solution would require the implementation to instantiate templates 
-tentatively. This would place a huge burden on implementations: The instantiation depth 
-might be very deep, before the condition is found which requires a rollback of the 
-instantiation.
+It seems like an obvious solution to require IFINAE (instantiation failure is not an 
+error) on ADL, i.e. to require tentative template instantiation. However, this would place 
+a huge burden on implementations: The instantiation depth might be very deep, before the 
+condition is found. IFINAE requires a rollback of all unfinished instantiations that lead 
+to the issue. It seems like a solvable task for compilers, but without implementation 
+experience it is not a realistic path forward.
 
 \subsection{Inhibit instantiation if a template parameter is incomplete}
 
-This would cover some of the cases where ADL appears too eager. However, only minor 
-variations of such examples would instantiate the class templates again, leading to the 
-same errors we were trying to fix. The solution would thus appear to be rather fragile and 
-potentially more confusing than helpful.
+A minimal solution for solving the problem in \lst{example1} inhibits instantiation on ADL 
+if a template parameter is incomplete. This would cover some of the cases where ADL 
+appears too eager. However, only minor variations of such examples would instantiate the 
+class templates again, leading to the same errors we were trying to fix. The solution 
+would thus appear to be rather fragile and potentially more confusing than helpful.
 
 \section{Implementation Experience}
 I implemented the presented idea for GCC and found no code breakage up to now.
