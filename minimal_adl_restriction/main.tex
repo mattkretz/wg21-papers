@@ -19,8 +19,8 @@
 \selectlanguage{american}
 \begin{wgTitlepage}
   I researched and tested a minimal change to ADL to avoid ill-formed instantiations of 
-  templates through ADL. This paper presents the idea and a call for examples which would 
-  get broken.
+  templates through ADL. This paper presents the idea and should serve as a call for 
+  examples which would get broken.
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
@@ -260,10 +260,43 @@ class templates again, leading to the same errors we were trying to fix. The sol
 would thus appear to be rather fragile and potentially more confusing than helpful.
 
 \section{Implementation Experience}
-I implemented the presented idea for GCC and found no code breakage up to now.
+I implemented the presented idea for GCC. One test of GCC's testsuite broke 
+(\lst{noexcept41}).
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:noexcept41,caption={
+GCC test that broke after implementation of less eager ADL
+}]
+template <typename> struct g { static const int h = 0; };
+template <typename i> void declval() { static_assert(!g<i>::h,""); }
+template <typename> struct a {
+  template <typename d, typename c>
+  friend auto f(d &&, c &&)
+    noexcept(declval<c>) -> decltype(declval<c>); // { dg-error "different exception" }
+};
+template <typename d, typename c> auto f(d &&, c &&) -> decltype(declval<c>);
+struct e {};
+static_assert((e{}, declval<a<int>>),""); // { dg-error "no context to resolve type" }
+\end{lstlisting}
+The test case started failing because the expression \code{(e{}, declval<a<int>>)} 
+requires name lookup of \code{operator,} and the type \code{a<int>} is an associated 
+entity and therefore was instantiated (i.e. GCC was looking for a hidden friend comma 
+operator in \code{a<int>}) which lead to the actual failure this test was looking for. To 
+me \lst{noexcept41} is no motivation for holding back on this proposal, rather the 
+opposite. For what it's worth, Clang doesn't even instantiate \code{a<int>} for this test 
+case.
+
+I found no further code breakage.
+
+\section{Wording}
+TBD.
 
 \section{Suggested Straw Polls}
-\wgPoll{Ship it!}{&&&&}
+None at this point.
+%\wgPoll{}{&&&&}
+
+\section{Acknowledgements}
+This paper and my implementation for GCC are a reaction to a discussion on the CWG list 
+with input from a Jonathan Wakely, Richard Smith, Peter Dimov, Barry Revzin, Arthur 
+O'Dwyer, Ville Voutilainen, and Daveed Vandevoorde.
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=90 formatoptions=trowan2
