@@ -188,9 +188,9 @@ void f(void*);
 template <class T> class C : public A::B {};
 
 void g(C<int>* p) {
-  f(p); // calls ::f
-  A::B* other_ptr = p;
-  f(p); // calls A::f
+  f(p); // calls ::f   // because C<int> has not been instantiated
+  A::B* other_ptr = p; // instantiates C<int> to find its base types
+  f(p); // calls A::f  // because C<int> has been instantiated before ADL
 }
 
 // analogue situation with incomplete types:
