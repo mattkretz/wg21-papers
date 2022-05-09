@@ -37,7 +37,32 @@ The question on \code{reciprocal_overflow_threshold} was deferred to let the aut
 
   \item Decision already taken in LEWG.
 
-  \item Decision already taken in LEWG.
+  \item (no action requested) In the prevision discussion (and poll) of this point we noticed that the traits P2551R0 listed was incomplete/incorrect.
+  The poll taken in LEWG therefore said: “The numeric traits that are not meaningful for \code{numeric_limits} (\code{denorm_min}, \code{epsilon}, etc) should be disabled for integral types.”
+  The resulting list then is:
+  \begin{itemize}
+    \item \code{denorm_min}
+    \item \code{epsilon}
+    \item \code{max_exponent}
+    \item \code{max_exponent10}
+    \item \code{min_exponent}
+    \item \code{min_exponent10}
+    \item \code{infinity}
+    \item \code{quiet_NaN}
+    \item \code{signaling_NaN}
+  \end{itemize}
+  The (bad) list in P2551R0 was:
+  \begin{itemize}
+    \item \code{denorm_min}
+    \item \code{epsilon}
+    \item \code{norm_min}
+    \item \code{reciprocal_overflow_threshold}
+    \item \code{round_error}
+    \item \code{max_exponent}
+    \item \code{max_exponent10}
+    \item \code{min_exponent}
+    \item \code{min_exponent10}
+  \end{itemize}
 
   \item \code{reciprocal_overflow_threshold} is currently defined as:
   \begin{wgText}[{P1841R2 [num.traits.val]}]
