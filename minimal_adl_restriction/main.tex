@@ -13,7 +13,7 @@
 \addbibresource{extra.bib}
 
 \newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
-\newcommand\notyetinstantiated{not\hyp{}yet\hyp{}instantiated\hyp{}templates\xspace}
+\newcommand\notyetinstantiated{not\hyp{}yet\hyp{}instantiated\hyp{}template}
 
 \begin{document}
 \selectlanguage{american}
@@ -34,7 +34,7 @@
 Consider the innocent-looking code in \lst{example1} (as posted to the core reflector by 
 Jonathan Wakely\footnote{\url{http://lists.isocpp.org/core/2021/06/11161.php} (the basic 
 idea of this paper was already hinted at in the resulting discussion thread)}).
-\begin{lstlisting}[style=Vc,float,label=lst:example1,caption={
+\begin{lstlisting}[style=Vc,float={hb},label=lst:example1,caption={
 Ill-formed instantiation of \type{Wrap<Incomplete>} because of ADL
 }]
 struct Incomplete;
@@ -66,12 +66,12 @@ int main()
 }
 \end{lstlisting}
 
-The expression \code{!l2} leads to name lookup of \code{operator!}. The associated 
-entities are \type{Testable<Wrap<Incomplete>>}, \type{Wrap<In\-com\-plete>}, and 
-\type{Incomplete}.
+The expressions \code{!l} and \code{!l2} lead to name lookup of \code{operator!}. The 
+associated entities of \code{l2} are \type{Testable<Wrap<Incomplete>>}, 
+\type{Wrap<In\-com\-plete>}, and \type{Incomplete}.
 In this example \type{Testable<Wrap<Incomplete>>} must already have been successfully 
 instantiated, otherwise the declaration of \code{l2} would have been ill-formed.
-The type \type{Incomplete} is incomplete and the failure to look for \code{operator!} 
+The type \type{In\-com\-plete} is incomplete and the failure to look for \code{operator!} 
 inside \type{Incomplete} is ignored.
 The type \type{Wrap<Incomplete>} is a template specialization which has not been 
 instantiated at this point in the translation. But instead of treating the type like the 
@@ -89,16 +89,72 @@ struct Incomplete {
 changes the value of the expression \code{!l}.
 
 Why does the standard allow incomplete types (i.e. not require completion) as associated 
-entities even though they can be used to violate the ODR? Isn't the same reasoning 
-applicable to templates that have not be instantiated yet? And what are the use cases for 
-defining a hidden friend in \type{Wrap<Incomplete>} which wins in overload resolution when 
-the argument is a \type{Testable<Wrap<Incomplete>>}?
+entities even though this can lead to ODR violations? Isn't the same reasoning applicable 
+to templates that have not be instantiated yet? And what are the use cases for defining a 
+hidden friend in \type{Wrap<Incomplete>} which wins in overload resolution when the 
+argument is a \type{Testable<Wrap<Incomplete>>}? (The last question is not only a rhetoric 
+question, see \sect{reference_wrapper} for a possible answer.)
+
+\subsection{Is this a real problem?}
+
+To determine whether \lst{example1} poses a real problem, consider that 
+\codelst@Testable<T>@ is equivalent to \codelst@std::unique_ptr<T>@ wrt. 
+\codelst@operator!@. I.e. a few corner cases, but still legitimate uses of 
+\codelst@unique_ptr@ lead to puzzling errors\footnote{OTOH, \code{unique_ptr} is not 
+\emph{boolean-testable}, so maybe users should simply learn to cast \code{unique_ptr}, 
+\code{optional}, etc to \code{bool}?}.
+
+Furthermore, for \codelst@std::unique_ptr<std::array<Incomplete, N>>@, instantiation on 
+ADL can occur in many more places; for example on range-based for loops as shown in 
+\lst{iterating_uniqptr}.
+\begin{lstlisting}[style=Vc,numbers=left,float={hbtp},label=lst:iterating_uniqptr,caption={
+Iteration over \code{std::span<std::unique_ptr<std::array<Incomplete, N>>>} is ill-formed
+}]
+class Incomplete;
+using Data = std::array<Incomplete, 3>;
+using Ptr = std::unique_ptr<Data>;
+
+void assert_nonnull (const std::span<Ptr> &x)
+{
+  for (const Ptr &ptr : x)  // ERROR: 'std::array<_Tp, _Nm>::_M_elems' has
+    assert (ptr);           //        incomplete type
+}
+\end{lstlisting}
+The reason for the error in \lst{iterating_uniqptr} isn't the lookup of \code{begin} and 
+\code{end} (it would be if \code{x} had no \code{begin} or \code{end} members) but rather 
+that operators applied to the iterator lead to ADL which instantiates 
+\codelst@std::array<Incomplete, 3>@. Thus, to write an iterator that doesn't break on 
+legitimate use of incomplete types a library developer has to use the ADL-proofing pattern 
+from \lst{adlproofediterator} as explained by \textcite{P2538R0}.
+\begin{lstlisting}[style=Vc,numbers=left,float={hbtp},label=lst:adlproofediterator,caption={
+ADL-proofed iterator type
+}]
+template <typename T>
+struct IteratorImpl {
+  class type {
+    // ...
+  };
+};
+
+template <typename T>
+using Iterator = typename IteratorImpl<T>::type;
+\end{lstlisting}
+We might expect standard library developers to learn and apply this pattern. But we should 
+not expect from any other \CC{} library developer to work around ADL surprises.
+
+\subsection{Instantiation via ADL is blocking language evolution}
+With the current behavior of ADL, adding non-member \codelst@operator[]@ or overloadable 
+\codelst@operator?:@ to the language\footnote{Motivation is / will be given in their own 
+papers.} is a breaking change. Existing code that currently compiles just fine would 
+suddenly instantiate templates through ADL and thus potentially lead to ill-formed 
+instantiation.
+
+\subsection{Another example}
 
 To complete the picture, note that the issue is not specific to operators (e.g. 
 \lst{example2} as presented by \textcite{P2538R0}). However, for operators there's no 
 simple “always fully qualify your calls” rule to avoid ADL.
-
-\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:example2,caption={
+\begin{lstlisting}[style=Vc,numbers=left,float={hbtp},label=lst:example2,caption={
 Minimal example triggering ill-formed instantiation
 }]
 template<class T> struct Holder { T t; };
@@ -109,6 +165,14 @@ int x = f(p);    // error: Holder<Incomplete> is an associated entity
 int y = ::f(p);  // ok: no ADL
 \end{lstlisting}
 
+\textcite{P2538R0} goes on to show how the original definition of \codelst@std::projected@ 
+leads to ill-formed instantiation on ADL. His proposed solution requires ADL-proofing of 
+\codelst@std::projected@, which requires a change in how the class template is defined.
+
+The proposed language change in this paper will make this and similar changes unnecessary. 
+The language would lose one sharp edge at a minor cost (more complex wording \& new, 
+unlikely, and easy to work around corner case for users).
+
 \subsection{History}
 
 To understand how much code might be affected by a breaking change in this area, it is 
@@ -117,9 +181,9 @@ for a long time. Template instantiation vial ADL works since GCC 4.5.0 (April 20
 3.1.0 (May 2012), and since an ICC release between ICC 14 and 16\footnote{I have only been 
   able to test with the compilers available on Compiler Explorer}.
 
-\pagebreak
+%\pagebreak
 
-\section{Solution idea}
+\section{Proposed solution}
 
 Let us consider a simple solution to make ADL avoid the above situations:\\
 \emph{Don't instantiate templates via ADL} (with one or two exceptions).
@@ -146,14 +210,20 @@ the class type affects the semantics of the program. [\ldots]
 \end{wgText}
 In basically all cases, the completeness of the class type does not affect the semantics 
 of the program, though. But the compiler cannot know that instantiation is unnecessary 
-until after it instantiated the template.
+until after it instantiated the template. The subsequent note in [temp.inst] a
+clarifies that the knowledge about whether a name exists or not is considered affecting 
+semantics. Therefore implementations have no choice of avoiding instantiation, even if 
+they kept track of ADL-relevant names (i.e. hidden friends).
 
 
 \subsection{Necessary instantiation}
 
 The one case where instantiation via ADL is still required is shown in 
-\lst{needsInstantiation}.
-\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:needsInstantiation,caption={
+\lst{needsInstantiation}. The situation in \lst{needsInstantiation} is unlikely (but 
+certainly not impossible\footnote{E.g. \url{https://gcc.gnu.org/PR34870}, which lead to 
+GCC instantiating templates via ADL}), since almost every other use of the lvalue \code{x} 
+would lead to instantiation.
+\begin{lstlisting}[style=Vc,numbers=left,float={hbtp},label=lst:needsInstantiation,caption={
 Requires instantiation or reasonable code could break.
 }]
 template <typename T>
@@ -165,9 +235,6 @@ void g(const A<int>& x) {
   f(x);
 }
 \end{lstlisting}
-The situation in \lst{needsInstantiation} is unlikely, but certainly not 
-impossible\footnote{\url{https://gcc.gnu.org/PR34870} lead to GCC instantiating templates 
-via ADL}, since almost every other use of the lvalue \code{x} would lead to instantiation.
 
 Therefore, given an argument of reference to \code{T}, ADL should instantiate \code{T} and 
 its bases but none of its template arguments.
@@ -176,7 +243,7 @@ its bases but none of its template arguments.
 
 Consider \lst{baseNamespace} which defines a base class in a different namespace 
 (\code{A}) than the derived class template.
-\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:baseNamespace,caption={
+\begin{lstlisting}[style=Vc,numbers=left,float={hbtp},label=lst:baseNamespace,caption={
 ADL in namespace of base class
 }]
 namespace A {
@@ -188,9 +255,9 @@ void f(void*);
 template <class T> class C : public A::B {};
 
 void g(C<int>* p) {
-  f(p); // calls ::f   // because C<int> has not been instantiated
+  f(p);    // calls  ::f  because C<int> has not been instantiated
   A::B* other_ptr = p; // instantiates C<int> to find its base types
-  f(p); // calls A::f  // because C<int> has been instantiated before ADL
+  f(p);    // calls A::f  because C<int> has been instantiated before ADL
 }
 
 // analogue situation with incomplete types:
@@ -202,15 +269,16 @@ void g1(I* p) { f(p); } // calls A::f
 In order for ADL to consider \code{A} as associated namespace when an argument of type 
 \code{C<int>*} is used, the base types of the class template need to be know. However, if 
 ADL were not to instantiate \code{C<int>} anymore, the behavior would depend on the 
-preceding code, whether \code{C<int>} had already been instantiated or not. The analogue 
+preceding code: whether \code{C<int>} had already been instantiated or not. The analogue 
 issue for an incomplete type \code{I} exhibits the same behavior change in ADL after 
 defining \code{I}. However, for the incomplete type it is more obvious why the base types' 
 namespaces are not considered (“You didn't say that \code{A::B} is a base!”).
 
 Note that overload resolution still has to instantiate class templates to find bases, as 
 shown in \lst{instantiateOverloadResolution}.
-\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:instantiateOverloadResolution,caption={
-Class template instantiation on overload resolution if ADL does not instantiate \code{C<int>}
+\begin{lstlisting}[style=Vc,numbers=left,float={hbtp},label=lst:instantiateOverloadResolution,caption={
+Class template instantiation on overload resolution if ADL does not instantiate 
+\code{C<int>}
 }]
 class B0 {};
 namespace A {
@@ -237,19 +305,182 @@ more conservative change to ADL, given an argument of pointer to \code{T}, let A
 instantiate \code{T} and its bases but none of its template arguments.
 
 Beyond references and pointers --- as far as I have seen --- there is little use in ADL 
-instantiating templates. I recommend to modify [basic.lookup.argdep] and/or [temp.inst] to 
-treat \notyetinstantiated types like incomplete types except if the \notyetinstantiated 
-type is the type of the function argument.
+instantiating templates. I propose to modify [basic.lookup.argdep] and/or [temp.inst] to 
+treat \notyetinstantiated{} types like incomplete types except if the 
+\notyetinstantiated{} type is the type of the function argument\footnote{\emph{stops 
+handwaving}; this is nowhere near wording \ldots}.
 
-\section{Alternative solutions}
+\subsection{\code{std::reference_wrapper} example}\label{sec:reference_wrapper}
+\codelst@std::reference_wrapper<X>@, where \codelst@X@ implements hidden friends, is the 
+canonical example where this proposal has the potential for breaking existing code.
+An idea for avoiding the breaking change is presented in \sect{convopadl}. Note that, 
+since \CC{}20, \codelst@std::reference_wrapper<T>@ does not require \codelst@T@ to be 
+complete and we can therefore construct valid examples with the type 
+\codelst@std::reference_wrapper<Wrap<Incomplete>>@. The
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:transparent_reference_wrapper,caption={
+Hidden friends are transparent for \code{std::reference_wrapper}
+}]
+struct X {
+  friend constexpr int f(const X&) { return 1; }
+  friend constexpr bool operator!(const X&) { return false; }
+};
+
+int g(std::reference_wrapper<X> ref) {
+  return !ref ? 0 : f(ref);  // returns 1
+}
+\end{lstlisting}
+relevant class of examples follows the pattern shown in 
+\lst{transparent_reference_wrapper}. This pattern relies on:
+\begin{enumerate}
+\item \codelst@std::reference_wrapper<X>@ is convertible to \codelst@X@, and
+\item ADL looks into \codelst@X@ for hidden friends when 
+\codelst@std::reference_wrapper<X>@ is a function argument (operand).
+\end{enumerate}
+Note that \codelst@X@ doesn't need to know about (or even spell out) 
+\codelst@std::reference_wrapper@ and can therefore work with any type that has a 
+conversion operator to \codelst@X@ \emph{and where \codelst@X@ is an associated entity}. 
+Notably, and inconsistently, function arguments of type \codelst@XRef@,
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:intransparent_reference_wrapper,caption={
+Hidden friends are not transparent for a non-template reference wrapper
+}]
+struct XRef {
+  X* ptr;
+  constexpr operator X&() const noexcept { return *ptr; }
+};
+\end{lstlisting}
+as defined in \lst{intransparent_reference_wrapper}, will not find hidden friends of 
+\codelst@X@ on name lookup. See \sect{convopadl} for an idea that would resolve the 
+inconsistency.
+
+With the following ingredients we can build an example (see \lst{refwrapperproblem}) that 
+would break with the proposed language change:
+\begin{itemize}
+\item A class template specialization \codelst@X<Y>@ that has not been instantiated yet.
+\item A hidden friend in \codelst@X<Y>@.
+\item A function call (or operator) which wants to find said hidden friend in name lookup.
+\item Wrap everything as \codelst@std::reference_wrapper<X<Y>>@.
+\end{itemize}
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:refwrapperproblem,caption={
+\code{std::reference_wrapper} example which would fail unless 
+line~\ref{lstline:refwrapperproblem0} is uncommented
+}]
+template <typename T>
+struct X
+{
+  T data;
+  friend auto operator<=>(const X&, const X&) = default;
+};
+
+// static_assert(std::totally_ordered<X<int>>); @\label{lstline:refwrapperproblem0}@
+// the following fails unless X<int> was instantiated already (e.g. with the
+//   line above)
+static_assert(std::totally_ordered<std::reference_wrapper<X<int>>>);
+\end{lstlisting}
+
+As far as I can tell there is no class template in the standard library that fits this 
+description. However, the \codelst@std::experimental::simd<T, Abi>@ class template of the 
+Parallelism TS 2 specifies its operators as hidden friends. Consequently, the example in 
+\lst{refwrappersimd} would not instantiate \codelst@simd<float>@ anymore via ADL and thus 
+fail to compile.
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:refwrappersimd,caption={
+Regression when combining \code{std::reference_wrapper} with 
+\code{std::experimental::simd}.
+}]
+#include <experimental/simd>
+#include <functional>
+
+auto f(std::reference_wrapper<std::experimental::simd<float>> x) {
+  return x == x; // would not instantiate simd<float> anymore
+}
+\end{lstlisting}
+
+An example similar to \lst{refwrappersimd} is still highly unlikely to occur outside of 
+code snippets meant to demonstrate the issue. In general, an expression directly involving 
+\codelst@simd<float>@ (i.e. the wrapped type) would precede the use of the type with a 
+reference wrapper with high probablilty.
+More importantly, the explicit use of \codelst@std::reference_wrapper@ or similar 
+reference types is not common. At least \codelst@reference_wrapper@ is unwrapped 
+transparently for \codelst@std::bind@ and typically unwraps automatically when a function 
+with a reference to the wrapped type is called.
+% One example, the Barton–Nackman trick, is discussed by \textcite{ODwyerBartonNackman}.
+While the chance of breakage after restricting instantiation via ADL is close to zero, we 
+have no way of making any more substantial statement. It is impossible to prove that no 
+breakage will occur, because the absence of certain code patterns cannot be proven.
+
+\section{Alternative solutions / additional ADL ideas}
+
+\subsection{Add conversion operator return types to associated entities}
+\label{sec:convopadl}
+Observe the inconsisteny in \lst{motivateADLconvop}.
+\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:motivateADLconvop,caption={
+Different name lookup for three reference types that should be equivalent 
+(\url{https://godbolt.org/z/83fqT76vn})
+}]
+struct foo {
+  friend bool operator!(const foo&) noexcept;
+};
+
+template <class T>
+struct ref {
+  T* data;
+  constexpr operator T&() const noexcept { return *data; }
+};
+
+struct int_ref {
+  int* data;
+  constexpr operator int&() const noexcept { return *data; }
+};
+
+struct foo_ref {
+  foo* data;
+  constexpr operator foo&() const noexcept { return *data; }
+};
+
+void f(const ref<foo>& r0, const int_ref& r1, const foo_ref& r2) {
+  !r0; // finds foo::operator! because foo is an associated entity
+  !r1; // OK
+  !r2; // ERROR
+}
+\end{lstlisting}
+Each of the three types \code{ref<foo>}, \code{int_ref}, and \code{foo_ref} (partially) 
+model a reference (conversion operator defined as for \code{std::ref\-er\-ence_wrapper}). 
+But they behave considerably different because name lookup is different.
+
+To make \lst{motivateADLconvop} consistent, we could add another rule to ADL and add the 
+return types of all conversion operators as associated entities. Since these types are 
+much more likely to make a semantic difference on name lookup, template instantiation 
+should be performed. However, only the conversion operators of the function argument type 
+itself must be considered; conversion operators of return types of conversion operators 
+are irrelevant, as are conversion operators of template arguments. As a consequence the 
+examples \lst{refwrapperproblem} and \lst{refwrappersimd} would work again.
+
+Obviously, more ADL has the potential to add more problems. But if this is introduced 
+together with not instantiating templates anymore, the net effect should be positive. 
+Counter-examples are welcome to improve the discussion of the idea.
+
+I have implemented this idea in GCC and found no regressions in the GCC and libstdc++ test 
+suites. More testers are welcome.
+
+\TODO{
+\todoitem Release patched GCC 12.1 and link to it from the paper.
+}
+
+\subsection{Opt-out/in ADL}
+\TODO{
+\todoitem \lstinline[style=Vc]@struct foo : adl bar { /* ... */ };@ opts out of 
+considering implicit associated entities; \code{bar} (and its associated entities) are the 
+only associated entities
+\todoitem \lstinline[style=Vc]@struct meow : adl void { /* ... */ };@ has no associated 
+entities.
+}
 
 \subsection{Tentative instantiation}
 It seems like an obvious solution to require IFINAE (instantiation failure is not an 
 error) on ADL, i.e. to require tentative template instantiation. However, this would place 
 a huge burden on implementations: The instantiation depth might be very deep, before the 
 condition is found. IFINAE requires a rollback of all unfinished instantiations that lead 
-to the issue. It seems like a solvable task for compilers, but without implementation 
-experience it is not a realistic path forward.
+to the issue. It seems like a huge but solvable task for compilers, but without 
+implementation experience it is not a realistic path forward.
 
 \subsection{Inhibit instantiation if a template parameter is incomplete}
 
@@ -259,12 +490,30 @@ appears too eager. However, only minor variations of such examples would instant
 class templates again, leading to the same errors we were trying to fix. The solution 
 would thus appear to be rather fragile and potentially more confusing than helpful.
 
+\subsection{Instantiation if and only if there are hidden friends with a matching name}
+
+The current wording already makes instantiation conditional on whether “the completeness 
+of the class type affects the semantics of the program”. Can we take this a step further, 
+and require instantiation only if the compiler determines name lookup will find something 
+it wouldn't find otherwise? Such a condition would come close to tentative instantiation 
+but isn't necessarily the same thing. Name lookup requires less information of the 
+complete type. Only when determining viability and performing overload resolution is the 
+completely instantiated type unavoidable.
+
+An implementation would have to
+\begin{enumerate}
+\item keep a list of names of all hidden friends, and
+\item be able to determine \emph{additional} associated namespaces from base classes.
+\end{enumerate}
+Instantiation is only necessary if a hidden friend was found via name lookup. For the 
+other case instantiation will likely be required for overload resolution.
+
 \section{Implementation Experience}
 I implemented the presented idea for GCC. One test of GCC's testsuite broke 
 (\lst{noexcept41}).
 \begin{lstlisting}[style=Vc,numbers=left,float,label=lst:noexcept41,caption={
-GCC test that broke after implementation of less eager ADL
-}]
+GCC test that broke after implementation of less eager ADL (\code{declval<a<int>>} without 
+parenthesis is no error --- with parenthesis \code{a<int>} isn't an associated entity)}]
 template <typename> struct g { static const int h = 0; };
 template <typename i> void declval() { static_assert(!g<i>::h,""); }
 template <typename> struct a {
@@ -297,6 +546,8 @@ None at this point.
 This paper and my implementation for GCC are a reaction to a discussion on the CWG list 
 with input from a Jonathan Wakely, Richard Smith, Peter Dimov, Barry Revzin, Arthur 
 O'Dwyer, Ville Voutilainen, and Daveed Vandevoorde.
+Arthur O'Dwyer suggested to consider \code{std::reference_wrapper} examples and explore 
+inconsistencies wrt. \code{boolean_testable}.
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=90 formatoptions=trowan2
