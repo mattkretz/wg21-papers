@@ -1,7 +1,7 @@
 \newcommand\wgTitle{A minimal ADL restriction to avoid ill-formed template instantiation}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{DMADLR0}
-\newcommand\wgGroup{EWG}
+\newcommand\wgDocumentNumber{D2600R0}
+\newcommand\wgGroup{EWGI, EWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{ }
 
@@ -19,8 +19,10 @@
 \selectlanguage{american}
 \begin{wgTitlepage}
   I researched and tested a minimal change to ADL to avoid ill-formed instantiations of 
-  templates through ADL. This paper presents the idea and should serve as a call for 
-  examples which would get broken.
+  templates through ADL. If ADL ignores \notyetinstantiated{} types (just like ADL ignores 
+  incomplete types) little to no functionality is lost while losing a sharp edge of the 
+  language. This paper presents the idea, discusses potential code breakage, and presents 
+  potential alternatives/extensions of the idea.
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
@@ -142,12 +144,12 @@ using Iterator = typename IteratorImpl<T>::type;
 We might expect standard library developers to learn and apply this pattern. But we should 
 not expect from any other \CC{} library developer to work around ADL surprises.
 
-\subsection{Instantiation via ADL is blocking language evolution}
+\subsection{Instantiation via ADL is blocking language evolution}\label{blocking}
 With the current behavior of ADL, adding non-member \codelst@operator[]@ or overloadable 
-\codelst@operator?:@ to the language\footnote{Motivation is / will be given in their own 
-papers.} is a breaking change. Existing code that currently compiles just fine would 
-suddenly instantiate templates through ADL and thus potentially lead to ill-formed 
-instantiation.
+\codelst@operator?:@ \citep{P0917R3} to the language\footnote{Motivation is / will be 
+given in their own papers.} is a breaking change. Existing code that currently compiles 
+just fine would suddenly instantiate templates through ADL and thus potentially lead to 
+ill-formed instantiation.
 
 \subsection{Another example}
 
@@ -177,7 +179,7 @@ unlikely, and easy to work around corner case for users).
 
 To understand how much code might be affected by a breaking change in this area, it is 
 helpful to know that template instantiation via ADL had not been implemented in compilers 
-for a long time. Template instantiation vial ADL works since GCC 4.5.0 (April 2010), Clang 
+for a long time. Template instantiation via ADL works since GCC 4.5.0 (April 2010), Clang 
 3.1.0 (May 2012), and since an ICC release between ICC 14 and 16\footnote{I have only been 
   able to test with the compilers available on Compiler Explorer}.
 
@@ -397,21 +399,28 @@ auto f(std::reference_wrapper<std::experimental::simd<float>> x) {
 An example similar to \lst{refwrappersimd} is still highly unlikely to occur outside of 
 code snippets meant to demonstrate the issue. In general, an expression directly involving 
 \codelst@simd<float>@ (i.e. the wrapped type) would precede the use of the type with a 
-reference wrapper with high probablilty.
+reference wrapper with high probability.
 More importantly, the explicit use of \codelst@std::reference_wrapper@ or similar 
 reference types is not common. At least \codelst@reference_wrapper@ is unwrapped 
 transparently for \codelst@std::bind@ and typically unwraps automatically when a function 
 with a reference to the wrapped type is called.
 % One example, the Barton–Nackman trick, is discussed by \textcite{ODwyerBartonNackman}.
-While the chance of breakage after restricting instantiation via ADL is close to zero, we 
-have no way of making any more substantial statement. It is impossible to prove that no 
+
+While the chance of breakage after restricting instantiation via ADL may be close to zero, 
+we have no way of making a more substantial statement. It is impossible to prove that no 
 breakage will occur, because the absence of certain code patterns cannot be proven.
 
 \section{Alternative solutions / additional ADL ideas}
 
+I believe the above suggestion would be a strict improvement of the \CC{} language and 
+better than the alternatives listed in the following. However, in order to reduce the 
+potential for breaking existing code and to resolve an inconsistency of ADL with regard to 
+reference wrappers, I believe the idea in \sect{convopadl} should be part of the final 
+solution.
+
 \subsection{Add conversion operator return types to associated entities}
 \label{sec:convopadl}
-Observe the inconsisteny in \lst{motivateADLconvop}.
+Observe the inconsistency in \lst{motivateADLconvop}.
 \begin{lstlisting}[style=Vc,numbers=left,float,label=lst:motivateADLconvop,caption={
 Different name lookup for three reference types that should be equivalent 
 (\url{https://godbolt.org/z/83fqT76vn})
@@ -459,20 +468,37 @@ together with not instantiating templates anymore, the net effect should be posi
 Counter-examples are welcome to improve the discussion of the idea.
 
 I have implemented this idea in GCC and found no regressions in the GCC and libstdc++ test 
-suites. More testers are welcome.
-
-\TODO{
-\todoitem Release patched GCC 12.1 and link to it from the paper.
-}
+suites. More testers are welcome. A modified GCC 12.1 can be obtained at 
+\url{https://github.com/mattkretz/gcc/tree/7895934f858fbb2e6039}.
 
 \subsection{Opt-out/in ADL}
-\TODO{
-\todoitem \lstinline[style=Vc]@struct foo : adl bar { /* ... */ };@ opts out of 
-considering implicit associated entities; \code{bar} (and its associated entities) are the 
-only associated entities
-\todoitem \lstinline[style=Vc]@struct meow : adl void { /* ... */ };@ has no associated 
-entities.
+
+If the committee cannot agree on changing the way ADL and template instantiation work, we 
+are basically only left with new opt-in/out syntax, if we want to solve this problem. I am 
+not ready to explore this idea. I mention it here to give a complete picture of the 
+solution space.
+
+As a straw-man example consider \lst{optinoutadl}.
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:optinoutadl,caption={
+Straw-man opt-in/out syntax for ADL
+}]
+// opts out of considering implicit associated entities; bar and its associated
+// entities are the only associated entities:
+struct foo : adl bar { /* ... */ };
+
+// no associated entities:
+struct meow : adl void { /* ... */ };
+
+// fix the unique_ptr problem from @\lst{example1}@
+namespace std {
+  template<class T, class D = default_delete<T>>
+  class unique_ptr : adl void {
+    // ...
+  };
 }
+\end{lstlisting}
+Note that an opt-in/out solution would not open the evolution path for 
+\codelst@operator[]@ and \codelst@operator?:@.
 
 \subsection{Tentative instantiation}
 It seems like an obvious solution to require IFINAE (instantiation failure is not an 
@@ -506,12 +532,17 @@ An implementation would have to
 \item be able to determine \emph{additional} associated namespaces from base classes.
 \end{enumerate}
 Instantiation is only necessary if a hidden friend was found via name lookup. For the 
-other case instantiation will likely be required for overload resolution.
+other case instantiation will likely be required for overload resolution, though.
 
 \section{Implementation Experience}
-I implemented the presented idea for GCC. One test of GCC's testsuite broke 
-(\lst{noexcept41}).
-\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:noexcept41,caption={
+I implemented the presented idea for GCC. The necessary change to the ADL code was 
+straightforward: In principle the change involved only making template instantiation 
+conditional on whether the type is the argument type itself or an associated entity.
+A modified GCC 12.1 can be obtained at 
+\url{https://github.com/mattkretz/gcc/tree/7266f1c5f75fc7a970de}.
+
+One test of GCC's testsuite broke (\lst{noexcept41}) with the change.
+\begin{lstlisting}[style=Vc,numbers=left,float={hbtp},label=lst:noexcept41,caption={
 GCC test that broke after implementation of less eager ADL (\code{declval<a<int>>} without 
 parenthesis is no error --- with parenthesis \code{a<int>} isn't an associated entity)}]
 template <typename> struct g { static const int h = 0; };
