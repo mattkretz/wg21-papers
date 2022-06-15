@@ -16,7 +16,7 @@ This repository holds the LuaLaTeX sources for my papers to the C++ committee.
 | [P2551](https://wg21.link/p2551) | [D2551](https://web-docs.gsi.de/~mkretz/D2551.pdf) | Clarify intent of P1841 numeric traits    | LEWG              |
 | TODO                             | [DNMSO](https://web-docs.gsi.de/~mkretz/DNMSO.pdf) | Non-member subscript operator             | drafting                   |
 | TODO                             | [DDSHR](https://web-docs.gsi.de/~mkretz/DDSHR.pdf) | `= delete` should have a reason           | drafting                   |
-| TODO                             | [DMADL](https://web-docs.gsi.de/~mkretz/DMADL.pdf) | A minimal ADL restriction to avoid ill-formed template instantiation | drafting                   |
+| [P2600](https://wg21.link/p2600) | [D2600](https://web-docs.gsi.de/~mkretz/D2600.pdf) | A minimal ADL restriction to avoid ill-formed template instantiation | EWG                   |
 
 
 To build the papers you need make, LuaLaTeX (only tested with a recent TeXLive distribution), and Biber.
