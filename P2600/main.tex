@@ -1,6 +1,6 @@
 \newcommand\wgTitle{A minimal ADL restriction to avoid ill-formed template instantiation}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D2600R0}
+\newcommand\wgDocumentNumber{P2600R0}
 \newcommand\wgGroup{EWGI, EWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{ }
@@ -92,8 +92,8 @@ changes the value of the expression \code{!l}.
 
 Why does the standard allow incomplete types (i.e. not require completion) as associated 
 entities even though this can lead to ODR violations? Isn't the same reasoning applicable 
-to templates that have not be instantiated yet? And what are the use cases for defining a 
-hidden friend in \type{Wrap<Incomplete>} which wins in overload resolution when the 
+to templates that have not been instantiated yet? And what are the use cases for defining 
+a hidden friend in \type{Wrap<Incomplete>} which wins in overload resolution when the 
 argument is a \type{Testable<Wrap<Incomplete>>}? (The last question is not only a rhetoric 
 question, see \sect{reference_wrapper} for a possible answer.)
 
@@ -116,7 +116,7 @@ class Incomplete;
 using Data = std::array<Incomplete, 3>;
 using Ptr = std::unique_ptr<Data>;
 
-void assert_nonnull (const std::span<Ptr> &x)
+void assert_nonnull (std::span<Ptr> x)
 {
   for (const Ptr &ptr : x)  // ERROR: 'std::array<_Tp, _Nm>::_M_elems' has
     assert (ptr);           //        incomplete type
@@ -144,20 +144,26 @@ using Iterator = typename IteratorImpl<T>::type;
 We might expect standard library developers to learn and apply this pattern. But we should 
 not expect from any other \CC{} library developer to work around ADL surprises.
 
-\subsection{Instantiation via ADL is blocking language evolution}\label{blocking}
+\subsection{Instantiation via ADL interferes with the evolution of \CC{}}\label{blocking}
+
 With the current behavior of ADL, adding non-member \codelst@operator[]@ or overloadable 
 \codelst@operator?:@ \citep{P0917R3} to the language\footnote{Motivation is / will be 
 given in their own papers.} is a breaking change. Existing code that currently compiles 
 just fine would suddenly instantiate templates through ADL and thus potentially lead to 
 ill-formed instantiation.
 
-\subsection{Another example}
+Instantiation via ADL is a concern that needs to be considered for language and library 
+evolution whenever ADL is required for a new feature.
+This proposal makes language and library evolution simpler (or even turn breaking changes 
+into non-breaking changes).
+
+\subsection{less need for ADL proofing}
 
 To complete the picture, note that the issue is not specific to operators (e.g. 
-\lst{example2} as presented by \textcite{P2538R0}). However, for operators there's no 
-simple “always fully qualify your calls” rule to avoid ADL.
+\lst{example2}). However, for operators there's no simple “always fully qualify your 
+calls” rule to avoid ADL.
 \begin{lstlisting}[style=Vc,numbers=left,float={hbtp},label=lst:example2,caption={
-Minimal example triggering ill-formed instantiation
+Minimal example triggering ill-formed instantiation, as presented in \cite{P2538R0}
 }]
 template<class T> struct Holder { T t; };
 struct Incomplete;
@@ -171,24 +177,26 @@ int y = ::f(p);  // ok: no ADL
 leads to ill-formed instantiation on ADL. His proposed solution requires ADL-proofing of 
 \codelst@std::projected@, which requires a change in how the class template is defined.
 
-The proposed language change in this paper will make this and similar changes unnecessary. 
-The language would lose one sharp edge at a minor cost (more complex wording \& new, 
-unlikely, and easy to work around corner case for users).
+This proposal makes ADL-proofing for avoiding ill-formed instantiation 
+unnecessary\footnote{ADL-proofing is still a useful tool for avoiding ADL hijacking.}. The 
+language would lose one sharp edge at a minor cost (more complex wording \& new, unlikely, 
+and easy to work around corner case for users).
 
 \subsection{History}
 
-To understand how much code might be affected by a breaking change in this area, it is 
-helpful to know that template instantiation via ADL had not been implemented in compilers 
-for a long time. Template instantiation via ADL works since GCC 4.5.0 (April 2010), Clang 
-3.1.0 (May 2012), and since an ICC release between ICC 14 and 16\footnote{I have only been 
-  able to test with the compilers available on Compiler Explorer}.
+To estimate how much code might be affected by limiting template instantiation on ADL to 
+the argument type itself, it is helpful to know that template instantiation via ADL had 
+not been implemented in compilers for a long time. Template instantiation via ADL works 
+since GCC 4.5.0 (April 2010), Clang 3.1.0 (May 2012), and since an ICC release between ICC 
+14 and 16\footnote{I have only been able to test with the compilers available on Compiler 
+Explorer}.
 
 %\pagebreak
 
 \section{Proposed solution}
 
 Let us consider a simple solution to make ADL avoid the above situations:\\
-\emph{Don't instantiate templates via ADL} (with one or two exceptions).
+\emph{Don't instantiate templates via ADL except for the argument type itself.}
 
 \textsc{Rationale:} If a given associated entity has not been instantiated at this point 
 in the translation,
@@ -212,10 +220,10 @@ the class type affects the semantics of the program. [\ldots]
 \end{wgText}
 In basically all cases, the completeness of the class type does not affect the semantics 
 of the program, though. But the compiler cannot know that instantiation is unnecessary 
-until after it instantiated the template. The subsequent note in [temp.inst] a
-clarifies that the knowledge about whether a name exists or not is considered affecting 
-semantics. Therefore implementations have no choice of avoiding instantiation, even if 
-they kept track of ADL-relevant names (i.e. hidden friends).
+until after it instantiated the template. The subsequent note in [temp.inst] clarifies 
+that the knowledge about whether a name exists or not is considered affecting semantics. 
+Therefore implementations have no choice of avoiding instantiation, even if they kept 
+track of ADL-relevant names (i.e. hidden friends).
 
 
 \subsection{Necessary instantiation}
@@ -300,8 +308,9 @@ void g(C<int>* p) {
         // because ADL now finds the additional candidate A::f(A::B*)
 }
 \end{lstlisting}
+\label{sec:adl on pointers}
 It is an open question whether template instantiation via ADL on arguments of pointer type 
-is enough of a problem to warrant the surprising behavior of 
+is enough of a problem to warrant the surprising behavior of the (contrived) example in 
 \lst{instantiateOverloadResolution} (vs. the surprising behavior of \lst{example2}). As a 
 more conservative change to ADL, given an argument of pointer to \code{T}, let ADL 
 instantiate \code{T} and its bases but none of its template arguments.
@@ -313,6 +322,7 @@ treat \notyetinstantiated{} types like incomplete types except if the
 handwaving}; this is nowhere near wording \ldots}.
 
 \subsection{\code{std::reference_wrapper} example}\label{sec:reference_wrapper}
+
 \codelst@std::reference_wrapper<X>@, where \codelst@X@ implements hidden friends, is the 
 canonical example where this proposal has the potential for breaking existing code.
 An idea for avoiding the breaking change is presented in \sect{convopadl}. Note that, 
@@ -397,8 +407,8 @@ auto f(std::reference_wrapper<std::experimental::simd<float>> x) {
 \end{lstlisting}
 
 An example similar to \lst{refwrappersimd} is still highly unlikely to occur outside of 
-code snippets meant to demonstrate the issue. In general, an expression directly involving 
-\codelst@simd<float>@ (i.e. the wrapped type) would precede the use of the type with a 
+code snippets specifically written for demonstrating the issue. In general, an expression 
+instantiating \codelst@simd<float>@ (i.e. the wrapped type) would precede the use of the 
 reference wrapper with high probability.
 More importantly, the explicit use of \codelst@std::reference_wrapper@ or similar 
 reference types is not common. At least \codelst@reference_wrapper@ is unwrapped 
@@ -410,6 +420,41 @@ While the chance of breakage after restricting instantiation via ADL may be clos
 we have no way of making a more substantial statement. It is impossible to prove that no 
 breakage will occur, because the absence of certain code patterns cannot be proven.
 
+\section{Implementation Experience}
+
+I implemented the presented idea for GCC. In this implementation the type of a pointer 
+argument is not instantiated (cf. \sect{adl on pointers}). The necessary change to the ADL 
+code was straightforward: In principle the change involved only making template 
+instantiation conditional on whether the type is the argument type itself or an associated 
+entity.
+A modified GCC 12.1 can be obtained at 
+\url{https://github.com/mattkretz/gcc/tree/7266f1c5f75fc7a970de}.
+
+One test of GCC's testsuite (shown in \lst{noexcept41}) broke with the change.
+\begin{lstlisting}[style=Vc,numbers=left,float={hbtp},label=lst:noexcept41,caption={
+GCC test that broke after implementation of less eager ADL (\code{declval<a<int>>} without 
+parenthesis is no error --- with parenthesis \code{a<int>} isn't an associated entity)}]
+template <typename> struct g { static const int h = 0; };
+template <typename i> void declval() { static_assert(!g<i>::h,""); }
+template <typename> struct a {
+  template <typename d, typename c>
+  friend auto f(d &&, c &&)
+    noexcept(declval<c>) -> decltype(declval<c>); // { dg-error "different exception" }
+};
+template <typename d, typename c> auto f(d &&, c &&) -> decltype(declval<c>);
+struct e {};
+static_assert((e{}, declval<a<int>>),""); // { dg-error "no context to resolve type" }
+\end{lstlisting}
+The test case started failing because the expression \code{(e{}, declval<a<int>>)} 
+requires name lookup of \code{operator,} and the type \code{a<int>} is an associated 
+entity and therefore was instantiated (i.e. GCC was looking for a hidden friend comma 
+operator in \code{a<int>}) which lead to the actual failure this test was looking for. To 
+me \lst{noexcept41} is no motivation for holding back on this proposal, rather the 
+opposite. For what it's worth, Clang doesn't even instantiate \code{a<int>} for this test 
+case.
+
+I found no further code breakage.
+
 \section{Alternative solutions / additional ADL ideas}
 
 I believe the above suggestion would be a strict improvement of the \CC{} language and 
@@ -420,8 +465,9 @@ solution.
 
 \subsection{Add conversion operator return types to associated entities}
 \label{sec:convopadl}
+
 Observe the inconsistency in \lst{motivateADLconvop}.
-\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:motivateADLconvop,caption={
+\begin{lstlisting}[style=Vc,numbers=left,float={hbtp},label=lst:motivateADLconvop,caption={
 Different name lookup for three reference types that should be equivalent 
 (\url{https://godbolt.org/z/83fqT76vn})
 }]
@@ -461,7 +507,7 @@ much more likely to make a semantic difference on name lookup, template instanti
 should be performed. However, only the conversion operators of the function argument type 
 itself must be considered; conversion operators of return types of conversion operators 
 are irrelevant, as are conversion operators of template arguments. As a consequence the 
-examples \lst{refwrapperproblem} and \lst{refwrappersimd} would work again.
+examples in \lst{refwrapperproblem} and \lst{refwrappersimd} would work again.
 
 Obviously, more ADL has the potential to add more problems. But if this is introduced 
 together with not instantiating templates anymore, the net effect should be positive. 
@@ -482,14 +528,16 @@ As a straw-man example consider \lst{optinoutadl}.
 \begin{lstlisting}[numbers=left,float={hbtp},label=lst:optinoutadl,caption={
 Straw-man opt-in/out syntax for ADL
 }]
-// opts out of considering implicit associated entities; bar and its associated
-// entities are the only associated entities:
+// opts out of considering implicit associated entities; instead `bar` and its
+// associated entities are the associated entities of foo<T>:
+template <typename T>
 struct foo : adl bar { /* ... */ };
 
 // no associated entities:
+template <typename T>
 struct meow : adl void { /* ... */ };
 
-// fix the unique_ptr problem from @\lst{example1}@
+// fix the `unique_ptr` problem from @\lst{example1}@
 namespace std {
   template<class T, class D = default_delete<T>>
   class unique_ptr : adl void {
@@ -497,10 +545,11 @@ namespace std {
   };
 }
 \end{lstlisting}
-Note that an opt-in/out solution would not open the evolution path for 
-\codelst@operator[]@ and \codelst@operator?:@.
+Note that such an opt-in/out solution would not open a path for the evolution of 
+non-member \codelst@operator[]@ and overloadable \codelst@operator?:@.
 
 \subsection{Tentative instantiation}
+
 It seems like an obvious solution to require IFINAE (instantiation failure is not an 
 error) on ADL, i.e. to require tentative template instantiation. However, this would place 
 a huge burden on implementations: The instantiation depth might be very deep, before the 
@@ -534,51 +583,22 @@ An implementation would have to
 Instantiation is only necessary if a hidden friend was found via name lookup. For the 
 other case instantiation will likely be required for overload resolution, though.
 
-\section{Implementation Experience}
-I implemented the presented idea for GCC. The necessary change to the ADL code was 
-straightforward: In principle the change involved only making template instantiation 
-conditional on whether the type is the argument type itself or an associated entity.
-A modified GCC 12.1 can be obtained at 
-\url{https://github.com/mattkretz/gcc/tree/7266f1c5f75fc7a970de}.
-
-One test of GCC's testsuite broke (\lst{noexcept41}) with the change.
-\begin{lstlisting}[style=Vc,numbers=left,float={hbtp},label=lst:noexcept41,caption={
-GCC test that broke after implementation of less eager ADL (\code{declval<a<int>>} without 
-parenthesis is no error --- with parenthesis \code{a<int>} isn't an associated entity)}]
-template <typename> struct g { static const int h = 0; };
-template <typename i> void declval() { static_assert(!g<i>::h,""); }
-template <typename> struct a {
-  template <typename d, typename c>
-  friend auto f(d &&, c &&)
-    noexcept(declval<c>) -> decltype(declval<c>); // { dg-error "different exception" }
-};
-template <typename d, typename c> auto f(d &&, c &&) -> decltype(declval<c>);
-struct e {};
-static_assert((e{}, declval<a<int>>),""); // { dg-error "no context to resolve type" }
-\end{lstlisting}
-The test case started failing because the expression \code{(e{}, declval<a<int>>)} 
-requires name lookup of \code{operator,} and the type \code{a<int>} is an associated 
-entity and therefore was instantiated (i.e. GCC was looking for a hidden friend comma 
-operator in \code{a<int>}) which lead to the actual failure this test was looking for. To 
-me \lst{noexcept41} is no motivation for holding back on this proposal, rather the 
-opposite. For what it's worth, Clang doesn't even instantiate \code{a<int>} for this test 
-case.
-
-I found no further code breakage.
-
 \section{Wording}
+
 TBD.
 
 \section{Suggested Straw Polls}
+
 None at this point.
 %\wgPoll{}{&&&&}
 
 \section{Acknowledgements}
+
 This paper and my implementation for GCC are a reaction to a discussion on the CWG list 
 with input from a Jonathan Wakely, Richard Smith, Peter Dimov, Barry Revzin, Arthur 
 O'Dwyer, Ville Voutilainen, and Daveed Vandevoorde.
-Arthur O'Dwyer suggested to consider \code{std::reference_wrapper} examples and explore 
-inconsistencies wrt. \code{boolean_testable}.
+Arthur O'Dwyer suggested to consider \code{std::reference_wrapper} examples and strengthen 
+the motivation.
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=90 formatoptions=trowan2
