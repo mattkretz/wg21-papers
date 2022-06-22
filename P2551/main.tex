@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Clarify intent of P1841 numeric traits}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>\\Jonathan Wakely <cxx@kayari.org>}
-\newcommand\wgDocumentNumber{P2551R1}
+\newcommand\wgDocumentNumber{D2551R2}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}23}
 %\newcommand\wgAcknowledgements{ }
@@ -27,19 +27,24 @@
 \section{Introduction}
 \cite{P1841R2} provides wording for numeric traits.
 The last design paper was \cite{P0437R1} with additions from \cite{P1370R1}.
-Most of the open questions were answered in LEWG already.
-The question on \code{reciprocal_overflow_threshold} was deferred to let the authors of \cite{P1370R1} and this paper determine the original intent and its consequences.
 
-
-\section{Remaining Design Questions}
+\section{Design Questions}
 \begin{enumerate}
-  \item Decision already taken in LEWG.
+  \item When exactly is a trait disabled for a given numeric type?
+  It seems the intent was for the \code{value} member to be defined whenever a representation for the desired constant exists.
+  The wording needs to clarify whether any behavioral aspects play a role.
+  For example, a \code{denorm_min} may be enabled independent of whether the execution environment flushes denormals to zero / treats denormals as zero.
+  Even in the case of a processor that unconditionally zeros denormals; as long as a representation exists, is the trait enabled?
+  Conversely, if a representation does not exist, is the trait disabled?
+  Specifically, \code{denorm_min} should never have the value of \code{norm_min}?
 
-  \item Decision already taken in LEWG.
+  \item Please clarify whether we want to treat \code{bool} as a numeric type and enable the traits accordingly.
+  The current wording in \cite{P1841R2} enables the traits for \code{bool}, which is consistent with \code{std::numeric_limits}.
+  \code{std::numeric_limits<bool>} will still exist if needed.
+  Numeric code does not use \code{bool} as a numeric type, despite it being technically an “arithmetic type” in the core language.
 
-  \item (no action requested) In the prevision discussion (and poll) of this point we noticed that the traits P2551R0 listed was incomplete/incorrect.
-  The poll taken in LEWG therefore said: “The numeric traits that are not meaningful for \code{numeric_limits} (\code{denorm_min}, \code{epsilon}, etc) should be disabled for integral types.”
-  The resulting list then is:
+  \item Many of the numeric traits are motivated by floating-point and make little sense for integral types.
+  Is it intended that all of the following numeric traits are enabled also for integral types?
   \begin{itemize}
     \item \code{denorm_min}
     \item \code{epsilon}
@@ -50,18 +55,6 @@ The question on \code{reciprocal_overflow_threshold} was deferred to let the aut
     \item \code{infinity}
     \item \code{quiet_NaN}
     \item \code{signaling_NaN}
-  \end{itemize}
-  The (bad) list in P2551R0 was:
-  \begin{itemize}
-    \item \code{denorm_min}
-    \item \code{epsilon}
-    \item \code{norm_min}
-    \item \code{reciprocal_overflow_threshold}
-    \item \code{round_error}
-    \item \code{max_exponent}
-    \item \code{max_exponent10}
-    \item \code{min_exponent}
-    \item \code{min_exponent10}
   \end{itemize}
 
   \item \code{reciprocal_overflow_threshold} is currently defined as:
@@ -103,20 +96,25 @@ The question on \code{reciprocal_overflow_threshold} was deferred to let the aut
     \end{quote}
   \end{itemize}
 
-  \item Decision already taken in LEWG.
+  \item \code{numeric_limits::max_digits10} is 0 for integral types.
+  Is \code{max_digits10_v<int>} supposed to yield \code{digits10_v<int> + 1}?
+  Or should it only be specialized for floating-point?
 \end{enumerate}
 
-\section{Suggested Straw Polls}
+\section{Proposed Changes}
+After reviewing P2551, Library Evolution wanted to make the following changes:
 
-\wgPoll{Remove \code{reciprocal_overflow_threshold} from P1841.}{&&&&}
-
-\noindent If the above poll doesn't reach consensus:\\
-
-\wgPoll{Specify the behavior of \code{1 / reciprocal_overflow_threshold} only for constant expressions.}{&&&&}
-
-\wgPoll{Require \code{reciprocal_overflow_threshold} to be a normal number.}{&&&&}
+\begin{enumerate}
+  \item Allow deviation of new individually specializable numeric traits from \code{numeric_limits}.
+  \item Base new individually specializable numeric traits on representation rather than behavior.
+  \item Disable \code{bool} for new individually specializable numeric traits.
+  \item Disable the new individually specializable numeric traits for integral types when they are not meaningful for \code{numeric_limits}.
+  \item \code{max_digits10} should be enabled for integral types (yielding \code{digits_10_v + 1}).
+  \item Remove \code{reciprocal_overflow_threshold}.
+\end{enumerate}
 
 \input{strawpolls}
+
 
 
 \end{document}
