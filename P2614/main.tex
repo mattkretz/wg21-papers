@@ -1,0 +1,105 @@
+\newcommand\wgTitle{Deprecate \code{numeric\_limits::has\_denorm}}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{D2614R0}
+\newcommand\wgGroup{SG6, LEWG}
+\newcommand\wgTarget{\CC{}26}
+\newcommand\wgAcknowledgements{
+Thanks to WG14 and specifically Fred Tydeman for their work on \code{*\_HAS\_SUBNORM} and 
+presenting in SG6. Thanks to Dietmar Kühl, Fred Tydeman, Jens Maurer, John McFarlane, and 
+Mark Hoemmen for the discussion in SG6 that motivated this paper. Much of this paper is 
+copied (and adjusted) from the corresponding WG14 papers authored by Fred Tydeman.
+}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\usepackage{changelog}
+\usepackage{underscore}
+
+\addbibresource{extra.bib}
+
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  Since C is intent on obsoleting the \code{*_HAS_SUBNORM} macros, we should consider the 
+  analogue change in \CC{}: the deprecation of \code{numeric_limits::has_denorm}. In 
+  general, compile-time constants that describe floating-point \emph{behavior} are 
+  problematic, since behavior might change at run-time.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+%\input{changelog}
+
+%\input{strawpolls}
+
+\section{Introduction}
+
+\code{numeric_limits} has a member called \code{has_denorm} of type 
+\code{float_denorm_style}:
+\medskip\begin{lstlisting}[style=Vc]
+enum float_denorm_style {
+  denorm_indeterminate = -1,
+  denorm_absent        = 0,
+  denorm_present       = 1
+};
+\end{lstlisting}
+
+As \textcite{WG14N2993} states:
+\begin{quote}{}
+There are several ways subnormals are “supported” in the field:
+
+\begin{itemize}
+  \item Partial support - hardware has encodings, but operations “fail”.
+  \begin{itemize}
+    \item Operands are flushed to zero; results are kept.
+    \item Operands are kept; results are flushed to zero.
+    \item Some operations flush, others do not flush.
+    \item Results suffer double rounding.
+    \item Support can be changed at runtime (not by means in Stardard C).
+  \end{itemize}
+  \item Not at all. There are no hardware encodings of subnormals.
+  \item Full support as per IEEE-754.
+\end{itemize}
+\end{quote}
+
+Since hardware can change in future iterations, an implementation that does not want to 
+risk an ABI break via \code{numeric_limits} will never set \code{has_denorm} to 
+\code{denorm_absent} or \code{denorm_present}. The only ABI-safe sensible value is 
+\code{denorm_indeterminate}. I.e. implementations cannot give a compile-time guarantee 
+about run-time \emph{behavior}.
+
+The \code{has_denorm} value is not helping \CC{} users. Worst case, it is misleading users 
+resulting in incorrect assumptions, breaking algorithms at some point.
+
+\section{Proposed solution}
+
+The \code{has_denorm} value should not be used. A shallow code 
+search\footnote{\url{https://codesearch.isocpp.org/cgi-bin/cgi_ppsearch?q=has_denorm&search=Search}} 
+suggests that no code actually relies on \code{has_denorm}. However, a removal of the 
+value would be a major compatiblity break. We can deprecate it, but without an actual 
+intent of removal (since it would break too much). As an alternative to deprecation, we 
+could change paragraph 46 “Meaningful for all floating-point types.” to state that it's 
+not even meaningful for floating-point types. Thus, user-defined types could still define 
+a meaning for \code{has_denorm}.
+
+The preference of SG6 after discussing \cite{WG14N2993} was deprecation of 
+\code{has_denorm}.
+
+\section{Wording}
+
+TBD.
+
+\section{Suggested Straw Polls}
+
+\wgPoll{Should the use of \code{numeric_limits::has_denorm} be discouraged via a change in 
+the standard?}{&&&&}
+
+\wgPoll{Deprecate \code{numeric_limits::has_denorm}?}{&&&&}
+
+\wgPoll{Document \code{numeric_limits::has_denorm} as not meaningful for arithmetic 
+types?}{&&&&}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=90 formatoptions=trowan2
