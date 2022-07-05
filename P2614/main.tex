@@ -6,8 +6,8 @@
 \newcommand\wgAcknowledgements{
 Thanks to WG14 and specifically Fred Tydeman for their work on \code{*\_HAS\_SUBNORM} and 
 presenting in SG6. Thanks to Dietmar Kühl, Fred Tydeman, Jens Maurer, John McFarlane, and 
-Mark Hoemmen for the discussion in SG6 that motivated this paper. Much of this paper is 
-copied (and adjusted) from the corresponding WG14 papers authored by Fred Tydeman.
+Mark Hoemmen for the discussion in SG6 that motivated this paper. Thanks to Mark Hoemmen 
+for pointing out that we should deprecate \code{has_denorm_loss}.
 }
 
 \usepackage{mymacros}
@@ -26,6 +26,7 @@ copied (and adjusted) from the corresponding WG14 papers authored by Fred Tydema
   analogue change in \CC{}: the deprecation of \code{numeric_limits::has_denorm}. In 
   general, compile-time constants that describe floating-point \emph{behavior} are 
   problematic, since behavior might change at run-time.
+  As a drive-by change, let's also deprecate \code{numeric_limits::has_denorm_loss}.
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
@@ -68,14 +69,36 @@ Since hardware can change in future iterations, an implementation that does not 
 risk an ABI break via \code{numeric_limits} will never set \code{has_denorm} to 
 \code{denorm_absent} or \code{denorm_present}. The only ABI-safe sensible value is 
 \code{denorm_indeterminate}. I.e. implementations cannot give a compile-time guarantee 
-about run-time \emph{behavior}.
+about \emph{run-time behavior}.
 
-The \code{has_denorm} value is not helping \CC{} users. Worst case, it is misleading users 
-resulting in incorrect assumptions, breaking algorithms at some point.
+The \code{has_denorm} value is not helping \CC{} users. Worst case, it is misleading 
+users, resulting in incorrect assumptions and possibly breaking algorithms at some point.
+
+\subsection{\code{has_denorm_loss}}
+
+The subsequent member in \code{numeric_limits}, \code{has_denorm_loss} is also calling for 
+deprecation. Who can tell me the meaning of: “true if loss of accuracy is detected as a 
+denormalization loss, rather than as an inexact result.\footnote{See ISO/IEC/IEEE 60559.}” 
+cppreference.com explains \cite{has_denorm_loss.cppreference}:
+\begin{quote}{}
+  No implementation of denormalization loss mechanism exists (accuracy loss is detected 
+  after rounding, as inexact result), and this option was removed in the 2008 revision of 
+  IEEE Std 754.
+
+  libstdc++, libc++, libCstd, and stlport4 define this constant as false for all 
+  floating-point types. Microsoft Visual Studio defines it as true for all floating-point 
+  types.
+\end{quote}
+
+I don't own a IEEE 754 revision older than the 2008 revision, so it's hard to check. But 
+at least the 2008 revision has no occurence of the word “loss” and no relevant occurence 
+of “accuracy”. The footnote's reference to the IEEE 754 standard is impossible to follow.
 
 \section{Proposed solution}
 
-The \code{has_denorm} value should not be used. A shallow code 
+The \code{has_denorm} and \code{has_denorm_loss} values should not be used.
+
+A shallow code 
 search\footnote{\url{https://codesearch.isocpp.org/cgi-bin/cgi_ppsearch?q=has_denorm&search=Search}} 
 suggests that no code actually relies on \code{has_denorm}. However, a removal of the 
 value would be a major compatiblity break. We can deprecate it, but without an actual 
@@ -86,6 +109,9 @@ a meaning for \code{has_denorm}.
 
 The preference of SG6 after discussing \cite{WG14N2993} was deprecation of 
 \code{has_denorm}.
+
+\code{has_denorm_loss} should simply be deprecated (without actual intent of removal, 
+though). The reference to IEEE 754 should be removed in any case.
 
 \section{Wording}
 
@@ -100,6 +126,8 @@ the standard?}{&&&&}
 
 \wgPoll{Document \code{numeric_limits::has_denorm} as not meaningful for arithmetic 
 types?}{&&&&}
+
+\wgPoll{Deprecate \code{numeric_limits::has_denorm_loss}?}{&&&&}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=90 formatoptions=trowan2
