@@ -1,13 +1,13 @@
 \newcommand\wgTitle{Deprecate \code{numeric\_limits::has\_denorm}}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D2614R0}
+\newcommand\wgDocumentNumber{P2614R0}
 \newcommand\wgGroup{SG6, LEWG}
 \newcommand\wgTarget{\CC{}26}
 \newcommand\wgAcknowledgements{
 Thanks to WG14 and specifically Fred Tydeman for their work on \code{*\_HAS\_SUBNORM} and 
 presenting in SG6. Thanks to Dietmar Kühl, Fred Tydeman, Jens Maurer, John McFarlane, and 
 Mark Hoemmen for the discussion in SG6 that motivated this paper. Thanks to Mark Hoemmen 
-for pointing out that we should deprecate \code{has_denorm_loss}.
+for pointing out that we should deprecate \code{has\_denorm\_loss}.
 }
 
 \usepackage{mymacros}
@@ -26,7 +26,7 @@ for pointing out that we should deprecate \code{has_denorm_loss}.
   analogue change in \CC{}: the deprecation of \code{numeric_limits::has_denorm}. In 
   general, compile-time constants that describe floating-point \emph{behavior} are 
   problematic, since behavior might change at run-time.
-  As a drive-by change, let's also deprecate \code{numeric_limits::has_denorm_loss}.
+  Let's also deprecate \code{numeric_limits::has_denorm_loss} while we're at it.
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
