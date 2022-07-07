@@ -25,12 +25,13 @@ Many other operators additionally allow overloads via non\hyp member functions.
 That the subscript operator does not allow non\hyp member overloads appears like an arbitrary decision, apparently motivated by a conservative approach, to only add features when the use\hyp cases are clear.
 
 Therefore, for the rest of this section I will give examples for non\hyp member subscript operators.
-In general, non\hyp member subscript is needed if the class to be subscripted is independent of the type used for the subscript argument or if modifications of the subscripted type are not possible.
+In general, non\hyp member subscript is needed if the class to be subscripted is independent of the type used for the subscript argument, if modifications of the subscripted type are not possible or the desired subscription functionality applies to a broader range of classes.
 Consequently, several examples are very similar:
 A generic container class only implements the \type{size\_t} subscript operator.
 A user-defined type subsequently provides a good use\hyp case for an additional subscript overload for one or more container classes.
 
 \subsection{Vector load/store/gather/scatter on std containers}
+\label{sec:simd_load}
 The use\hyp case that got me started was the design of a gather/scatter API for SIMD vector types.
 Consider the classical container indexing operation:
 \smallskip\begin{lstlisting}
@@ -124,6 +125,68 @@ linalg::matrix mat = ...;
 mat[3, 3] = 1;
 
 \end{lstlisting}
+
+\subsection{Interpolated access}
+Subscripting a random-access range with non-integral types can have interesting use cases,
+like interpolating between the elements at the nearest smaller and larger integral index of the subscript:
+\smallskip\begin{lstlisting}
+auto operator[](std::ranges::random_access_range auto r, double index) {
+    double integ;
+    const double frac = std::modf(index, &integ);
+    return std::lerp(r[integ], r[integ + 1], frac);
+}
+std::vector v{0.0, 1.0, 4.5, 7.8};
+double value = v[1.6]; // value == 3.1
+\end{lstlisting}
+However, adding such an overload in practice might be dangerous because the floating-point index might truncate to a range's integral subscript operator in case the floating point overload is not visible, or change the behavior of an existing floating point subscription relying on the truncation.
+This issue could be worked around using a custom type which cannot truncate into an integral, allowing to e.g. also specify the used interpolation:
+\smallskip\begin{lstlisting}
+std::vector v{0.0, 1.0, 4.5, 7.8};
+double value = v[1.6_linear]; // value == 3.1
+\end{lstlisting}
+
+With the adoption of P2128, we could even allow interpolation on higher dimensional objects, like the proposed `std::mdspan` or `std::mdarray`.
+\smallskip\begin{lstlisting}
+std::mdarray<double, N, M, K> a = ...;
+double value = a[7.5, 8.9, 76.4]; // trilinear interpolation
+\end{lstlisting}
+
+While we are aware that such a usage might be niche or a separate function for interpolated access could be arguably better, we would like to give library writes the necessary machinery to implement such a feature within their domains if they desire so.
+
+\subsection{Generic subsetting}
+The idea from section \ref{sec:simd_load} to use SIMD vectors as subscripts can be further generalized to allow any kind entity representing multiple indices as subscript.
+\smallskip\begin{lstlisting}
+auto operator[](std::ranges::random_access_range r, std::ranges::input_range indices);
+\end{listing}
+The concrete implementation and return type of such an operation is debatable and thus intentionally omitted.
+Still, it could allow for better formulation of some algorithms or more efficient access for certain ranges, if the index set used for subscription is known in advance.
+
+\subsection{Predicated subsetting}
+Subscripting with a unary predicate would allow us to select a subset of an existing container.
+Combined with an easy way to specify these predicates, e.g. Boost.Lambda2, this allows powerful and concise expressions:
+\smallskip\begin{lstlisting}
+template <std::ranges::random_access_range R, typename UnaryPredicate>
+auto operator[](R&& r, UnaryPredicate&& p) {
+	return std::forward<R>(r) | std::views::filter(std::forward<UnaryPredicate>(p));
+}
+std::vector v{0.0, -1.0, 4.5, -7.8};
+for (auto e : v[_1 > 0])
+	...;
+\end{listing}
+
+\subsection{Slicing}
+With the adoption of P2128, a generic slicing facility could be defined:
+\smallskip\begin{lstlisting}
+template <std::ranges::random_access_range R>
+auto operator[](R r, std::size_t from, std::size_t to, std::size_t step = 0) { ... }
+
+std::vector v{...};
+auto slice1 = v[10, 20];    // elements from the 10th to the 20th (exclusive)
+auto slice2 = v[10, 20, 2]; // every second element from the 10th to the 20th (exclusive)
+\end{listing}
+Such slicing operators are supported in other languages, e.g. Python.
+There have also been C++ language extensions to add such slicing functionality, e.g. Intel's Cilk Plus Array Notations.
+The adoption of P2128 and this proposal would allow for corresponding library solutions to emerge.
 
 \section{Implementation}
 Implementing non-member subscript overloads for GCC was as simple as removing one line of code (a special case).
