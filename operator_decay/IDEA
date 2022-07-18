@@ -1,0 +1,138 @@
+Any function that wants to return a smart reference might want to modify how
+deduction works and decay to its value type. This is important to avoid passing
+references where the syntax doesn't clearly state such an intent. Storing a
+reference without syntactic clues leads to non-obvious memory safety issues
+(dangling references) and should therefore be avoided. However, with current
+C++ a reference type that is not an lvalue reference does not "decay" to pass
+by value, that facility is simply missing in the language.
+
+Consider:
+
+decay_t<int &> -> int
+decay_t<vector<int>::reference> -> int
+decay_t<vector<bool>::reference> -> vector<bool>::reference (should be bool!)
+
+It isn't bool because there's C++ doesn't allow it. This proposal wants to make
+it possible (though changing vector<bool> would be a breaking change, so that's
+not proposed).
+
+-------------------------------------------------------------
+
+#include <vector>
+
+void g(bool);
+void g(int);
+void g(int*);
+void g(auto&&) = delete;
+
+int data[10] = {};
+void f()
+{
+  g(data); // decays to int*
+}
+
+void f(std::vector<int> d)
+{
+  auto x = d[0]; // x is deduced as value_type
+  g(x); // calls g(int)
+  auto& y = d[0];
+  y = 1;
+}
+
+void f(std::vector<bool> d)
+{
+  auto x = d[0]; // x is deduced as reference and NOT value_type
+
+  g(x); // calls g<std::vector<bool>::reference>(auto&&). should call g(bool), therefore should decay to bool above; like data decays to int*
+
+  auto& y = d[0]; // right, this doesn't and shouldn't work
+
+  d[0] = true; // but this works
+
+  std::vector<bool>::reference ref = d[0];
+
+  ref = false; // and this works even if reference would decay on deduction
+}
+
+-------------------------------------------------------------
+
+using __vf4 [[__gnu__::__vector_size__(16)]] = float;
+
+class simd_reference
+{
+  __vf4& ref; // ref[i] is not a float lvalue reference
+  size_t i;
+
+public:
+  operator float() const
+  { return ref[i]; }
+
+  simd_reference operator=(float x) &&
+  {
+    ref[i] = x;
+    return simd_reference{ref, i};
+  }
+};
+
+class simd
+{
+  __vf4 d;
+
+public:
+  float operator[](size_t i) const
+  { return d[i]; }
+
+  simd_reference operator[](size_t i)
+  { return simd_reference{d, i}; }
+};
+
+void f(simd x)
+{
+  auto ref = x[0]; // decltype(ref) should be float like when x is std::vector<float>
+  ...
+}
+
+-------------------------------------------------------------
+
+Proposal
+========
+
+Options:
+
+A)
+
+class simd_reference
+{
+  float operator decay();
+  ...
+
+B)
+
+class simd_reference decays_to float
+{
+  ...
+
+C)
+
+class simd_reference
+{
+  constexpr operator float() const decay
+  { return ref[i]; }
+  ...
+
+D)
+
+template<>
+struct ::std::decay<simd_reference>
+{
+  using type = float;
+};
+
+
+Result:
+
+simd_reference f();
+static_assert(std::is_same_v<float, std::decay_t<simd_reference>>);
+auto x = f(); // decltype(x) is float
+simd_reference ref1 = f(); // well-formed
+decltype(auto) ref2 = f(); // type is simd_reference

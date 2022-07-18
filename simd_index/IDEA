@@ -1,0 +1,55 @@
+simd should have a member type `index_type` or `subscript_type` (or something similar as non-member)
+with the following semantics:
+
+using Idx = simd<T, A>::index_type;
+
+// Idx has a size: the number of contiguous elements to load/store
+Idx::size() == simd<T, A>::size()
+
+// Idx represents a range (basically a iota) with knowledge of the type simd<T, A>
+Idx::simd_type == simd<T, A>
+Idx::mask_type == simd<T, A>::mask_type
+Idx::value_type == simd<T, A>::value_type
+
+// - Idx could inherit std::ranges::iota_view, thus implementing a range
+// - only one ctor: the first index as argument
+Idx(n) // calls std::ranges::iota_view(n, simd_type::size())
+
+class @simd_index_type@ : public std::ranges::iota_view
+{
+public:
+  using simd_type = ...;
+  using mask_type = simd_type::mask_type;
+  using value_type = simd_type::value_type;
+
+  class reference
+  {
+    const value_type* const _mem;
+
+  public:
+    constexpr operator simd_type() const decay
+    { return simd_type(_mem); }
+
+    constexpr void operator =(simd_type x) && { x.copy_to(_mem); }
+    constexpr void operator+=(simd_type x) && { (simd_type(_mem) + x).copy_to(_mem); }
+    // all compound operators ...
+  };
+
+  @simd_index_type@(std::size_t i)
+    : std::ranges::iota_view(i, i + simd_type::size())
+  {}
+
+  constexpr friend simd_type
+  operator[](const contiguous_range<value_type> auto& range, @simd_index_type@ idx)
+  {
+    precondition(range.size() >= idx.back());
+    return simd_type(std::ranges::data(range) + idx.front());
+  }
+
+  constexpr friend reference
+  operator[](contiguous_range<value_type> auto& range, @simd_index_type@ idx)
+  {
+    precondition(range.size() >= idx.back());
+    return reference(std::ranges::data(range) + idx.front());
+  }
+};

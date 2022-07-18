@@ -1,0 +1,6 @@
+void f(std::span<int, 4> mem)
+{
+  std::simd v = mem; // CTAD -> simd<int, deduce_t<int, 4>>; executes a SIMD load
+  v += 1;
+  mem = v; // SIMD store
+}
