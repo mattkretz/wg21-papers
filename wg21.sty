@@ -240,9 +240,9 @@
 
 \ifdefined\sectionlinesformat % On Travis VMs TeX Live is too old. KOMA Script doesn't have \sectionlinesformat yet.
   \renewcommand{\sectionlinesformat}[4]{%
-    \@hangfrom{\hskip #2#3}{\hfill \ifstr{#1}{section}{\MakeUppercase{#4}}{\MakeLowercase{#4}}}\nopagebreak%
-    \ifstr{#1}{section}{\@myheadingrule}{}%
-    \ifstr{#1}{subsection}{\@myheadingrule}{}%
+    \@hangfrom{\hskip #2#3}{\hfill \Ifstr{#1}{section}{\MakeUppercase{#4}}{\MakeLowercase{#4}}}\nopagebreak%
+    \Ifstr{#1}{section}{\@myheadingrule}{}%
+    \Ifstr{#1}{subsection}{\@myheadingrule}{}%
   }
 
   \renewcommand*{\sectionformat}{{\sectionNumberFont\thesection\autodot}\enskip}
