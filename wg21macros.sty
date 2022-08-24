@@ -92,12 +92,13 @@
     texcl=true,
     frame=none,
     commentstyle={\rmfamily\itshape},
-    basicstyle={\ttfamily\smaller[1]},
+    basicstyle={\ttfamily},
     moredelim=**[is][\color{WgAdd}]{|+}{+|},
     moredelim=**[is][\color{WgRem}]{|-}{-|},
     moredelim=**[is][\itshape]{|/}{/|}
   }
   \let\type=\code
+  \def\ttdefault{wgCodeFont}
   \par\rmfamily\smaller[1]\noindent\hrulefill\hspace{1ex} #1
 }
 {%
