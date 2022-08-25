@@ -218,6 +218,7 @@
     \def\theWgStableName{#2}%
     \def\theWGSubSection{\theWGClause{}}%
     \def\theWGSubSubSection{\theWGClause{}}%
+    \def\theWGSubSubSubSection{\theWGSubSubSection}%
     \protected@edef\@currentlabel{\theWGSubSection}%
     \addcontentsline{toc}{subsection}{(\thesubsection{}) \theWGClause{} #1 [#2]}%
     {\noindent\wgOrigSection{subsection}\larger[2]\arabic{WGClause} #1\label{sec:#2}\hfill[#2]}\\%
@@ -233,6 +234,7 @@
     \def\theWgStableName{#2}%
     \def\theWGSubSection{\theWGClause{}.\arabic{WGSubSection}}%
     \def\theWGSubSubSection{\theWGSubSection{}}%
+    \def\theWGSubSubSubSection{\theWGSubSubSection}%
     \protected@edef\@currentlabel{\theWGSubSection}%
     \addcontentsline{toc}{subsubsection}{(\thesubsubsection{}) \theWGSubSection{} #1 [#2]}%
     {\noindent\wgOrigSection{subsubsection}\larger[1]\theWGSubSection{} #1\label{sec:#2}\hfill[#2]}\\%
@@ -247,6 +249,7 @@
     \setcounter{Paras}{0}%
     \def\theWgStableName{#2}%
     \def\theWGSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}}%
+    \def\theWGSubSubSubSection{\theWGSubSubSection}%
     \protected@edef\@currentlabel{\theWGSubSubSection}%
     \addcontentsline{toc}{paragraph}{(\theparagraph{}) \theWGSubSubSection{} #1 [#2]}%
     {\noindent\wgOrigSection{paragraph}\theWGSubSubSection{} #1\label{sec:#2}\hfill[#2]}\\%
