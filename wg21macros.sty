@@ -289,23 +289,26 @@
   \bigskip
 }
 
+\newcommand{\ttref}[1]{Tony~Table~\ref{tt:#1}}
+
 \newcounter{TonyTable}
-\newenvironment{tonytable}[1]{
-\renewcommand\tablename{Tony Table}
-\let\prevthetable\thetable
-\addtocounter{table}{-1}
-\stepcounter{TonyTable}
-\renewcommand\thetable{\arabic{TonyTable}}
+
+\newenvironment{tonytable}[1]{%
+\renewcommand\tablename{Tony Table}%
+\let\prevthetable\thetable%
+\addtocounter{table}{-1}%
+\stepcounter{TonyTable}%
+\renewcommand\thetable{\arabic{TonyTable}}%
 \begin{table}[h]
 \caption{#1}
 \begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
 before&with \wgDocumentNumber\\
 \hline
-}{
-\end{tabular}
-\end{table}
-\let\thetable\prevthetable
-\renewcommand\tablename{Table}
+}{%
+\end{tabular}%
+\end{table}%
+\let\thetable\prevthetable%
+\renewcommand\tablename{Table}%
 }
 
 \newcommand\UnaryTypeTrait{\texttt{UnaryTypeTrait}\xspace}
