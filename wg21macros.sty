@@ -259,10 +259,10 @@
     \stepcounter{WGSubSubSubSection}%
     \setcounter{Paras}{0}%
     \def\theWgStableName{#2}%
-    \def\theWGSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}.\arabic{WGSubSubSubSection}}%
+    \def\theWGSubSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}.\arabic{WGSubSubSubSection}}%
     \protected@edef\@currentlabel{\theWGSubSubSubSection}%
     \addcontentsline{toc}{subparagraph}{(\thesubparagraph{}) \theWGSubSubSubSection{} #1 [#2]}%
-    {\noindent\wgOrigSection{subparagraph}\theWGSubSubSection{} #1\label{sec:#2}\hfill[#2]}\\%
+    {\noindent\wgOrigSection{subparagraph}\theWGSubSubSubSection{} #1\label{sec:#2}\hfill[#2]}\\%
     \noindent%
 }
 \makeatother
