@@ -97,42 +97,51 @@ void f(simd x)
 Proposal
 ========
 
+class A { /*...*/ };
+
 Options:
 
 A)
 
-class simd_reference
+class Reference
 {
-  float operator decay();
+  A operator decay();
   ...
 
 B)
 
-class simd_reference decays_to float
+class Reference decays_to A
 {
   ...
 
 C)
 
-class simd_reference
+class Reference
 {
-  constexpr operator float() const decay
-  { return ref[i]; }
+  constexpr operator A() const decay;
   ...
 
 D)
 
 template<>
-struct ::std::decay<simd_reference>
+struct ::std::decay<Reference>
 {
-  using type = float;
+  using type = A;
 };
 
 
-Result:
+//  Result
+// ========
 
-simd_reference f();
-static_assert(std::is_same_v<float, std::decay_t<simd_reference>>);
-auto x = f(); // decltype(x) is float
-simd_reference ref1 = f(); // well-formed
-decltype(auto) ref2 = f(); // type is simd_reference
+Reference f();
+static_assert(std::is_same_v<A, std::decay_t<Reference>>);
+auto x = f(); // decltype(x) is A
+Reference ref1 = f(); // well-formed
+decltype(auto) ref2 = f(); // type is Reference
+const auto& ref3 = f(); // const Reference&
+auto&& ref4 = f(); // Reference&&
+
+Foo bar;
+bar + f(); // lookup of operator+ (as always + associated type A),
+           // overload resolution lets Reference decay to A (unless exact match with Reference and
+           // its value category)
