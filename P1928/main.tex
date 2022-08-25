@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Merge data-parallel types from the Parallelism TS 2}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P1928R0}
+\newcommand\wgDocumentNumber{D1928R1}
 \newcommand\wgGroup{SG1}
 \newcommand\wgTarget{\CC{}23}
 %\newcommand\wgAcknowledgements{ }
@@ -40,19 +40,37 @@
 \cite{P0214R9} introduced \simdT and related types and functions into the Parallelism TS 2 Section 9.
 The TS was published in 2018.
 An incomplete and non-conforming (because P0214 evolved) implementation existed for the whole time P0214 progressed through the committee.
-Shortly after the GCC 9.1.0 release, a complete implementation of Section 9 of the TS was made available.
+Shortly after the GCC 9 release, a complete implementation of Section 9 of the TS was made available.
+Since GCC 11 a complete \code{simd} implementation of the TS is part of its standard library.
 
-Note: This paper is not yet proposing the merge, but is aiming to start the process and raise awareness.
-Later revisions will actually call for a merge.
+Note: The first revision of this paper did not proposing a merge.
+In the meantime the TS feedback progressed to a point where a merge should happen ASAP.
 
 \subsection{Related papers}
 \begin{description}
   \item[\wglink{P0350}] Before publication of the TS, SG1 approved \cite{P0350R0} which did not progress in time in LEWG to make it into the TS.
     \wglink{P0350} is moving forward independently.
+
   \item[\wglink{P0918}] After publication of the TS, SG1 approved \cite{P0918R2} which adds \code{shuffle}, \code{interleave}, \code{sum_to}, \code{multiply_sum_to}, and \code{saturated_simd_cast}.
     \wglink{P0918} will move forward independently.
+
+  \item[\wglink{P1068}] R3 of the paper removed discussion/proposal of a \code{simd} based API because it was targeting \CC{}23 with the understanding of \code{simd} not being ready for \CC{}23.
+    This is unfortunate as the presence of \code{simd} in the IS might lead to a considerably different assessment of the iterator/range-based API proposed in P1068.
+
+  \item[\wglink{P0917}] The ability to write code that is generic wrt. arithmetic types and \code{simd} types is considered to be of high value (TS feedback).
+    Conditional expressions via the \code{where} function were not all too well received.
+    Conditional expressions via the conditional operator would provide a solution deemed perfect by those giving feedback (myself included).
+
+  \item[draft on non-member {operator[]}] TODO
+
+  \item[\wglink{P2600}] The fix for ADL is important to ensure the above two papers do not break existing code.
+
+  \item[\wglink{P0543}] The paper proposing functions for saturation arithmetic expects \code{simd} overloads as soon as \code{simd} is merged to the IS.
+
+  \item[\wglink{P0553}] The bit operations that are part of \CC{}20 expects \code{simd} overloads as soon as \code{simd} is merged to the IS.
+
 \end{description}
-Both papers currently have no shipping vehicle and are basically blocked on this paper.
+The papers \wglink{P0350}, \wglink{P0918}, and the \code{simd}-based \wglink{P1068} fork currently have no shipping vehicle and are basically blocked on this paper.
 
 \section{Changes after TS feedback}
 This section is mostly a stub.
@@ -117,6 +135,18 @@ The wording that produces \code{simd} overloads misses a few cases and leaves ro
 There is also no explicit mention of integral overloads that are supported in \code{<cmath>} (e.g. \code{std::cos(1)} calling \code{std::cos(double)}).
 
 This needs more work and is not reflected in the wording at this point.
+
+
+\section{Open questions}
+
+\subsection{Correct place for \code{simd} in the IS?}
+
+While \code{simd} is certainly very important for numerics and therefore fits into the “Numerics library” clause, it is also more than that.
+E.g. \code{simd} can be used for vectorization of text processing.
+In principle \code{simd} should be understood similar to fundamental types.
+Is the “General utilities library” clause a better place?
+Or rename “Concurrency support library” to “Parallelism and concurrency support library” and put it there?
+Alternatively, add a new library clause?
 
 \section{Wording}
 \input{wording}
