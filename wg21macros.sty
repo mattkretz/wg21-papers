@@ -68,6 +68,7 @@
 \fi
 \soulregister{\code}{1}
 \soulregister{\type}{1}
+\soulregister{\tcode}{1}
 \newcommand\wgAdd[1]{\textcolor{WgAdd}{\ul{#1}}}
 \newcommand\wgRemove[1]{\textcolor{WgRem}{\st{#1}}} % deprecated
 \newcommand\wgRem[1]{\textcolor{WgRem}{\st{#1}}}
@@ -261,7 +262,7 @@
     \def\theWgStableName{#2}%
     \def\theWGSubSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}.\arabic{WGSubSubSubSection}}%
     \protected@edef\@currentlabel{\theWGSubSubSubSection}%
-    \addcontentsline{toc}{subparagraph}{(\thesubparagraph{}) \theWGSubSubSubSection{} #1 [#2]}%
+    %\addcontentsline{toc}{subparagraph}{(\thesubparagraph{}) \theWGSubSubSubSection{} #1 [#2]}%
     {\noindent\wgOrigSection{subparagraph}\theWGSubSubSubSection{} #1\label{sec:#2}\hfill[#2]}\\%
     \noindent%
 }

@@ -1651,7 +1651,7 @@ template<class T, class Abi> simd<T, Abi>
   The result of element-wise application of \tcode{std::clamp(v[$i$], lo[$i$], hi[$i$])} \foralli.
 \end{itemdescr}
 
-\rSec2[simd.math]{Math library}
+\rSec2[simd.math]{\wgChange{M}{\tcode{simd} m}ath library}
 
 \pnum
 For each set of overloaded functions within \tcode{<cmath>}, there shall be additional overloads sufficient to ensure that if any argument corresponding to a \tcode{double} parameter has type \tcode{simd<T, Abi>}, where \tcode{is_floating_point_v<T>} is \tcode{true}, then:
@@ -1696,30 +1696,30 @@ public:
   |+template<class G> explicit simd_mask(G&& gen) noexcept;+|
   template<class Flags> simd_mask(const value_type* mem, Flags);
 
-  // \ref{simd.mask.copy}, Copy functions
+  // \ref{simd.mask.copy}, \wgChange{C}{\tcode{simd_mask} c}opy functions
   template<class Flags> void copy_from(const value_type* mem, Flags);
   template<class Flags> void copy_to(value_type* mem, Flags);
 
-  // \ref{simd.mask.subscr}, Subscript operators
+  // \ref{simd.mask.subscr}, \wgChange{S}{\tcode{simd_mask} s}ubscript operators
   reference operator[](size_t);
   value_type operator[](size_t) const;
 
-  // \ref{simd.mask.unary}, Unary operators
+  // \ref{simd.mask.unary}, \wgChange{U}{\tcode{simd_mask} u}nary operators
   simd_mask operator!() const noexcept;
 
-  // \ref{simd.mask.binary}, Binary operators
+  // \ref{simd.mask.binary}, \wgChange{B}{\tcode{simd_mask} b}inary operators
   friend simd_mask operator&&(const simd_mask&, const simd_mask&) noexcept;
   friend simd_mask operator||(const simd_mask&, const simd_mask&) noexcept;
   friend simd_mask operator&(const simd_mask&, const simd_mask&) noexcept;
   friend simd_mask operator|(const simd_mask&, const simd_mask&) noexcept;
   friend simd_mask operator^(const simd_mask&, const simd_mask&) noexcept;
 
-  // \ref{simd.mask.cassign}, Compound assignment
+  // \ref{simd.mask.cassign}, \wgChange{C}{\tcode{simd_mask} c}ompound assignment
   friend simd_mask& operator&=(simd_mask&, const simd_mask&) noexcept;
   friend simd_mask& operator|=(simd_mask&, const simd_mask&) noexcept;
   friend simd_mask& operator^=(simd_mask&, const simd_mask&) noexcept;
 
-  // \ref{simd.mask.comparison}, Comparisons
+  // \ref{simd.mask.comparison}, \wgChange{C}{\tcode{simd_mask} c}omparisons
   friend simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
   friend simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
 };
@@ -1770,7 +1770,7 @@ static constexpr size_t size() noexcept;
   The width of \tcode{simd<T, Abi>}.
 \end{itemdescr}
 
-\rSec2[simd.mask.ctor]{Constructors}
+\rSec2[simd.mask.ctor]{\wgChange{C}{\tcode{simd_mask} c}onstructors}
 
 \begin{itemdecl}
 explicit simd_mask(value_type x) noexcept;
@@ -1832,7 +1832,7 @@ template<class Flags> simd_mask(const value_type* mem, Flags);
 
 \end{itemdescr}
 
-\rSec2[simd.mask.copy]{Copy functions}
+\rSec2[simd.mask.copy]{\wgChange{C}{\tcode{simd_mask} c}opy functions}
 
 \begin{itemdecl}
 template<class Flags> void copy_from(const value_type* mem, Flags);
@@ -1875,7 +1875,7 @@ template<class Flags> void copy_to(value_type* mem, Flags);
   This function shall not participate in overload resolution unless \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
 \end{itemdescr}
 
-\rSec2[simd.mask.subscr]{Subscript operators}
+\rSec2[simd.mask.subscr]{\wgChange{S}{\tcode{simd_mask} s}ubscript operators}
 
 \begin{itemdecl}
 reference operator[](size_t i);
@@ -1905,7 +1905,7 @@ value_type operator[](size_t i) const;
   \pnum\throws Nothing.
 \end{itemdescr}
 
-\rSec2[simd.mask.unary]{Unary operators}
+\rSec2[simd.mask.unary]{\wgChange{U}{\tcode{simd_mask} u}nary operators}
 
 \begin{itemdecl}
 simd_mask operator!() const noexcept;
@@ -1918,7 +1918,7 @@ simd_mask operator!() const noexcept;
 
 \rSec1[simd.mask.nonmembers]{Non-member operations}
 
-\rSec2[simd.mask.binary]{Binary operators}
+\rSec2[simd.mask.binary]{\wgChange{B}{\tcode{simd_mask} b}inary operators}
 
 \begin{itemdecl}
 friend simd_mask operator&&(const simd_mask& lhs, const simd_mask& rhs) noexcept;
@@ -1933,7 +1933,7 @@ friend simd_mask operator^ (const simd_mask& lhs, const simd_mask& rhs) noexcept
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.mask.cassign]{Compound assignment}
+\rSec2[simd.mask.cassign]{\wgChange{C}{\tcode{simd_mask} c}ompound assignment}
 
 \begin{itemdecl}
 friend simd_mask& operator&=(simd_mask& lhs, const simd_mask& rhs) noexcept;
@@ -1949,7 +1949,7 @@ friend simd_mask& operator^=(simd_mask& lhs, const simd_mask& rhs) noexcept;
   \tcode{lhs}.
 \end{itemdescr}
 
-\rSec2[simd.mask.comparison]{Comparisons}
+\rSec2[simd.mask.comparison]{\wgChange{C}{\tcode{simd_mask} c}omparisons}
 
 \begin{itemdecl}
 friend simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
@@ -1961,7 +1961,7 @@ friend simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.mask.reductions]{Reductions}
+\rSec2[simd.mask.reductions]{\wgChange{R}{\tcode{simd_mask} r}eductions}
 
 \begin{itemdecl}
 template<class T, class Abi> bool all_of(const simd_mask<T, Abi>& k) noexcept;
