@@ -1,7 +1,7 @@
 \newcommand\wgTitle{Non-Member Subscript Operator}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
 \newcommand\wgDocumentNumber{DNMSOR0}
-\newcommand\wgGroup{EWG-I}
+\newcommand\wgGroup{EWG-I, EWG}
 \newcommand\wgTarget{\CC{}23}
 
 \usepackage{mymacros}
@@ -20,113 +20,261 @@
 \end{wgTitlepage}
 
 \section{Problem}
-The subscript operator is currently only overloadable via a member function.
-Many other operators additionally allow overloads via non\hyp member functions.
-That the subscript operator does not allow non\hyp member overloads appears like an arbitrary decision, apparently motivated by a conservative approach, to only add features when the use\hyp cases are clear.
+The subscript operator is currently only overloadable as a member.
+Most other operators allow non\hyp member overloads.
+That the subscript operator does not allow non\hyp member overloads seems
+arbitrary, potentially motivated by a conservative approach only to add
+features when the use\hyp cases are clear. Therefore, for the rest of this
+section I will give examples for non\hyp member subscript operators.
 
-Therefore, for the rest of this section I will give examples for non\hyp member subscript operators.
-In general, non\hyp member subscript is needed if the class to be subscripted is independent of the type used for the subscript argument or if modifications of the subscripted type are not possible.
-Consequently, several examples are very similar:
-A generic container class only implements the \type{size\_t} subscript operator.
-A user-defined type subsequently provides a good use\hyp case for an additional subscript overload for one or more container classes.
+In general, non\hyp member subscript is needed / preferable
+\begin{itemize}
+  \item if modification of the container type is not possible, or
 
-\subsection{Vector load/store/gather/scatter on std containers}
+  \item if the container type should not depend on the index type (e.g.
+    \lstinline@#include <vector>@ should not implicitly
+    \lstinline@#include <simd>@), or
+
+  \item if the implementation of the subscript operation is a detail of the
+    index type rather than the container type.
+\end{itemize}
+
+\subsection{Vector gather/scatter on std containers and C-arrays}\label{sec:gatherscatter}
 The use\hyp case that got me started was the design of a gather/scatter API for SIMD vector types.
-Consider the classical container indexing operation:
+Consider a function \code{f} which modifies an element at a given index:
 \smallskip\begin{lstlisting}
-std::vector<int> data = ...;
-int i = ...;
-int x = data[i];
-\end{lstlisting}
-If I want to carry this syntax over to data\hyp parallel types I would like to write:
-\smallskip\begin{lstlisting}
-std::vector<int> data = ...;
-std::simd<int> i = ...;
-auto x = data[i];
-static_assert(std::is_simd_v<decltype(x)>);
-\end{lstlisting}
-This expression intuitively\footnote{All operators on data-parallel types act element-wise.} asks for four loads from \code{data} at \code{data[i[0]]}, \code{data[i[1]]}, \code{data[i[2]]}, and \code{data[i[3]]}.
-
-The reverse operation is just as useful (scatter):
-\smallskip\begin{lstlisting}
-std::vector<int> data = ...;
-std::simd<int> i = ...;
-std::simd<int> x = ...;
-data[i] = x;
-\end{lstlisting}
-
-\subsection{Vector load/store subscripts}
-\begin{lstlisting}[morekeywords={[5]idx}]
-std::vector<int> data = ...;
-std::idx<std::simd<int>> i = 3; // the number of elements is given by simd<int>::size()
-auto x = data[i];
-// decltype(x) -> simd<int>
-\end{lstlisting}
-
-\TODO{
-\todoitem needs non-fundamental types in the operator[] parameter type, thus a dependency on the type
-\todoitem it makes a lot of sense to delay such declarations to somewhere later in the program to avoid pulling in all possible useful operator[] declarations
+void f(std::vector<int>& data, int i) {
+  int x = data[i];
+  // do something with x
+  data[i] = x;
 }
+\end{lstlisting}
 
-Obviously, this pattern is just as useful outside of standard library implementations, where a non-\code{std} object storing multiple indices is used for gather \& scatter subscripting.
+Now, let us generalize \code{i} from one index value to multiple indices,
+limiting the discussion to \code{std::simd}\footnote{Assuming
+\code{std::experimental::simd} becomes \code{std::simd} once \cite{P1928R0}
+gains traction again.} for the multi-index type. Obviously, \code{simd}
+objects are not convertible to \type{size_t} and thus the existing subscript
+operator is not viable. We therefore need a new member \code{operator[]}
+overload in \code{std::vector} with a \code{simd} subscript argument.
+
+While there's a non-zero chance for the standard library to adopt \code{simd}
+integration throughout the library, it is unlikely that non-std containers will
+do so. Furthermore, the gather and scatter operations on subscripting are
+really a detail of \code{simd}, rather than \code{vector}. The necessary
+interface to \code{vector} and all contiguous ranges already exists with
+\code{std::ranges::data}. Last but not least, a hidden friend \code{operator[]}
+inside \code{simd} would allow a single generic implementation for all
+contiguous ranges and all supported \code{simd} element types. Without
+non-member overloads the implementation must be copied into every type. (I.e.
+without non-member \code{operator[]} generic programming in \CC{} has a hole.)
+
+The alternative to adding additional member \code{operator[](simd)} overloads
+is to rely on a named function instead. This is the most likely outcome if this
+paper is not adopted. \ttref{gather} shows the significant improvement in
+generic code if \code{simd} subscripts are available.
+\begin{tonytable}{SIMD gather from a \code{std::vector}}\label{tt:gather}
+\smaller\begin{lstlisting}
+template<std::ranges::contiguous_range Range,
+         class Idx>
+void f(Range& data, Idx i) {
+  std::conditional_t<std::is_simd_v<Idx>,
+                     std::simd<int>, int> x;
+  if constexpr (std::is_simd_v<Idx>)
+    x = std::simd_gather(std::ranges::data(data), i);
+  else
+    x = data[i];
+  // do something with x
+  if constexpr (std::is_simd_v<Idx>)
+    std::simd_scatter(std::ranges::data(data), i, x);
+  else
+    data[i] = x;
+}
+\end{lstlisting}
+&
+\smaller\begin{lstlisting}
+template<std::ranges::contiguous_range Range,
+         class Idx>
+void f(Range& data, Idx i) {
+
+
+
+
+
+  auto x = std::as_const(data)[i];
+  // do something with x
+
+
+
+  data[i] = x;
+}
+\end{lstlisting}
+\end{tonytable}%
+
+Note that the \code{simd} subscript expression intuitively\footnote{All
+operators on data-parallel types act element-wise.} asks for
+\code{simd<int>::size()} single-element loads from / stores to \code{data} at \code{data[i[0]]},
+\code{data[i[1]]}, \code{data[i[2]]}, \ldots.
+
+\subsubsection{Tangent: reference class decay}
+
+The need for \code{as_const} in \ttref{gather} is unfortunate. The non-const
+overload of a subscript has to return a reference class type that is able to
+perform the scatter operation on assignment. Without \code{as_const} the type
+of \code{x} would be the reference class. Since we don't want to have a
+reference --- we wrote \code{auto} not \code{auto\&} --- we have to ensure the
+\code{const} overload is used. Note the inconsistency with regard to a function
+\code{f} that returns \code{int\&}: the type of \code{auto x = f()} isn't a
+reference but a copy of the value (\code{decay_t<int\&>} is \code{int}). It
+would be great to get language support to define user-defined reference
+wrappers with decay semantics. See \cite{PTODO}.
+
+\subsection{Vector load/store subscripts}\label{sec:loadstore}
+Analogue to SIMD scatter \& gather subscripting, SIMD loads and stores can be implemented as subscripting into a contiguous range.
+However, instead of a single index a SIMD load/store is an access via multiple contiguous indices.
+This key difference must be reflected in the index type.
+A \code{simd} index type therefore represents a contiguous index range (similar to a \code{ranges::iota_view<size_t>}).
+In addition, a \code{simd} index type could determine the \code{simd} ABI tag, thus avoiding reference proxy types when subscripting \code{const} ranges.
+The availability of SIMD loads and stores via \code{simd} index types improves generality and readability significantly.
+
+\ttref{loadstore} shows a simple loop (i.e. without epilogue) over a given range of \code{float}s incrementing every value in the range by 1.
+\begin{tonytable}{SIMD loop over a contiguous range}\label{tt:loadstore}
+  \smaller\begin{lstlisting}
+void f(std::ranges::contiguous_range<float>
+       auto& data)
+{
+  using V = std::simd<float>;
+  for (std::size_t i = 0;
+         i + V::size() <= data.size();
+         i += V::size())
+  {
+    const float* ptr
+      = std::ranges::data(data) + i;
+    V v(ptr);
+    v += 1;
+    v.copy_to(ptr);
+  }
+}
+  \end{lstlisting}
+  &
+  \smaller\begin{lstlisting}
+void f(std::ranges::contiguous_range<float>
+       auto& data)
+{
+
+  for (std::simd<float>::index_type i = 0;
+         i < data.size(); ++i)
+
+  {
+    data[i] += 1;
+
+
+
+
+  }
+}
+  \end{lstlisting}
+\end{tonytable}%
+Without non-member \code{operator[]} overloads, there is little value in providing a \code{simd} index type.
+Thus, code would have to resort to the low-level load and store operations of the \code{simd} type (left column in \ttref{loadstore}).
+However, with suitable \code{operator[]} overloads, the \code{simd} index type allows concise, readable code which is also generic wrt. the index type%
+\footnote{except for handling the epilogue in case the range isn't prepared have a matching size} (right column in \ttref{loadstore}).
+
+
+\subsection{Vector gather/scatter or load/store on program-defined ranges}
+As noted above, the SIMD gather, scatter, load, and store operations are implementation details of \code{simd} rather than the ranges where the memory access happens.
+If subscript operators for SIMD were implemented in some ranges / containers (as members) the support would be inconsistent / patchy.
+It is much more useful to define the subscript operators to apply to all ranges modelling \code{contiguous_range}, which \emph{requires a non-member \code{operator[]}} (preferably as hidden friend of the index type).
+As a consequence we'd see seamless integration of program-defined ranges integrate with \code{simd}.
+
+%For what it's worth, the duplication of \code{operator[](size_t)} in contiguous ranges could have been avoided with a generic non-member \code{operator[]}
+
+\subsection{Multi-index subscripts}
+The subscript overloads described in \sect{gatherscatter} and \sect{loadstore} are just as useful for enabling non-SIMD multi-index subscripts.
+For example, a user could add a \code{vector<T>::operator[]} overload for a program-defined index type that returns a \code{span}.
+Especially for contiguous ranges, which expose an array of data via \code{std::ranges::data}, it is a sensible (better) implementation choice to tie the “not \code{size_t}” \code{operator[]}s to the index type(s).
+This requires non-member \code{operator[]} overloads.
 
 \subsection{Subscripting with scoped enumerations}
-\TODO{
-  \todoitem This would better use \type{uint32\_t} as base for the enum and thus avoid the \code{ColorValues} array altogether.  The example is not very motivating this way.
-}
+The use of scoped enumerations can be cumbersome without the ability to use some of the operators that “just work” for unscoped enumerations.
+Therefore, it is really useful that operators can be overloaded for scoped enumerations, effectively providing an opt-in for operators.
+However, \code{operator[]} stands out.
+There's no way to allow subscripting with scoped enumerations unless the necessary \code{operator[]} can be added as a member.
+That's typically not going to happen, especially for standard library types like \code{array} and \code{vector}.
 
-\begin{lstlisting}[style=Vc]
+Allowing non-member \code{operator[]} fills that hole.
+See \lst{colorsubscripts} for an example.
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:colorsubscripts,caption={
+  Scoped enumerations sometimes should be able to opt-in to being used as subscript index
+}]
 enum class Color : char {
   Red,
   Green,
   Blue
 };
 
-using ColorArray = std::array<std::uint32_t, 3>;
-const ColorArray ColorValues = {{
+struct Hsv {
+  short hue, sat, val;
+};
+
+using ArgbArray = std::array<std::uint32_t, 3>;
+using HsvArray = std::array<Hsv, 3>;
+
+const ArgbArray ArgbValue = {{
   0xFFFF0000,
   0xFF00FF00,
   0xFF0000FF,
 }};
 
-auto value = ColorValues[Color::Red]; // error: no implicit conversion
+const HsvArray HsvValue = {{
+  {0, 1000, 1000},
+  {120, 1000, 1000},
+  {240, 1000, 1000}
+}};
 
-std::uint32_t operator[](const ColorArray &values, Color c) {
-  return values[static_cast<std::size_t>(c)];
-}
+auto rgb = ArgbValue[Color::Red];  // ERROR
+auto hsv = HsvValue[Color::Green]; // ERROR
 
-auto value = ColorValues[Color::Red]; // now it works
+constexpr inline std::uint32_t operator[](const ArgbArray &values, Color c)
+{ return values[static_cast<std::size_t>(c)]; }
+
+constexpr inline Hsv operator[](const HsvArray &values, Color c)
+{ return values[static_cast<std::size_t>(c)]; }
+
+auto rgb = ArgbValue[Color::Red];  // now it works
+auto hsv = HsvValue[Color::Green]; // now it works
 \end{lstlisting}
 
 \subsection{Compatiblity layer}
-Once P2128 is adopted, providing multi\hyp dimensional subscript operators for linear algebra (linalg) types (e.g. matrices) will be possible.
-It is to be expected that linalg\hyp libaries will start providing these subscript operators, though adoption will be lagging until the respective C++ standard is in widespread use.
-Therefore, early adopters likely won't benefit from P2128, unless they maintain their own linalg\hyp library.
-Locally\footnote{This is somewhat similar to providing make_unique in C++11.} adding a non\hyp member subscript operator will allow early adopters to enable a more natural syntax until P2128 is in widespread use.
+After P2128 was adopted for \CC{}23, providing multi\hyp dimensional subscript operators for linear algebra (linalg) types (e.g. matrices) will be possible.
+It is to be expected that some linalg\hyp libaries will provide these subscript operators, but it is unlikely that every type where multi-dimensional indexing is possible will be updated.
+Therefore, a non-member \code{operator[]} overload would allow programs to modernize the interface of such types without patching 3rd-party library types (e.g. \lst{linalg}).
+This is similar to program-defined \code{make_unique} in C++11 sources.
 
-\begin{lstlisting}[style=Vc]
-//linalg.h - external code, cannot be modified
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:linalg,caption={
+  Extending a type with missing multi-dimensional subscript operator
+}]
+// linalg.h - external code, cannot be modified
 namespace linalg {
   struct matrix {
     float & operator()(size_t row, size_t col);
   };
 }
 
-//utils.h - local utility header
+// utils.h - local utility header
 namespace linalg {
-  //! @attention to be removed once linalg provides multi-dim subscript
-  inline float & operator[](matrix &self, size_t row, size_t col) {
+  inline float& operator[](matrix& self, size_t row, size_t col) {
     return self(row, col);
   }
 }
 
 linalg::matrix mat = ...;
 mat[3, 3] = 1;
-
 \end{lstlisting}
 
 \section{Implementation}
-Implementing non-member subscript overloads for GCC was as simple as removing one line of code (a special case).
+Implementing non-member subscript overloads for GCC was as simple as removing two lines of code (two special cases) before P2128 was implemented.
+After P2128 slightly more work was necessary because operators could only have up to three arguments before P2128 and the new subscript operator code did not look for non-member operators
 
 \section{Wording}
 
