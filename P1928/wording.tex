@@ -34,7 +34,7 @@ Throughout this Clause, the set of \defn{vectorizable types} for a data-parallel
 The intent is to support acceleration through data-parallel execution resources, such as SIMD registers and instructions or execution units driven by a common instruction decoder. If such execution resources are unavailable, the interfaces support a transparent fallback to sequential execution.
 \end{note}
 
-\rSec1[simd.synopsis]{Header \tcode{<\wgRem{experimental/}simd>} synopsis}
+\rSec1[simd.synopsis]{Header \texorpdfstring{\tcode{<\wgRem{experimental/}simd>}}{<simd>} synopsis}
 
 %\indexhdr{simd}
 \begin{codeblock}
@@ -1261,7 +1261,7 @@ friend mask_type operator<(const simd& lhs, const simd& rhs) noexcept;
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.reductions]{\wgChange{R}{\tcode{simd} r}eductions}
+\rSec2[simd.reductions]{\texorpdfstring{\wgChange{R}{\tcode{simd} r}}{simd r}eductions}
 
 \pnum
 In this subclause, \tcode{BinaryOperation} shall be a binary element-wise operation.
@@ -1640,7 +1640,7 @@ template<class T, class Abi> simd<T, Abi>
   The result of element-wise application of \tcode{std::clamp(v[$i$], lo[$i$], hi[$i$])} \foralli.
 \end{itemdescr}
 
-\rSec2[simd.math]{\wgChange{M}{\tcode{simd} m}ath library}
+\rSec2[simd.math]{\texorpdfstring{\wgChange{M}{\tcode{simd} m}ath}{simd math} library}
 
 \pnum
 For each set of overloaded functions within \tcode{<cmath>}, there shall be additional overloads sufficient to ensure that if any argument corresponding to a \tcode{double} parameter has type \tcode{simd<T, Abi>}, where \tcode{is_floating_point_v<T>} is \tcode{true}, then:
@@ -1759,7 +1759,7 @@ static constexpr size_t size() noexcept;
   The width of \tcode{simd<T, Abi>}.
 \end{itemdescr}
 
-\rSec2[simd.mask.ctor]{\wgChange{C}{\tcode{simd_mask} c}onstructors}
+\rSec2[simd.mask.ctor]{\texorpdfstring{\wgChange{C}{\tcode{simd_mask} c}onstructors}{simd_mask constructors}}
 
 \begin{itemdecl}
 explicit simd_mask(value_type x) noexcept;
@@ -1821,7 +1821,7 @@ template<class Flags> simd_mask(const value_type* mem, Flags);
 
 \end{itemdescr}
 
-\rSec2[simd.mask.copy]{\wgChange{C}{\tcode{simd_mask} c}opy functions}
+\rSec2[simd.mask.copy]{\texorpdfstring{\wgChange{C}{\tcode{simd_mask} c}opy}{simd_mask copy} functions}
 
 \begin{itemdecl}
 template<class Flags> void copy_from(const value_type* mem, Flags);
@@ -1864,7 +1864,7 @@ template<class Flags> void copy_to(value_type* mem, Flags);
   This function shall not participate in overload resolution unless \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
 \end{itemdescr}
 
-\rSec2[simd.mask.subscr]{\wgChange{S}{\tcode{simd_mask} s}ubscript operators}
+\rSec2[simd.mask.subscr]{\texorpdfstring{\wgChange{S}{\tcode{simd_mask} s}ubscript}{simd_mask subscript} operators}
 
 \begin{itemdecl}
 reference operator[](size_t i);
@@ -1894,7 +1894,7 @@ value_type operator[](size_t i) const;
   \pnum\throws Nothing.
 \end{itemdescr}
 
-\rSec2[simd.mask.unary]{\wgChange{U}{\tcode{simd_mask} u}nary operators}
+\rSec2[simd.mask.unary]{\texorpdfstring{\wgChange{U}{\tcode{simd_mask} u}nary}{simd_mask unary} operators}
 
 \begin{itemdecl}
 simd_mask operator!() const noexcept;
@@ -1907,7 +1907,7 @@ simd_mask operator!() const noexcept;
 
 \rSec1[simd.mask.nonmembers]{Non-member operations}
 
-\rSec2[simd.mask.binary]{\wgChange{B}{\tcode{simd_mask} b}inary operators}
+\rSec2[simd.mask.binary]{\texorpdfstring{\wgChange{B}{\tcode{simd_mask} b}inary}{simd_mask binary} operators}
 
 \begin{itemdecl}
 friend simd_mask operator&&(const simd_mask& lhs, const simd_mask& rhs) noexcept;
@@ -1922,7 +1922,7 @@ friend simd_mask operator^ (const simd_mask& lhs, const simd_mask& rhs) noexcept
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.mask.cassign]{\wgChange{C}{\tcode{simd_mask} c}ompound assignment}
+\rSec2[simd.mask.cassign]{\texorpdfstring{\wgChange{C}{\tcode{simd_mask} c}ompound}{simd_mask compound} assignment}
 
 \begin{itemdecl}
 friend simd_mask& operator&=(simd_mask& lhs, const simd_mask& rhs) noexcept;
@@ -1938,7 +1938,7 @@ friend simd_mask& operator^=(simd_mask& lhs, const simd_mask& rhs) noexcept;
   \tcode{lhs}.
 \end{itemdescr}
 
-\rSec2[simd.mask.comparison]{\wgChange{C}{\tcode{simd_mask} c}omparisons}
+\rSec2[simd.mask.comparison]{\texorpdfstring{\wgChange{C}{\tcode{simd_mask} c}omparisons}{simd_mask comparisons}}
 
 \begin{itemdecl}
 friend simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
@@ -1950,7 +1950,7 @@ friend simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.mask.reductions]{\wgChange{R}{\tcode{simd_mask} r}eductions}
+\rSec2[simd.mask.reductions]{\texorpdfstring{\wgChange{R}{\tcode{simd_mask} r}eductions}{simd_mask reductions}}
 
 \begin{itemdecl}
 template<class T, class Abi> bool all_of(const simd_mask<T, Abi>& k) noexcept;

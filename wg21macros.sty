@@ -240,7 +240,7 @@
     \def\theWGSubSubSubSection{\theWGSubSubSection}%
     \protected@edef\@currentlabel{\theWGSubSection}%
     \addcontentsline{toc}{subsubsection}{%
-      \theWGSubSection{} [#2] #1 (\thesubsubsection{})%
+      \theWGSubSection{} #1 [#2] (\thesubsubsection{})%
     }%
     {\noindent\wgOrigSection{subsubsection}\larger[1]\theWGSubSection{} #1\label{sec:\wgLabelPrefix#2}\hfill[#2]}\\%
     \noindent%
@@ -257,7 +257,7 @@
     \def\theWGSubSubSubSection{\theWGSubSubSection}%
     \protected@edef\@currentlabel{\theWGSubSubSection}%
     \addcontentsline{toc}{paragraph}{%
-      \theWGSubSubSection{} [#2] (\theparagraph{})%
+      \theWGSubSubSection{} #1 [#2] (\theparagraph{})%
     }%
     {\noindent\wgOrigSection{paragraph}\theWGSubSubSection{} #1\label{sec:\wgLabelPrefix#2}\hfill[#2]}\\%
     \noindent%
@@ -273,7 +273,7 @@
     \def\theWGSubSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}.\arabic{WGSubSubSubSection}}%
     \protected@edef\@currentlabel{\theWGSubSubSubSection}%
     \addcontentsline{toc}{subparagraph}{%
-      \theWGSubSubSubSection{} [#2] (\thesubparagraph{})%
+      \theWGSubSubSubSection{} #1 [#2] (\thesubparagraph{})%
     }%
     {\noindent\wgOrigSection{subparagraph}\theWGSubSubSubSection{} #1\label{sec:\wgLabelPrefix#2}\hfill[#2]}\\%
     \noindent%
