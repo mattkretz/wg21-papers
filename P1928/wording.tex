@@ -151,7 +151,7 @@ namespace std|-::experimental { inline namespace parallelism_v2-| {
     resize_simd<simd_size_v<T, Abi> * N, simd_mask<T, Abi>>
       concat(const array<simd_mask<T, Abi>, N>& arr) noexcept;
 
-  // \ref{simd.mask.reductions}, Reductions
+  // \ref{simd.mask.reductions}, \wgChange{R}{\tcode{simd_mask} r}eductions
   template<class T, class Abi> bool all_of(const simd_mask<T, Abi>&) noexcept;
   template<class T, class Abi> bool any_of(const simd_mask<T, Abi>&) noexcept;
   template<class T, class Abi> bool none_of(const simd_mask<T, Abi>&) noexcept;
@@ -197,7 +197,7 @@ namespace std|-::experimental { inline namespace parallelism_v2-| {
     const_where_expression<bool, T>
       where(@\seebelow@ k, const T& d) noexcept;
 
-  // \ref{simd.reductions}, Reductions
+  // \ref{simd.reductions}, \wgChange{R}{\tcode{simd} r}eductions
   template<class T, class Abi, class BinaryOperation = plus<>>
     T reduce(const simd<T, Abi>&,
              BinaryOperation = {});
@@ -1261,7 +1261,7 @@ friend mask_type operator<(const simd& lhs, const simd& rhs) noexcept;
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.reductions]{Reductions}
+\rSec2[simd.reductions]{\wgChange{R}{\tcode{simd} r}eductions}
 
 \pnum
 In this subclause, \tcode{BinaryOperation} shall be a binary element-wise operation.
