@@ -34,12 +34,11 @@ Throughout this Clause, the set of \defn{vectorizable types} for a data-parallel
 The intent is to support acceleration through data-parallel execution resources, such as SIMD registers and instructions or execution units driven by a common instruction decoder. If such execution resources are unavailable, the interfaces support a transparent fallback to sequential execution.
 \end{note}
 
-\rSec1[simd.synopsis]{Header \tcode{<experimental/simd>} synopsis}
+\rSec1[simd.synopsis]{Header \tcode{<\wgRem{experimental/}simd>} synopsis}
 
-%\indexhdr{experimental/simd}
+%\indexhdr{simd}
 \begin{codeblock}
-namespace std::experimental {
-inline namespace parallelism_v2 {
+namespace std|-::experimental { inline namespace parallelism_v2-| {
   namespace simd_abi {
     using scalar = @\seebelow@;
     template<int N> using fixed_size = @\seebelow@;
@@ -247,12 +246,11 @@ inline namespace parallelism_v2 {
       clamp(const simd<T, Abi>& v,
             const simd<T, Abi>& lo,
             const simd<T, Abi>& hi);
-}
-}
+|-}-|}
 \end{codeblock}
 
 \pnum
-The header \tcode{<experimental/simd>} defines class templates, tag types, trait types, and function templates for element-wise operations on data-parallel objects.
+The header \tcode{<\wgRem{experimental/}simd>} defines class templates, tag types, trait types, and function templates for element-wise operations on data-parallel objects.
 
 \rSec1[simd.abi]{\tcode{simd} ABI tags}
 
@@ -267,7 +265,7 @@ namespace simd_abi {
 \end{codeblock}
 
 \pnum
-An \defn{ABI tag} is a type in the \tcode{std::experimental::parallelism_v2::simd_abi} namespace that indicates a choice of size and binary representation for objects of data-parallel type. \begin{note}The intent is for the size and binary representation to depend on the target architecture.\end{note} The ABI tag, together with a given element type implies a number of elements. ABI tag types are used as the second template argument to \tcode{simd} and \tcode{simd_mask}.
+An \defn{ABI tag} is a type in the \tcode{std::\wgRem{experimental::parallelism_v2::}simd_abi} namespace that indicates a choice of size and binary representation for objects of data-parallel type. \begin{note}The intent is for the size and binary representation to depend on the target architecture.\end{note} The ABI tag, together with a given element type implies a number of elements. ABI tag types are used as the second template argument to \tcode{simd} and \tcode{simd_mask}.
 
 \pnum
 \begin{note}The ABI tag is orthogonal to selecting the machine instruction set. The selected machine instruction set limits the usable ABI tag types, though (see \ref{simd.overview}). The ABI tags enable users to safely pass objects of data-parallel type between translation unit boundaries (e.g. function calls or I/O).\end{note}
@@ -291,7 +289,7 @@ Use of the \tcode{simd_abi::fixed_size<N>} tag type requires data-parallel types
 \begin{note}An implementation can forego ABI compatibility between differently compiled translation units for \tcode{simd} and \tcode{simd_mask} specializations using the same \tcode{simd_abi::fixed_size<N>} tag. Otherwise, the efficiency of \tcode{simd<T, Abi>} is likely to be better than for \tcode{simd<T, fixed_size<simd_size_v<T, Abi>>>} (with \tcode{Abi} not a specialization of \tcode{simd_abi::fixed_size}).\end{note}
 
 \pnum
-An implementation may define additional \defn{extended ABI tag} types in the \tcode{std::experimental::parallelism_v2::simd_abi} namespace, to support other forms of data-parallel computation.
+An implementation may define additional \defn{extended ABI tag} types in the \tcode{std::\wgRem{experimental::parallelism_v2::}simd_abi} namespace, to support other forms of data-parallel computation.
 
 \pnum
 \tcode{compatible<T>} is an implementation-defined alias for an ABI tag. \begin{note}The intent is to use the ABI tag producing the most efficient data-parallel execution for the element type \tcode{T} that ensures ABI compatibility between translation units on the target architecture.\end{note}
