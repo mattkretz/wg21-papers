@@ -77,8 +77,11 @@
 \newcommand\wgItemRem{\color{WgRem}\item[\st{\mbox{ \textbullet }}]\hspace*{-\labelsep}\st{\mbox{\hspace*{\labelsep}}}}
 \newenvironment{wgBAdd}{\color{WgAdd}}{\color{black}}
 \newenvironment{wgBRem}{\color{WgRem}}{\color{black}}
+\def\wgLabelPrefix{}%
 \newenvironment{wgText}[1][]{
   \begingroup
+  \let\wgRealRef=\ref%
+  \renewcommand\ref[1]{\wgRealRef{sec:\wgLabelPrefix##1}}%
   \lstset{%
     language=C++,
     keywordstyle=,
@@ -221,7 +224,7 @@
     \def\theWGSubSubSubSection{\theWGSubSubSection}%
     \protected@edef\@currentlabel{\theWGSubSection}%
     \addcontentsline{toc}{subsection}{(\thesubsection{}) \theWGClause{} #1 [#2]}%
-    {\noindent\wgOrigSection{subsection}\larger[2]\arabic{WGClause} #1\label{sec:#2}\hfill[#2]}\\%
+    {\noindent\wgOrigSection{subsection}\larger[2]\arabic{WGClause} #1\label{sec:\wgLabelPrefix#2}\hfill[#2]}\\%
     \noindent%
 }
 \newcommand\wgSubsection[2]{%
@@ -236,8 +239,10 @@
     \def\theWGSubSubSection{\theWGSubSection{}}%
     \def\theWGSubSubSubSection{\theWGSubSubSection}%
     \protected@edef\@currentlabel{\theWGSubSection}%
-    \addcontentsline{toc}{subsubsection}{(\thesubsubsection{}) \theWGSubSection{} #1 [#2]}%
-    {\noindent\wgOrigSection{subsubsection}\larger[1]\theWGSubSection{} #1\label{sec:#2}\hfill[#2]}\\%
+    \addcontentsline{toc}{subsubsection}{%
+      \theWGSubSection{} [#2] #1 (\thesubsubsection{})%
+    }%
+    {\noindent\wgOrigSection{subsubsection}\larger[1]\theWGSubSection{} #1\label{sec:\wgLabelPrefix#2}\hfill[#2]}\\%
     \noindent%
 }
 \newcommand\wgSubsubsection[2]{%
@@ -251,8 +256,10 @@
     \def\theWGSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}}%
     \def\theWGSubSubSubSection{\theWGSubSubSection}%
     \protected@edef\@currentlabel{\theWGSubSubSection}%
-    \addcontentsline{toc}{paragraph}{(\theparagraph{}) \theWGSubSubSection{} #1 [#2]}%
-    {\noindent\wgOrigSection{paragraph}\theWGSubSubSection{} #1\label{sec:#2}\hfill[#2]}\\%
+    \addcontentsline{toc}{paragraph}{%
+      \theWGSubSubSection{} [#2] (\theparagraph{})%
+    }%
+    {\noindent\wgOrigSection{paragraph}\theWGSubSubSection{} #1\label{sec:\wgLabelPrefix#2}\hfill[#2]}\\%
     \noindent%
 }
 \newcommand\wgSubsubsubsection[2]{%
@@ -265,8 +272,10 @@
     \def\theWgStableName{#2}%
     \def\theWGSubSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}.\arabic{WGSubSubSubSection}}%
     \protected@edef\@currentlabel{\theWGSubSubSubSection}%
-    %\addcontentsline{toc}{subparagraph}{(\thesubparagraph{}) \theWGSubSubSubSection{} #1 [#2]}%
-    {\noindent\wgOrigSection{subparagraph}\theWGSubSubSubSection{} #1\label{sec:#2}\hfill[#2]}\\%
+    \addcontentsline{toc}{subparagraph}{%
+      \theWGSubSubSubSection{} [#2] (\thesubparagraph{})%
+    }%
+    {\noindent\wgOrigSection{subparagraph}\theWGSubSubSubSection{} #1\label{sec:\wgLabelPrefix#2}\hfill[#2]}\\%
     \noindent%
 }
 \makeatother

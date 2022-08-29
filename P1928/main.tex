@@ -7,6 +7,8 @@
 
 \usepackage{mymacros}
 \usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
 \usepackage{changelog}
 \usepackage{underscore}
 
@@ -149,7 +151,39 @@ Or rename “Concurrency support library” to “Parallelism and concurrency su
 Alternatively, add a new library clause?
 
 \section{Wording}
-\input{wording}
+
+The following section presents the wording to be applied against the \CC{} working draft.
+The subsequent \sect{diff} reproduces the same wording as a diff against the Parallelism TS 2.
+
+\subsection{Add Section 9 of N4808 with modifications}\label{sec:wording}
+
+\begin{wgText}[Add a new subclause after §28.8 {[numbers]}]
+  \def\wgRem#1{}
+  \def\wgAdd#1{#1}
+  \def\wgChange#1#2{#2}
+  \colorlet{WgAdd}{black}
+  \colorlet{WgRem}{white}
+  \setcounter{WGClause}{28}
+  \setcounter{WGSubSection}{8}
+  \lstset{%
+    columns=fullflexible,
+    deletedelim=**[is]{|-}{-|},
+    moredelim=[is][\color{white}\fontsize{0.1pt}{0.1pt}\selectfont{}]{|-}{-|}
+  }
+  \input{wording}
+\end{wgText}
+
+\subsection{Diff against Parallelism TS 2 (N4808)}\label{sec:diff}
+
+In the following, the wording from \sect{wording} is repeated with additional indications of differences with regard to N4808.
+Changes relative to N4808, which contains editorial changes after the publication of the TS, are marked using color for \textcolor{WgAdd}{additions} and \textcolor{WgRem}{removals}.
+
+\def\wgLabelPrefix{diff}%
+\begin{wgText}
+  \setcounter{WGClause}{28}
+  \setcounter{WGSubSection}{8}
+  \input{wording}
+\end{wgText}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=0
