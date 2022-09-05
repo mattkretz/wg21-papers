@@ -141,6 +141,30 @@ This needs more work and is not reflected in the wording at this point.
 
 \section{Open questions}
 
+\subsection{Integration with ranges}
+\code{simd} itself is not a range.
+The value of a data-parallel object is not an array of elements but rather needs to be understood as a single opaque value that happens to have means for reading and writing element values.
+I.e. \code{simd<int> x = \{\};} does not start the lifetime of \type{int} objects.
+The \code{element_reference} for \code{operator[]} is bad enough as is.
+Let's not exacerbate the problem by adding iterators to \code{simd}.
+
+Instead, a \code{simd} can be converted into an array (e.g. \lst{simdtoarray}).
+Conversely, a \std\code{span} with static extent can be converted into a \std\type{simd}.
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:simdtoarray,caption={
+  \code{simd} to \code{array} conversion
+}]
+template <class T, class A>
+std::array<T, std::simd_size_v<T, A>> to_array(std::simd<T, A> x)
+{
+  std::array<T, std::simd_size_v<T, A>> r;
+  x.copy_to(r.data());
+  return r;
+}
+\end{lstlisting}
+
+I plan to pursue conversions to array and from span with static extent in a follow-up paper.
+I believe it is not necessary to resolve this question before merging \code{simd} from the TS.
+
 \subsection{Correct place for \code{simd} in the IS?}
 
 While \code{simd} is certainly very important for numerics and therefore fits into the “Numerics library” clause, it is also more than that.
