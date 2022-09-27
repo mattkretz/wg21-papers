@@ -1,7 +1,7 @@
 \newcommand\wgTitle{Deprecate \code{numeric\_limits::has\_denorm}}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P2614R0}
-\newcommand\wgGroup{SG6, LEWG}
+\newcommand\wgDocumentNumber{P2614R1}
+\newcommand\wgGroup{LEWG, LWG}
 \newcommand\wgTarget{\CC{}26}
 \newcommand\wgAcknowledgements{
 Thanks to WG14 and specifically Fred Tydeman for their work on \code{*\_HAS\_SUBNORM} and 
@@ -31,9 +31,9 @@ for pointing out that we should deprecate \code{has\_denorm\_loss}.
 
 \pagestyle{scrheadings}
 
-%\input{changelog}
+\input{changelog}
 
-%\input{strawpolls}
+\input{strawpolls}
 
 \section{Introduction}
 
@@ -115,19 +115,7 @@ though). The reference to IEEE 754 should be removed in any case.
 
 \section{Wording}
 
-TBD.
-
-\section{Suggested Straw Polls}
-
-\wgPoll{Should the use of \code{numeric_limits::has_denorm} be discouraged via a change in 
-the standard?}{&&&&}
-
-\wgPoll{Deprecate \code{numeric_limits::has_denorm}?}{&&&&}
-
-\wgPoll{Document \code{numeric_limits::has_denorm} as not meaningful for arithmetic 
-types?}{&&&&}
-
-\wgPoll{Deprecate \code{numeric_limits::has_denorm_loss}?}{&&&&}
+\input{wording}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=90 formatoptions=trowan2
