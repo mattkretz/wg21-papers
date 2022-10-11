@@ -179,104 +179,111 @@ For reference, the above names are my preference over the following alternatives
 
 See Section \ref{sec:noabihelper}.
 
-\subsubsection{Implication for casts}\label{sec:implicationforcasts}
+\subsection{Casts}\label{sec:casts}
 
 The change to the ABI tags requires a reconsideration of cast functions and
 implicit and explicit casts between data-parallel types of different ABI tags.
 
-\begin{itemize}
-  \item Conversions between \code{fixed_size_simd<T, N>} and
-    \code{abi_stable_simd<T, N>} should be implicit, because the only
-    difference is in how the parameter is passed to a function.
-    Thus, a function on an API boundary might want to declare function
-    arguments with \code{abi_stable<N>} and then continue with
-    \code{fixed_size<T, N>} in its implementation.
-    However, conversions between \code{fixed_size_simd_mask<T, N>} and
-    \code{abi_stable_simd_mask<T, N>} might require costly conversion between
-    different mask representations.
-    It would certainly be inconsistent to allow implicit conversions for
-    \code{simd} but not \code{simd_mask}.
-    Also this potential mask conversion cost exists for today's
-    \stdx\simdabi\code{fixed_size_simd_mask<T, N>} for every mask operation, so
-    reducing it to implicit conversions on ABI boundaries would already be a
-    huge improvement.
+\subsubsection{interconvertible \code{fixed_size} and \code{abi_stable}}
 
-  \item From the cast functions \stdx\code{to_fixed_size},
-    \stdx\code{to_native}, and \stdx\code{to_compatible} only the conversions
-    from \simdabi\code{fixed_size<T, N>} to \simdabi\code{native<T>} and back
-    may still benefit from a named cast function.
-    Most importantly, the conversion from \code{native} to its
-    \code{fixed_size} counterpart benefits from a cast expression that does not
-    require spelling out the destination type.
-    If only (explicit) converting constructors were provided by the standard
-    library, it would be simple enough for users to define their own
-    \code{to_fixed_size} function if they want one (e.g.
-    \begin{lstlisting}[numbers=left,float={hbtp},label=lst:userdefined-to-fixed-size,caption={
-      Example of a user-defined \code{to_fixed_size} implementation if explicit casts are provided
-    }]
+Conversions between \code{fixed_size_simd<T, N>} and \code{abi_stable_simd<T,
+N>} should be implicit, because the only difference is in how the parameter is
+passed to a function.
+Thus, a function on an API boundary might want to declare function arguments
+with \code{abi_stable<N>} and then continue with \code{fixed_size<T, N>} in its
+implementation.
+However, conversions between \code{fixed_size_simd_mask<T, N>} and
+\code{abi_stable_simd_mask<T, N>} might require costly conversion between
+different mask representations.
+It would certainly be inconsistent to allow implicit conversions for
+\code{simd} but not \code{simd_mask}.
+Also this potential mask conversion cost exists for today's
+\stdx\simdabi\code{fixed_size_simd_mask<T, N>} for every mask operation, so
+reducing it to implicit conversions on ABI boundaries would already be a huge
+improvement.
+
+\subsubsection{named cast functions}
+
+From the cast functions \stdx\code{to_fixed_size}, \stdx\code{to_native}, and
+\stdx\code{to_compatible} only the conversions from \simdabi\code{fixed_size<T,
+N>} to \simdabi\code{native<T>} and back may still benefit from a named cast
+function.
+Most importantly, the conversion from \code{native} to its \code{fixed_size}
+counterpart benefits from a cast expression that does not require spelling out
+the destination type.
+If only (explicit) converting constructors were provided by the standard
+library, it would be simple enough for users to define their own
+\code{to_fixed_size} function if they want one (e.g.
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:userdefined-to-fixed-size,caption={
+  Example of a user-defined \code{to_fixed_size} implementation if explicit casts are provided
+}]
 template <typename T>
 constexpr auto to_fixed_size(std::simd<T> x)
 {
   using R = std::fixed_size_simd<T, std::simd<T>::size()>;
   return static_cast<R>(x);
 }
-    \end{lstlisting}
-    \lst{userdefined-to-fixed-size}).
-    The reverse cast can trivially be spelled out as
-    \code{static_cast<simd<T>>(y)} in program code.
-    The only motivation for adding a \code{to_native} function would be the
-    provision of a counterpart for the \code{to_fixed_size} cast function.
+\end{lstlisting}
+\lst{userdefined-to-fixed-size}).
+The reverse cast can trivially be spelled out as \code{static_cast<simd<T>>(y)}
+in program code.
+The only motivation for adding a \code{to_native} function would be the
+provision of a counterpart for the \code{to_fixed_size} cast function.
 
-    However, from my experience it is better to enable implicit conversions
-    between \code{native<T>} and \code{fixed_size<T, N>} with equal element
-    count even if such conversion might be non-portable between targets with
-    different native SIMD widths.
-    The expectation is, that most values for \code{N} will be derived from
-    \code{simd_size_v<T>} anyway and thus be portable by construction.
-    There is no way to know how \code{N} was determined, so we have to design
-    for one assumption or the other.
-    Since it should be recommended practice for users to compile \code{simd}
-    code to at least two different targets with different SIMD widths for CI,
-    non-portable use of such implicit casts can be caught automatically before
-    integration to the main branch.
+However, from my experience it is better to enable implicit conversions between
+\code{native<T>} and \code{fixed_size<T, N>} with equal element count even if
+such conversion might be non-portable between targets with different native
+SIMD widths.
+The expectation is, that most values for \code{N} will be derived from
+\code{simd_size_v<T>} anyway and thus be portable by construction.
+There is no way to know how \code{N} was determined, so we have to design for
+one assumption or the other.
+Since it should be recommended practice for users to compile \code{simd} code
+to at least two different targets with different SIMD widths for CI,
+non-portable use of such implicit casts can be caught automatically before
+integration to the main branch.
 
-    If there is consensus to allow implicit conversions, then I believe the
-    named cast functions should be removed altogether.
+If there is consensus to allow implicit conversions, then I believe the named
+cast functions should be removed altogether.
 
-  \item The TS allows implicit casts between \code{fixed_size<N>} types that
-    only differ in element type and where the values are preserved (“every
-    possible value of \code{U} can be represented with type
-    \code{value_type}”).
-    According to the above points the proposed converting constructor only has
-    a constraint on the number of elements being equal.
-    However, it is conditionally \code{explicit}:
-    Implicit casts are only allowed if one of the types uses the
-    \code{fixed_size} ABI tag and the \code{value_type} difference is such that
-    all values are preserved (same wording as in the TS).
+\subsubsection{(explicit) converting constructors}
 
-    This resolves major inconveniences when working with mixed-precision
-    operations.
-    It is still safer than builtin types, because conversions that might lose
-    information require an explicit cast.
-    Also, an unintended widening of the SIMD register size can happen but is
-    not completely invisible as shown in \lst{mixedprecision}.
+The TS allows implicit casts between \code{fixed_size<N>} types that only
+differ in element type and where the values are preserved (“every possible
+value of \code{U} can be represented with type \code{value_type}”).
+According to the above points the proposed converting constructor only has a
+constraint on the number of elements being equal.
+However, it is conditionally \code{explicit}:
+Implicit casts are only allowed if one of the types uses the \code{fixed_size}
+ABI tag and the \code{value_type} difference is such that all values are
+preserved (same wording as in the TS).
 
-  \item \code{simd_mask} casts should be equivalent to \code{simd} casts.
-    Thus, if \code{simd<T0, A0>} is implicitly convertible to \code{simd<T1,
-    A1>} then \code{simd_mask<T0, A0>} is implicitly convertible to
-    \code{simd_mask<T1, A1>}.
-    The reverse (if \code{simd_mask} is convertible then \code{simd} is
-    convertible) does not have to be true.
-    Specifically, the TS allows all \code{fixed_size<N>} mask to be
-    interconvertible, irrespective of the element type.
-    For the IS merge, the proposal is to make this more consistent with
-    \code{simd} while also preserving most of the convenience:
-    Allow implicit conversions if one of the types has a \code{fixed_size} ABI
-    tag and the \code{sizeof} the element type is equal, otherwise the
-    conversion must be explicit.
-    Conversions with different element count are not possible via a constructor
-    (consistent with \code{simd}).
-\end{itemize}
+This resolves major inconveniences when working with mixed-precision
+operations.
+It is still safer than builtin types, because conversions that might lose
+information require an explicit cast.
+Also, an unintended widening of the SIMD register size can happen but is not
+completely invisible as shown in \lst{mixedprecision}.
+
+\subsubsection{mask casts}
+\code{simd_mask} casts should work when \code{simd} casts work.
+I.e. if \code{simd<T0, A0>} is implicitly convertible to \code{simd<T1, A1>}
+then \code{simd_mask<T0, A0>} is implicitly convertible to \code{simd_mask<T1,
+A1>}.
+The reverse (if \code{simd_mask} is convertible then \code{simd} is
+convertible) does not have to be true.
+Specifically, the TS allows all \code{fixed_size<N>} mask to be
+interconvertible, irrespective of the element type.
+For the IS merge, the proposal is to make this more consistent with \code{simd}
+while also preserving most of the convenience:
+Allow implicit conversions if one of the types has a \code{fixed_size} ABI tag
+and the \code{sizeof} the element types are equal, otherwise the conversion
+must be explicit.
+
+Conversions with different element count are not possible via a constructor
+(consistent with \code{simd}).
+This would require a different function, such as the \code{resize<N>(simd)}
+function proposed by \textcite[8]{P2638R0}.
 
 \begin{lstlisting}[numbers=left,float={hbtp},label=lst:mixedprecision,caption={
   Mixed precision code using a recommended pattern for setting up \code{simd} types with equal number of elements
@@ -312,6 +319,41 @@ void f(vint a, vdouble b, vdouble c)
 }
 \end{lstlisting}
 
+\subsubsection{Summary of casts}
+
+\begin{enumerate}
+  \item \code{simd<T0, A0>} is convertible to \code{simd<T1, A1>} if
+    \code{simd_size_v<T0, A0> == simd_size_v<T1, A1>}.
+
+  \item \code{simd<T0, A0>} is implicitly convertible to \code{simd<T1, A1>} if, in addition,
+    \begin{itemize}
+      \item the conversion \code{T0} to \code{T1} is value-preserving, and
+      \item either \code{A0} or \code{A1} is a specialization of \code{fixed_size}.
+    \end{itemize}
+
+  \item \code{simd_mask<T0, A0>} is convertible to \code{simd_mask<T1, A1>} if
+    \code{simd_size_v<T0, A0> == simd_size_v<T1, A1>}.
+
+  \item \code{simd_mask<T0, A0>} is implicitly convertible to \code{simd_mask<T1, A1>} if, in addition,
+    \begin{itemize}
+      \item \code{sizeof(T0) == sizeof(T1)}, and
+      \item either \code{A0} or \code{A1} is a specialization of \code{fixed_size}.
+    \end{itemize}
+
+  \item \code{simd<T0, A0>} can be \code{bit_cast}ed to \code{simd<T1, A1>} if
+    \code{sizeof(simd<T0, A0>) == sizeof(simd<T1, A1>)}.
+    I.e. all \code{simd} specializations are trivially copyable.
+
+  \item \code{simd_mask<T0, A0>} can be \code{bit_cast}ed to \code{simd_mask<T1, A1>} if
+    \code{sizeof(simd_mask<T0, A0>) == sizeof(simd_mask<T1, A1>)}.
+    I.e. all \code{simd_mask} specializations are trivially copyable.
+
+  \item \std\code{simd_cast<T1>(x)} is basically a shorthand for
+    \code{static_cast<std::rebind_simd_t<T1, decltype(x)>>(x)}.
+
+  \item \std\code{simd_bit_cast<T1>(x)} is basically a shorthand for
+    \code{std::bit_cast<std::rebind_simd_t<T1, decltype(x)>>(x)}.
+\end{enumerate}
 
 \subsection{Missing \code{simd_mask} generator constructor}
 The \code{simd} generator constructor is very useful for initializing objects from scalars in a portable (different \code{size()}) fashion.
@@ -404,9 +446,9 @@ However, that goes against a decision / discussion in SG1, so I would prefer for
 
 \wgPoll{Remove provision of \code{simd} type (ABI tag) that \emph{might} help passing \code{simd} objects correctly over ABI boundaries}{&&&&}
 
-\subsection{Casts}
+\subsection{Casts}\label{sec:question-casts}
 
-See Section \ref{sec:implicationforcasts} for a discussion.
+See Section \ref{sec:casts} for a discussion.
 
 \subsubsection{Suggested Polls}
 
