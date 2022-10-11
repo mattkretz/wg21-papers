@@ -470,6 +470,7 @@ The subsequent \sect{diff} reproduces the same wording as a diff against the Par
   \def\wgRem#1{}
   \def\wgAdd#1{#1}
   \def\wgChange#1#2{#2}
+  \def\diffbreak#1{}
   \colorlet{WgAdd}{black}
   \colorlet{WgRem}{white}
   \setcounter{WGClause}{28}
@@ -491,6 +492,17 @@ Changes relative to N4808, which contains editorial changes after the publicatio
 \begin{wgText}
   \setcounter{WGClause}{28}
   \setcounter{WGSubSection}{8}
+  \makeatletter
+  \let\@tmp@seebelow=\seebelow
+  \def\seebelow{\mbox{\@tmp@seebelow}}
+  \let\@tmp@impdef=\impdef
+  \def\impdef{\mbox{\@tmp@impdef}}
+    \newcount\diffbreak@count
+    \def\diffbreak#1{
+      \\\diffbreak@count=\z@%
+      \hbox{\@whilenum\diffbreak@count<#1\do{\ \advance\diffbreak@count\@ne}}%
+    }
+  \makeatother
   \input{wording}
 \end{wgText}
 
