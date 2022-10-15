@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Merge data-parallel types from the Parallelism TS 2}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D1928R1}
+\newcommand\wgDocumentNumber{P1928R1}
 \newcommand\wgGroup{SG1, LEWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{ }
@@ -80,8 +80,16 @@ In the meantime the TS feedback progressed to a point where a merge should happe
 
   \item[\wglink{P0553}] The bit operations that are part of \CC{}20 expects \code{simd} overloads as soon as \code{simd} is merged to the IS.
 
+  \item[\wglink{P2638}] Intel’s response to \wglink{P1915R0} for \code{std::simd}
+
+  \item[\wglink{P2663}] \code{std::simd<std::complex<T>>}.
+
+  \item[\wglink{P2664}] Permutations for \code{simd}.
+
 \end{description}
-The papers \wglink{P0350}, \wglink{P0918}, and the \code{simd}-based \wglink{P1068} fork currently have no shipping vehicle and are basically blocked on this paper.
+The papers \wglink{P0350}, \wglink{P0918}, \wglink{P2663}, \wglink{P2664}, and
+the \code{simd}-based \wglink{P1068} fork currently have no shipping vehicle
+and are basically blocked on this paper.
 
 \section{Changes after TS feedback}
 This section is mostly a stub.
