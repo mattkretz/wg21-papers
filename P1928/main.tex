@@ -11,6 +11,7 @@
 \hypersetup{bookmarksdepth=5}
 \usepackage{changelog}
 \usepackage{underscore}
+\usepackage{comment}
 
 \addbibresource{extra.bib}
 
@@ -28,10 +29,17 @@
 \newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
 \DeclareRobustCommand\simdabi{\code{simd\_abi\MayBreak::\MayBreak}}
 
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+
 \begin{document}
 \selectlanguage{american}
 \begin{wgTitlepage}
-  After the Parallelism TS 2 was published in 2018, data-parallel types (\simdT) have been implemented and used, and we are receiving feedback, this paper proposes to merge Section 9 of the Parallelism TS 2 into the IS working draft.
+  After the Parallelism TS 2 was published in 2018, data-parallel types
+  (\simdT) have been implemented and used.
+  Now there is sufficient feedback to improve and merge Section 9 of the
+  Parallelism TS 2 into the IS working draft.
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
@@ -80,7 +88,7 @@ This section is mostly a stub.
 \cite{P1915R0} (Expected Feedback from \code{simd} in the Parallelism TS 2) was just published and asks for specific feedback.
 After gathering feedback, the relevant changes will be added to a new revision of this paper.
 
-\subsection{ABI tags}
+\subsection{improve ABI tags}
 I received consistent feedback that \simdabi\code{compatible<T>} is the wrong default and it should rather be \simdabi\code{native<T>} instead.
 All my tutorial material instructed users to use \stdx\code{native_simd<T>}.
 There really is little use for \simdabi\code{compatible<T>}.
@@ -88,7 +96,7 @@ The preferred approach should be the use of \simdabi\code{native<T>} together wi
 Consequently, there is no reason to keep \simdabi\code{compatible<T>} in its current form.
 
 Another common question was about a “fixed size” ABI tag, similar to \stdx\simdabi\code{fixed_size<N>} but without the ABI compatibility cost.%
-\footnote{Implementations are encouraged to make passing \code{fixed_size} objects ABI compatible between different hardware generations and/or even different architectures.}
+\footnote{Implementations of the TS are encouraged to make passing \code{fixed_size} objects ABI compatible between different hardware generations and/or even different architectures.}
 Basically, the ABI footgun should be as dangerous as \stdx\simdabi\code{native<T>}.
 The answer to that FAQ is to use \stdx\simdabi\code{deduce_t<T, N>} as ABI tag.
 This will provide you with a high-performance footgun, if supported, but might also fall back to \stdx\simdabi\code{fixed_size<N>}.
@@ -106,12 +114,20 @@ My proposal:
   \item[\code{A1 = \simdabi fixed_size<T, N>}]\ \\
     \code{simd<T, A1>} abstracts one or more registers storing \code{N} values.
     The actual hardware resources might store more values; but instructions are generated to make it appear as if there are exactly \code{N} values stored and manipulated.
+
     Parameter passing may be ABI incompatible between different TUs when compiled with different compiler flags.
     Therefore, if \code{sizeof(simd<T, A0>)}%
     \footnote{\code{A0} is not a typo; this depends on \simdabi\code{native<T>}}
     or \code{alignof(\MayBreak{}simd\MayBreak{}<\MayBreak{}T, A0>)} in TU1
     differ from the same expressions in TU2, then the types \code{A1} in TU1
     and TU2 have a different name.
+    This new requirement (wrt. the TS) is the reason for the additional
+    \code{T} parameter.
+    This allows an implementation to define the \code{fixed_size} alias as e.g.
+    \lstinline@template <typename T, @
+    \lstinline@int N> @
+    \lstinline@using fixed_size @
+    \lstinline@= _Fixed<N, native<T>>;@.
     \code{A1} and \code{A0} are always different types, i.e. even if \code{simd_size_v<T, A0> == N}.
 
     A major difference to \stdx\simdabi\code{fixed_size<N>} in the TS is about \code{simd_mask}.
@@ -119,7 +135,7 @@ My proposal:
     \begin{itemize}
       \item full SIMD registers with all bits set to 1 or 0 per corresponding element
       \item bitmasks
-      \item an array of \code{bool} or similar (in theory\ldots{} Why would anyone do that?)
+      \item an array of \code{bool} or similar
     \end{itemize}
     The new intent for the \code{fixed_size<T, N>} ABI tag would be to allow \code{simd_mask<T, A1>} to use either choice depending only on compiler flags.
 
@@ -134,10 +150,12 @@ My proposal:
 \end{description}
 
 At this point the \simdabi\code{deduce} facility seems to be obsolete.
-In theory, its ability to take an optional pack of ABI tags into account for its decision would be lost when removing \simdabi\code{deduce}.
-However, I have not heard of any users who want to use this feature.
-My recommendation is removal.%
-\footnote{For reference: my implementation simply ignores the pack of ABI tags given to \simdabi\code{deduce}.}
+However, it is still a useful tool for implementing the \code{rebind_simd} and \code{resize_simd} traits.
+Without more compelling reason for removal, it should be merged as is.
+%In theory, its ability to take an optional pack of ABI tags into account for its decision would be lost when removing \simdabi\code{deduce}.
+%However, I have not heard of any users who want to use this feature.
+%My recommendation is removal.%
+%\footnote{For reference: my implementation simply ignores the pack of ABI tags given to \simdabi\code{deduce}.}
 
 \subsubsection{Naming discussion}
 
@@ -177,14 +195,15 @@ For reference, the above names are my preference over the following alternatives
 
 \subsubsection{Alternative: no ABI boundary helper}
 
-See Section \ref{sec:noabihelper}.
+See \sect{sec:noabihelper}.
 
-\subsection{Casts}\label{sec:casts}
+\subsection{Simplify/generalize casts}\label{sec:casts}
 
 The change to the ABI tags requires a reconsideration of cast functions and
 implicit and explicit casts between data-parallel types of different ABI tags.
+This is in addition to TS feedback on casts being to strict or cumbersome to use.
 
-\subsubsection{interconvertible \code{fixed_size} and \code{abi_stable}}
+\subsubsection{Interconvertible \code{fixed_size} and \code{abi_stable}}
 
 Conversions between \code{fixed_size_simd<T, N>} and \code{abi_stable_simd<T,
 N>} should be implicit, because the only difference is in how the parameter is
@@ -202,7 +221,107 @@ Also this potential mask conversion cost exists for today's
 reducing it to implicit conversions on ABI boundaries would already be a huge
 improvement.
 
-\subsubsection{named cast functions}
+\subsubsection{More (explicit) converting constructors}
+
+The TS allows implicit casts between \code{fixed_size<N>} types that only
+differ in element type and where the values are preserved (“every possible
+value of \code{U} can be represented with type \code{value_type}”).
+
+However, from experience with the TS, it is better to also enable implicit
+conversions between any \code{simd} specializations with equal element count,
+even if such a conversion might be non-portable between targets with different
+native SIMD widths.
+The expectation is, that users set up their types according to a pattern
+similar to \lst{lst:simdtypespattern}.
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:simdtypespattern,caption={
+  Recommended setup of \code{simd} types
+}]
+using  floatv = std::simd<float>;
+using doublev = std::rebind_simd_t<double, floatv>;
+using  int32v = std::rebind_simd_t<std:: int32_t, floatv>;
+using uint32v = std::rebind_simd_t<std::uint32_t, floatv>;
+using  int16v = std::rebind_simd_t<std:: int16_t, floatv>;
+using uint16v = std::rebind_simd_t<std::uint16_t, floatv>;
+// ...
+\end{lstlisting}
+Thus, users will work with a set of types that have equal number of elements by
+construction.
+Some of the types may use the \code{fixed_size} ABI tag and some may use an
+extended ABI tag.
+This detail should not stop the user from being able to cast between a
+compiler-flag dependent subset of these types.
+
+%There is no way to know how \code{N} of a given \code{fixed_size} ABI tag was
+%determined, so we have to tailor the design for one assumption or the other.
+%(If we expect most of our \code{simd} users to use CI for compiling their code
+%for at least two different targets with different SIMD widths, then
+%non-portable use of such implicit casts can be caught automatically before
+%integration to the main branch.)
+
+Besides a constraint on the number of elements being equal, the converting
+constructor should be conditionally \code{explicit}:
+Implicit casts are only allowed if the element type conversion is
+value-preserving (same wording as in the TS).
+
+This resolves major inconveniences when working with mixed-precision
+operations (cf. \ttref{tt:better with conv ctors}).
+\begin{tonytable}{Improved generic code after adding converting constructors}\label{tt:better with conv ctors}
+  \begin{lstlisting}
+namespace stdx = std::experimental;
+
+template <class T> void f(T a, int b)
+{
+  using I = std::conditional_t<
+              stdx::is_simd_v<T>,
+              stdx::rebind_simd_t<int, T>, int>;
+  I c;
+  if constexpr (stdx::is_simd_v<T>) {
+    c = stdx::static_simd_cast<I>(a) + b;
+  } else {
+    c = static_cast<int>(a) + b;
+  }
+  g(c);
+}
+  \end{lstlisting}
+  &
+  \begin{lstlisting}
+// assuming simd in namespace std
+
+template <class T> void f(T a, int b)
+{
+  using I = std::conditional_t<
+              std::is_simd_v<T>,
+              std::rebind_simd_t<int, T>, int>;
+  I c = static_cast<I>(a) + b;
+
+
+
+
+
+  g(c);
+}
+  \end{lstlisting}
+\end{tonytable}%
+Type conversions for \code{simd} are still less error-prone than builtin types,
+because conversions that might lose information require an explicit cast.
+Also, an unintended widening of the SIMD register size can happen but is not
+completely invisible as shown in \lst{lst:mixedprecision}.
+
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:mixedprecision,caption={
+  Mixed precision code using the types from \lst{lst:simdtypespattern}, ensuring equal element count
+}]
+void f(int32v a, doublev b, floatv c)
+{
+  doublev x = a * b + c; // OK: implicit (value-preserving) conversion from int and float
+    // to double. Requires twice the register space, but there's no way around it and the
+    // result type requires it anyway.
+  int32v y = a * b; // ERROR: implicit conversion from double to int not value-preserving
+  int32v z1 = static_cast<int32v>(a * b); // OK: cast hints at implicit register widening
+  int32v z2 = a * static_cast<int32v>(b); // OK
+}
+\end{lstlisting}
+
+\subsubsection{Remove named cast functions}
 
 From the cast functions \stdx\code{to_fixed_size}, \stdx\code{to_native}, and
 \stdx\code{to_compatible} only the conversions from \simdabi\code{fixed_size<T,
@@ -224,46 +343,49 @@ constexpr auto to_fixed_size(std::simd<T> x)
   return static_cast<R>(x);
 }
 \end{lstlisting}
-\lst{userdefined-to-fixed-size}).
+\lst{lst:userdefined-to-fixed-size}).
 The reverse cast can trivially be spelled out as \code{static_cast<simd<T>>(y)}
 in program code.
 The only motivation for adding a \code{to_native} function would be the
 provision of a counterpart for the \code{to_fixed_size} cast function.
 
-However, from my experience it is better to enable implicit conversions between
-\code{native<T>} and \code{fixed_size<T, N>} with equal element count even if
-such conversion might be non-portable between targets with different native
-SIMD widths.
-The expectation is, that most values for \code{N} will be derived from
-\code{simd_size_v<T>} anyway and thus be portable by construction.
-There is no way to know how \code{N} was determined, so we have to design for
-one assumption or the other.
-Since it should be recommended practice for users to compile \code{simd} code
-to at least two different targets with different SIMD widths for CI,
-non-portable use of such implicit casts can be caught automatically before
-integration to the main branch.
-
 If there is consensus to allow implicit conversions, then I believe the named
 cast functions should be removed altogether.
 
-\subsubsection{(explicit) converting constructors}
+\subsubsection{Remove \code{simd_cast} and \code{static_simd_cast}}
+There are two cast function templates in the TS: \code{simd_cast} and
+\code{static_simd_cast}.
+The former is equivalent to the latter except that only value-preserving
+conversions are allowed.
+The template parameter can either be a \code{simd} specialization or a
+vectorizable type \code{T}.
+In the latter case, the cast function determines the return type as
+\code{fixed_size_simd<T, input.size()>}.
 
-The TS allows implicit casts between \code{fixed_size<N>} types that only
-differ in element type and where the values are preserved (“every possible
-value of \code{U} can be represented with type \code{value_type}”).
-According to the above points the proposed converting constructor only has a
-constraint on the number of elements being equal.
-However, it is conditionally \code{explicit}:
-Implicit casts are only allowed if one of the types uses the \code{fixed_size}
-ABI tag and the \code{value_type} difference is such that all values are
-preserved (same wording as in the TS).
-
-This resolves major inconveniences when working with mixed-precision
-operations.
-It is still safer than builtin types, because conversions that might lose
-information require an explicit cast.
-Also, an unintended widening of the SIMD register size can happen but is not
-completely invisible as shown in \lst{mixedprecision}.
+If we allow all conversions covered by \stdx\code{simd_cast} and
+\stdx\code{static_simd_cast} via \std\code{simd} constructors, then the cast
+functions can be removed altogether.
+The lost feature (cast via element type) can be replaced using
+\code{rebind_simd} as shown in \ttref{tt:tsvsp1928casts}.
+\begin{tonytable}{Casting without specifying the target ABI tag}\label{tt:tsvsp1928casts}
+  \begin{lstlisting}
+template <typename V>
+void f(V x)
+{
+  const auto y = stdx::static_simd_cast<double>(x);
+  // ...
+}
+  \end{lstlisting}
+  &
+  \begin{lstlisting}
+template <typename V>
+void f(V x)
+{
+  const auto y = std::rebind_simd_t<double, V>(x);
+  // ...
+}
+  \end{lstlisting}
+\end{tonytable}%
 
 \subsubsection{mask casts}
 \code{simd_mask} casts should work when \code{simd} casts work.
@@ -276,48 +398,13 @@ Specifically, the TS allows all \code{fixed_size<N>} mask to be
 interconvertible, irrespective of the element type.
 For the IS merge, the proposal is to make this more consistent with \code{simd}
 while also preserving most of the convenience:
-Allow implicit conversions if one of the types has a \code{fixed_size} ABI tag
-and the \code{sizeof} the element types are equal, otherwise the conversion
-must be explicit.
+Allow implicit conversions if the \code{sizeof} the element types are equal,
+otherwise the conversion must be explicit.
 
 Conversions with different element count are not possible via a constructor
 (consistent with \code{simd}).
 This would require a different function, such as the \code{resize<N>(simd)}
-function proposed by \textcite[8]{P2638R0}.
-
-\begin{lstlisting}[numbers=left,float={hbtp},label=lst:mixedprecision,caption={
-  Mixed precision code using a recommended pattern for setting up \code{simd} types with equal number of elements
-}]
-constexpr std::size_t VSize = std::simd_size_v<float>;
-
-template <class T>
-  using V = std::fixed_size_simd<T, VSize>;
-
-using vfloat = V<float>;
-using vdouble = V<double>;
-using vshort = V<short>;
-using vint = V<int>;
-// ...
-
-void f(vint a, vdouble b, vdouble c)
-{
-  vdouble x = a * b + c; // OK:
-  // implicit conversion from int to double (value-preserving);
-  // requires twice the register space, but there's no way around it
-  // and the result type requires it anyway
-
-  vint y = a * b; // ERROR:
-  // implicit conversion from int to double, but implicit conversion
-  // from double to int fails
-
-  vint z1 = static_cast<vint>(a * b); // OK:
-  // the cast hints at the cost involved: vdouble requires twice the register space
-
-  vint z2 = static_cast<vint>(a * static_cast<vfloat>(b)); // OK
-
-  vint z3 = a * static_cast<vint>(b); // OK
-}
-\end{lstlisting}
+function proposed by \textcite{P2638R0}.
 
 \subsubsection{Summary of casts}
 
@@ -325,39 +412,31 @@ void f(vint a, vdouble b, vdouble c)
   \item \code{simd<T0, A0>} is convertible to \code{simd<T1, A1>} if
     \code{simd_size_v<T0, A0> == simd_size_v<T1, A1>}.
 
-  \item \code{simd<T0, A0>} is implicitly convertible to \code{simd<T1, A1>} if, in addition,
-    \begin{itemize}
-      \item the conversion \code{T0} to \code{T1} is value-preserving, and
-      \item either \code{A0} or \code{A1} is a specialization of \code{fixed_size}.
-    \end{itemize}
+  \item \code{simd<T0, A0>} is implicitly convertible to \code{simd<T1, A1>}
+    if, additionally, the conversion \code{T0} to \code{T1} is
+    value-preserving.
 
   \item \code{simd_mask<T0, A0>} is convertible to \code{simd_mask<T1, A1>} if
     \code{simd_size_v<T0, A0> == simd_size_v<T1, A1>}.
 
-  \item \code{simd_mask<T0, A0>} is implicitly convertible to \code{simd_mask<T1, A1>} if, in addition,
-    \begin{itemize}
-      \item \code{sizeof(T0) == sizeof(T1)}, and
-      \item either \code{A0} or \code{A1} is a specialization of \code{fixed_size}.
-    \end{itemize}
+  \item \code{simd_mask<T0, A0>} is implicitly convertible to
+    \code{simd_mask<T1, A1>} if, additionally, \item \code{sizeof(T0) ==
+    sizeof(T1)}.
 
   \item \code{simd<T0, A0>} can be \code{bit_cast}ed to \code{simd<T1, A1>} if
-    \code{sizeof(simd<T0, A0>) == sizeof(simd<T1, A1>)}.
-    I.e. all \code{simd} specializations are trivially copyable.
+    \code{sizeof(simd<T0, A0>) == sizeof(simd<T1, A1>)} and neither \code{A0}
+    nor \code{A1} are specializations of \simdabi\code{abi_stable}.
 
   \item \code{simd_mask<T0, A0>} can be \code{bit_cast}ed to \code{simd_mask<T1, A1>} if
-    \code{sizeof(simd_mask<T0, A0>) == sizeof(simd_mask<T1, A1>)}.
-    I.e. all \code{simd_mask} specializations are trivially copyable.
-
-  \item \std\code{simd_cast<T1>(x)} is basically a shorthand for
-    \code{static_cast<std::rebind_simd_t<T1, decltype(x)>>(x)}.
-
-  \item \std\code{simd_bit_cast<T1>(x)} is basically a shorthand for
-    \code{std::bit_cast<std::rebind_simd_t<T1, decltype(x)>>(x)}.
+    \code{sizeof(simd_mask<T0, A0>) == sizeof(simd_mask<T1, A1>)} and neither
+    \code{A0} nor \code{A1} are specializations of \simdabi\code{abi_stable}.
 \end{enumerate}
 
-\subsection{Missing \code{simd_mask} generator constructor}
-The \code{simd} generator constructor is very useful for initializing objects from scalars in a portable (different \code{size()}) fashion.
-The need for a similar constructor for \code{simd_mask} is less frequent, but if only for consistency, there should be one.
+\subsection{Add \code{simd_mask} generator constructor}
+The \code{simd} generator constructor is very useful for initializing objects
+from scalars in a portable (i.e. different \code{simd::size()}) fashion.
+The need for a similar constructor for \code{simd_mask} is less frequent, but,
+even if only for consistency, there should be one.
 Besides consistency, it is also useful, of course.
 Consider a predicate function that is given without \code{simd} interface (e.g. from a library).
 How do you construct a \code{simd_mask} from it?
@@ -389,18 +468,21 @@ template<class G> simd_mask(G&& gen) noexcept;
 \end{itemdecl}
 \end{wgText}
 
-\subsection{Add missing casts for \code{simd_mask}}
+\subsection{Complete casts for \code{simd_mask}}
 The \code{simd_cast} and \code{static_simd_cast} overloads for \code{simd_mask} were forgotten for the TS.
 Without those casts (and no casts via constructors) mixing different arithmetic types is painful.
 There is no motivation for forbidding casts on \code{simd_mask}.
 
-Therefore add the following overloads:
-\begin{wgText}
-\begin{codeblock}
-  template<class T, class U, class Abi> @\seebelow@ simd_cast(const simd_mask<U, Abi>&) noexcept;
-  template<class T, class U, class Abi> @\seebelow@ static_simd_cast(const simd_mask<U, Abi>&) noexcept;
-\end{codeblock}
-\end{wgText}
+However, since the proposed change for casts removes \code{simd_cast} and
+\code{static_simd_cast}, the problem is already solved.
+
+%Therefore add the following overloads:
+%\begin{wgText}
+%\begin{codeblock}
+  %template<class T, class U, class Abi> @\seebelow@ simd_cast(const simd_mask<U, Abi>&) noexcept;
+  %template<class T, class U, class Abi> @\seebelow@ static_simd_cast(const simd_mask<U, Abi>&) noexcept;
+%\end{codeblock}
+%\end{wgText}
 
 \subsection{\code{element_reference} is overspecified}
 \code{element_reference} is spelled out in a lot of detail.
@@ -408,9 +490,51 @@ It may be better to define its requirements in a table instead.
 
 This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
 
+\subsection{Default load/store flags to \code{element_aligned}}
+
+Consider:
+\medskip\begin{lstlisting}[style=Vc,numbers=left]
+std::simd<float> v(addr, std::vector_aligned); @\label{lstline:vector_aligned}@
+v.copy_from(addr + 1, std::element_aligned); @\label{lstline:load element_aligned}@
+v.copy_to(dest, std::element_aligned); @\label{lstline:store element_aligned}@
+\end{lstlisting}
+Line~\ref{lstline:vector_aligned} supplies an optimization hint to the load operation.
+Line~\ref{lstline:load element_aligned} says what really?
+“Please don't crash.
+I know this is not a vector aligned access\footnote{Of course, vector aligned is equivalent to element aligned if \code{simd<float>::size() == 1}}.”
+Line~\ref{lstline:store element_aligned} says:
+“I don't know whether it's vector aligned or not.
+Compiler, if you know more, please optimize, otherwise just don't make it crash.”
+(To clarify, the difference between lines~\ref{lstline:load element_aligned} and~\ref{lstline:store element_aligned} is what line~\ref{lstline:vector_aligned} says about the alignment of \code{addr}.)
+In both cases of \code{element_aligned} access, the developer requested a behavior we take as given in all other situations.
+Why does the TS force to spell it out in this case?
+
+Since \CC{}20, we also have another option:
+\medskip\begin{lstlisting}[numbers=left]
+std::simd<float> v(std::assume_aligned<std::memory_alignment_v<std::simd<float>>>(addr)); @\label{lstline:assume_aligned}@
+v.copy_from(addr + 1);
+v.copy_to(dest);
+\end{lstlisting}
+This seems to compose well, except that line \ref{lstline:assume_aligned} is rather long for a common pattern in this interface.
+Also, this removes implementation freedom because the library cannot statically determine the alignment properties of the pointer.
+
+Consequently, as a minimal improvement to the TS keep the load/store flags as
+is, but default them to \code{element_aligned}.
+I.e.:
+\medskip\begin{lstlisting}[numbers=left]
+std::simd<float> v(addr, std::vector_aligned);
+v.copy_from(addr + 1);
+v.copy_to(dest);
+\end{lstlisting}
+
 \subsection{Clean up math function overloads}
 The wording that produces \code{simd} overloads misses a few cases and leaves room for ambiguity.
 There is also no explicit mention of integral overloads that are supported in \code{<cmath>} (e.g. \code{std::cos(1)} calling \code{std::cos(double)}).
+At the very least, \code{std::abs(simd<\textit{signed-integral}>)} should be specified.
+
+Also, from implementation experience ``undefined behavior'' for domain, pole, or range error is unnecessary.
+It could either be an unspecified result or even match the expected result of the function according to Annex F in the C standard.
+The latter could also be only a recommendation, i.e. QoI.
 
 This needs more work and is not reflected in the wording at this point.
 
@@ -448,7 +572,7 @@ However, that goes against a decision / discussion in SG1, so I would prefer for
 
 \subsection{Casts}\label{sec:question-casts}
 
-See Section \ref{sec:casts} for a discussion.
+See \sect{sec:casts} for a discussion.
 
 \subsubsection{Suggested Polls}
 
@@ -473,7 +597,7 @@ I.e. \code{simd<int> x = \{\};} does not start the lifetime of \type{int} object
 The \code{element_reference} for \code{operator[]} is bad enough as is.
 Let's not exacerbate the problem by adding iterators to \code{simd}.
 
-Instead, a \code{simd} can be converted into an array (e.g. \lst{simdtoarray}).
+Instead, a \code{simd} can be converted into an array (e.g. \lst{lst:simdtoarray}).
 Conversely, a \std\code{span} with static extent can be converted into a \std\type{simd}.
 \begin{lstlisting}[numbers=left,float={hbtp},label=lst:simdtoarray,caption={
   \code{simd} to \code{array} conversion
@@ -503,50 +627,7 @@ The author is seeking feedback before making a recommendation.
 
 \section{Wording}
 
-The following section presents the wording to be applied against the \CC{} working draft.
-The subsequent \sect{diff} reproduces the same wording as a diff against the Parallelism TS 2.
-
-\subsection{Add Section 9 of N4808 with modifications}\label{sec:wording}
-
-\begin{wgText}[Add a new subclause after §28.8 {[numbers]}]
-  \def\wgRem#1{}
-  \def\wgAdd#1{#1}
-  \def\wgChange#1#2{#2}
-  \def\diffbreak#1{}
-  \colorlet{WgAdd}{black}
-  \colorlet{WgRem}{white}
-  \setcounter{WGClause}{28}
-  \setcounter{WGSubSection}{8}
-  \lstset{%
-    columns=fullflexible,
-    deletedelim=**[is]{|-}{-|},
-    moredelim=[is][\color{white}\fontsize{0.1pt}{0.1pt}\selectfont{}]{|-}{-|}
-  }
-  \input{wording}
-\end{wgText}
-
-\subsection{Diff against Parallelism TS 2 (N4808)}\label{sec:diff}
-
-In the following, the wording from \sect{wording} is repeated with additional indications of differences with regard to N4808.
-Changes relative to N4808, which contains editorial changes after the publication of the TS, are marked using color for \textcolor{WgAdd}{additions} and \textcolor{WgRem}{removals}.
-
-\def\wgLabelPrefix{diff}%
-\begin{wgText}
-  \setcounter{WGClause}{28}
-  \setcounter{WGSubSection}{8}
-  \makeatletter
-  \let\@tmp@seebelow=\seebelow
-  \def\seebelow{\mbox{\@tmp@seebelow}}
-  \let\@tmp@impdef=\impdef
-  \def\impdef{\mbox{\@tmp@impdef}}
-    \newcount\diffbreak@count
-    \def\diffbreak#1{
-      \\\diffbreak@count=\z@%
-      \hbox{\@whilenum\diffbreak@count<#1\do{\ \advance\diffbreak@count\@ne}}%
-    }
-  \makeatother
-  \input{wording}
-\end{wgText}
+\input{wording2}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=0

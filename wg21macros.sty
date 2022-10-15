@@ -195,7 +195,7 @@
 \newcommand{\complexity}{\Fundesc{Complexity}}
 \newcommand{\remark}{\Fundesc{Remark}}
 \newcommand{\remarks}{\Fundesc{Remarks}}
-\newcommand{\note}{\remark}
+%\newcommand{\note}{\remark}
 \newcommand{\notes}{\remarks}
 %\newcommand{\realnote}{\Fundesc{Note}}
 %\newcommand{\realnotes}{\Fundesc{Notes}}
@@ -322,6 +322,7 @@
 \renewcommand\thetable{\arabic{TonyTable}}%
 \begin{table}[h]
 \caption{#1}
+\smaller%
 \begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
 before&with \wgDocumentNumber\\
 \hline
@@ -338,7 +339,9 @@ before&with \wgDocumentNumber\\
 
 \newcommand{\noteintro}[1]{[\,\textit{#1:}\space}
 \newcommand{\noteoutro}[1]{\textit{\,---\,end #1}\,]}
-%\newenvironment{note}[1][Note]{\noteintro{#1}}{\noteoutro{note}\xspace}
+\soulregister{\noteintro}{1}
+\soulregister{\noteoutro}{1}
+\newenvironment{note}[1][Note]{\noteintro{#1}}{\noteoutro{note}\xspace}
 \newenvironment{example}[1][Example]{\noteintro{#1}}{\noteoutro{example}\xspace}
 
 \newcommand{\indextext}[1]{}

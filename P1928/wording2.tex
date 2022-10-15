@@ -1,0 +1,52 @@
+The following section presents the wording to be applied against the \CC{}
+working draft.
+The subsequent section, \sect{sec:diff}, reproduces the same wording as a diff
+against the Parallelism TS 2.
+
+There is still work to be done.
+In this revision consider this section as a preview how this paper is going to
+present the wording.
+
+\subsection{Add Section 9 of N4808 with modifications}\label{sec:wording}
+
+\begin{wgText}[Add a new subclause after §28.8 {[numbers]}]
+  \def\wgRem#1{}
+  \newsavebox{\wgVoid}
+  \excludecomment{wgBRem}
+  \def\wgAdd#1{#1}
+  \def\wgChange#1#2{#2}
+  \def\diffbreak#1{}
+  \colorlet{WgAdd}{black}
+  \colorlet{WgRem}{white}
+  \setcounter{WGClause}{28}
+  \setcounter{WGSubSection}{8}
+  \lstset{%
+    columns=fullflexible,
+    deletedelim=**[is]{|-}{-|},
+    moredelim=[is][\color{white}\fontsize{0.1pt}{0.1pt}\selectfont{}]{|-}{-|}
+  }
+  \input{wording}
+\end{wgText}
+
+\subsection{Diff against Parallelism TS 2 (N4808)}\label{sec:diff}
+
+In the following, the wording from \sect{sec:wording} is repeated with additional indications of differences with regard to N4808.
+Changes relative to N4808, which contains editorial changes after the publication of the TS, are marked using color for \textcolor{WgAdd}{additions} and \textcolor{WgRem}{removals}.
+
+\def\wgLabelPrefix{diff}%
+\begin{wgText}
+  \setcounter{WGClause}{28}
+  \setcounter{WGSubSection}{8}
+  \makeatletter
+  \let\@tmp@seebelow=\seebelow
+  \def\seebelow{\mbox{\@tmp@seebelow}}
+  \let\@tmp@impdef=\impdef
+  \def\impdef{\mbox{\@tmp@impdef}}
+    \newcount\diffbreak@count
+    \def\diffbreak#1{
+      \\\diffbreak@count=\z@%
+      \hbox{\@whilenum\diffbreak@count<#1\do{\ \advance\diffbreak@count\@ne}}%
+    }
+  \makeatother
+  \input{wording}
+\end{wgText}

@@ -3,15 +3,24 @@
 \item Target \CC{}26, addressing SG1 and LEWG.
 \item Call for a merge of the (improved \& adjusted) TS specification to the IS.
 \item Discuss changes to the ABI tags as consequence of TS experience; calls for polls to change the status quo.
+\item Add template parameter \code{T} to \code{simd_abi::fixed_size}.
+\item Remove \code{simd_abi::compatible}.
+\item Add (but ask for removal) \code{simd_abi::abi_stable}.
 \item Mention TS implementation in GCC releases.
 \item Add more references to related papers.
 \item Adjust the clause number for [numbers] to latest draft.
 \item Add open question: what is the correct clause for [simd]?
 \item Add open question: integration with ranges.
+\item Add \code{simd_mask} generator constructor.
 \item Consistently add simd and simd_mask to headings.
 \item Remove experimental and parallelism_v2 namespaces.
 \item Present the wording twice: with and without diff against N4808 (Parallelism TS 2).
+\item Default load/store flags to \code{element_aligned}.
+\item Generalize casts: conditionally \code{explicit} converting constructors.
+\item Remove named cast functions.
+\end{revision}
 
+\begin{revision}
+  \todo Apply the new library specification style from P0788R3.
   \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.
-%  \item ...
 \end{revision}
