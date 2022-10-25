@@ -1010,8 +1010,9 @@ template<class U@\wgAdd{, class UAbi}@> @\diffbreak{2}\wgAdd{explicit(\seebelow)
     \pnum
     \wgAdd{The constructor is \tcode{explicit} iff}
     \begin{itemize}
-      \wgItemAdd \wgAdd{not every possible value of \tcode{U} can be represented with type \tcode{value_type}, or}
-      \wgItemAdd \wgAdd{if both \tcode{U} and \tcode{value_type} are integral, the integer conversion rank (\mbox{\ref{conv.rank}}) of \tcode{U} is greater than the integer conversion rank of \tcode{value_type}.}
+      \wgItemAdd \wgAdd{at least on possible value of \tcode{U} cannot be represented with type \tcode{value_type}, or}
+      \wgItemAdd \wgAdd{if both \tcode{U} and \tcode{value_type} are integral types, the integer conversion rank (\mbox{\ref{conv.rank}}) of \tcode{U} is greater than the integer conversion rank of \tcode{value_type}, or}
+      \wgItemAdd \wgAdd{if both \tcode{U} and \tcode{value_type} are floating-point types, the floating-point conversion rank (\mbox{\ref{conv.rank}}) of \tcode{U} is greater than the floating-point conversion rank of \tcode{value_type}.}
     \end{itemize}
   \end{wgBAdd}
 \end{itemdescr}
