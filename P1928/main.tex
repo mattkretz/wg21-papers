@@ -112,14 +112,14 @@ With \stdx\simdabi\code{deduce_t<T, N>} turning out to be used potentially more 
 My proposal:
 
 \begin{description}
-  \item[\code{A0 = \simdabi native<T>}]\ \\
+  \item[\code{A0 = \simdabi native<T>}] \emph{(no change from the TS semantics)}\\
     \code{simd<T, A0>} abstracts a SIMD register (or similar) with highest performance on the target system (typically widest available register, but that's a QoI choice).
     Consequently, the number of elements is chosen by the implementation and may differ for different \code{T} and different compiler flags.
     \simdabi\code{native<T>} is an alias for an unspecified type.
     \simdabi\code{native<T>} can be an alias for \simdabi\code{scalar}.
     If \code{sizeof(simd<T, A0>)} or \code{alignof(\MayBreak{}simd\MayBreak{}<\MayBreak{}T, A0>)} in TU1 differ from the same expressions in TU2, then the types \code{A0} in TU1 and TU2 have a different name.
 
-  \item[\code{A1 = \simdabi fixed_size<T, N>}]\ \\
+  \item[\code{A1 = \simdabi fixed_size<T, N>}] \emph{(different to the TS semantics)}\\
     \code{simd<T, A1>} abstracts one or more registers storing \code{N} values.
     The actual hardware resources might store more values; but instructions are generated to make it appear as if there are exactly \code{N} values stored and manipulated.
 
@@ -147,7 +147,7 @@ My proposal:
     \end{itemize}
     The new intent for the \code{fixed_size<T, N>} ABI tag would be to allow \code{simd_mask<T, A1>} to use either choice depending only on compiler flags.
 
-  \item[\code{A2 = \simdabi abi_stable<N>}]\ \\
+  \item[\code{A2 = \simdabi abi_stable<N>}] \emph{(new, but same semantics as \code{fixed_size} in the TS)}\\
     \code{simd<T, A2>} abstracts the same hardware resources as \code{simd<T, A1>}, however with the intent of ABI compatibility between differently compiled TUs.
     This can't be a normative requirement; and thus \code{A2} and \code{A1} may be equivalent types (QoI).
     (Note: There is no use for a \simdabi\code{abi_stable<T>} type since the parameter passing differences are tied to the number of elements in a SIMD vector.
