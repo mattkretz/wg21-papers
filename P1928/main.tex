@@ -91,10 +91,11 @@ The papers \wglink{P0350}, \wglink{P0918}, \wglink{P2663}, \wglink{P2664}, and
 the \code{simd}-based \wglink{P1068} fork currently have no shipping vehicle
 and are basically blocked on this paper.
 
-\section{Changes after TS feedback}
-This section is mostly a stub.
-\cite{P1915R0} (Expected Feedback from \code{simd} in the Parallelism TS 2) was just published and asks for specific feedback.
-After gathering feedback, the relevant changes will be added to a new revision of this paper.
+\section{Changes after TS feedback}\label{sec:changes}
+\cite{P1915R0} (Expected Feedback from \code{simd} in the Parallelism TS 2) was published in 2019, asking for feedback to the TS.
+I received feedback on the TS via the GitHub issue tracker, e-mails, and personal conversations.
+There is also a lot of valuable feedback published in \wglink{P2638} ``Intel’s response to \wglink{P1915R0} for \code{std::simd}''.
+This paper captures the major change requests but should still be considered a work-in-progress.
 
 \subsection{improve ABI tags}
 I received consistent feedback that \simdabi\code{compatible<T>} is the wrong default and it should rather be \simdabi\code{native<T>} instead.
