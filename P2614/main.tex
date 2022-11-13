@@ -1,8 +1,8 @@
 \newcommand\wgTitle{Deprecate \code{numeric\_limits::has\_denorm}}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P2614R1}
-\newcommand\wgGroup{LEWG, LWG}
-\newcommand\wgTarget{\CC{}26}
+\newcommand\wgDocumentNumber{P2614R2}
+\newcommand\wgGroup{LWG}
+\newcommand\wgTarget{\CC{}23}
 \newcommand\wgAcknowledgements{
 Thanks to WG14 and specifically Fred Tydeman for their work on \code{*\_HAS\_SUBNORM} and 
 presenting in SG6. Thanks to Dietmar Kühl, Fred Tydeman, Jens Maurer, John McFarlane, and 
@@ -79,7 +79,7 @@ users, resulting in incorrect assumptions and possibly breaking algorithms at so
 The subsequent member in \code{numeric_limits}, \code{has_denorm_loss} is also calling for 
 deprecation. Who can tell me the meaning of: “true if loss of accuracy is detected as a 
 denormalization loss, rather than as an inexact result.\footnote{See ISO/IEC/IEEE 60559.}” 
-cppreference.com explains \cite{has_denorm_loss.cppreference}:
+cppreference.com explains \cite{has.denorm.loss.cppreference}:
 \begin{quote}{}
   No implementation of denormalization loss mechanism exists (accuracy loss is detected 
   after rounding, as inexact result), and this option was removed in the 2008 revision of 

@@ -72,6 +72,58 @@ than as an inexact result.}
 \begin{itemdecl}
 static constexpr T infinity() noexcept;
 \end{itemdecl}
+
+\begin{itemdescr}
+  \pnum
+  Representation of positive infinity, if available.
+
+  \pnum
+  Meaningful for all specializations for which \tcode{has_infinity != false}. Required in specializations for
+  which \tcode{is_iec559 != false}.
+\end{itemdescr}
+
+\begin{itemdecl}
+static constexpr T quiet_NaN() noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum
+  Representation of a quiet “Not a Number”, if available.
+
+  \pnum
+  Meaningful for all specializations for which \tcode{has_quiet_NaN != false}. Required in specializations for
+  which \tcode{is_iec559 != false}.
+\end{itemdescr}
+
+\begin{itemdecl}
+static constexpr T signaling_NaN() noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum
+  Representation of a signaling “Not a Number”, if available.
+
+  \pnum
+  Meaningful for all specializations for which \tcode{has_signaling_NaN != false}. Required in specializations
+  for which \tcode{is_iec559 != false}.
+\end{itemdescr}
+
+\begin{itemdecl}
+static constexpr T denorm_min() noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum
+  Minimum positive subnormal value\wgAdd{, if available. Otherwise minimum positive normalized value}.
+
+  \pnum
+  Meaningful for all floating-point types.
+
+  \begin{wgBRem}
+  \pnum
+  \wgRem{In specializations for which \tcode{has_denorm == false}, returns the minimum positive normalized value.}
+  \end{wgBRem}
+\end{itemdescr}
 \end{wgText}
 
 Modify 17.3.5.3 [numeric.special] paragraph 2 as follows:
