@@ -977,12 +977,12 @@ template<class U> simd(U&&) noexcept;
   Constructs an object with each element initialized to the value of the argument after conversion to \tcode{value_type}.
 
   \pnum\remarks
-  Let \tcode{From} denote the type \tcode{remove_cv_t<remove_reference_t<U>>}. This constructor shall not participate in overload resolution unless:
+  Let \tcode{From} denote the type \wgChange{\tcode{remove_cv_t<remove_reference_t<U>>}}{\tcode{remove_cvref_t<U>}}. This constructor shall not participate in overload resolution unless:
   \begin{itemize}
     \item \tcode{From} is a vectorizable type and every possibly value of \tcode{From} can be represented with type \tcode{value_type}, or
     \item \tcode{From} is not an arithmetic type and is implicitly convertible to \tcode{value_type}, or
     \item \tcode{From} is \tcode{int}, or
-    \item \tcode{From} is \tcode{unsigned int} and \tcode{value_type} is an unsigned integral type.
+    \item \tcode{From} is \tcode{unsigned int} and \wgChange{\tcode{value_type} is an unsigned integral type}{\tcode{is_unsigned_v<value_type>} is \tcode{true}}.% unsigned integer types excludes character types
   \end{itemize}
 
 \end{itemdescr}
