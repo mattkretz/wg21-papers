@@ -536,6 +536,12 @@ v.copy_from(addr + 1);
 v.copy_to(dest);
 \end{lstlisting}
 
+\subsection{\code{constexpr} everything}
+The libstdc++ implementation implements the complete TS API as \code{constexpr} as an optional extension.
+This is useful (e.g. for computing constants) and not a significant implementation burden.
+Users (as well as \textcite{P2638R0}) have called for \code{constexpr}.
+The merge consequently adds \code{constexpr} to all functions.
+
 \subsection{Specify \code{simd::size} as \code{integral_constant}}
 The TS specifies \code{simd::size} as a \code{static constexpr} function returning the number of elements of the \code{simd} specialization.
 Instead of a function, this paper uses a static data member of type \code{std::integral_constant<std::size_t, N>}, which is both convertible to \code{std::size_t} and callable.
