@@ -536,6 +536,31 @@ v.copy_from(addr + 1);
 v.copy_to(dest);
 \end{lstlisting}
 
+\subsection{Specify \code{simd::size} as \code{integral_constant}}
+The TS specifies \code{simd::size} as a \code{static constexpr} function returning the number of elements of the \code{simd} specialization.
+Instead of a function, this paper uses a static data member of type \code{std::integral_constant<std::size_t, N>}, which is both convertible to \code{std::size_t} and callable.
+The upside of using a static data member is that it can be used as function parameter without conversion to integer and thus easily pass the size into a function as constant expression.
+See \lst{lst:sizeparam} for an example.
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:sizeparam,caption={
+    Example: Pass \code{simd::size} as ``constant expression function argument''
+}]
+template <std::ranges::contiguous_range R, std::size_t Size>
+std::span<const std::ranges::range_value_t<R>, Size>
+auto subscript(const R& r, std::size_t first, std::integral_constant<std::size_t, Size>) {
+  return std::span<const std::ranges::range_value_t<R>, Size>(
+    std::ranges::data(r) + first, Size());
+}
+
+void g(std::vector<float> data) {
+  std::simd<float> v;
+  for (std::size_t i = 0; i + v.size < data.size(); i += v.size) {
+    v = subscript(data, i, v.size);  // simd::simd(span) to be proposed
+    // ...
+  }
+}
+\end{lstlisting}
+
+
 \subsection{Clean up math function overloads}
 The wording that produces \code{simd} overloads misses a few cases and leaves room for ambiguity.
 There is also no explicit mention of integral overloads that are supported in \code{<cmath>} (e.g. \code{std::cos(1)} calling \code{std::cos(double)}).
