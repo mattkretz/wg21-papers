@@ -148,13 +148,7 @@ My proposal:
     \end{itemize}
     The new intent for the \code{fixed_size<T, N>} ABI tag would be to allow \code{simd_mask<T, A1>} to use either choice depending only on compiler flags.
 
-  \item[\code{A2 = \simdabi abi_stable<N>}] \emph{(new, but same semantics as \code{fixed_size} in the TS)}\\
-    \code{simd<T, A2>} abstracts the same hardware resources as \code{simd<T, A1>}, however with the intent of ABI compatibility between differently compiled TUs.
-    This can't be a normative requirement; and thus \code{A2} and \code{A1} may be equivalent types (QoI).
-    (Note: There is no use for a \simdabi\code{abi_stable<T>} type since the parameter passing differences are tied to the number of elements in a SIMD vector.
-    Thus, either \simdabi\code{native<T>} would work just fine or \simdabi\code{abi_stable<T>} would lead to incompatibilities, because types with the same name had different \code{sizeof} and \code{alignof}.)
-
-  \item[\code{A3 = \simdabi scalar}]\ \\
+  \item[\code{A2 = \simdabi scalar}]\ \\
     No change.
 \end{description}
 
@@ -176,59 +170,23 @@ For context on naming, consider the use-cases that the ABI tags serve:
   \item[\simdabi\code{fixed_size<T, N>}] Higher abstraction level than \code{native<T>}: the user/algorithm dictates the number of elements to be processed in parallel.
     The objects might not be direct mappings to hardware resources, but they use the best that is available on the given target system.
 
-  \item[\simdabi\code{abi_stable<N>}] The type to use as function parameter type on ABI boundaries.
-    This type allows TUs translated with different machine-related compiler flags to interact correctly.
-
   \item[\simdabi\code{scalar}] The actual type of \code{native<T>} if the target hardware has no support for parallel processing of elements of \code{T}.%
     \footnote{A typical example is \simdabi\code{native<long double>}.}
     In addition, \code{simd<T, simd_abi::scalar>} can be a useful debugging tool.
 \end{description}
 
-For reference, the above names are my preference over the following alternatives.
+For reference, the name \code{fixed_size} is my preference over the following alternatives:
 \begin{itemize}
-  \item alternatives for \code{fixed_size}:
-    \begin{itemize}
-      \item \code{simd_abi::fixed_native<N>} with \code{simd} alias \code{fixed_native_simd<T, N>}
-      \item \code{simd_abi::fixed<N>} with \code{simd} alias \code{fixed_simd<T, N>}
-      \item \code{simd_abi::sized<N>} with \code{simd} alias \code{sized_simd<T, N>}
-    \end{itemize}
-
-  \item alternatives for \code{abi_stable}:
-    \begin{itemize}
-      \item \code{simd_abi::fixed_compatible<N>} with \code{simd} alias \code{fixed_compatible_simd<T, N>}
-      \item \code{simd_abi::compatible<N>} with \code{simd} alias \code{compatible_simd<T, N>}
-      \item \code{simd_abi::abi_compatible<N>} with \code{simd} alias \code{abi_compatible_simd<T, N>}
-      \item \code{simd_abi::parameter<N>} with \code{simd} alias \code{parameter_simd<T, N>} or \code{simd_parameter<T, N>}
-    \end{itemize}
+  \item \code{simd_abi::fixed_native<N>} with \code{simd} alias \code{fixed_native_simd<T, N>}
+  \item \code{simd_abi::fixed<N>} with \code{simd} alias \code{fixed_simd<T, N>}
+  \item \code{simd_abi::sized<N>} with \code{simd} alias \code{sized_simd<T, N>}
 \end{itemize}
-
-\subsubsection{Alternative: no ABI boundary helper}
-
-See \sect{sec:noabihelper}.
 
 \subsection{Simplify/generalize casts}\label{sec:casts}
 
 The change to the ABI tags requires a reconsideration of cast functions and
 implicit and explicit casts between data-parallel types of different ABI tags.
 This is in addition to TS feedback on casts being to strict or cumbersome to use.
-
-\subsubsection{Interconvertible \code{fixed_size} and \code{abi_stable}}
-
-Conversions between \code{fixed_size_simd<T, N>} and \code{abi_stable_simd<T,
-N>} should be implicit, because the only difference is in how the parameter is
-passed to a function.
-Thus, a function on an API boundary might want to declare function arguments
-with \code{abi_stable<N>} and then continue with \code{fixed_size<T, N>} in its
-implementation.
-However, conversions between \code{fixed_size_simd_mask<T, N>} and
-\code{abi_stable_simd_mask<T, N>} might require costly conversion between
-different mask representations.
-It would certainly be inconsistent to allow implicit conversions for
-\code{simd} but not \code{simd_mask}.
-Also this potential mask conversion cost exists for today's
-\stdx\simdabi\code{fixed_size_simd_mask<T, N>} for every mask operation, so
-reducing it to implicit conversions on ABI boundaries would already be a huge
-improvement.
 
 \subsubsection{More (explicit) converting constructors}
 
@@ -433,12 +391,10 @@ function proposed by \textcite{P2638R0}.
     sizeof(T1)}.
 
   \item \code{simd<T0, A0>} can be \code{bit_cast}ed to \code{simd<T1, A1>} if
-    \code{sizeof(simd<T0, A0>) == sizeof(simd<T1, A1>)} and neither \code{A0}
-    nor \code{A1} are specializations of \simdabi\code{abi_stable}.
+    \code{sizeof(simd<T0, A0>) == sizeof(simd<T1, A1>)}.
 
   \item \code{simd_mask<T0, A0>} can be \code{bit_cast}ed to \code{simd_mask<T1, A1>} if
-    \code{sizeof(simd_mask<T0, A0>) == sizeof(simd_mask<T1, A1>)} and neither
-    \code{A0} nor \code{A1} are specializations of \simdabi\code{abi_stable}.
+    \code{sizeof(simd_mask<T0, A0>) == sizeof(simd_mask<T1, A1>)}.
 \end{enumerate}
 
 \subsection{Add \code{simd_mask} generator constructor}
@@ -580,35 +536,6 @@ This needs more work and is not reflected in the wording at this point.
 
 
 \section{Open questions}
-
-\subsection{Remove support for safe parameter passing over ABI boundaries}
-\label{sec:noabihelper}
-
-The feature, that \stdx\simdabi\code{fixed_size<N>} acts as a type for safely passing over ABI boundaries was a request/idea from SG1 and was not part of the original design.
-My preferred approach would be that users or compilers solve this problem, and not \code{simd}.
-Users could pass data via \code{std::array<T, N>} instead of \stdx\code{fixed_size_simd<\MayBreak{}T, N>}; in some situations this might be less efficient, though.
-Alternatively, the \code{simd} object can be wrapped in a \code{struct} with non-trivial copy constructor (at least for the Itanium ABI).
-
-A more general solution would require a language extension.
-An implementation could provide attributes for adjusting the calling convention for certain functions or function parameters.
-This would make it trivial to request less efficient copying at the place where it is needed without extra performance cost in other places.
-
-Removing the \stdx\simdabi\code{fixed_size<N>} / \std\simdabi\code{abi_stable<N>} ABI would resolve the problem that one of the \code{simd} specializations is not trivially copyable and thus not bit-castable.
-Furthermore, no type in the \CC{} standard can \emph{guarantee} compatibility on ABI boundaries (i.e. TUs compiled with different compiler flags), since there can be no normative wording to such an effect.
-Thus, the type is less useful in this respect to users than it should be.
-
-Consequently, this is my preferred set of standard ABI tags:
-\begin{itemize}
-  \item \simdabi\code{native<T>}
-  \item \simdabi\code{fixed_size<T, N>}
-  \item \simdabi\code{scalar}
-\end{itemize}
-I.e. compared to the TS, remove \code{compatible<T>} and remove the ABI suggestion for \code{fixed_size<T, N>}.
-However, that goes against a decision / discussion in SG1, so I would prefer for (at least) SG1 to weigh in on this issue.
-
-\subsubsection{Suggested Poll}
-
-\wgPoll{Remove provision of \code{simd} type (ABI tag) that \emph{might} help passing \code{simd} objects correctly over ABI boundaries}{&&&&}
 
 \subsection{Casts}\label{sec:question-casts}
 
