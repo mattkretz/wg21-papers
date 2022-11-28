@@ -278,8 +278,11 @@ The value of \tcode{max_fixed_size<T>} is at least 32.
 \tcode{fixed_size<N>} is an alias for an unspecified ABI tag.
 \tcode{fixed_size} does not introduce a non-deduced context.
 Use of the \tcode{simd_abi::fixed_size<N>} tag type requires data-parallel types to store \tcode{N}
-elements (i.e. \tcode{\wgChange{simd<T, simd_abi::fixed_size<N>>::size()}{simd_size_v<T,
-simd_abi::fixed_size<N>>}} is \tcode{N}). \tcode{simd<T, fixed_size<N>>} and \tcode{simd_mask<T,
+elements (i.e.
+\wgChange
+  {\tcode{simd<T, simd_abi::fixed_size<N>>::size()\relax} is}
+  {\tcode{simd_size_v<T, simd_abi::fixed_size<N>>\relax} equals}
+\tcode{N}). \tcode{simd<T, fixed_size<N>>} and \tcode{simd_mask<T,
 fixed_size<N>>} with \tcode{N > 0} and \tcode{N <= max_fixed_size<T>} shall be supported.
 Additionally, for every supported \tcode{simd<T, Abi>} (see \ref{simd.overview}), where \tcode{Abi}
 is an ABI tag that is not a specialization of \tcode{simd_abi::fixed_size}, \tcode{N == simd<T,
@@ -437,7 +440,7 @@ template<class T, class Abi = simd_abi::@\wgChange{compatible}{native}@<T>> stru
 \end{itemize}
 \begin{note}
   The rules are different from those in (\ref{simd.overview})\wgChange{.}{:
-  The \tcode{value} member is present even if \tcode{simd<T, Abi>} is not supported for the currently targeted system.}
+  The member \tcode{value} is present even if \tcode{simd<T, Abi>} is not supported for the currently targeted system.}
 \end{note}
 
 \pnum
