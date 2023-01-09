@@ -27,6 +27,7 @@
 \item Define simd::size as a \code{constexpr} static data-member of type \code{integral_constant<size_t, N>}. This simplifies passing the size via function arguments and still be useable as a constant expression in the function body.
 \item Document addition of \code{constexpr} to the API.
 \item Removed ABI tag for passing \code{simd} over ABI boundaries.
+\item Apply cast interface changes to the wording.
   \todo Apply the new library specification style from P0788R3.
   \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.
 \end{revision}

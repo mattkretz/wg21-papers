@@ -186,7 +186,7 @@ For reference, the name \code{fixed_size} is my preference over the following al
 
 The change to the ABI tags requires a reconsideration of cast functions and
 implicit and explicit casts between data-parallel types of different ABI tags.
-This is in addition to TS feedback on casts being to strict or cumbersome to use.
+This is in addition to TS feedback on casts being too strict or cumbersome to use.
 
 \subsubsection{More (explicit) converting constructors}
 
@@ -217,13 +217,6 @@ Some of the types may use the \code{fixed_size} ABI tag and some may use an
 extended ABI tag.
 This detail should not stop the user from being able to cast between a
 compiler-flag dependent subset of these types.
-
-%There is no way to know how \code{N} of a given \code{fixed_size} ABI tag was
-%determined, so we have to tailor the design for one assumption or the other.
-%(If we expect most of our \code{simd} users to use CI for compiling their code
-%for at least two different targets with different SIMD widths, then
-%non-portable use of such implicit casts can be caught automatically before
-%integration to the main branch.)
 
 Besides a constraint on the number of elements being equal, the converting
 constructor should be conditionally \code{explicit}:
@@ -271,8 +264,9 @@ template <class T> void f(T a, int b)
 \end{tonytable}%
 Type conversions for \code{simd} are still less error-prone than builtin types,
 because conversions that might lose information require an explicit cast.
-Also, an unintended widening of the SIMD register size can happen but is not
-completely invisible as shown in \lst{lst:mixedprecision}.
+Also, unintended widening of the SIMD register size can happen, but typically
+leads to the need for an explicit cast in the complete statement (cf.
+\lst{lst:mixedprecision}).
 
 \begin{lstlisting}[numbers=left,float={hbtp},label=lst:mixedprecision,caption={
   Mixed precision code using the types from \lst{lst:simdtypespattern}, ensuring equal element count
@@ -297,17 +291,16 @@ function.
 Most importantly, the conversion from \code{native} to its \code{fixed_size}
 counterpart benefits from a cast expression that does not require spelling out
 the destination type.
-If only (explicit) converting constructors were provided by the standard
-library, it would be simple enough for users to define their own
-\code{to_fixed_size} function if they want one (e.g.
+However, since converting constructors are provided by the standard library, it
+is simple for users to define their own \code{to_fixed_size} function if they
+want one (e.g.
 \begin{lstlisting}[numbers=left,float={hbtp},label=lst:userdefined-to-fixed-size,caption={
   Example of a user-defined \code{to_fixed_size} implementation if explicit casts are provided
 }]
 template <typename T>
-constexpr auto to_fixed_size(std::simd<T> x)
+constexpr std::fixed_size_simd<T, std::simd_size_v<T>> to_fixed_size(std::simd<T> x)
 {
-  using R = std::fixed_size_simd<T, std::simd<T>::size()>;
-  return static_cast<R>(x);
+  return x;
 }
 \end{lstlisting}
 \lst{lst:userdefined-to-fixed-size}).
@@ -316,8 +309,9 @@ in program code.
 The only motivation for adding a \code{to_native} function would be the
 provision of a counterpart for the \code{to_fixed_size} cast function.
 
-If there is consensus to allow implicit conversions, then I believe the named
-cast functions should be removed altogether.
+Besides the functions only implementing trivial implicit casts, there is little
+to no need for these functions.
+The named cast functions are therefore removed altogether.
 
 \subsubsection{Remove \code{simd_cast} and \code{static_simd_cast}}
 There are two cast function templates in the TS: \code{simd_cast} and
@@ -329,8 +323,8 @@ vectorizable type \code{T}.
 In the latter case, the cast function determines the return type as
 \code{fixed_size_simd<T, input.size()>}.
 
-If we allow all conversions covered by \stdx\code{simd_cast} and
-\stdx\code{static_simd_cast} via \std\code{simd} constructors, then the cast
+Since we allow all conversions covered by \stdx\code{simd_cast} and
+\stdx\code{static_simd_cast} via \std\code{simd} constructors, the cast
 functions can be removed altogether.
 The lost feature (cast via element type) can be replaced using
 \code{rebind_simd} as shown in \ttref{tt:tsvsp1928casts}.
@@ -373,6 +367,13 @@ Conversions with different element count are not possible via a constructor
 This would require a different function, such as the \code{resize<N>(simd)}
 function proposed by \textcite{P2638R0}.
 
+\subsubsection{Complete casts for \code{simd_mask}}
+The \code{simd_cast} and \code{static_simd_cast} overloads for \code{simd_mask} were forgotten for the TS.
+Without those casts (and no casts via constructors) mixing different arithmetic types is painful.
+There is no motivation for forbidding casts on \code{simd_mask}.
+
+The proposed changes for casts solve this issue.
+
 \subsubsection{Summary of casts}
 
 \begin{enumerate}
@@ -387,7 +388,7 @@ function proposed by \textcite{P2638R0}.
     \code{simd_size_v<T0, A0> == simd_size_v<T1, A1>}.
 
   \item \code{simd_mask<T0, A0>} is implicitly convertible to
-    \code{simd_mask<T1, A1>} if, additionally, \item \code{sizeof(T0) ==
+    \code{simd_mask<T1, A1>} if, additionally, \code{sizeof(T0) ==
     sizeof(T1)}.
 
   \item \code{simd<T0, A0>} can be \code{bit_cast}ed to \code{simd<T1, A1>} if
@@ -432,22 +433,6 @@ Therefore add:
 template<class G> simd_mask(G&& gen) noexcept;
 \end{itemdecl}
 \end{wgText}
-
-\subsection{Complete casts for \code{simd_mask}}
-The \code{simd_cast} and \code{static_simd_cast} overloads for \code{simd_mask} were forgotten for the TS.
-Without those casts (and no casts via constructors) mixing different arithmetic types is painful.
-There is no motivation for forbidding casts on \code{simd_mask}.
-
-However, since the proposed change for casts removes \code{simd_cast} and
-\code{static_simd_cast}, the problem is already solved.
-
-%Therefore add the following overloads:
-%\begin{wgText}
-%\begin{codeblock}
-  %template<class T, class U, class Abi> @\seebelow@ simd_cast(const simd_mask<U, Abi>&) noexcept;
-  %template<class T, class U, class Abi> @\seebelow@ static_simd_cast(const simd_mask<U, Abi>&) noexcept;
-%\end{codeblock}
-%\end{wgText}
 
 \subsection{\code{element_reference} is overspecified}
 \code{element_reference} is spelled out in a lot of detail.
@@ -536,26 +521,6 @@ This needs more work and is not reflected in the wording at this point.
 
 
 \section{Open questions}
-
-\subsection{Casts}\label{sec:question-casts}
-
-See \sect{sec:casts} for a discussion.
-
-\subsubsection{Suggested Polls}
-
-\wgPoll{Allow implicit conversions between \code{simd<T>} and
-\code{fixed_size_simd<T, N>} (both directions, \code{N == simd<T>::size()})%
-\footnote{
-This is a change of the TS status quo.
-The paper argues that it is an improvement.
-}
-}{&&&&}
-
-\wgPoll{Remove named cast functions (\code{to_fixed_size}, \code{to_native})%
-\footnote{This is a change of the TS status quo.
-The paper argues that it if the above poll passes, the functions are
-unnecessary.}
-}{&&&&}
 
 \subsection{Integration with ranges}
 \code{simd} itself is not a range.

@@ -1434,128 +1434,103 @@ template<class M, class V> typename V::value_type hmax(const const_where_express
 
 \rSec2[simd.casts]{Casts}
 
+\begin{wgBRem}
 \begin{itemdecl}
-template<class T, class U, class Abi> @\seebelow@ simd_cast(const simd<U, Abi>& x) noexcept;
+@\wgRem{template<class T, class U, class Abi> \seebelow simd_cast(const simd<U, Abi>\& x) noexcept;}@
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum
-  Let \tcode{To} denote \tcode{T::value_type} if \tcode{is_simd_v<T>} is \tcode{true}, or \tcode{T} otherwise.
+  \wgRem{Let \tcode{To} denote \tcode{T::value_type} if \tcode{is_simd_v<T>} is \tcode{true}, or \tcode{T} otherwise.}
 
-  \pnum\returns
-  A \tcode{simd} object with the $i^\text{th}$ element initialized to \tcode{static_cast<To>(x[$i$])} \foralli.
+  \pnum\wgRem{\returns
+  A \tcode{simd} object with the $i^\text{th}$ element initialized to \tcode{static_cast<To>(x[$i$])} \foralli.}
 
-  \pnum\remarks
-  The function shall not participate in overload resolution unless
+  \pnum\wgRem{\remarks
+  The function shall not participate in overload resolution unless}
   \begin{itemize}
-    \item every possible value of type \tcode{U} can be represented with type \tcode{To}, and
-    \item either
+    \wgItemRem \wgRem{every possible value of type \tcode{U} can be represented with type \tcode{To}, and}
+    \wgItemRem \wgRem{either}
       \begin{itemize}
-        \item \tcode{is_simd_v<T>} is \tcode{false}, or
-        \item \tcode{T::size() == simd<U, Abi>::size()} is \tcode{true}.
+        \wgItemRem \wgRem{\tcode{is_simd_v<T>} is \tcode{false}, or}
+        \wgItemRem \wgRem{\tcode{T::size() == simd<U, Abi>::size()} is \tcode{true}.}
       \end{itemize}
   \end{itemize}
 
   \pnum
-  The return type is
+  \wgRem{The return type is}
   \begin{itemize}
-    \item \tcode{T} if \tcode{is_simd_v<T>} is \tcode{true};
-    \item otherwise, \tcode{simd<T, Abi>} if \tcode{U} is the same type as \tcode{T};
-    \item otherwise, \tcode{simd<T, simd_abi::fixed_size<simd<U, Abi>::size()>>}
+    \wgItemRem \wgRem{\tcode{T} if \tcode{is_simd_v<T>} is \tcode{true};}
+    \wgItemRem \wgRem{otherwise, \tcode{simd<T, Abi>} if \tcode{U} is the same type as \tcode{T};}
+    \wgItemRem \wgRem{otherwise, \tcode{simd<T, simd_abi::fixed_size<simd<U, Abi>::size()>>}}
   \end{itemize}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class U, class Abi> @\seebelow@ static_simd_cast(const simd<U, Abi>& x) noexcept;
+@\wgRem{template<class T, class U, class Abi> \seebelow static_simd_cast(const simd<U, Abi>\& x) noexcept;}@
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum
-  Let \tcode{To} denote \tcode{T::value_type} if \tcode{is_simd_v<T>} is \tcode{true} or \tcode{T} otherwise.
+  \wgRem{Let \tcode{To} denote \tcode{T::value_type} if \tcode{is_simd_v<T>} is \tcode{true} or \tcode{T} otherwise.}
 
-  \pnum\returns
-  A \tcode{simd} object with the $i^\text{th}$ element initialized to \tcode{static_cast<To>(x[$i$])} \foralli.
+  \pnum\wgRem{\returns
+  A \tcode{simd} object with the $i^\text{th}$ element initialized to \tcode{static_cast<To>(x[$i$])} \foralli.}
 
-  \pnum\remarks
-  The function shall not participate in overload resolution unless either
+  \pnum\wgRem{\remarks
+  The function shall not participate in overload resolution unless either}
   \begin{itemize}
-    \item \tcode{is_simd_v<T>} is \tcode{false}, or
-    \item \tcode{T::size() == simd<U, Abi>::size()} is \tcode{true}.
+    \wgItemRem \wgRem{\tcode{is_simd_v<T>} is \tcode{false}, or}
+    \wgItemRem \wgRem{\tcode{T::size() == simd<U, Abi>::size()} is \tcode{true}.}
   \end{itemize}
 
   \pnum
-  The return type is
+  \wgRem{The return type is}
   \begin{itemize}
-    \item \tcode{T} if \tcode{is_simd_v<T>} is \tcode{true};
-    \item otherwise, \tcode{simd<T, Abi>} if either \tcode{U} is the same type as \tcode{T} or \tcode{make_signed_t<U>} is the same type as \tcode{make_signed_t<T>};
-    \item otherwise, \tcode{simd<T, simd_abi::fixed_size<simd<U, Abi>::size()>>}.
+    \wgItemRem \wgRem{\tcode{T} if \tcode{is_simd_v<T>} is \tcode{true};}
+    \wgItemRem \wgRem{otherwise, \tcode{simd<T, Abi>} if either \tcode{U} is the same type as \tcode{T} or \tcode{make_signed_t<U>} is the same type as \tcode{make_signed_t<T>};}
+    \wgItemRem \wgRem{otherwise, \tcode{simd<T, simd_abi::fixed_size<simd<U, Abi>::size()>>}.}
   \end{itemize}
 \end{itemdescr}
 
-\begin{wgBAdd}
 \begin{itemdecl}
-|+template<class T, class U, class Abi> |/see below/| simd_cast(const simd_mask<U, Abi>& x) noexcept;
-template<class T, class U, class Abi> |/see below/| static_simd_cast(const simd_mask<U, Abi>& x) noexcept;+|
+@\wgRem{template<class T, class Abi>}\diffbreak{2}%
+  \wgRem{fixed_size_simd<T, simd_size_v<T, Abi>> to_fixed_size(const simd<T, Abi>\& x) noexcept;}\diffbreak{0}%
+\wgRem{template<class T, class Abi>}\diffbreak{2}%
+  \wgRem{fixed_size_simd_mask<T, simd_size_v<T, Abi>> to_fixed_size(const simd_mask<T, Abi>\& x) noexcept;}@
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\returns
-  A \tcode{simd_mask} object with the $i^\text{th}$ element initialized to \tcode{x[$i$]} \foralli.
-
-  \pnum\remarks
-  The functions shall not participate in overload resolution unless either
-  \begin{itemize}
-    \item \tcode{is_simd_mask_v<T>} is \tcode{false}, or
-    \item \tcode{T::size() == simd_size_v<U, Abi>} is \tcode{true}.
-  \end{itemize}
-
-  \pnum
-  The return type is
-  \begin{itemize}
-    \item \tcode{T} if \tcode{is_simd_mask_v<T>} is \tcode{true};
-    \item otherwise, \tcode{simd_mask<T, Abi>} if either \tcode{U} is the same type as \tcode{T} or \tcode{make_signed_t<U>} is the same type as \tcode{make_signed_t<T>};
-    \item otherwise, \tcode{simd_mask<T, simd_abi::fixed_size<simd_size_v<U, Abi>>>}
-  \end{itemize}
-\end{itemdescr}
-\end{wgBAdd}
-
-\begin{itemdecl}
-template<class T, class Abi>
-  fixed_size_simd<T, simd_size_v<T, Abi>> to_fixed_size(const simd<T, Abi>& x) noexcept;
-template<class T, class Abi>
-  fixed_size_simd_mask<T, simd_size_v<T, Abi>> to_fixed_size(const simd_mask<T, Abi>& x) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\returns
-  A data-parallel object with the $i^\text{th}$ element initialized to \tcode{x[$i$]} \foralli.
+  \pnum\wgRem{\returns
+A data-parallel object with the $i^\text{th}$ element initialized to \tcode{x[$i$]} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, int N> native_simd<T> to_native(const fixed_size_simd<T, N>& x) noexcept;
-template<class T, int N> native_simd_mask<T> to_native(const fixed_size_simd_mask<T, N>& x) noexcept;
+@\wgRem{template<class T, int N> native_simd<T> to_native(const fixed_size_simd<T, N>\& x) noexcept;}\diffbreak{0}%
+\wgRem{template<class T, int N> native_simd_mask<T> to_native(const fixed_size_simd_mask<T, N>\& x) noexcept;}@
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\returns
-  A data-parallel object with the $i^\text{th}$ element initialized to \tcode{x[$i$]} \foralli.
+  \pnum\wgRem{\returns
+  A data-parallel object with the $i^\text{th}$ element initialized to \tcode{x[$i$]} \foralli.}
 
-  \pnum\remarks
-  These functions shall not participate in overload resolution unless \tcode{simd_size_v<T, simd_abi::native<T>> == N} is \tcode{true}.
+  \pnum\wgRem{\remarks
+  These functions shall not participate in overload resolution unless \tcode{simd_size_v<T, simd_abi::native<T>> == N} is \tcode{true}.}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, int N> simd<T> to_compatible(const fixed_size_simd<T, N>& x) noexcept;
-template<class T, int N> simd_mask<T> to_compatible(const fixed_size_simd_mask<T, N>& x) noexcept;
+@\wgRem{template<class T, int N> simd<T> to_compatible(const fixed_size_simd<T, N>\& x) noexcept;}\diffbreak{0}%
+\wgRem{template<class T, int N> simd_mask<T> to_compatible(const fixed_size_simd_mask<T, N>\& x) noexcept;}@
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\returns
-  A data-parallel object with the $i^\text{th}$ element initialized to \tcode{x[$i$]} \foralli.
+  \pnum\wgRem{\returns
+  A data-parallel object with the $i^\text{th}$ element initialized to \tcode{x[$i$]} \foralli.}
 
-  \pnum\remarks
-  These functions shall not participate in overload resolution unless \tcode{simd_size_v<T, simd_abi::compatible<T>> == N} is \tcode{true}.
+  \pnum\wgRem{\remarks
+  These functions shall not participate in overload resolution unless \tcode{simd_size_v<T, simd_abi::compatible<T>> == N} is \tcode{true}.}
 \end{itemdescr}
+\end{wgBRem}
 
 \begin{itemdecl}
 template<size_t... Sizes, class T, class Abi>
