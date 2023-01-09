@@ -1707,14 +1707,14 @@ public:
 
   static constexpr @\wgChange{size_t size() noexcept}{typename simd_size<T, Abi>::type size}@;
 
-  simd_mask() noexcept = default;
+  @\wgAdd{constexpr }@simd_mask() noexcept = default;
 
   // \ref{simd.mask.ctor}, \wgChange{C}{\tcode{simd_mask} c}onstructors
   @\wgAdd{constexpr} @explicit simd_mask(value_type) noexcept;
   template<class U@\wgAdd{, class UAbi}@>
   @\wgAdd{constexpr explicit(\seebelow) }@simd_mask(const simd_mask<U, @\wgChange{simd_abi::fixed_size<size()>}{UAbi}@>&) noexcept;
   @\wgAdd{template<class G> constexpr explicit simd_mask(G\&\& gen) noexcept;}@
-  template<class Flags@\wgAdd{ = element_aligned_tag}@> simd_mask(const value_type* mem, Flags@\wgAdd{ = \{\}}@);
+  template<class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr }@simd_mask(const value_type* mem, Flags@\wgAdd{ = \{\}}@);
 
   // \ref{simd.mask.copy}, \wgChange{C}{\tcode{simd_mask} c}opy functions
   template<class Flags@\wgAdd{ = element_aligned_tag}@>@\diffbreak{4}
@@ -1723,27 +1723,27 @@ public:
     \wgAdd{constexpr}@ void copy_to(value_type* mem, Flags@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
 
   // \ref{simd.mask.subscr}, \wgChange{S}{\tcode{simd_mask} s}ubscript operators
-  reference operator[](size_t);
-  value_type operator[](size_t) const;
+  @\wgAdd{constexpr }@reference operator[](size_t);
+  @\wgAdd{constexpr }@value_type operator[](size_t) const;
 
   // \ref{simd.mask.unary}, \wgChange{U}{\tcode{simd_mask} u}nary operators
-  simd_mask operator!() const noexcept;
+  @\wgAdd{constexpr }@simd_mask operator!() const noexcept;
 
   // \ref{simd.mask.binary}, \wgChange{B}{\tcode{simd_mask} b}inary operators
-  friend simd_mask operator&&(const simd_mask&, const simd_mask&) noexcept;
-  friend simd_mask operator||(const simd_mask&, const simd_mask&) noexcept;
-  friend simd_mask operator&(const simd_mask&, const simd_mask&) noexcept;
-  friend simd_mask operator|(const simd_mask&, const simd_mask&) noexcept;
-  friend simd_mask operator^(const simd_mask&, const simd_mask&) noexcept;
+  friend @\wgAdd{constexpr }@simd_mask operator&&(const simd_mask&, const simd_mask&) noexcept;
+  friend @\wgAdd{constexpr }@simd_mask operator||(const simd_mask&, const simd_mask&) noexcept;
+  friend @\wgAdd{constexpr }@simd_mask operator&(const simd_mask&, const simd_mask&) noexcept;
+  friend @\wgAdd{constexpr }@simd_mask operator|(const simd_mask&, const simd_mask&) noexcept;
+  friend @\wgAdd{constexpr }@simd_mask operator^(const simd_mask&, const simd_mask&) noexcept;
 
   // \ref{simd.mask.cassign}, \wgChange{C}{\tcode{simd_mask} c}ompound assignment
-  friend simd_mask& operator&=(simd_mask&, const simd_mask&) noexcept;
-  friend simd_mask& operator|=(simd_mask&, const simd_mask&) noexcept;
-  friend simd_mask& operator^=(simd_mask&, const simd_mask&) noexcept;
+  friend @\wgAdd{constexpr }@simd_mask& operator&=(simd_mask&, const simd_mask&) noexcept;
+  friend @\wgAdd{constexpr }@simd_mask& operator|=(simd_mask&, const simd_mask&) noexcept;
+  friend @\wgAdd{constexpr }@simd_mask& operator^=(simd_mask&, const simd_mask&) noexcept;
 
   // \ref{simd.mask.comparison}, \wgChange{C}{\tcode{simd_mask} c}omparisons
-  friend simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
-  friend simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
+  friend @\wgAdd{constexpr }@simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
+  friend @\wgAdd{constexpr }@simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
 };
 \end{codeblock}
 
