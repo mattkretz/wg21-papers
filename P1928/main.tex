@@ -511,6 +511,143 @@ void g(std::vector<float> data) {
 \end{lstlisting}
 
 
+\subsection{Replace \code{where} facilities}
+
+The \code{where} functions and corresponding \code{where_expression} have been
+the most controversial part going into the TS.
+My interpretation of the feedback I received is that users can work with it but
+do not find it intuitive.
+Instead, many have asked for a blend / select / conditional operator instead.
+Whenever I asked users whether they would like to use the \code{?:} operator I
+got positive and often enthusiastic responses.
+An overloaded \code{operator?:} would open the door to generic and intuitive
+SIMD code.
+
+A major motivation for the \code{where} function in the TS was its ability to
+express masked \emph{operations} in addition to masked assignments.
+This enables library implementations to explicitly use masked operation
+intrinsics instead of resorting to an unmasked operation with subsequent masked
+assignment.
+The latter can be contracted to a masked operation by compilers, but obviously
+there's no guarantee.
+In any case, the topic is a QoI issue that doesn't have to dictate the API.
+
+If \code{operator?:} had been overloadable when I designed \stdx\simd{} then I
+would have propopsed \code{?:} overloads for \code{simd_mask} and \code{simd}.
+Consequently, \code{where} would likely not have existed.
+Sadly we still cannot overload \code{operator?:} even though there has been
+positive feedback in EWG-I.
+That work is currently blocked on \cite{P2600R0}.
+
+\subsubsection{Proposed replacements for \code{where}}
+
+\begin{itemize}
+  \item \code{auto conditional_operator(simd_mask, \textit{simd_like},
+    \textit{simd_like})}\footnote{to be replaced by an actual \code{operator?:}
+      overload as soon as EWG lifts the restriction\ldots}
+  \item Facilities for converting \code{simd_mask<T>} to \code{simd<T>} with
+    values \code{0} or \code{1}:
+    \begin{itemize}
+      \item unary \code{simd_mask::operator+}
+      \item unary \code{simd_mask::operator-}
+      \item \code{simd_mask::operator simd_type} (not \code{explicit},
+        preferably with 4.1 of \cite{P2600R0} adopted)
+    \end{itemize}
+\end{itemize}
+
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:mixedsimdandmask,caption={
+    Binary operations involving \code{simd_mask} and \code{simd}
+}]
+using floatv = std::simd<float>;
+using intv = std::rebind_simd_t<int, floatv>;
+
+int count_positive(const std::vector<float>& x)
+{
+  intv counter = {};
+  for (std::size_t i = 0; i + floatv::size <= x.size(); i += floatv::size) {
+    counter += floatv(&x[i]) > 0;
+  counter += x > 0;
+}
+\end{lstlisting}
+
+\subsubsection{Examples}
+
+\lst{lst:simdconditionals} presents a few simple examples of working with a
+\code{simd_mask} result in the absence of \code{where}.
+Note that the compiler I used implements the ADL fix proposed in \cite{P2600R0}
+and implements \code{opertaor?:} overloading as explored in \cite{D0917}.
+
+\begin{itemize}
+  \item The function \code{f0} scales all positive values in \code{x} by 2.
+    The compiler contracts the blending of \code{2 * x} and \code{x} with the
+    multiply operation (a left shift by 1) to a masked left shift instruction.
+
+  \item The functions \code{f1} and \code{f2} both return a \code{simd<int>}
+    where all positive entries of \code{x} are replaced by 1 and the remaining
+    entries are 0.
+    I.e. converting the comparison result to \code{simd} works analogue to
+    promotion of \bool to \intt.
+
+  \item The functions \code{f3} and \code{f4} both return a \code{simd<int>}
+    where all positive entries of \code{x} are replaced by -1 and the remaining
+    entries are 0.
+    The ISA allows a more efficient translation and the compiler recognizes the
+    pattern in both variants.
+
+  \item Finally, to complete the set, \code{f5} shows how one could even blend
+    \code{bool} arguments into a \code{simd_mask}.
+    The compiler recognizes that the conditional operator is a no-op and simply
+    returns the result of the comparison itself.
+\end{itemize}
+
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:simdconditionals,caption={
+    \code{simd} conditionals without \code{where} and with \cite{P2600R0} and \cite{D0917}, showing the corresponding assembly output (\code{gcc -O2 -std=c++23 -march=skylake-avx512}; personal GCC 12.1 branch with patches implementing \cite{P2600R0} and \cite{D0917})
+}]
+auto f0(std::simd<int> x) { return x > 0 ? 2 * x : x; }
+/*	vpxor	xmm1, xmm1, xmm1
+	vpcmpd	k1, zmm1, zmm0, 1
+	vpslld	zmm0{k1}, zmm0, 1
+	ret
+*/
+auto f1(std::simd<int> x) { return x > 0 ? 1 : 0; }
+/*	vmovdqa32	zmm1, zmm0
+	vpxor		xmm0, xmm0, xmm0
+	vpcmpd		k1, zmm0, zmm1, 1
+	mov		eax, 1
+	vpbroadcastd	zmm0{k1}{z}, eax
+	ret
+*/
+auto f2(std::simd<int> x) { return std::simd(x > 0); }
+/*	vmovdqa32	zmm1, zmm0
+	vpxor		xmm0, xmm0, xmm0
+	vpcmpd		k1, zmm0, zmm1, 1
+	mov		eax, 1
+	vpbroadcastd	zmm0{k1}{z}, eax
+	ret
+*/
+auto f3(std::simd<int> x) { return -(x > 0); }
+/*	vmovdqa32	zmm1, zmm0
+	vpxor		xmm0, xmm0, xmm0
+	vpcmpd		k0, zmm0, zmm1, 1
+	vpmovm2d	zmm0, k0
+	ret
+*/
+auto f4(std::simd<int> x) { return x > 0 ? -1 : 0; }
+/*	vmovdqa32	zmm1, zmm0
+	vpxor		xmm0, xmm0, xmm0
+	vpcmpd		k0, zmm0, zmm1, 1
+	vpmovm2d	zmm0, k0
+	ret
+*/
+auto f5(std::simd<int> x) { return x > 0 ? true : false; }
+/*	vmovdqa32	zmm1, zmm0
+	vpxor		xmm0, xmm0, xmm0
+	vpcmpd		k0, zmm0, zmm1, 1
+	kmovw		eax, k0
+	ret
+*/
+\end{lstlisting}
+
 \subsection{Clean up math function overloads}
 The wording that produces \code{simd} overloads misses a few cases and leaves room for ambiguity.
 There is also no explicit mention of integral overloads that are supported in \code{<cmath>} (e.g. \code{std::cos(1)} calling \code{std::cos(double)}).
