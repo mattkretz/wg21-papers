@@ -710,10 +710,10 @@ public:
   template<class U, class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr }@simd(const U* mem, Flags f@\wgAdd{ = \{\}}@);
 
   // \ref{simd.copy}, \tcode{simd} copy functions
-  template<class U, class Flags@\wgAdd{ = element_aligned_tag}@>@\diffbreak{4}
-    \wgAdd{constexpr void}@ copy_from(const U* mem, Flags f@\wgAdd{ = \{\}}@);
-  template<class U, class Flags@\wgAdd{ = element_aligned_tag}@>@\diffbreak{4}
-    \wgAdd{constexpr void}@ copy_to(U* mem, Flags f@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
+  template<class U, class Flags@\wgAdd{ = element_aligned_tag}@>
+    @\wgAdd{constexpr void}@ copy_from(const U* mem, Flags f@\wgAdd{ = \{\}}@);
+  template<class U, class Flags@\wgAdd{ = element_aligned_tag}@>
+    @\wgAdd{constexpr void}@ copy_to(U* mem, Flags f@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
 
   // \ref{simd.subscr}, \tcode{simd} subscript operators
   @\wgAdd{constexpr }@reference operator[](size_t);
@@ -994,19 +994,17 @@ template<class U@\wgAdd{, class UAbi}@> @\diffbreak{2}\wgAdd{constexpr explicit(
   \pnum\remarks
   This constructor shall not participate in overload resolution unless
   \wgAdd{\tcode{simd_size_v<U, UAbi> == size()}.}
-  %\begin{wgBRem}
   \begin{itemize}
     \wgItemRem \wgRem{\tcode{abi_type} is \tcode{simd_abi::fixed_size<size()>}, and}
     \wgItemRem \wgRem{every possible value of \tcode{U} can be represented with type \tcode{value_type}, and}
     \wgItemRem \wgRem{if both \tcode{U} and \tcode{value_type} are integral, the integer conversion rank (\mbox{\ref{conv.rank}}) of \tcode{value_type} is greater than the integer conversion rank of \tcode{U}.}
   \end{itemize}
-  %\end{wgBRem}
 
   \begin{wgBAdd}
     \pnum
     \wgAdd{The constructor is \tcode{explicit} iff}
     \begin{itemize}
-      \wgItemAdd \wgAdd{at least on possible value of \tcode{U} cannot be represented with type \tcode{value_type}, or}
+      \wgItemAdd \wgAdd{at least one possible value of \tcode{U} cannot be represented with type \tcode{value_type}, or}
       \wgItemAdd \wgAdd{if both \tcode{U} and \tcode{value_type} are integral types, the integer conversion rank (\mbox{\ref{conv.rank}}) of \tcode{U} is greater than the integer conversion rank of \tcode{value_type}, or}
       \wgItemAdd \wgAdd{if both \tcode{U} and \tcode{value_type} are floating-point types, the floating-point conversion rank (\mbox{\ref{conv.rank}}) of \tcode{U} is greater than the floating-point conversion rank of \tcode{value_type}.}
     \end{itemize}
@@ -1714,13 +1712,14 @@ public:
   template<class U@\wgAdd{, class UAbi}@>
   @\wgAdd{constexpr explicit(\seebelow) }@simd_mask(const simd_mask<U, @\wgChange{simd_abi::fixed_size<size()>}{UAbi}@>&) noexcept;
   @\wgAdd{template<class G> constexpr explicit simd_mask(G\&\& gen) noexcept;}@
-  template<class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr }@simd_mask(const value_type* mem, Flags@\wgAdd{ = \{\}}@);
+  template<class Flags@\wgAdd{ = element_aligned_tag}@>
+    @\wgAdd{constexpr }@simd_mask(const value_type* mem, Flags@\wgAdd{ = \{\}}@);
 
   // \ref{simd.mask.copy}, \wgChange{C}{\tcode{simd_mask} c}opy functions
-  template<class Flags@\wgAdd{ = element_aligned_tag}@>@\diffbreak{4}
-    \wgAdd{constexpr}@ void copy_from(const value_type* mem, Flags@\wgAdd{ = \{\}}@);
-  template<class Flags@\wgAdd{ = element_aligned_tag}@>@\diffbreak{4}
-    \wgAdd{constexpr}@ void copy_to(value_type* mem, Flags@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
+  template<class Flags@\wgAdd{ = element_aligned_tag}@>
+    @\wgAdd{constexpr}@ void copy_from(const value_type* mem, Flags@\wgAdd{ = \{\}}@);
+  template<class Flags@\wgAdd{ = element_aligned_tag}@>
+    @\wgAdd{constexpr}@ void copy_to(value_type* mem, Flags@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
 
   // \ref{simd.mask.subscr}, \wgChange{S}{\tcode{simd_mask} s}ubscript operators
   @\wgAdd{constexpr }@reference operator[](size_t);
