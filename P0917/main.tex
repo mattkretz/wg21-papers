@@ -2,7 +2,7 @@
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
 \newcommand\wgDocumentNumber{D0917R4}
 \newcommand\wgGroup{EWG}
-\newcommand\wgTarget{\CC{}23}
+\newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{ }
 
 \usepackage{mymacros}
@@ -33,6 +33,10 @@
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
 \section{Introduction}
 Most operators in \CC{} can be overloaded.
 The few exceptions are: \code{?:}, \code{::}, \code{.}, \code{.*}.
@@ -881,9 +885,6 @@ It would be possible to extend \code{operator?:} to boolean conditions once lazy
 
 \section{Wording}
 TBD.
-
-\input{changelog}
-\input{strawpolls}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=0

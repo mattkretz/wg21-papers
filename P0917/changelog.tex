@@ -28,6 +28,24 @@
   \todo \code{auto operator?:(T, U) = default} could mean \code{common_type_t<T, U> operator?:(...)}, i.e. synthesize a builtin operator using \code{common_tpye} for the return type.
   \todo Explore: Definition of \code{operator?:(Cond, A, B)} automatically synthesizes \code{operator?:(Cond, B, A)} calling the former.
         (Note, there are no compatibility issues like for defaulted compares.)
+  \todo More motivation: P2655R1 "\code{common_reference_t} of \code{reference_wrapper} should be a reference type".
+        P2655R1 resolves the problem via another template specialization. Instead making \code{operator?:} do the right thing would be more generic and an obvious fix for the type's semantics.
+        \todo Units example:
+        \begin{lstlisting}[style=Vc]
+        quantity<isq::speed[km / h]> speed_1 = 42 * isq::speed[m / s];
+        quantity<isq::speed[m / s]> speed_2 = 42 * isq::speed[km / h];
+        quantity_of<isq::speed> auto speed_3 = speed_1 + speed_2;
+
+        using ct = std::common_type_t<decltype(speed_1), decltype(speed_2)>;
+
+        static_assert(std::is_same_v<ct, decltype(speed_3)>);
+        static_assert(std::is_same_v<ct, quantity<reference<
+          isq::speed, scaled_unit<mag<ratio{1, 18}>, derived_unit<si::metre,
+                                                       per<si::second>>>{}>{}>>);
+
+        // this cannot but should work:
+        quantity_of<isq::speed> auto = cond ? speed_1 : speed_2;
+        \end{lstlisting}
 \end{revision}
 
   %\todo Discuss implications for “contextually convertible to \bool” implementations.
