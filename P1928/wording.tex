@@ -1710,7 +1710,7 @@ public:
   // \ref{simd.mask.ctor}, \wgChange{C}{\tcode{simd_mask} c}onstructors
   @\wgAdd{constexpr} @explicit simd_mask(value_type) noexcept;
   template<class U@\wgAdd{, class UAbi}@>
-  @\wgAdd{constexpr explicit(\seebelow) }@simd_mask(const simd_mask<U, @\wgChange{simd_abi::fixed_size<size()>}{UAbi}@>&) noexcept;
+    @\wgAdd{constexpr explicit(sizeof(U) != sizeof(T)) }@simd_mask(const simd_mask<U, @\wgChange{simd_abi::fixed_size<size()>}{UAbi}@>&) noexcept;
   @\wgAdd{template<class G> constexpr explicit simd_mask(G\&\& gen) noexcept;}@
   template<class Flags@\wgAdd{ = element_aligned_tag}@>
     @\wgAdd{constexpr }@simd_mask(const value_type* mem, Flags@\wgAdd{ = \{\}}@);
@@ -1803,7 +1803,8 @@ static constexpr @\wgChange{size_t size() noexcept}{typename simd_size<T, Abi>::
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U> @\wgAdd{constexpr }@simd_mask(const simd_mask<U, simd_abi::fixed_size<size()>>& x) noexcept;
+template<class U@\wgAdd{, class UAbi}@>
+  @\wgAdd{constexpr explicit(sizeof(U) != sizeof(T)) }@simd_mask(const simd_mask<U, @\wgChange{simd_abi::fixed_size<size()>}{UAbi}@>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1811,12 +1812,12 @@ template<class U> @\wgAdd{constexpr }@simd_mask(const simd_mask<U, simd_abi::fix
   Constructs an object of type \tcode{simd_mask} where the $i^\text{th}$ element equals \tcode{x[$i$]} \foralli.
 
   \pnum\remarks
-  This constructor shall not participate in overload resolution unless \tcode{abi_type} is \tcode{simd_abi::fixed_size<size()>}.
+  This constructor shall not participate in overload resolution unless \wgChange{\tcode{abi_type} is \tcode{simd_abi::fixed_size<size()>}}{\tcode{simd_size_v<U, UAbi> == size()}}.
 \end{itemdescr}
 
 \begin{wgBAdd}
 \begin{itemdecl}
-@\wgAdd{template<class G> constexpr simd_mask(G\&\& gen) noexcept;}@
+@\wgAdd{template<class G> constexpr explicit simd_mask(G\&\& gen) noexcept;}@
 \end{itemdecl}
 
 \begin{itemdescr}
