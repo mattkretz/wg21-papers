@@ -577,29 +577,6 @@ int count_positive(const std::vector<float>& x)
 Note that the compiler I used implements the ADL fix proposed in \cite{P2600R0}
 and implements \code{opertaor?:} overloading as explored in \cite{D0917}.
 
-\begin{itemize}
-  \item The function \code{f0} scales all positive values in \code{x} by 2.
-    The compiler contracts the blending of \code{2 * x} and \code{x} with the
-    multiply operation (a left shift by 1) to a masked left shift instruction.
-
-  \item The functions \code{f1} and \code{f2} both return a \code{simd<int>}
-    where all positive entries of \code{x} are replaced by 1 and the remaining
-    entries are 0.
-    I.e. converting the comparison result to \code{simd} works analogue to
-    promotion of \bool to \intt.
-
-  \item The functions \code{f3} and \code{f4} both return a \code{simd<int>}
-    where all positive entries of \code{x} are replaced by -1 and the remaining
-    entries are 0.
-    The ISA allows a more efficient translation and the compiler recognizes the
-    pattern in both variants.
-
-  \item Finally, to complete the set, \code{f5} shows how one could even blend
-    \code{bool} arguments into a \code{simd_mask}.
-    The compiler recognizes that the conditional operator is a no-op and simply
-    returns the result of the comparison itself.
-\end{itemize}
-
 \begin{lstlisting}[numbers=left,float={hbtp},label=lst:simdconditionals,caption={
     \code{simd} conditionals without \code{where} and with \cite{P2600R0} and \cite{D0917}, showing the corresponding assembly output (\code{gcc -O2 -std=c++23 -march=skylake-avx512}; personal GCC 12.1 branch with patches implementing \cite{P2600R0} and \cite{D0917})
 }]
@@ -647,6 +624,29 @@ auto f5(std::simd<int> x) { return x > 0 ? true : false; }
 	ret
 */
 \end{lstlisting}
+
+\begin{itemize}
+  \item The function \code{f0} scales all positive values in \code{x} by 2.
+    The compiler contracts the blending of \code{2 * x} and \code{x} with the
+    multiply operation (a left shift by 1) to a masked left shift instruction.
+
+  \item The functions \code{f1} and \code{f2} both return a \code{simd<int>}
+    where all positive entries of \code{x} are replaced by 1 and the remaining
+    entries are 0.
+    I.e. converting the comparison result to \code{simd} works analogue to
+    promotion of \bool to \intt.
+
+  \item The functions \code{f3} and \code{f4} both return a \code{simd<int>}
+    where all positive entries of \code{x} are replaced by -1 and the remaining
+    entries are 0.
+    The ISA allows a more efficient translation and the compiler recognizes the
+    pattern in both variants.
+
+  \item Finally, to complete the set, \code{f5} shows how one could even blend
+    \code{bool} arguments into a \code{simd_mask}.
+    The compiler recognizes that the conditional operator is a no-op and simply
+    returns the result of the comparison itself.
+\end{itemize}
 
 \subsection{Clean up math function overloads}
 The wording that produces \code{simd} overloads misses a few cases and leaves room for ambiguity.
