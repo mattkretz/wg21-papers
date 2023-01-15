@@ -769,9 +769,13 @@ The wording that produces \code{simd} overloads misses a few cases and leaves ro
 There is also no explicit mention of integral overloads that are supported in \code{<cmath>} (e.g. \code{std::cos(1)} calling \code{std::cos(double)}).
 At the very least, \code{std::abs(simd<\textit{signed-integral}>)} should be specified.
 
-Also, from implementation experience ``undefined behavior'' for domain, pole, or range error is unnecessary.
-It could either be an unspecified result or even match the expected result of the function according to Annex F in the C standard.
-The latter could also be only a recommendation, i.e. QoI.
+Also, from implementation experience, ``undefined behavior'' for domain, pole,
+or range error is unnecessary.
+It could either be an unspecified result or even match the expected result of
+the function according to Annex F in the C standard.
+The latter could possibly be a recommendation, i.e. QoI.
+The intent is to avoid \code{errno} altogether, while still supporting
+floating-point exceptions (possibly depending on compiler flags).
 
 This needs more work and is not reflected in the wording at this point.
 
