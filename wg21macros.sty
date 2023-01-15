@@ -314,17 +314,17 @@
 
 \newcounter{TonyTable}
 
-\newenvironment{tonytable}[1]{%
+\newenvironment{tonytable}[2][before]{%
 \renewcommand\tablename{Tony Table}%
 \let\prevthetable\thetable%
 \addtocounter{table}{-1}%
 \stepcounter{TonyTable}%
 \renewcommand\thetable{\arabic{TonyTable}}%
-\begin{table}[h]
-\caption{#1}
+\begin{table}[hbtp]
+\caption{#2}
 \smaller%
 \begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
-before&with \wgDocumentNumber\\
+#1&with \wgDocumentNumber\\
 \hline
 }{%
 \end{tabular}%

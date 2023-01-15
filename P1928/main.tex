@@ -228,7 +228,7 @@ value-preserving (same wording as in the TS).
 
 This resolves major inconveniences when working with mixed-precision
 operations (cf. \ttref{tt:better with conv ctors}).
-\begin{tonytable}{Improved generic code after adding converting constructors}\label{tt:better with conv ctors}
+\begin{tonytable}[Parallelism TS 2]{Improved generic code after adding converting constructors}\label{tt:better with conv ctors}
   \begin{lstlisting}
 namespace stdx = std::experimental;
 
@@ -331,7 +331,7 @@ Since we allow all conversions covered by \stdx\code{simd_cast} and
 functions can be removed altogether.
 The lost feature (cast via element type) can be replaced using
 \code{rebind_simd} as shown in \ttref{tt:tsvsp1928casts}.
-\begin{tonytable}{Casting without specifying the target ABI tag}\label{tt:tsvsp1928casts}
+\begin{tonytable}[Parallelism TS 2]{Casting without specifying the target ABI tag}\label{tt:tsvsp1928casts}
   \begin{lstlisting}
 template <typename V>
 void f(V x)
@@ -541,11 +541,32 @@ That work is currently blocked on \cite{P2600R0}.
 
 \subsubsection{Proposed replacements for \code{where}}
 
+This paper proposes the following replacements for \stdx\code{where}:
+
 \begin{itemize}
-  \item \code{auto conditional_operator(simd_mask, \textit{simd_like},
-    \textit{simd_like})}\footnote{to be replaced by an actual \code{operator?:}
-      overload as soon as EWG lifts the restriction\ldots}
-  \item Facilities for converting \code{simd_mask<T>} to \code{simd<T>} with
+  \item overloads for \code{simd\MayBreak{}::\MayBreak{}copy_from},
+    \code{simd\MayBreak{}::\MayBreak{}copy_to},
+    \code{simd_mask\MayBreak{}::\MayBreak{}copy_from},
+    \code{simd_mask\MayBreak{}::\MayBreak{}copy_to}, \code{reduce},
+    \code{hmin}, and \code{hmax} with additional \code{simd_mask} parameter
+
+  \item hidden friend \code{operator?:}\footnote{to be replaced by an actual
+    \code{operator?:} overload as soon as EWG lifts the restriction\ldots} /
+    \code{conditional_operator} functions in \code{simd} and \code{simd_mask}:
+    \begin{itemize}
+      \item \lstinline@simd simd::operator?:(mask_type, simd, simd)@
+      \item \lstinline@template <class U1, class U2>@\\
+        \lstinline@requires convertible_to<simd_mask, rebind_simd_t<common_type_t<U1, U2>, simd_mask>@\\
+        \lstinline@friend constexpr rebind_simd_t<common_type_t<U1, U2>, simd_type>@\\
+        \lstinline@simd_mask::operator?:(simd_mask, U1, U2)@
+      \item \lstinline@simd_mask simd_mask::operator?:(simd_mask, simd_mask, simd_mask)@
+      \item \lstinline@simd_mask simd_mask::operator?:(simd_mask<K, KAbi>, simd_mask, simd_mask<U, UAbi>)@\\
+        (for disambiguation of the above because \code{simd_mask}s can be interconvertible)
+      \item \lstinline@simd_mask simd_mask::operator?:(simd_mask, bool, bool)@\\
+        (for consistency; it's not very useful)
+    \end{itemize}
+
+  \item facilities for converting \code{simd_mask<T>} to \code{simd<T>} with
     values \code{0} or \code{1}:
     \begin{itemize}
       \item unary \code{simd_mask::operator+}
@@ -555,20 +576,7 @@ That work is currently blocked on \cite{P2600R0}.
     \end{itemize}
 \end{itemize}
 
-\begin{lstlisting}[numbers=left,float={hbtp},label=lst:mixedsimdandmask,caption={
-    Binary operations involving \code{simd_mask} and \code{simd}
-}]
-using floatv = std::simd<float>;
-using intv = std::rebind_simd_t<int, floatv>;
-
-int count_positive(const std::vector<float>& x)
-{
-  intv counter = {};
-  for (std::size_t i = 0; i + floatv::size <= x.size(); i += floatv::size) {
-    counter += floatv(&x[i]) > 0;
-  counter += x > 0;
-}
-\end{lstlisting}
+(Wording for the above is still TBD.)
 
 \subsubsection{Examples}
 
@@ -647,6 +655,114 @@ auto f5(std::simd<int> x) { return x > 0 ? true : false; }
     The compiler recognizes that the conditional operator is a no-op and simply
     returns the result of the comparison itself.
 \end{itemize}
+
+\begin{tonytable}[Parallelism TS 2]{Counting positive values in a \std\code{vector}}\label{tt:countingexample}
+  \begin{lstlisting}
+namespace stdx = std::experimental;
+int count_positive(
+  const std::vector<stdx::native_simd<float>>& x)
+{
+  // simplify generated assembly:
+  if (x.size() == 0) std::unreachable();
+  using floatv = stdx::native_simd<float>;
+  using intv = stdx::rebind_simd_t<int, floatv>;
+  intv counter = {};
+  for (stdx::simd v : x) {
+    auto k = stdx::static_simd_cast<
+               intv::mask_type>(v > 0);
+    ++where(k, counter);
+  }
+  return reduce(counter);
+}
+/*	mov	edx, 1
+	mov	rcx, QWORD PTR [rdi+8]
+	mov	rax, QWORD PTR [rdi]
+	vpxor	xmm0, xmm0, xmm0
+	vxorps	xmm2, xmm2, xmm2
+	vpbroadcastd	zmm1, edx
+.L12:
+	vcmpps	k1, zmm2, ZMMWORD PTR [rax], 1
+	add	rax, 64
+
+	vpaddd	zmm0{k1}, zmm0, zmm1
+	cmp	rcx, rax
+	jne	.L12
+	vmovdqa	ymm1, ymm0
+	vextracti64x4	ymm0, zmm0, 0x1
+	vpaddd	ymm0, ymm1, ymm0
+	vmovdqa	xmm1, xmm0
+	vextracti64x2	xmm0, ymm0, 0x1
+	vpaddd	xmm1, xmm1, xmm0
+	vpshufd	xmm0, xmm1, 27
+	vpaddd	xmm0, xmm0, xmm1
+	vpunpckhqdq	xmm1, xmm0, xmm0
+	vpaddd	xmm0, xmm0, xmm1
+	vmovd	eax, xmm0
+	vzeroupper
+	ret
+*/
+  \end{lstlisting}
+  &
+  \begin{lstlisting}
+
+int count_positive(
+  const std::vector<std::simd<float>>& x)
+{
+  // simplify generated assembly:
+  if (x.size() == 0) std::unreachable();
+  using floatv = std::simd<float>;
+  using intv = std::rebind_simd_t<int, floatv>;
+  intv counter = {};
+  for (std::simd v : x) {
+    counter += v > 0;
+
+
+  }
+  return reduce(counter);
+}
+/*	mov	edx, 1
+	mov	rcx, QWORD PTR [rdi+8]
+	mov	rax, QWORD PTR [rdi]
+	vpxor	xmm0, xmm0, xmm0
+	vxorps	xmm3, xmm3, xmm3
+	vpbroadcastd	zmm2, edx
+.L9:
+	vcmpps	k1, zmm3, ZMMWORD PTR [rax], 1
+	add	rax, 64
+	vmovdqa32	zmm1{k1}{z}, zmm2
+	vpaddd	zmm0, zmm0, zmm1
+	cmp	rcx, rax
+	jne	.L9
+	vmovdqa	ymm1, ymm0
+	vextracti64x4	ymm0, zmm0, 0x1
+	vpaddd	ymm0, ymm1, ymm0
+	vmovdqa	xmm1, xmm0
+	vextracti64x2	xmm0, ymm0, 0x1
+	vpaddd	xmm1, xmm1, xmm0
+	vpshufd	xmm0, xmm1, 27
+	vpaddd	xmm0, xmm0, xmm1
+	vpunpckhqdq	xmm1, xmm0, xmm0
+	vpaddd	xmm0, xmm0, xmm1
+	vmovd	eax, xmm0
+	vzeroupper
+	ret
+*/
+  \end{lstlisting}
+\end{tonytable}%
+
+\ttref{tt:countingexample} presents an algorithm for counting all positive
+\code{float} values in a \code{std::vector}.
+For simplicity, the code uses \code{vector<simd<float>>} and assumes the \code{vector}
+is not empty.
+If a \code{simd_mask} implicitly converts to a \code{simd} (as proposed and
+analogue to \code{bool}), the code is simplified significantly.
+However, at this point, the TS implementation compiles to a masked add
+instruction while the implementation for this paper does not.
+The difference is that the former executes an unmasked addition followed up by
+a masked assignment while the latter converts the mask into a \code{simd} of 1s
+and 0s followed up by an unmasked addition.
+The compiler needs to recognize this pattern in order to reach the same
+performance (QoI).
 
 \subsection{Clean up math function overloads}
 The wording that produces \code{simd} overloads misses a few cases and leaves room for ambiguity.
