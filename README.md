@@ -18,6 +18,7 @@ This repository holds the LuaLaTeX sources for my papers to the C++ committee.
 | TODO                             | [DDSHR](https://web-docs.gsi.de/~mkretz/DDSHR.pdf) | `= delete` should have a reason           | drafting                   |
 | [P2600](https://wg21.link/p2600) | [D2600](https://web-docs.gsi.de/~mkretz/D2600.pdf) | A minimal ADL restriction to avoid ill-formed template instantiation | EWG                   |
 | [P2614](https://wg21.link/p2614) | [D2614](https://web-docs.gsi.de/~mkretz/D2614.pdf) | Deprecate numeric_limits::has_denorm      | LEWG online voting    |
+| [P2772](https://wg21.link/p2772) | [D2772](https://web-docs.gsi.de/~mkretz/D2772.pdf) | `std::integral_constant` literals do not suffice — `constexpr_t`? | LEWG |
 
 
 To build the papers you need make, LuaLaTeX (only tested with a recent TeXLive distribution), and Biber.

@@ -1,0 +1,262 @@
+\newcommand\wgTitle{\code{std::integral\_constant} literals do not suffice --- \code{constexpr\_t}?}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{P2772R0}
+\newcommand\wgGroup{LEWG-I, LEWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+%\setcounter{tocdepth}{2} % show sections and subsections in TOC
+%\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+%\usepackage{comment}
+
+\addbibresource{extra.bib}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  \textcite{P2725R0} proposes user-defined literals for simpler use of
+  \code{std::integral_constant}, simplifying basically a notion of passing
+  \code{constexpr} function arguments.
+  I fully support the idea, but I believe it does not cover the complete
+  problem \& design space.
+  In this paper I show the use cases and solutions that I believe need to be
+  considered at the same time.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+%\input{changelog}
+%\input{strawpolls}
+
+\section{Introduction}
+I am convinced we need simpler and shorter syntax for passing constant
+expressions to functions.
+Especially if the function cannot easily resort to an NTTP (operator overload
+or member function that often would require the \code{template} keyword when
+called).
+
+My solution idea started from \lst{lst:idea1}, which uses the variable template
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:idea1,caption={
+    \code{integral_constant} from variable template
+}]
+template <auto N>
+inline constexpr std::integral_constant<decltype(N), N> Const = {};
+
+template <typename T>
+struct my_complex
+{
+  T re, im;
+};
+
+template <typename T>
+struct X
+{
+  void f(auto c) {
+    // c can be used in constant expressions here
+  }
+};
+
+inline constexpr short foo = 2;
+
+template <typename T>
+void g(X<T> x) {
+  x.f(Const<1>);
+  x.f(Const<2uz>);
+  x.f(Const<3.0>);
+  x.f(Const<4.f>);
+  x.f(Const<foo>); // P2725R0 doesn't solve this
+  x.f(Const<my_complex(1.f, 1.f)>); // nor this
+}
+\end{lstlisting}
+\code{Const} for constructing objects of type \code{integral_constant}.
+When passed as deduced function parameter, the value can be used in constant
+expressions in the function body.
+In \lst{lst:idea1} the alternative is an NTTP to the function \code{f}, making
+all calls in \code{g} look like \code{x.template f<1>()}.
+
+The first four calls to \code{f} in \lst{lst:idea1} are possible with P2725R0,
+but the last two are not.
+P2725R0 can only turn integer literals into \code{integral_constant}s.
+The problem space is larger than what P2725R0 solves.
+Nevertheless, integer literals are a common case and therefore the solution of
+P2725R0 seems what we want, just incomplete.
+I think a viable outcome could be to add both `1ic` and `std::cnst<1>` at the
+same time.\footnote{I'd like to write \code{std::const<1>}, but arrgh.
+  `std::constant<1>` is a bit too long for my taste.}
+I believe there is no good rationale for adding \emph{only}
+\code{integral_constant} literals.
+Simple tasks such as, how do I write an \code{integral_constant} for
+\code{INT_MAX}, \code{std::numeric_limits<int>::max()}, or any other constexpr
+variable?
+Should \std\code{integral_constant<decltype(foo), foo>\{\}} really be our only answer?
+
+\section{wait, what? \code{integral_constant<double>}?}
+Oh, not to forget.
+I instantiated \code{integral_constant<double>} (and \code{float} and
+\code{my_complex}) in \lst{lst:idea1}.
+\code{integral_constant} is misnamed nowadays.
+Should it be constrained to integers (for no good reason other than the name)?
+Or should we consider a new type so that our type names can still be used to carry intent?
+
+A type for passing any possible NTTP could e.g. be named \code{constexpr_t}:
+\medskip\begin{lstlisting}[style=Vc]
+template <auto Value>
+struct constexpr_t {
+  using value_type = decltype(Value);
+  using type = constexpr_t;
+  static inline constexpr value_type value = Value;
+  constexpr operator value_type() const noexcept { return Value; }
+  static constexpr value_type operator()() noexcept { return Value; }
+};
+\end{lstlisting}
+
+\section{A compile-time numeric type}
+\textcite{P2725R0} proposes the addition of unary minus to \code{integral_constant}.
+That's a breaking change, as shown by \lst{lst:breaking}.
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:breaking,caption={
+    Adding unary minus to \code{integral_constant} is a breaking change
+}]
+void f(std::same_as<int> auto);
+
+void g(auto x) {
+  f(-x); //valid now, ill-formed with P2725R0:
+}
+
+void h() {
+  g(std::integral_constant<int, 1>());
+}
+\end{lstlisting}
+
+In addition, the return type of unary minus is controversial.
+\code{-short(1)} is of type \code{int}.
+Whether you dislike integral promotions it or not, that would be inconsistent
+with \code{integral_constant\MayBreak{}::\MayBreak{}operator-()} returning
+\code{integral_constant<short, ...>}.
+
+While the proposed return type seems to be an improvement, what about a
+user-defined structural type that returns a different type on unary minus?
+\code{bounded\MayBreak{}::\MayBreak{}integer} \cite{site.bounded-integer} is an example of such a
+type (though not structural).
+Example:
+\medskip\begin{lstlisting}
+  bounded::integer<1, 10> a;
+  auto b = -a; // b is bounded::integer< -10, -1>
+\end{lstlisting}
+For such a case we need \code{integral_constant::operator-} to return
+\code{decltype(-std\MayBreak{}::\MayBreak{}declval<T>())}.
+
+Finally, adding only unary minus is inconsistent.
+We should then also add unary plus and unary tilde (bit flip).
+
+And why stop with unary operators?
+Binary operators are also missing.
+
+If we want an \code{integral_constant} type that implements unary minus, I
+believe we need to have a new type.
+E.g. \code{std::numeric_constant<auto value>} that requires the NTTP to have the properties of a numeric type.
+Such a type would then overload all operators accordingly, similar to \code{boost::hana::integral_constant}.
+See \url{https://godbolt.org/z/vdzzdKdKz}.
+
+
+\section{Context \& unbaked explorations}
+My original angle was the exploration of possible APIs for simple integration
+of \code{std::simd} into the ranges and container world.
+
+\begin{enumerate}
+  \item \code{std::simd::size} shouldn't be a function, but an
+    \code{integral_constant}.
+    (You can still call it like a function.)
+    \code{std::array::size} should also be changed to be an
+    \code{integral_constant} (same for spans of static extent).
+
+    Changing \code{array::size} should be a non-breaking change.
+    The user code that could get broken is not allowed AFAIU.
+    (“Moreover, the behavior of a C++ program is unspecified (possibly
+      ill-formed) [\ldots] if it attempts to form a pointer-to-member
+      designating [\ldots] a standard library non-static member function [\ldots].”
+    \url{https://eel.is/c++draft/constraints#namespace.std-6})
+
+  \item I've been playing with (needs my GCC branch for non-member
+    \code{operator[]}):
+\medskip\begin{lstlisting}
+constexpr std::span<...>
+operator[](std::ranges::contiguous_range auto&&,
+           index_like auto first, index_like auto size)
+\end{lstlisting}
+    I.e. similar to \code{submdrange}'s \code{strided_index_range}, I was
+    looking at index ranges.
+    If you pass an \code{integral_constant} size, you get a \code{span} of
+    static extent which can CTAD into a \code{std::simd}.
+    Result:
+\medskip\begin{lstlisting}[style=Vc]
+std::vector<float> x = ...;
+std::simd v = x[0, 8ic];
+std::simd w = x[0, std::simd<float>::size];
+\end{lstlisting}
+    Literals as proposed by \textcite{P2725R0} make this code much simpler to read and write!
+\end{enumerate}
+
+For the second point, my prototype code is at:\\
+\url{https://github.com/mattkretz/index-range-subscripting/blob/main/subscript.h#L71}
+
+Given:
+\medskip\begin{lstlisting}[style=Vc]
+  std::vector<float> data;
+  const auto& cdata = data;
+\end{lstlisting}
+
+I can write:
+\begin{enumerate}
+  \item \lstinline@data[1u, Const<4>]@ returning a \lstinline@span<float, 4>@
+
+  \item \lstinline@cdata[1u, Const<4>]@ returning a \lstinline@span<const float, 4>@
+
+  \item \lstinline@data[1, Const<4>]@ returning a \lstinline@span<float, dynamic_extent>@
+
+  \item \lstinline@data[1u, Const<-4>]@ returning a \lstinline@span<float, dynamic_extent>@
+
+  \item \lstinline@data[-1, Const<-4>]@ returning a \lstinline@span<float, dynamic_extent>@
+
+  \item \lstinline@data[Const<-1>, Const<-4>]@ ERROR: index range results in negative size
+
+  \item \lstinline@data[Const<-4>, Const<-1>]@ returning a \lstinline@span<float, 4>@
+
+  \item \lstinline@data[Const<-1>, Const<4>]@ ERROR: index range exceeds bounds
+
+  \item \lstinline@(data | transform(...))[1, 5]@ returning a \lstinline@subrange<...>@
+\end{enumerate}
+
+And, can I have more crazy\ldots? After I can write
+\medskip\begin{lstlisting}[style=Vc]
+  std::simd v = data[1u, std::simd<float>::size];
+\end{lstlisting}
+
+I want to write
+\medskip\begin{lstlisting}[style=Vc]
+  data[1u, v.size] = v;
+\end{lstlisting}
+
+This requires a new \code{span::operator=}.
+Or a non-member \code{operator=} so that I can implement it as a hidden friend
+in \code{simd}?
+
+The more I think of it, the more I like the direction.
+Originally, I wanted to only allow non-member \code{operator[]} and non-member
+\code{operator?:} overloads.
+But by now I'm ready to propose that we should simply make all operators the
+same, i.e. allow non-member overloads for \code{[]}, \code{()}, \code{=}, and
+\code{->} in addition to allowing member and non-member operator?: (even if I
+  see little use for member \code{operator?:} --- but consistency wins over my
+imagination).
+
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
