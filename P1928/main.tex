@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Merge data-parallel types from the Parallelism TS 2}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P1928R2}
+\newcommand\wgDocumentNumber{D1928R3}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{ }
@@ -779,10 +779,97 @@ floating-point exceptions (possibly depending on compiler flags).
 
 This needs more work and is not reflected in the wording at this point.
 
+%Wording idea:
+%\begin{wgText}
+%  \setcounter{Paras}{2}
+%  \pnum
+%  For each function with at least one parameter of type
+%  \term{floating-point-type} other than \tcode{abs}, the implementation also
+%  provides additional overloads sufficient to ensure that:
+%  \begin{enumerate}
+%    \item If at least one argument has a type that is a specialization of \tcode{simd}, then,
+%      \begin{itemize}
+%        \item if any two arguments are specializations of \tcode{simd} with
+%          different width, then overload resolution does not result in a usable
+%          candidate ([over.match.general]) from the overloads provided by the
+%          implementation; otherwise
+%        % now all simd arguments have equal width, or arguments are non-simd
+%        \item every argument that is a specialization of \tcode{simd} 
+%      \end{itemize}
+%      if every argument corresponding to a \term{floating-point-type} parameter
+%      has arithmetic type or is a specialization of \tcode{simd}, then every
+%      such
+%      argument is effectively cast to the floating-point type with the greatest
+%      floating-point conversion rank and greatest floating-point conversion
+%      subrank among the types of all such arguments, where arguments of integer
+%      type are considered to have the same floating-point conversion rank as
+%      \tcode{double}.
+%
+%    \item Otherwise, if every argument corresponding to a
+%      \term{floating-point-type} parameter has arithmetic type, then every such
+%      argument is effectively cast to the floating-point type with the greatest
+%      floating-point conversion rank and greatest floating-point conversion
+%      subrank among the types of all such arguments, where arguments of integer
+%      type are considered to have the same floating-point conversion rank as
+%      \tcode{double}.
+%      If no such floating-point type with the greatest rank and subrank exists,
+%      then overload resolution does not result in a usable candidate
+%      ([over.match.general]) from the overloads provided by the implementation.
+%  \end{enumerate}
+%\end{wgText}
 
 \section{Open questions}
 
-\subsection{Integration with ranges}
+\subsection{Alternatives to \code{hmin} and \code{hmax}}
+The functions \code{hmin(simd)} and \code{hmax(simd)} are basically
+specializations of \code{reduce(simd)}.
+I received feedback asking for better names.
+
+With \CC{}17, there was nothing equivalent to \code{std::plus<>} for minimum
+and maximum.
+Since the merge of Ranges (\CC{}20), we have \std\code{ranges::min} and
+\std\code{ranges::max}.
+The \code{reduce(simd)} specification requires the \code{binary_op} to be
+callable with two \code{simd} arguments, though (split initial argument in
+half, call \code{binary_op}, split again, call \code{binary_op}, \ldots until
+only a scalar is left).
+This doesn't work with \code{std::ranges::min} (and \code{max}) because it
+requires an lvalue reference as return type.
+If we added another \code{operator()} to \code{std::ranges::min}, then their
+use with \code{reduce(simd)} would be slightly inconsistent:
+\medskip\begin{lstlisting}
+simd<unsigned> v = ...;
+auto a = reduce(v, std::bit_and<>); // must type <>
+auto b = reduce(v, std::ranges::min); // must *not* type <>
+\end{lstlisting}
+
+However, if \code{simd} will be an \code{input_range} (see \sect{sec:ranges})
+then the
+\std\code{ranges::min(\MayBreak{}ranges\MayBreak{}::\MayBreak{}input_range
+auto\&\&, ...)} overload matches and \std\code{ranges::min(simd)} works out of
+the box.
+We could then leave it up to QoI to recognize the opportunity for a SIMD
+implementation of the reduction.
+
+Alternatively (or in addition) we could rename the TS functions to
+\code{reduce_min(simd)} and \code{reduce_max(simd)}.
+
+\subsubsection{Suggested Polls}
+
+\wgPoll{We want to do something about \code{hmin} and \code{hmax}; i.e. the TS
+status quo is not acceptable for the IS.}
+{&&&&}
+
+\wgPoll{Rename to \code{reduce_min} and \code{reduce_max}.}
+{&&&&}
+
+\wgPoll{Extend \code{std::ranges::min} and \code{max} to allow prvalue return types.}
+{&&&&}
+
+\wgPoll{Remove \code{hmin} and \code{hmax} expecting \code{simd} to become a range.}
+{&&&&}
+
+\subsection{Integration with ranges}\label{sec:ranges}
 \code{simd} itself is not a container.
 The value of a data-parallel object is not an array of elements but rather needs to be understood as a single opaque value that happens to have means for reading and writing element values.
 I.e. \code{simd<int> x = \{\};} does not start the lifetime of \type{int} objects.
