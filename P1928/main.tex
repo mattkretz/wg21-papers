@@ -870,8 +870,13 @@ status quo is not acceptable for the IS.}
 {&&&&}
 
 \subsection{Make \code{simd_mask} reductions consistent with \code{<bit>}}
-The functions in \code{<bit>} were added in \CC{}20 and now \code{simd_mask}
-needs to adjust for consistency.
+The functions in \code{<bit>} were added in \CC{}20 \cite{P0553R4} and now
+\code{simd_mask} needs to adjust for consistency.
+Overloads for \code{simd<\textit{unsigned integer type}>} will also have to be
+added.
+But not with this \emph{merge} paper.
+I promise to write a follow-up paper.
+
 The three relevant functions in the TS are
 \begin{itemize}
   \item \code{popcount(simd_mask)} and \code{popcount(}\textit{bool}\code{)}:\\
@@ -881,7 +886,7 @@ The three relevant functions in the TS are
     on the result of a comparison.
     For \code{simd_mask<T>} this operation provides value, for \code{T} it
     simply casts the \code{bool} to an \code{int}.
-    The TS merge therefore will add \code{bool} to the list of valid types for
+    The TS merge would therefore add \code{bool} to the list of valid types for
     \code{popcount}.
 
   \item \code{find_first_set(simd_mask)} and \code{find_first_set(}\textit{bool}\code{)}:\\
@@ -898,8 +903,11 @@ The three relevant functions in the TS are
 I believe we should remove the precondition on the \code{simd_mask} reductions
 and allow masks where \code{none_of} returns \code{true}.
 Then behavior is identical to \code{countl_zero} and \code{countr_zero}.
+The reason for the precondition was efficiency on older ISAs.
+At this point, especially with the precedent set by the \code{count[lr]}
+functions, I don't believe the performance issue is worth the UB.
 
-Renaming the function is not obvious though.
+Renaming the \code{find_first/last_set} functions is not obvious though.
 Consider that a \code{simd_mask k} can be indexed via subscript operator.
 Then \code{k[0]} identifies the first element in \code{k}.
 For all of us who think left-to-right, it would therefore be intuitive to have
