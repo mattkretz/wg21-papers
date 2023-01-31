@@ -827,15 +827,15 @@ I received feedback asking for better names.
 
 With \CC{}17, there was nothing equivalent to \code{std::plus<>} for minimum
 and maximum.
-Since the merge of Ranges (\CC{}20), we have \std\code{ranges::min} and
-\std\code{ranges::max}.
+Since the merge of Ranges (\CC{}20), we have \stdranges\code{min} and
+\stdranges\code{max}.
 The \code{reduce(simd)} specification requires the \code{binary_op} to be
 callable with two \code{simd} arguments, though (split initial argument in
 half, call \code{binary_op}, split again, call \code{binary_op}, \ldots until
 only a scalar is left).
-This doesn't work with \code{std::ranges::min} (and \code{max}) because it
+This doesn't work with \stdranges\code{min} (and \code{max}) because it
 requires an lvalue reference as return type.
-If we added another \code{operator()} to \code{std::ranges::min}, then their
+If we added another \code{operator()} to \stdranges\code{min}, then their
 use with \code{reduce(simd)} would be slightly inconsistent:
 \medskip\begin{lstlisting}
 simd<unsigned> v = ...;
@@ -845,8 +845,8 @@ auto b = reduce(v, std::ranges::min); // must *not* type <>
 
 However, if \code{simd} will be an \code{input_range} (see \sect{sec:ranges})
 then the
-\std\code{ranges::min(\MayBreak{}ranges\MayBreak{}::\MayBreak{}input_range
-auto\&\&, ...)} overload matches and \std\code{ranges::min(simd)} works out of
+\stdranges\code{min(\MayBreak{}ranges\MayBreak{}::\MayBreak{}input_range
+auto\&\&, ...)} overload matches and \stdranges\code{min(simd)} works out of
 the box.
 We could then leave it up to QoI to recognize the opportunity for a SIMD
 implementation of the reduction.
@@ -863,7 +863,7 @@ status quo is not acceptable for the IS.}
 \wgPoll{Rename to \code{reduce_min} and \code{reduce_max}.}
 {&&&&}
 
-\wgPoll{Extend \code{std::ranges::min} and \code{max} to allow prvalue return types.}
+\wgPoll{Extend \stdranges\code{min} and \code{max} to allow prvalue return types.}
 {&&&&}
 
 \wgPoll{Remove \code{hmin} and \code{hmax} expecting \code{simd} to become a range.}
