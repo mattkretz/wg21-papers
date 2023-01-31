@@ -550,9 +550,9 @@ This paper proposes the following replacements for \stdx\code{where}:
     \code{simd_mask\MayBreak{}::\MayBreak{}copy_to}, \code{reduce},
     \code{hmin}, and \code{hmax} with additional \code{simd_mask} parameter
 
-  \item hidden friend \code{operator?:}\footnote{to be replaced by an actual
-    \code{operator?:} overload as soon as EWG lifts the restriction\ldots} /
-    \code{conditional_operator} functions in \code{simd} and \code{simd_mask}:
+  \item hidden friend \code{operator?:}\footnote{as soon as EWG lifts the
+    restriction\ldots} / \code{conditional_operator} functions in \code{simd}
+    and \code{simd_mask}:
     \begin{itemize}
       \item \lstinline@simd simd::operator?:(mask_type, simd, simd)@
       \item \lstinline@template <class U1, class U2>@\\
@@ -569,10 +569,11 @@ This paper proposes the following replacements for \stdx\code{where}:
   \item facilities for converting \code{simd_mask<T>} to \code{simd<T>} with
     values \code{0} or \code{1}:
     \begin{itemize}
-      \item unary \code{simd_mask::operator+}
-      \item unary \code{simd_mask::operator-}
       \item \code{simd_mask::operator simd_type} (not \code{explicit},
         preferably with 4.1 of \cite{P2600R0} adopted)
+      \item unary \code{simd_mask::operator+}; equivalent to \code{+(operator simd_type())}
+      \item unary \code{simd_mask::operator-}; equivalent to \code{-(operator simd_type())}
+      \item unary \code{simd_mask::operator\~{}}; equivalent to \code{\~{}(operator simd_type())}
     \end{itemize}
 \end{itemize}
 
