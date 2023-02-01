@@ -544,11 +544,13 @@ That work is currently blocked on \cite{P2600R0}.
 This paper proposes the following replacements for \stdx\code{where}:
 
 \begin{itemize}
-  \item overloads for \code{simd\MayBreak{}::\MayBreak{}copy_from},
+  \item Overloads for \code{simd\MayBreak{}::\MayBreak{}copy_from},
     \code{simd\MayBreak{}::\MayBreak{}copy_to},
     \code{simd_mask\MayBreak{}::\MayBreak{}copy_from},
     \code{simd_mask\MayBreak{}::\MayBreak{}copy_to}, \code{reduce},
-    \code{hmin}, and \code{hmax} with additional \code{simd_mask} parameter
+    \code{hmin}, and \code{hmax} with additional \code{simd_mask} parameter.
+
+    There are still open questions on these functions, discussed in \sect{sec:maskedOverloads}.
 
   \item hidden friend \code{operator?:}\footnote{as soon as EWG lifts the
     restriction\ldots} / \code{conditional_operator} functions in \code{simd}
@@ -1048,8 +1050,61 @@ It can be added back later if really needed.
 \wgPoll{Do note merge / remove \code{some_of}.}
 {&&&&}
 
+\subsection{Argument order and naming of masked overloads}\label{sec:maskedOverloads}
+
+In the TS, where-expressions made it possible to reuse existing function names
+and argument orders for masked operations.
+With the removal of where-expressions the mask must become a function argument.
+See \tabref{tab:callsWithoutWhere} for a possible pattern to replace where-expressions.
+\begin{beforeaftertable}[Parallelism TS 2 & possible replacement]{Possible replacement for where-expressions}
+  \label{tab:callsWithoutWhere}
+  \begin{lstlisting}
+stdx::native_simd<float> v = ...;
+where(v > 0, v).copy_from(ptr, stdx::element_aligned);
+where(v < 0, v).copy_to(ptr, stdx::element_aligned);
+float pos_sum = reduce(where(v > 0, v));
+  \end{lstlisting}
+  &
+  \begin{lstlisting}
+std::simd<float> v = ...;
+v.copy_from_if(ptr, v > 0);
+v.copy_to_if(ptr, v < 0);
+float pos_sum = reduce_if(v, v > 0);
+  \end{lstlisting}
+\end{beforeaftertable}%
+
+There are more options, of course.
+E.g. possible replacements for \stdx\code{where_expression::copy_from}:
+\begin{itemize}
+  \item \lstinline@v.copy_from_if(v > 0, ptr)@\\
+    Here the condition directly follows the word ``if'', which seems helpful.
+    However:
+  \item \lstinline@v.copy_from_if(ptr, v > 0)@\\
+    This argument order follows precedent from algorithms, which always append
+    the predicate to the list of arguments (e.g. \code{copy_if(first, last,
+    d_first, pred)}).
+    In addition, the argument order matches the order of words in the function
+    name: ``from'' --- \code{ptr}, ``if'' --- \code{mask}.
+  \item \lstinline@v.copy_from(v > 0, ptr)@
+  \item \lstinline@v.copy_from(ptr, v > 0)@
+  \item \lstinline@v.copy_from_where(v > 0, ptr)@
+  \item \lstinline@v.copy_from_where(ptr, v > 0)@
+\end{itemize}
+
+The TS has no facility for masked load constructors.
+I did not receive feedback that such a constructor is needed/wanted, so this paper will not propose one.
+
+I propose to append \code{_if} to the masked functions and append the mask
+argument (but before default arguments or additional arguments required for
+masked operations, such as the \code{identity_element} in \code{reduce}).
+
+\subsubsection{Suggested Polls}
+
+\wgPoll{The names of masked ``overloads'' should include an \code{if} and follow the argument order proposed in \wgDocumentNumber{} \sect{sec:maskedOverloads}}
+{&&&&}
+
 \subsection{Integration with ranges}\label{sec:ranges}
-\code{simd} itself is not a container.
+\code{simd} itself is not a container \cite{P0851R0}.
 The value of a data-parallel object is not an array of elements but rather needs to be understood as a single opaque value that happens to have means for reading and writing element values.
 I.e. \code{simd<int> x = \{\};} does not start the lifetime of \type{int} objects.
 This implies that \code{simd} cannot model a contiguous range but only a random-access range.

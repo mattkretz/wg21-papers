@@ -311,6 +311,20 @@
   \bigskip
 }
 
+\newcommand{\tabref}[1]{Table~\ref{#1}}
+
+\newenvironment{beforeaftertable}[2][before & after]{%
+\begin{table}[hbtp]
+\caption{#2}
+\smaller%
+\begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
+#1 \\
+\hline
+}{%
+\end{tabular}%
+\end{table}%
+}
+
 \newcommand{\ttref}[1]{Tony~Table~\ref{tt:#1}}
 
 \newcounter{TonyTable}
