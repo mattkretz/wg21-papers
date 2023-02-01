@@ -39,6 +39,7 @@
 \item Remove \code{some_of}.
 \item Add unary \code{\~{}} to \code{simd_mask}.
 \item Discuss and ask for confirmation of masked ``overloads'' names and argument order.
+\item Resolve inconsistencies wrt. \code{int} and \code{size_t}: Change \code{fixed_size} and \code{resize_simd} NTTPs from \code{int} to \code{size_t} (for consistency).
   \todo Replace \code{where} wording.
   \todo Apply the new library specification style from P0788R3.
   \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.

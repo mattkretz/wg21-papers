@@ -41,8 +41,8 @@ The intent is to support acceleration through data-parallel execution resources,
 namespace std@\wgRem{::experimental \{ inline namespace parallelism_v2}@ {
   namespace simd_abi {
     using scalar = @\seebelow@;
-    template<@\wgAdd{class T, }@int N> using fixed_size = @\seebelow@;
-    template<class T> inline constexpr int max_fixed_size = @\impdef;\diffbreak{4}%
+    template<@\wgAdd{class T, }\wgChange{int}{size_t}@ N> using fixed_size = @\seebelow@;
+    template<class T> inline constexpr @\wgChange{int}{size_t}@ max_fixed_size = @\impdef;\diffbreak{4}%
     \wgRem{template<class T> using compatible = \impdef;}@
     template<class T> using native = @\impdef@;
 
@@ -82,18 +82,18 @@ namespace std@\wgRem{::experimental \{ inline namespace parallelism_v2}@ {
 
   template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   template<class T, class V> using rebind_simd_t = typename rebind_simd<T, V>::type;
-  template<int N, class V> struct resize_simd { using type = @\seebelow@; };
-  template<int N, class V> using resize_simd_t = typename resize_simd<N, V>::type;
+  template<@\wgChange{int}{size_t}@ N, class V> struct resize_simd { using type = @\seebelow@; };
+  template<@\wgChange{int}{size_t}@ N, class V> using resize_simd_t = typename resize_simd<N, V>::type;
 
   // \ref{simd.class}, Class template \tcode{simd}
   template<class T, class Abi = simd_abi::@\wgChange{compatible}{native}@<T>> class simd;@\diffbreak{2}
   \wgRem{template<class T> using native_simd = simd<T, simd_abi::native<T>>;}@
-  template<class T, int N> using fixed_size_simd = simd<T, simd_abi::fixed_size<@\wgAdd{T, }@N>>;
+  template<class T, @\wgChange{int}{size_t}@ N> using fixed_size_simd = simd<T, simd_abi::fixed_size<@\wgAdd{T, }@N>>;
 
   // \ref{simd.mask.class}, Class template \tcode{simd_mask}
   template<class T, class Abi = simd_abi::@\wgChange{compatible}{native}@<T>> class simd_mask;@\diffbreak{2}
   \wgRem{template<class T> using native_simd_mask = simd_mask<T, simd_abi::native<T>>;}@
-  template<class T, int N> using fixed_size_simd_mask = simd_mask<T, simd_abi::fixed_size<@\wgAdd{T, }@N>>;
+  template<class T, @\wgChange{int}{size_t}@ N> using fixed_size_simd_mask = simd_mask<T, simd_abi::fixed_size<@\wgAdd{T, }@N>>;
 
   @\wgRem{// \mbox{\ref{simd.casts}}, Casts}\diffbreak{2}%
   \wgRem{template<class T, class U, class Abi> \seebelow{} simd_cast(const simd<U, Abi>\&) noexcept;}\diffbreak{2}%
@@ -254,8 +254,8 @@ The header \tcode{<\wgRem{experimental/}simd>} defines class templates, tag type
 \begin{codeblock}
 namespace simd_abi {
   using scalar = @\seebelow@;
-  template<@\wgAdd{class T, }@int N> using fixed_size = @\seebelow@;
-  template<class T> inline constexpr int max_fixed_size = @\impdef@;@\diffbreak{2}
+  template<@\wgAdd{class T, }@@\wgChange{int}{size_t}@ N> using fixed_size = @\seebelow@;
+  template<class T> inline constexpr @\wgChange{int}{size_t}@ max_fixed_size = @\impdef@;@\diffbreak{2}
   \wgRem{template<class T> using compatible = \impdef;}@
   template<class T> using native = @\impdef@;
 }
@@ -490,7 +490,7 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
 \end{itemdescr}
 
 \begin{itemdecl}
-template<int N, class V> struct resize_simd { using type = @\seebelow@; };
+template<@\wgChange{int}{size_t}@ N, class V> struct resize_simd { using type = @\seebelow@; };
 \end{itemdecl}
 
 \begin{itemdescr}
