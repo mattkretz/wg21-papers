@@ -1103,6 +1103,27 @@ masked operations, such as the \code{identity_element} in \code{reduce}).
 \wgPoll{The names of masked ``overloads'' should include an \code{if} and follow the argument order proposed in \wgDocumentNumber{} \sect{sec:maskedOverloads}}
 {&&&&}
 
+%\subsection{Tuning masked loads and stores}
+%
+%The TS specifies masked loads and stores to prefer memory safety over performance:
+%\begin{quote}{}
+%  [§9.5 p9] Requires: [\ldots] the largest selected index is less than the number of values pointed to by mem.]
+%
+%  [§9.5 p19] Requires: [\ldots] for all selected indices i, i shall be less than the number of values pointed to by mem.
+%\end{quote}
+%I.e. the implementation is not allowed to read or write the memory locations that are masked off.
+%Consequently,\\
+%\lstinline@where(stdx::simd_mask<int>(false), v).copy_from(&*data.end(), stdx::element_aligned)@\\
+%would not access any memory and the code would not invoke undefined behavior.
+%However, this precludes efficient implementations on ISAs that have no native
+%support for masked load and store operations.
+%If a user ensures his memory allocations are always padded as necessary and
+%thus expects highest performance, there is no good knob to turn to ``fast and
+%faults are on you''.
+%
+%Such a knob could easily be provided via an additional load/store flag:\\
+%\lstinline@v.copy_from_if(ptr, v > 0, std::vector_aligned | std::may_dereference_all)@.
+%
 \subsection{Integration with ranges}\label{sec:ranges}
 \code{simd} itself is not a container \cite{P0851R0}.
 The value of a data-parallel object is not an array of elements but rather needs to be understood as a single opaque value that happens to have means for reading and writing element values.
