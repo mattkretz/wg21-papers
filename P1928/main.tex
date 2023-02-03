@@ -441,12 +441,6 @@ template<class G> simd_mask(G&& gen) noexcept;
 \end{itemdecl}
 \end{wgText}
 
-\subsection{\code{element_reference} is overspecified}
-\code{element_reference} is spelled out in a lot of detail.
-It may be better to define its requirements in a table instead.
-
-This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
-
 \subsection{Default load/store flags to \code{element_aligned}}
 
 Consider:
@@ -1245,6 +1239,12 @@ Or rename “Concurrency support library” to “Parallelism and concurrency su
 Alternatively, add a new library clause?
 
 I am seeking feedback before making a recommendation.
+
+\subsection{\code{element_reference} is overspecified}
+\code{element_reference} is spelled out in a lot of detail.
+It may be better to define its requirements in a list of requirements or a table instead.
+
+This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
 
 \section{Wording}
 
