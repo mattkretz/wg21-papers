@@ -478,6 +478,30 @@ v.copy_from(addr + 1);
 v.copy_to(dest);
 \end{lstlisting}
 
+\sect{sec:convertingLoadsAndStores} discusses an option for additional flags.
+
+\subsection{Contiguous iterators for loads and stores}\label{sec:contiguousItLoadStore}
+
+After Ranges and Concepts introduced \code{std::contiguous_iterator}, the
+load/store interface for \code{simd} can easily be generalized from \code{U*}
+to \code{std::contiguous_iterator} with additional constraints for
+\code{input_iterator}/\code{output_iterator} and \code{iter_value_t}.
+This was not a possible design choice for the TS but does make a lot of sense
+to modernize with the merge.
+Therefore, the merge generalizes the load/store interfaces to look like
+\lst{lst:copyImpl}.
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:copyImpl,caption={
+    \code{copy_from} and \code{copy_to} declarations using \code{contiguous_iterator}
+}]
+template <contiguous_iterator It, typename Flags = element_aligned_tag>
+requires detail::vectorizable<iter_value_t<It>>
+constexpr void copy_from(const It& first, Flags f = {});
+
+template <contiguous_iterator It, typename Flags = element_aligned_tag>
+requires output_iterator<It, Tp> && detail::vectorizable<iter_value_t<It>>
+constexpr void copy_to(const It& first, Flags f = {}) const;
+\end{lstlisting}
+
 \subsection{\code{constexpr} everything}
 The libstdc++ implementation implements the complete TS API as \code{constexpr} as an optional extension.
 This is useful (e.g. for computing constants) and not a significant implementation burden.

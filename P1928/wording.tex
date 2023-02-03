@@ -707,13 +707,15 @@ public:
   template<class U@\wgAdd{, class UAbi}@> @\diffbreak{4}
     \wgAdd{constexpr explicit(\seebelow)}@ simd(const simd<U, @\wgChange{simd_abi::fixed_size<size()>}{UAbi}@>&) noexcept;
   template<class G> @\wgAdd{constexpr }@explicit simd(G&& gen) noexcept;
-  template<class U, class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr }@simd(const U* mem, Flags f@\wgAdd{ = \{\}}@);
+  template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = element_aligned_tag}@>
+    @\wgAdd{constexpr }@simd(const @\wgChange{U* mem}{It\& first}@, Flags@\wgAdd{ = \{\}}@);
 
   // \ref{simd.copy}, \tcode{simd} copy functions
-  template<class U, class Flags@\wgAdd{ = element_aligned_tag}@>
-    @\wgAdd{constexpr void}@ copy_from(const U* mem, Flags f@\wgAdd{ = \{\}}@);
-  template<class U, class Flags@\wgAdd{ = element_aligned_tag}@>
-    @\wgAdd{constexpr void}@ copy_to(U* mem, Flags f@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
+  template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = element_aligned_tag}@>
+    @\wgAdd{constexpr void}@ copy_from(const @\wgChange{U* mem}{It\& first}@, Flags f@\wgAdd{ = \{\}}@);
+  template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = element_aligned_tag}@>
+    @\wgAdd{requires output_iterator<It, value_type>}@
+    @\wgAdd{constexpr void}@ copy_to(@\wgChange{U* mem}{const It\& first}@, Flags f@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
 
   // \ref{simd.subscr}, \tcode{simd} subscript operators
   @\wgAdd{constexpr }@reference operator[](size_t);
@@ -1027,13 +1029,16 @@ template<class G> @\wgAdd{constexpr }@simd(G&& gen) noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U, class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr }@simd(const U* mem, Flags@\wgAdd{ = \{\}}@);
+template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = element_aligned_tag}@>
+  @\wgAdd{constexpr }@simd(const @\wgChange{U* mem}{It\& first}@, Flags@\wgAdd{ = \{\}}@);
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\wgAdd{\mbox{\constraints} \tcode{iter_value_t<It>} is a vectorizable type.}
+
   \pnum\requires
   \begin{itemize}
-    \item \tcode{[mem, mem + size())} is a valid range.
+    \item \tcode{[first, first + size())} is a valid range.
     \flagsRequires{simd, U}{U}
   \end{itemize}
 
@@ -1043,18 +1048,21 @@ template<class U, class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr
   \pnum\remarks
   This constructor shall not participate in overload resolution unless
   \begin{itemize}
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}, and
-    \item \tcode{U} is a vectorizable type.
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}\wgAdd{.}\wgRem{, and}
+    \wgItemRem \wgRem{\tcode{U} is a vectorizable type.}
   \end{itemize}
 \end{itemdescr}
 
 \rSec2[simd.copy]{\tcode{simd} copy functions}
 
 \begin{itemdecl}
-template<class U, class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr }@void copy_from(const U* mem, Flags@\wgAdd{ = \{\}}@);
+template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = element_aligned_tag}@>
+  @\wgAdd{constexpr }@void copy_from(const @\wgChange{U* mem}{It\& first}@, Flags f@\wgAdd{ = \{\}}@);
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\wgAdd{\mbox{\constraints} \tcode{iter_value_t<It>} is a vectorizable type.}
+
   \pnum\requires
   \begin{itemize}
     \item \tcode{[mem, mem + size())} is a valid range.
@@ -1067,16 +1075,20 @@ template<class U, class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr
   \pnum\remarks
   This function shall not participate in overload resolution unless
   \begin{itemize}
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}, and
-    \item \tcode{U} is a vectorizable type.
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}\wgAdd{.}\wgRem{, and}
+    \wgItemRem\wgRem{\tcode{U} is a vectorizable type.}
   \end{itemize}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U, class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr }@void copy_to(U* mem, Flags@\wgAdd{ = \{\}}@) const;
+template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = element_aligned_tag}@>
+  @\wgAdd{requires output_iterator<It, value_type>}@
+  @\wgAdd{constexpr }@void copy_to(@\wgChange{U* mem}{const It\& first}@, Flags f@\wgAdd{ = \{\}}@) const;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\wgAdd{\mbox{\constraints} \tcode{iter_value_t<It>} is a vectorizable type.}
+
   \pnum\requires
   \begin{itemize}
     \item \tcode{[mem, mem + size())} is a valid range.
@@ -1089,8 +1101,8 @@ template<class U, class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr
   \pnum\remarks
   This function shall not participate in overload resolution unless
   \begin{itemize}
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}, and
-    \item \tcode{U} is a vectorizable type.
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}\wgAdd{.}\wgRem{, and}
+    \wgItemRem \wgRem{\tcode{U} is a vectorizable type.}
   \end{itemize}
 \end{itemdescr}
 
@@ -1710,16 +1722,17 @@ public:
   // \ref{simd.mask.ctor}, \wgChange{C}{\tcode{simd_mask} c}onstructors
   @\wgAdd{constexpr} @explicit simd_mask(value_type) noexcept;
   template<class U@\wgAdd{, class UAbi}@>
-    @\wgAdd{constexpr explicit(sizeof(U) != sizeof(T)) }@simd_mask(const simd_mask<U, @\wgChange{simd_abi::fixed_size<size()>}{UAbi}@>&) noexcept;
+    @\wgAdd{constexpr explicit(sizeof(U) != sizeof(T)) }\diffbreak{4}@simd_mask(const simd_mask<U, @\wgChange{simd_abi::fixed_size<size()>}{UAbi}@>&) noexcept;
   @\wgAdd{template<class G> constexpr explicit simd_mask(G\&\& gen) noexcept;}@
-  template<class Flags@\wgAdd{ = element_aligned_tag}@>
-    @\wgAdd{constexpr }@simd_mask(const value_type* mem, Flags@\wgAdd{ = \{\}}@);
+  template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned_tag}@>
+    @\wgAdd{constexpr }@simd_mask(const @\wgChange{value_type* mem}{It\& first}@, Flags@\wgAdd{ = \{\}}@);
 
   // \ref{simd.mask.copy}, \wgChange{C}{\tcode{simd_mask} c}opy functions
-  template<class Flags@\wgAdd{ = element_aligned_tag}@>
-    @\wgAdd{constexpr}@ void copy_from(const value_type* mem, Flags@\wgAdd{ = \{\}}@);
-  template<class Flags@\wgAdd{ = element_aligned_tag}@>
-    @\wgAdd{constexpr}@ void copy_to(value_type* mem, Flags@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
+  template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned_tag}@>
+    @\wgAdd{constexpr}@ void copy_from(const @\wgChange{value_type* mem}{It\& first}@, Flags@\wgAdd{ = \{\}}@);
+  template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned_tag}@>
+    @\wgAdd{requires output_iterator<It, value_type>}@
+    @\wgAdd{constexpr}@ void copy_to(@\wgChange{value_type* mem}{const It\& first}@, Flags@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
 
   // \ref{simd.mask.subscr}, \wgChange{S}{\tcode{simd_mask} s}ubscript operators
   @\wgAdd{constexpr }@reference operator[](size_t);
@@ -1834,10 +1847,13 @@ template<class U@\wgAdd{, class UAbi}@>
 \end{wgBAdd}
 
 \begin{itemdecl}
-template<class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr }@simd_mask(const value_type* mem, Flags@\wgAdd{ = \{\}}@);
+template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned_tag}@>
+  @\wgAdd{constexpr }@simd_mask(const @\wgChange{value_type* mem}{It\& first}@, Flags@\wgAdd{ = \{\}}@);
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\wgAdd{\mbox{\constraints} \tcode{iter_value_t<It>} is of type \tcode{bool}.}
+
   \pnum\requires
   \begin{itemize}
     \item \tcode{[mem, mem + size())} is a valid range.
@@ -1857,10 +1873,13 @@ template<class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr }@simd_m
 \rSec2[simd.mask.copy]{\texorpdfstring{\wgChange{C}{\tcode{simd_mask} c}opy}{simd_mask copy} functions}
 
 \begin{itemdecl}
-template<class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr }@void copy_from(const value_type* mem, Flags@\wgAdd{ = \{\}}@);
+template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned_tag}@>
+  @\wgAdd{constexpr}@ void copy_from(const @\wgChange{value_type* mem}{It\& first}@, Flags@\wgAdd{ = \{\}}@);
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\wgAdd{\mbox{\constraints} \tcode{iter_value_t<It>} is of type \tcode{bool}.}
+
   \pnum\requires
   \begin{itemize}
     \item \tcode{[mem, mem + size())} is a valid range.
@@ -1878,10 +1897,14 @@ template<class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr }@void c
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class Flags@\wgAdd{ = element_aligned_tag}@> @\wgAdd{constexpr }@void copy_to(value_type* mem, Flags@\wgAdd{ = \{\}}@);
+template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned_tag}@>
+  @\wgAdd{requires output_iterator<It, value_type>}@
+  @\wgAdd{constexpr}@ void copy_to(@\wgChange{value_type* mem}{const It\& first}@, Flags@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\wgAdd{\mbox{\constraints} \tcode{iter_value_t<It>} is of type \tcode{bool}.}
+
   \pnum\requires
   \begin{itemize}
     \item \tcode{[mem, mem + size())} is a valid range.

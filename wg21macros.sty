@@ -180,37 +180,46 @@
  \end{indented}
 }
 
-\newcommand{\Fundescx}[1]{\textit{#1}\xspace}
-\newcommand{\Fundesc}[1]{\Fundescx{#1:}}
+%% Library function descriptions
+\newcommand{\Fundescx}[1]{\textit{#1}}
+\newcommand{\Fundesc}[1]{\Fundescx{#1}:\space}
+\newcommand{\recommended}{\Fundesc{Recommended practice}}
 \newcommand{\required}{\Fundesc{Required behavior}}
-\newcommand{\requires}{\Fundesc{Requires}}
+\newcommand{\constraints}{\Fundesc{Constraints}}
+\newcommand{\mandates}{\Fundesc{Mandates}}
+\newcommand{\expects}{\Fundesc{Preconditions}}
 \newcommand{\effects}{\Fundesc{Effects}}
-\newcommand{\postconditions}{\Fundesc{Postconditions}}
-\newcommand{\postcondition}{\Fundesc{Postcondition}}
-\newcommand{\preconditions}{\requires}
-\newcommand{\precondition}{\requires}
+\newcommand{\ensures}{\Fundesc{Postconditions}}
 \newcommand{\returns}{\mbox{\textit{Returns:}\ }}
 \newcommand{\throws}{\mbox{\textit{Throws:}\ }}
 \newcommand{\default}{\Fundesc{Default behavior}}
 \newcommand{\complexity}{\Fundesc{Complexity}}
-\newcommand{\remark}{\mbox{\textit{Remark:}\ }}
 \newcommand{\remarks}{\mbox{\textit{Remarks:}\ }}
-%\newcommand{\note}{\remark}
-\newcommand{\notes}{\remarks}
-%\newcommand{\realnote}{\Fundesc{Note}}
-%\newcommand{\realnotes}{\Fundesc{Notes}}
 \newcommand{\errors}{\Fundesc{Error conditions}}
 \newcommand{\sync}{\Fundesc{Synchronization}}
 \newcommand{\implimits}{\Fundesc{Implementation limits}}
 \newcommand{\replaceable}{\Fundesc{Replaceable}}
-\newcommand{\exceptionsafety}{\Fundesc{Exception safety}}
+\newcommand{\result}{\Fundesc{Result}}
 \newcommand{\returntype}{\Fundesc{Return type}}
-\newcommand{\cvalue}{\Fundesc{Value}}
 \newcommand{\ctype}{\Fundesc{Type}}
+\newcommand{\templalias}{\Fundesc{Alias template}}
+
+% Obsolete library function descriptions
+\newcommand{\requires}{\Fundesc{Requires}}
+\newcommand{\postconditions}{\Fundesc{Postconditions}}
+\newcommand{\postcondition}{\Fundesc{Postcondition}}
+\newcommand{\preconditions}{\requires}
+\newcommand{\precondition}{\requires}
+\newcommand{\remark}{\mbox{\textit{Remark:}\ }}
+%\newcommand{\note}{\remark}
+\newcommand{\notes}{\remarks}
+%\newcommand{\realnote}{\Fundesc{Note}}
+%\newcommand{\realnotes}{\Fundesc{Notes}}
+\newcommand{\exceptionsafety}{\Fundesc{Exception safety}}
+\newcommand{\cvalue}{\Fundesc{Value}}
 \newcommand{\ctypes}{\Fundesc{Types}}
 \newcommand{\dtype}{\Fundesc{Default type}}
 \newcommand{\ctemplate}{\Fundesc{Class template}}
-\newcommand{\templalias}{\Fundesc{Alias template}}
 
 \DeclareRobustCommand\std{\code{std\MayBreak::\MayBreak}}
 \DeclareRobustCommand\stdx{\code{std\MayBreak::\MayBreak{}ex\-per\-i\-men\-tal\MayBreak::\MayBreak}}
