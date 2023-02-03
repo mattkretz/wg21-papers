@@ -1156,6 +1156,68 @@ masked operations, such as the \code{identity_element} in \code{reduce}).
 %
 %Such a knob could easily be provided via an additional load/store flag:\\
 %\lstinline@v.copy_from_if(ptr, v > 0, std::vector_aligned | std::may_dereference_all)@.
+\subsection{Converting loads \& stores consistency}\label{sec:convertingLoadsAndStores}
+
+For the TS, we allowed pointers to any \emph{vectorizable} type as valid
+arguments to \code{copy_from} and \code{copy_to}.
+I.e. loads and stores can be converting operations without a clue in the code
+other than the type of the pointer.
+It can therefore happen that a conversion that is not value-preserving goes
+unnoticed.
+The broadcast and \code{simd} conversion constructurs guard against accidental
+use of such conversions.
+
+I have not received feedback that users wrote buggy because of this liberal
+interface.
+However, in the TS process this question was never really considered.
+Therefore, I just wanted to show a suggestion for a stricter but just as
+powerful interface.
+\lst{lst:saferConvertingLoads} presents converting broadcast and cast
+\begin{lstlisting}[numbers=left,float={hbtp},label=lst:saferConvertingLoads,caption={
+    Load-store flags as opt-in to converting loads and stores
+}]
+float  fmem[std::simd_size_v<float>] = {};
+double dmem[std::simd_size_v<float>] = {};
+short  smem[std::simd_size_v<float>] = {};
+
+std::simd<float> a = 1.; // ERROR: double -> float conversion is not value-preserving
+std::simd<float> b = std::rebind_simd_t<int, std::simd<float>>(1); // ERROR:
+                                                  // int -> float is not value-preserving
+
+// TS:
+stdx::simd<float> ts;
+ts.copy_from(fmem, stdx::element_aligned); // OK
+ts.copy_from(dmem, stdx::element_aligned); // OK
+ts.copy_from(smem, stdx::element_aligned); // OK
+
+// idea, not status quo of this paper:
+std::simd<float> v;
+v.copy_from(fmem); // OK
+v.copy_from(dmem); // ERROR: converting load
+v.copy_from(smem); // ERROR: converting load
+
+// Option (a) - one flag only:
+v.copy_from(dmem, std::simd_converting); // OK
+v.copy_from(smem, std::simd_converting); // OK
+
+// Option (b) - two flags:
+v.copy_from(dmem, std::simd_safe_cvt); // ERROR: double -> float is not value-preserving
+v.copy_from(dmem, std::simd_any_cvt);  // OK
+v.copy_from(smem, std::simd_safe_cvt); // OK
+v.copy_from(smem, std::simd_any_cvt);  // OK
+\end{lstlisting}
+expressions, which are ill-formed because the type conversion is not
+value-preserving.
+The equivalent conversions on \code{copy_from} are well-formed, though.
+I believe it would be better for users to opt-in to conversions on load and
+store.
+There are value-preserving and non-value-preserving conversions, which could be
+combined into the same opt-in or we provide a separate spelling for
+value-preserving conversions (the safe kind of conversion).
+
+If LEWG is interested, I would be thankful for naming suggestions.
+I do not believe that using ``safe'' is a good term here.
+
 %
 \subsection{Integration with ranges}\label{sec:ranges}
 \code{simd} itself is not a container \cite{P0851R0}.
