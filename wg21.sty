@@ -418,7 +418,6 @@
 \linespread{1.09}
 \renewcommand{\familydefault}{\sfdefault}
 
-%TeXGyrePagella / SwitzeraADFLight
 \setmainfont{TeXGyreTermes}[
   Ligatures=TeX,
   SmallCapsFeatures={Numbers={Monospaced,OldStyle}}
@@ -432,20 +431,18 @@
   SmallCapsFont={TeXGyreAdventor},
   SmallCapsFeatures={Letters=SmallCaps,Scale=MatchLowercase,Numbers={Proportional}}
 ]
-\setmonofont{firacodenerdfontcompletemlight}[
-  Scale=MatchLowercase,
-  %LetterSpace=-5,
-  AutoFakeSlant,
-  BoldFont={firacodenerdfontcompletembold},
-  SmallCapsFont={firacodenerdfontcompletemregular},
-  SmallCapsFeatures={Scale=0.80,Numbers={Proportional}}
+\setmonofont{LatinModernMonoLight}[
+  Ligatures=NoCommon,
+  FakeStretch=0.92,
+  Scale=0.91,
+  SmallCapsFont={LatinModernMonoCaps},
+  SmallCapsFeatures={Scale=0.90,Numbers={Proportional}}
 ]
-\newfontfamily\wgCodeFont{firamono-regular}[
+\newfontfamily\wgCodeFont{LatinModernMonoLight}[
   NFSSFamily=wgCodeFont,
-  Scale=0.73,
-  %LetterSpace=-5,
-  AutoFakeSlant,
-  BoldFont={firamono-bold}
+  Ligatures=NoCommon,
+  Scale=0.89,
+  FakeStretch=0.95
 ]
 
 % Math fonts:
