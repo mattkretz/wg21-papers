@@ -10,7 +10,7 @@ CREATEMD5 := md5sum `find . -regex '.*\.\(aux\|bbl\|toc\|tex\|ind\)'` > ._aux-md
 CHECKMD5  := md5sum --quiet -c ._aux-md5sums
 UPLOADNAME := D$(shell echo $(NAME)|cut -c2-5).pdf
 
-all: final mobile
+all: final
 
 ._dummy.tex:
 	touch $@
@@ -99,7 +99,7 @@ $(NAME).pdf: ../final.tex $(ALL_DEPS)
 		$(PDFLATEX) ../final; \
 		test -s final.pdf && mv final.pdf $@; \
 	done
-	timeout 20s scp -B $@ lxpool.gsi.de:web-docs/$(UPLOADNAME) &
+	test "$(USER)" = "mkretz" && timeout 20s scp -B $@ lxpool.gsi.de:web-docs/$(UPLOADNAME) &
 
 $(NAME)_%.pdf: ../%.tex $(ALL_DEPS)
 	@$(CREATEMD5)

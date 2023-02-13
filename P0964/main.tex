@@ -30,8 +30,8 @@
 
 \usepackage{pifont}
 
-\newcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
-\newcommand\forallmaskedi[1]{%
+\renewcommand\foralli[1][]{for all \code i $\in$ \code{[0, #1size())}\xspace}
+\renewcommand\forallmaskedi[1]{%
   for all \code i
   $\in \{j \in \mathbb{N}_0 | j < \code{size()} ⋀ \code{#1[}j\code{]}\}$%
   \xspace%
