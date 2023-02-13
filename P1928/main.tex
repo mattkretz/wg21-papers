@@ -1270,9 +1270,27 @@ It may be better to define its requirements in a list of requirements or a table
 
 This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
 
-\section{Wording}
+\section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 
-\input{wording2}
+The following section presents the wording to be applied against the \CC{}
+working draft.
+
+The wording still needs work:
+\begin{itemize}
+  \item Replace \code{where} \& \code{where_expression} wording with \code{conditional_operator} and masked overloads.
+  \item Apply the new library specification style from P0788R3.
+\end{itemize}
+
+\begin{wgText}[Add a new subclause after §28.8 {[numbers]}]
+  \setcounter{WGClause}{28}
+  \setcounter{WGSubSection}{8}
+  \lstset{%
+    columns=fullflexible,
+    deletedelim=**[is]{|-}{-|},
+    moredelim=[is][\color{white}\fontsize{0.1pt}{0.1pt}\selectfont{}]{|-}{-|}
+  }
+  \input{wording}
+\end{wgText}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=0

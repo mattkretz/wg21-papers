@@ -229,71 +229,73 @@
     \leavevmode\llap{\normalfont\usekomafont{#1}(\csname #1format\endcsname\hspace{-.3em})\qquad}%
 }
 \makeatletter
-\newcommand{\wgSection}[2]{%
+\newcommand{\wgSection}[3][subsection]{%
     \par%
     \vskip1.0\baselineskip plus 1.5\baselineskip minus 0.2\baselineskip%
     \phantomsection%
-    \stepcounter{subsection}%
+    \stepcounter{#1}%
     \stepcounter{WGClause}%
     \setcounter{Paras}{0}%
-    \def\theWgStableName{#2}%
+    \def\theWgStableName{#3}%
     \def\theWGSubSection{\theWGClause{}}%
     \def\theWGSubSubSection{\theWGClause{}}%
-    \def\theWGSubSubSubSection{\theWGSubSubSection}%
-    \protected@edef\@currentlabel{\theWGSubSection}%
-    \addcontentsline{toc}{subsection}{(\thesubsection{}) \theWGClause{} #1 [#2]}%
-    {\noindent\wgOrigSection{subsection}\larger[2]\arabic{WGClause} #1\label{sec:\wgLabelPrefix#2}\hfill[#2]}\\%
+    \def\theWGSubSubSubSection{\theWGClause{}}%
+    \protected@edef\@currentlabel{\theWGClause{}}%
+    \addcontentsline{toc}{#1}{%
+      \theWGClause{} #2 [#3] (\thesubsection{})%
+    }%
+    {\noindent\wgOrigSection{#1}\larger[2]\arabic{WGClause} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}\\%
     \noindent%
 }
-\newcommand\wgSubsection[2]{%
+\newcommand\wgSubsection[3][subsubsection]{%
     \par%
     \vskip0.75\baselineskip plus 1.0\baselineskip minus 0.15\baselineskip%
     \phantomsection%
-    \stepcounter{subsubsection}%
+    \stepcounter{#1}%
     \stepcounter{WGSubSection}%
     \setcounter{Paras}{0}%
-    \def\theWgStableName{#2}%
+    \def\theWgStableName{#3}%
     \def\theWGSubSection{\theWGClause{}.\arabic{WGSubSection}}%
     \def\theWGSubSubSection{\theWGSubSection{}}%
     \def\theWGSubSubSubSection{\theWGSubSubSection}%
     \protected@edef\@currentlabel{\theWGSubSection}%
-    \addcontentsline{toc}{subsubsection}{%
-      \theWGSubSection{} #1 [#2] (\thesubsubsection{})%
+    \addcontentsline{toc}{#1}{%
+      \theWGSubSection{} #2 [#3] (\thesubsubsection{})%
     }%
-    {\noindent\wgOrigSection{subsubsection}\larger[1]\theWGSubSection{} #1\label{sec:\wgLabelPrefix#2}\hfill[#2]}\\%
+    {\noindent\wgOrigSection{#1}\larger[1]\theWGSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}\\%
     \noindent%
 }
-\newcommand\wgSubsubsection[2]{%
+\newcommand\wgSubsubsection[3][paragraph]{%
     \par%
     \vskip0.5\baselineskip plus .5\baselineskip minus 0.1\baselineskip%
     \phantomsection%
-    \stepcounter{paragraph}%
+    \stepcounter{#1}%
     \stepcounter{WGSubSubSection}%
     \setcounter{Paras}{0}%
-    \def\theWgStableName{#2}%
+    \def\theWgStableName{#3}%
     \def\theWGSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}}%
     \def\theWGSubSubSubSection{\theWGSubSubSection}%
     \protected@edef\@currentlabel{\theWGSubSubSection}%
-    \addcontentsline{toc}{paragraph}{%
-      \theWGSubSubSection{} #1 [#2] (\theparagraph{})%
+    \addcontentsline{toc}{#1}{%
+      \theWGSubSubSection{} #2 [#3] (\theparagraph{})%
     }%
-    {\noindent\wgOrigSection{paragraph}\theWGSubSubSection{} #1\label{sec:\wgLabelPrefix#2}\hfill[#2]}\\%
+    {\noindent\wgOrigSection{#1}\theWGSubSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}\\%
     \noindent%
 }
-\newcommand\wgSubsubsubsection[2]{%
+\newcommand\wgSubsubsubsection[3][subparagraph]{%
     \par%
     \vskip0.5\baselineskip plus .5\baselineskip minus 0.1\baselineskip%
     \phantomsection%
-    \stepcounter{subparagraph}%
+    \stepcounter{#1}%
     \stepcounter{WGSubSubSubSection}%
     \setcounter{Paras}{0}%
-    \def\theWgStableName{#2}%
+    \def\theWgStableName{#3}%
     \def\theWGSubSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}.\arabic{WGSubSubSubSection}}%
     \protected@edef\@currentlabel{\theWGSubSubSubSection}%
-    \addcontentsline{toc}{subparagraph}{%
-      \theWGSubSubSubSection{} #1 [#2] (\thesubparagraph{})%
+    \addcontentsline{toc}{#1}{%
+      \theWGSubSubSubSection{} #2 [#3] (\thesubparagraph{})%
     }%
-    {\noindent\wgOrigSection{subparagraph}\theWGSubSubSubSection{} #1\label{sec:\wgLabelPrefix#2}\hfill[#2]}\\%
+    {\noindent\wgOrigSection{#1}\theWGSubSubSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}\\%
     \noindent%
 }
 \makeatother

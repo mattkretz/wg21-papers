@@ -1,10 +1,9 @@
 \def\rSec#1[#2]#3{%
-  \ifcase#1\let\s=\wgSubsection
-  \or\let\s=\wgSubsubsection
-  \or\let\s=\wgSubsubsubsection
-  \or\let\s=\error
-  \fi%
-  \s{#3}{#2}}
+  \ifcase#1\wgSubsection[subsection]{#3}{#2}
+  \or\wgSubsubsection[subsubsection]{#3}{#2}
+  \or\wgSubsubsubsection[paragraph]{#3}{#2}
+  \or\error
+\fi}
 
 %\renewcommand\foralli[1][]{for all $i$ in the range of \tcode{[0, #1size())}}
 %\renewcommand\forallmaskedi{for all selected indices $i$}
@@ -34,16 +33,15 @@ Throughout this Clause, the set of \defn{vectorizable types} for a data-parallel
 The intent is to support acceleration through data-parallel execution resources, such as SIMD registers and instructions or execution units driven by a common instruction decoder. If such execution resources are unavailable, the interfaces support a transparent fallback to sequential execution.
 \end{note}
 
-\rSec1[simd.synopsis]{Header \texorpdfstring{\tcode{<\wgRem{experimental/}simd>}}{<simd>} synopsis}
+\rSec1[simd.synopsis]{Header \texorpdfstring{\tcode{<simd>}}{<simd>} synopsis}
 
 %\indexhdr{simd}
 \begin{codeblock}
-namespace std@\wgRem{::experimental \{ inline namespace parallelism_v2}@ {
+namespace std {
   namespace simd_abi {
     using scalar = @\seebelow@;
-    template<@\wgAdd{class T, }\wgChange{int}{size_t}@ N> using fixed_size = @\seebelow@;
-    template<class T> inline constexpr @\wgChange{int}{size_t}@ max_fixed_size = @\impdef;\diffbreak{4}%
-    \wgRem{template<class T> using compatible = \impdef;}@
+    template<class T, size_t N> using fixed_size = @\seebelow@;
+    template<class T> inline constexpr size_t max_fixed_size = @\impdef@;
     template<class T> using native = @\impdef@;
 
     template<class T, size_t N, class... Abis> struct deduce { using type = @\seebelow@; };
@@ -72,8 +70,8 @@ namespace std@\wgRem{::experimental \{ inline namespace parallelism_v2}@ {
   template<class T> inline constexpr bool is_simd_flag_type_v =
     is_simd_flag_type<T>::value;
 
-  template<class T, class Abi = simd_abi::@\wgChange{compatible}{native}@<T>> struct simd_size;
-  template<class T, class Abi = simd_abi::@\wgChange{compatible}{native}@<T>>
+  template<class T, class Abi = simd_abi::native<T>> struct simd_size;
+  template<class T, class Abi = simd_abi::native<T>>
     inline constexpr size_t simd_size_v = simd_size<T,Abi>::value;
 
   template<class T, class U = typename T::value_type> struct memory_alignment;
@@ -82,88 +80,67 @@ namespace std@\wgRem{::experimental \{ inline namespace parallelism_v2}@ {
 
   template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   template<class T, class V> using rebind_simd_t = typename rebind_simd<T, V>::type;
-  template<@\wgChange{int}{size_t}@ N, class V> struct resize_simd { using type = @\seebelow@; };
-  template<@\wgChange{int}{size_t}@ N, class V> using resize_simd_t = typename resize_simd<N, V>::type;
+  template<size_t N, class V> struct resize_simd { using type = @\seebelow@; };
+  template<size_t N, class V> using resize_simd_t = typename resize_simd<N, V>::type;
 
   // \ref{simd.class}, Class template \tcode{simd}
-  template<class T, class Abi = simd_abi::@\wgChange{compatible}{native}@<T>> class simd;@\diffbreak{2}
-  \wgRem{template<class T> using native_simd = simd<T, simd_abi::native<T>>;}@
-  template<class T, @\wgChange{int}{size_t}@ N> using fixed_size_simd = simd<T, simd_abi::fixed_size<@\wgAdd{T, }@N>>;
+  template<class T, class Abi = simd_abi::native<T>> class simd;
+  template<class T, size_t N> using fixed_size_simd = simd<T, simd_abi::fixed_size<T, N>>;
 
   // \ref{simd.mask.class}, Class template \tcode{simd_mask}
-  template<class T, class Abi = simd_abi::@\wgChange{compatible}{native}@<T>> class simd_mask;@\diffbreak{2}
-  \wgRem{template<class T> using native_simd_mask = simd_mask<T, simd_abi::native<T>>;}@
-  template<class T, @\wgChange{int}{size_t}@ N> using fixed_size_simd_mask = simd_mask<T, simd_abi::fixed_size<@\wgAdd{T, }@N>>;
+  template<class T, class Abi = simd_abi::native<T>> class simd_mask;
+  template<class T, size_t N> using fixed_size_simd_mask = simd_mask<T, simd_abi::fixed_size<T, N>>;
 
-  @\wgRem{// \mbox{\ref{simd.casts}}, Casts}\diffbreak{2}%
-  \wgRem{template<class T, class U, class Abi> \seebelow{} simd_cast(const simd<U, Abi>\&) noexcept;}\diffbreak{2}%
-  \wgRem{template<class T, class U, class Abi> \seebelow{} static_simd_cast(const simd<U, Abi>\&) noexcept;}\diffbreak{0}%
-  \diffbreak{2}%
-  \wgRem{template<class T, class Abi>}\diffbreak{4}%
-    \wgRem{fixed_size_simd<T, simd_size_v<T, Abi>>}\diffbreak{6}%
-    \wgRem{to_fixed_size(const simd<T, Abi>\&) noexcept;}\diffbreak{2}%
-  \wgRem{template<class T, class Abi>}\diffbreak{4}%
-    \wgRem{fixed_size_simd_mask<T, simd_size_v<T, Abi>>}\diffbreak{6}%
-    \wgRem{to_fixed_size(const simd_mask<T, Abi>\&) noexcept;}\diffbreak{2}%
-  \wgRem{template<class T, int N>}\diffbreak{4}%
-    \wgRem{native_simd<T> to_native(const fixed_size_simd<T, N>\&) noexcept;}\diffbreak{2}%
-  \wgRem{template<class T, int N>}\diffbreak{4}%
-    \wgRem{native_simd_mask<T> to_native(const fixed_size_simd_mask<T, N>\&) noexcept;}\diffbreak{2}%
-  \wgRem{template<class T, int N>}\diffbreak{4}%
-    \wgRem{simd<T> to_compatible(const fixed_size_simd<T, N>\&) noexcept;}\diffbreak{2}%
-  \wgRem{template<class T, int N>}\diffbreak{4}%
-    \wgRem{simd_mask<T> to_compatible(const fixed_size_simd_mask<T, N>\&) noexcept;}\diffbreak{0}%
-@
   template<size_t... Sizes, class T, class Abi>
-    @\wgAdd{constexpr }@tuple<simd<T, simd_abi::deduce_t<T, Sizes>>...>
+    constexpr tuple<simd<T, simd_abi::deduce_t<T, Sizes>>...>
       split(const simd<T, Abi>&) noexcept;
   template<size_t... Sizes, class T, class Abi>
-    @\wgAdd{constexpr }@tuple<simd_mask<T, simd_mask_abi::deduce_t<T, Sizes>>...>
+    constexpr tuple<simd_mask<T, simd_mask_abi::deduce_t<T, Sizes>>...>
       split(const simd_mask<T, Abi>&) noexcept;
   template<class V, class Abi>
-    @\wgAdd{constexpr }@array<V, simd_size_v<typename V::value_type, Abi> / V::size()>
+    constexpr array<V, simd_size_v<typename V::value_type, Abi> / V::size()>
       split(const simd<typename V::value_type, Abi>&) noexcept;
   template<class V, class Abi>
-    @\wgAdd{constexpr }@array<V, simd_size_v<typename V::simd_type::value_type, Abi> / V::size()>
+    constexpr array<V, simd_size_v<typename V::simd_type::value_type, Abi> / V::size()>
       split(const simd_mask<typename V::simd_type::value_type, Abi>&) noexcept;
 
   template<size_t N, class T, class A>
-    @\wgAdd{constexpr }@array<resize_simd@\wgAdd{_t}@<simd_size_v<T, A> / N, simd<T, A>>, N>
+    constexpr array<resize_simd_t<simd_size_v<T, A> / N, simd<T, A>>, N>
       split_by(const simd<T, A>& x) noexcept;
   template<size_t N, class T, class A>
-    @\wgAdd{constexpr }@array<resize_simd@\wgAdd{_t}@<simd_size_v<T, A> / N, simd_mask<T, A>>, N>
+    constexpr array<resize_simd_t<simd_size_v<T, A> / N, simd_mask<T, A>>, N>
       split_by(const simd_mask<T, A>& x) noexcept;
 
   template<class T, class... Abis>
-    @\wgAdd{constexpr }@simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>>
+    constexpr simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>>
       concat(const simd<T, Abis>&...) noexcept;
   template<class T, class... Abis>
-    @\wgAdd{constexpr }@simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>>
+    constexpr simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>>
       concat(const simd_mask<T, Abis>&...) noexcept;
 
   template<class T, class Abi, size_t N>
-    @\wgAdd{constexpr }@resize_simd@\wgAdd{_t}@<simd_size_v<T, Abi> * N, simd<T, Abi>>
+    constexpr resize_simd_t<simd_size_v<T, Abi> * N, simd<T, Abi>>
       concat(const array<simd<T, Abi>, N>& arr) noexcept;
   template<class T, class Abi, size_t N>
-    @\wgAdd{constexpr }@resize_simd@\wgAdd{_t}@<simd_size_v<T, Abi> * N, simd_mask<T, Abi>>
+    constexpr resize_simd_t<simd_size_v<T, Abi> * N, simd_mask<T, Abi>>
       concat(const array<simd_mask<T, Abi>, N>& arr) noexcept;
 
-  // \ref{simd.mask.reductions}, \wgChange{R}{\tcode{simd_mask} r}eductions
-  template<class T, class Abi> @\wgAdd{constexpr }@bool all_of(const simd_mask<T, Abi>&) noexcept;
-  template<class T, class Abi> @\wgAdd{constexpr }@bool any_of(const simd_mask<T, Abi>&) noexcept;
-  template<class T, class Abi> @\wgAdd{constexpr }@bool none_of(const simd_mask<T, Abi>&) noexcept;
-  template<class T, class Abi> @\wgAdd{constexpr }@bool some_of(const simd_mask<T, Abi>&) noexcept;
-  template<class T, class Abi> @\wgAdd{constexpr }@int popcount(const simd_mask<T, Abi>&) noexcept;
-  template<class T, class Abi> @\wgAdd{constexpr }@int find_first_set(const simd_mask<T, Abi>&);
-  template<class T, class Abi> @\wgAdd{constexpr }@int find_last_set(const simd_mask<T, Abi>&);
+  // \ref{simd.mask.reductions}, \tcode{simd_mask} reductions
+  template<class T, class Abi> constexpr bool all_of(const simd_mask<T, Abi>&) noexcept;
+  template<class T, class Abi> constexpr bool any_of(const simd_mask<T, Abi>&) noexcept;
+  template<class T, class Abi> constexpr bool none_of(const simd_mask<T, Abi>&) noexcept;
+  template<class T, class Abi> constexpr bool some_of(const simd_mask<T, Abi>&) noexcept;
+  template<class T, class Abi> constexpr int popcount(const simd_mask<T, Abi>&) noexcept;
+  template<class T, class Abi> constexpr int find_first_set(const simd_mask<T, Abi>&);
+  template<class T, class Abi> constexpr int find_last_set(const simd_mask<T, Abi>&);
 
-  @\wgAdd{constexpr }@bool all_of(@\UNSP{T}@) noexcept;
-  @\wgAdd{constexpr }@bool any_of(@\UNSP{T}@) noexcept;
-  @\wgAdd{constexpr }@bool none_of(@\UNSP{T}@) noexcept;
-  @\wgAdd{constexpr }@bool some_of(@\UNSP{T}@) noexcept;
-  @\wgAdd{constexpr }@int popcount(@\UNSP{T}@) noexcept;
-  @\wgAdd{constexpr }@int find_first_set(@\UNSP{T}@);
-  @\wgAdd{constexpr }@int find_last_set(@\UNSP{T}@);
+  constexpr bool all_of(@\UNSP{T}@) noexcept;
+  constexpr bool any_of(@\UNSP{T}@) noexcept;
+  constexpr bool none_of(@\UNSP{T}@) noexcept;
+  constexpr bool some_of(@\UNSP{T}@) noexcept;
+  constexpr int popcount(@\UNSP{T}@) noexcept;
+  constexpr int find_first_set(@\UNSP{T}@);
+  constexpr int find_last_set(@\UNSP{T}@);
 
   // \ref{simd.whereexpr}, Where expression class templates
   template<class M, class T> class const_where_expression;
@@ -194,52 +171,52 @@ namespace std@\wgRem{::experimental \{ inline namespace parallelism_v2}@ {
     const_where_expression<bool, T>
       where(@\seebelow@ k, const T& d) noexcept;
 
-  // \ref{simd.reductions}, \wgChange{R}{\tcode{simd} r}eductions
+  // \ref{simd.reductions}, \tcode{simd} reductions
   template<class T, class Abi, class BinaryOperation = plus<>>
-    @\wgAdd{constexpr }@T reduce(const simd<T, Abi>&,
+    constexpr T reduce(const simd<T, Abi>&,
                        BinaryOperation = {});
 
   template<class M, class V, class BinaryOperation>
-    @\wgAdd{constexpr }@typename V::value_type reduce(const const_where_expression<M, V>& x,
+    constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
                                             typename V::value_type identity_element,
                                             BinaryOperation binary_op);
   template<class M, class V>
-    @\wgAdd{constexpr }@typename V::value_type reduce(const const_where_expression<M, V>& x,
+    constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
                                             plus<> binary_op = {}) noexcept;
   template<class M, class V>
-    @\wgAdd{constexpr }@typename V::value_type reduce(const const_where_expression<M, V>& x,
+    constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
                                             multiplies<> binary_op) noexcept;
   template<class M, class V>
-    @\wgAdd{constexpr }@typename V::value_type reduce(const const_where_expression<M, V>& x,
+    constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
                                             bit_and<> binary_op) noexcept;
   template<class M, class V>
-    @\wgAdd{constexpr }@typename V::value_type reduce(const const_where_expression<M, V>& x,
+    constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
                                             bit_or<> binary_op) noexcept;
   template<class M, class V>
-    @\wgAdd{constexpr }@typename V::value_type reduce(const const_where_expression<M, V>& x,
+    constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
                                             bit_xor<> binary_op) noexcept;
 
   template<class T, class Abi>
-    @\wgAdd{constexpr }@T hmin(const simd<T, abi>&) noexcept;
+    constexpr T hmin(const simd<T, abi>&) noexcept;
   template<class M, class V>
-    @\wgAdd{constexpr }@typename V::value_type hmin(const const_where_expression<M, V>&) noexcept;
+    constexpr typename V::value_type hmin(const const_where_expression<M, V>&) noexcept;
   template<class T, class Abi>
-    @\wgAdd{constexpr }@T hmax(const simd<T, abi>&) noexcept;
+    constexpr T hmax(const simd<T, abi>&) noexcept;
   template<class M, class V>
-    @\wgAdd{constexpr }@typename V::value_type hmax(const const_where_expression<M, V>&) noexcept;
+    constexpr typename V::value_type hmax(const const_where_expression<M, V>&) noexcept;
 
   // \ref{simd.alg}, Algorithms
   template<class T, class Abi>
-    @\wgAdd{constexpr }@simd<T, Abi>
+    constexpr simd<T, Abi>
       min(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
   template<class T, class Abi>
-    @\wgAdd{constexpr }@simd<T, Abi>
+    constexpr simd<T, Abi>
       max(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
   template<class T, class Abi>
-    @\wgAdd{constexpr }@pair<simd<T, Abi>, simd<T, Abi>>
+    constexpr pair<simd<T, Abi>, simd<T, Abi>>
       minmax(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
   template<class T, class Abi>
-    @\wgAdd{constexpr }@simd<T, Abi>
+    constexpr simd<T, Abi>
       clamp(const simd<T, Abi>& v,
             const simd<T, Abi>& lo,
             const simd<T, Abi>& hi);
@@ -247,29 +224,28 @@ namespace std@\wgRem{::experimental \{ inline namespace parallelism_v2}@ {
 \end{codeblock}
 
 \pnum
-The header \tcode{<\wgRem{experimental/}simd>} defines class templates, tag types, trait types, and function templates for element-wise operations on data-parallel objects.
+The header \tcode{<simd>} defines class templates, tag types, trait types, and function templates for element-wise operations on data-parallel objects.
 
 \rSec1[simd.abi]{\tcode{simd} ABI tags}
 
 \begin{codeblock}
 namespace simd_abi {
   using scalar = @\seebelow@;
-  template<@\wgAdd{class T, }@@\wgChange{int}{size_t}@ N> using fixed_size = @\seebelow@;
-  template<class T> inline constexpr @\wgChange{int}{size_t}@ max_fixed_size = @\impdef@;@\diffbreak{2}
-  \wgRem{template<class T> using compatible = \impdef;}@
+  template<class T, size_t N> using fixed_size = @\seebelow@;
+  template<class T> inline constexpr size_t max_fixed_size = @\impdef@;
   template<class T> using native = @\impdef@;
 }
 \end{codeblock}
 
 \pnum
-An \defn{ABI tag} is a type in the \tcode{std::\wgRem{experimental::parallelism_v2::}simd_abi} namespace that indicates a choice of size and binary representation for objects of data-parallel type. \begin{note}The intent is for the size and binary representation to depend on the target architecture.\end{note} The ABI tag, together with a given element type implies a number of elements. ABI tag types are used as the second template argument to \tcode{simd} and \tcode{simd_mask}.
+An \defn{ABI tag} is a type in the \tcode{std::simd_abi} namespace that indicates a choice of size and binary representation for objects of data-parallel type. \begin{note}The intent is for the size and binary representation to depend on the target architecture.\end{note} The ABI tag, together with a given element type implies a number of elements. ABI tag types are used as the second template argument to \tcode{simd} and \tcode{simd_mask}.
 
 \pnum
 \begin{note}The ABI tag is orthogonal to selecting the machine instruction set. The selected machine instruction set limits the usable ABI tag types, though (see \ref{simd.overview}). The ABI tags enable users to safely pass objects of data-parallel type between translation unit boundaries (e.g. function calls or I/O).\end{note}
 
 \pnum
 \tcode{scalar} is an alias for an unspecified ABI tag that is different from \tcode{fixed_size<1>}.
-Use of the \tcode{scalar} tag type requires data-parallel types to store a single element (i.e., \wgChange{\tcode{simd<T, simd_abi::scalar>::size()} returns}{\tcode{simd_size_v<T, simd_abi::scalar>} equals} 1).
+Use of the \tcode{scalar} tag type requires data-parallel types to store a single element (i.e., \tcode{simd_size_v<T, simd_abi::scalar>} equals 1).
 
 \pnum
 The value of \tcode{max_fixed_size<T>} is at least 32.
@@ -278,10 +254,7 @@ The value of \tcode{max_fixed_size<T>} is at least 32.
 \tcode{fixed_size<N>} is an alias for an unspecified ABI tag.
 \tcode{fixed_size} does not introduce a non-deduced context.
 Use of the \tcode{simd_abi::fixed_size<N>} tag type requires data-parallel types to store \tcode{N}
-elements (i.e.
-\wgChange
-  {\tcode{simd<T, simd_abi::fixed_size<N>>::size()\relax} is}
-  {\tcode{simd_size_v<T, simd_abi::fixed_size<N>>\relax} equals}
+elements (i.e. \tcode{simd_size_v<T, simd_abi::fixed_size<N>>\relax} equals
 \tcode{N}). \tcode{simd<T, fixed_size<N>>} and \tcode{simd_mask<T,
 fixed_size<N>>} with \tcode{N > 0} and \tcode{N <= max_fixed_size<T>} shall be supported.
 Additionally, for every supported \tcode{simd<T, Abi>} (see \ref{simd.overview}), where \tcode{Abi}
@@ -291,49 +264,16 @@ Abi>::size()} shall be supported.
 \pnum
 \begin{note}It is unspecified whether \tcode{simd<T, fixed_size<N>>} with \tcode{N > max_fixed_size<T>} is supported. The value of \tcode{max_fixed_size<T>} can depend on compiler flags and can change between different compiler versions.\end{note}
 
-\begin{wgBAdd}
 \pnum
-\wgAdd{%
   The type of \tcode{fixed_size<T, N>} in TU1 differs from the type of
   \tcode{fixed_size<T, N>} in TU2 iff the type of \tcode{native<T>} in TU1 differs from
   the type of \tcode{native<T>} in TU2.
-}
-\end{wgBAdd}
-
-\begin{wgBRem}
-\pnum
-\wgRem{
-\noteintro{Note}
-  An implementation can forego ABI compatibility between differently compiled translation
-  units for \tcode{simd} and \tcode{simd_mask} specializations using the same
-  \tcode{simd_abi::fixed_size<N>} tag. Otherwise, the efficiency of
-  \tcode{simd<T, Abi>} is likely to be better than for \tcode{simd<T,
-  fixed_size<simd_size_v<T, Abi>>>} (with \tcode{Abi} not a specialization
-  of \tcode{simd_abi::fixed_size}).
-\noteoutro{note}
-}
-\end{wgBRem}
 
 \pnum
-An implementation may define additional \defn{extended ABI tag} types in the \tcode{std::\wgRem{experimental::parallelism_v2::}simd_abi} namespace, to support other forms of data-parallel computation.
-
-\begin{wgBRem}
-\pnum
-\wgRem{\tcode{compatible<T>} is an implementation-defined alias for an ABI tag.
-\noteintro{Note}
-The intent is to use the ABI tag producing the most efficient data-parallel execution for the element type \tcode{T} that ensures ABI compatibility between translation units on the target architecture.
-\noteoutro{note}}
-\begin{example}
-  \wgRem{Consider a target architecture supporting the extended ABI tags \tcode{__simd128} and \tcode{__simd256}, where the \tcode{__simd256} type requires an optional ISA extension on said architecture. Also, the target architecture does not support \tcode{long double} with either ABI tag. The implementation therefore defines \tcode{compatible<T>} as an alias for:}
-  \begin{itemize}
-    \wgItemRem\wgRem{\tcode{scalar} if \tcode{T} is the same type as \tcode{long double}, and}
-    \wgItemRem\wgRem{\tcode{__simd128} otherwise.}
-  \end{itemize}
-\end{example}
-\end{wgBRem}
+An implementation may define additional \defn{extended ABI tag} types in the \tcode{std::simd_abi} namespace, to support other forms of data-parallel computation.
 
 \pnum
-\tcode{native<T>} is an implementation-defined alias for an ABI tag. \begin{note}The intent is to use the ABI tag producing the most efficient data-parallel execution for the element type \tcode{T} that is supported on the currently targeted system. \wgRem{For target architectures without ISA extensions, the \tcode{native<T>} and \tcode{compatible<T>} aliases will likely be the same.} For target architectures with ISA extensions, compiler flags may \wgChange{influence}{change the type of} the \tcode{native<T>} alias\wgRem{while \tcode{compatible<T>} will be the same independent of such flags}.\end{note}
+\tcode{native<T>} is an implementation-defined alias for an ABI tag. \begin{note}The intent is to use the ABI tag producing the most efficient data-parallel execution for the element type \tcode{T} that is supported on the currently targeted system. For target architectures with ISA extensions, compiler flags may change the type of the \tcode{native<T>} alias.\end{note}
 \begin{example}
   Consider a target architecture supporting the extended ABI tags \tcode{__simd128} and \tcode{__simd256}, where hardware support for \tcode{__simd256} only exists for floating-point types. The implementation therefore defines \tcode{native<T>} as an alias for
   \begin{itemize}
@@ -362,8 +302,7 @@ Where present, the member typedef \tcode{type} shall name an ABI tag type that s
   \item \tcode{simd<T, type>} is default constructible (see \ref{simd.overview}).
 \end{itemize}
 If \tcode{N} is \tcode{1}, the member typedef \tcode{type} is \tcode{simd_abi::scalar}.
-\wgRem{Otherwise, if there are multiple ABI tag types that satisfy the constraints, the member typedef \tcode{type} is implementation-defined.}
-\begin{note}\wgRem{It is expected that extended ABI tags can produce better optimizations and thus are preferred over \tcode{simd_abi::fixed_size<N>}.}
+\begin{note}
   Implementations can base the choice on \tcode{Abis}, but can also ignore the \tcode{Abis} arguments.
 \end{note}
 
@@ -428,7 +367,7 @@ The behavior of a program that adds specializations for \tcode{is_simd_flag_type
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi = simd_abi::@\wgChange{compatible}{native}@<T>> struct simd_size { @\seebelow@ };
+template<class T, class Abi = simd_abi::native<T>> struct simd_size { @\seebelow@ };
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -439,12 +378,12 @@ template<class T, class Abi = simd_abi::@\wgChange{compatible}{native}@<T>> stru
   \item \tcode{is_abi_tag_v<Abi>} is \tcode{true}.
 \end{itemize}
 \begin{note}
-  The rules are different from those in (\ref{simd.overview})\wgChange{.}{:
-  The member \tcode{value} is present even if \tcode{simd<T, Abi>} is not supported for the currently targeted system.}
+  The rules are different from those in (\ref{simd.overview}):
+  The member \tcode{value} is present even if \tcode{simd<T, Abi>} is not supported for the currently targeted system.
 \end{note}
 
 \pnum
-If \tcode{value} is present, the type \tcode{simd_size<T, Abi>} is a \tcode{BinaryTypeTrait} with a base characteristic of \tcode{integral_constant<size_t, N>} with \tcode{N} equal to the number of elements in a \tcode{simd<T, Abi>} object. \wgRem{\noteintro{Note}If \tcode{simd<T, Abi>} is not supported for the currently targeted system, \tcode{simd_size<T, Abi>::value} produces the value \tcode{simd<T, Abi>::size()} would return if it were supported.\noteoutro{note}}
+If \tcode{value} is present, the type \tcode{simd_size<T, Abi>} is a \tcode{BinaryTypeTrait} with a base characteristic of \tcode{integral_constant<size_t, N>} with \tcode{N} equal to the number of elements in a \tcode{simd<T, Abi>} object.
 
 \pnum
 The behavior of a program that adds specializations for \tcode{simd_size} is undefined.
@@ -490,7 +429,7 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
 \end{itemdescr}
 
 \begin{itemdecl}
-template<@\wgChange{int}{size_t}@ N, class V> struct resize_simd { using type = @\seebelow@; };
+template<size_t N, class V> struct resize_simd { using type = @\seebelow@; };
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -521,7 +460,7 @@ public:
   T operator+() const && noexcept;
   T operator~() const && noexcept;
 
-  template<class U, class Flags@\wgAdd{ = element_aligned_tag}@> void copy_to(U* mem, Flags f@\wgAdd{ = \{\}}@) const &&;
+  template<class U, class Flags = element_aligned_tag> void copy_to(U* mem, Flags f = {}) const &&;
 };
 
 template<class M, class T>
@@ -544,7 +483,7 @@ public:
   void operator--() && noexcept;
   void operator--(int) && noexcept;
 
-  template<class U, class Flags@\wgAdd{ = element_aligned_tag}@> void copy_from(const U* mem, Flags@\wgAdd{ = \{\}}@) &&;
+  template<class U, class Flags = element_aligned_tag> void copy_from(const U* mem, Flags = {}) &&;
 };
 \end{codeblock}
 
@@ -583,7 +522,7 @@ T operator~() const && noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U, class Flags@\wgAdd{ = element_aligned_tag}@> void copy_to(U* mem, Flags@\wgAdd{ = \{\}}@) const &&;
+template<class U, class Flags = element_aligned_tag> void copy_to(U* mem, Flags = {}) const &&;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -659,7 +598,7 @@ void operator--(int) && noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U, class Flags@\wgAdd{ = element_aligned_tag}@> void copy_from(const U* mem, Flags@\wgAdd{ = \{\}}@) &&;
+template<class U, class Flags = element_aligned_tag> void copy_from(const U* mem, Flags = {}) &&;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -698,74 +637,74 @@ public:
   using mask_type = simd_mask<T, Abi>;
   using abi_type = Abi;
 
-  static constexpr @\wgChange{size_t size() noexcept}{typename simd_size<T, Abi>::type size}@;
+  static constexpr typename simd_size<T, Abi>::type size;
 
-  @\wgAdd{constexpr }@simd() noexcept = default;
+  constexpr simd() noexcept = default;
 
   // \ref{simd.ctor}, \tcode{simd} constructors
-  template<class U> @\wgAdd{constexpr }@simd(U&& value) noexcept;
-  template<class U@\wgAdd{, class UAbi}@> @\diffbreak{4}
-    \wgAdd{constexpr explicit(\seebelow)}@ simd(const simd<U, @\wgChange{simd_abi::fixed_size<size()>}{UAbi}@>&) noexcept;
-  template<class G> @\wgAdd{constexpr }@explicit simd(G&& gen) noexcept;
-  template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = element_aligned_tag}@>
-    @\wgAdd{constexpr }@simd(const @\wgChange{U* mem}{It\& first}@, Flags@\wgAdd{ = \{\}}@);
+  template<class U> constexpr simd(U&& value) noexcept;
+  template<class U, class UAbi>
+    constexpr explicit(\seebelow) simd(const simd<U, UAbi>&) noexcept;
+  template<class G> constexpr explicit simd(G&& gen) noexcept;
+  template<contiguous_iterator It, class Flags = element_aligned_tag>
+    constexpr simd(const It& first, Flags = {});
 
   // \ref{simd.copy}, \tcode{simd} copy functions
-  template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = element_aligned_tag}@>
-    @\wgAdd{constexpr void}@ copy_from(const @\wgChange{U* mem}{It\& first}@, Flags f@\wgAdd{ = \{\}}@);
-  template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = element_aligned_tag}@>
-    @\wgAdd{requires output_iterator<It, value_type>}@
-    @\wgAdd{constexpr void}@ copy_to(@\wgChange{U* mem}{const It\& first}@, Flags f@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
+  template<contiguous_iterator It, class Flags = element_aligned_tag>
+    constexpr void copy_from(const It& first, Flags f = {});
+  template<contiguous_iterator It, class Flags = element_aligned_tag>
+    requires output_iterator<It, value_type>
+    constexpr void copy_to(const It& first, Flags f = {}) const;
 
   // \ref{simd.subscr}, \tcode{simd} subscript operators
-  @\wgAdd{constexpr }@reference operator[](size_t);
-  @\wgAdd{constexpr }@value_type operator[](size_t) const;
+  constexpr reference operator[](size_t);
+  constexpr value_type operator[](size_t) const;
 
   // \ref{simd.unary}, \tcode{simd} unary operators
-  @\wgAdd{constexpr }@simd& operator++() noexcept;
-  @\wgAdd{constexpr }@simd operator++(int) noexcept;
-  @\wgAdd{constexpr }@simd& operator--() noexcept;
-  @\wgAdd{constexpr }@simd operator--(int) noexcept;
-  @\wgAdd{constexpr }@mask_type operator!() const noexcept;
-  @\wgAdd{constexpr }@simd operator~() const noexcept;
-  @\wgAdd{constexpr }@simd operator+() const noexcept;
-  @\wgAdd{constexpr }@simd operator-() const noexcept;
+  constexpr simd& operator++() noexcept;
+  constexpr simd operator++(int) noexcept;
+  constexpr simd& operator--() noexcept;
+  constexpr simd operator--(int) noexcept;
+  constexpr mask_type operator!() const noexcept;
+  constexpr simd operator~() const noexcept;
+  constexpr simd operator+() const noexcept;
+  constexpr simd operator-() const noexcept;
 
   // \ref{simd.binary}, \tcode{simd} binary operators
-  friend @\wgAdd{constexpr }@simd operator+(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd operator-(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd operator*(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd operator/(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd operator%(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd operator&(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd operator|(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd operator^(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd operator<<(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd operator>>(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd operator<<(const simd&, int) noexcept;
-  friend @\wgAdd{constexpr }@simd operator>>(const simd&, int) noexcept;
+  friend constexpr simd operator+(const simd&, const simd&) noexcept;
+  friend constexpr simd operator-(const simd&, const simd&) noexcept;
+  friend constexpr simd operator*(const simd&, const simd&) noexcept;
+  friend constexpr simd operator/(const simd&, const simd&) noexcept;
+  friend constexpr simd operator%(const simd&, const simd&) noexcept;
+  friend constexpr simd operator&(const simd&, const simd&) noexcept;
+  friend constexpr simd operator|(const simd&, const simd&) noexcept;
+  friend constexpr simd operator^(const simd&, const simd&) noexcept;
+  friend constexpr simd operator<<(const simd&, const simd&) noexcept;
+  friend constexpr simd operator>>(const simd&, const simd&) noexcept;
+  friend constexpr simd operator<<(const simd&, int) noexcept;
+  friend constexpr simd operator>>(const simd&, int) noexcept;
 
   // \ref{simd.cassign}, \tcode{simd} compound assignment
-  friend @\wgAdd{constexpr }@simd& operator+=(simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd& operator-=(simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd& operator*=(simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd& operator/=(simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd& operator%=(simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd& operator&=(simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd& operator|=(simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd& operator^=(simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd& operator<<=(simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd& operator>>=(simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@simd& operator<<=(simd&, int) noexcept;
-  friend @\wgAdd{constexpr }@simd& operator>>=(simd&, int) noexcept;
+  friend constexpr simd& operator+=(simd&, const simd&) noexcept;
+  friend constexpr simd& operator-=(simd&, const simd&) noexcept;
+  friend constexpr simd& operator*=(simd&, const simd&) noexcept;
+  friend constexpr simd& operator/=(simd&, const simd&) noexcept;
+  friend constexpr simd& operator%=(simd&, const simd&) noexcept;
+  friend constexpr simd& operator&=(simd&, const simd&) noexcept;
+  friend constexpr simd& operator|=(simd&, const simd&) noexcept;
+  friend constexpr simd& operator^=(simd&, const simd&) noexcept;
+  friend constexpr simd& operator<<=(simd&, const simd&) noexcept;
+  friend constexpr simd& operator>>=(simd&, const simd&) noexcept;
+  friend constexpr simd& operator<<=(simd&, int) noexcept;
+  friend constexpr simd& operator>>=(simd&, int) noexcept;
 
   // \ref{simd.comparison}, \tcode{simd} compare operators
-  friend @\wgAdd{constexpr }@mask_type operator==(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@mask_type operator!=(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@mask_type operator>=(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@mask_type operator<=(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@mask_type operator>(const simd&, const simd&) noexcept;
-  friend @\wgAdd{constexpr }@mask_type operator<(const simd&, const simd&) noexcept;
+  friend constexpr mask_type operator==(const simd&, const simd&) noexcept;
+  friend constexpr mask_type operator!=(const simd&, const simd&) noexcept;
+  friend constexpr mask_type operator>=(const simd&, const simd&) noexcept;
+  friend constexpr mask_type operator<=(const simd&, const simd&) noexcept;
+  friend constexpr mask_type operator>(const simd&, const simd&) noexcept;
+  friend constexpr mask_type operator<(const simd&, const simd&) noexcept;
 };
 \end{codeblock}
 
@@ -773,7 +712,7 @@ public:
 The class template \tcode{simd} is a data-parallel type. The width of a given \tcode{simd} specialization is a constant expression, determined by the template parameters.
 
 \pnum
-Every specialization of \tcode{simd} \wgChange{shall be}{is} a complete type. The specialization \tcode{simd<T, Abi>} is supported if \tcode{T} is a vectorizable type and
+Every specialization of \tcode{simd} is a complete type. The specialization \tcode{simd<T, Abi>} is supported if \tcode{T} is a vectorizable type and
 \begin{itemize}
   \item \tcode{Abi} is \tcode{simd_abi::scalar}, or
   \item \tcode{Abi} is \tcode{simd_abi::fixed_size<N>}, with \tcode{N} constrained as defined in \ref{simd.abi}.
@@ -806,8 +745,8 @@ Default intialization performs no initialization of the elements; value-initiali
 Implementations should enable explicit conversion from and to implementation-defined types. This adds one or more of the following declarations to class \tcode{simd}:
 
 \begin{codeblock}
-@\wgAdd{constexpr }@explicit operator @\impdef@() const;
-@\wgAdd{constexpr }@explicit simd(const @\impdef@& init);
+constexpr explicit operator @\impdef@() const;
+constexpr explicit simd(const @\impdef@& init);
 \end{codeblock}
 
 \begin{example}
@@ -824,7 +763,7 @@ Implementations should enable explicit conversion from and to implementation-def
 \rSec2[simd.width]{\tcode{simd} width}
 
 \begin{itemdecl}
-static constexpr @\wgChange{size_t size() noexcept}{typename simd_size<T, Abi>::type size}@;
+static constexpr typename simd_size<T, Abi>::type size;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -847,34 +786,34 @@ public:
   reference() = delete;
   reference(const reference&) = delete;
 
-  @\wgAdd{constexpr }@operator value_type() const noexcept;
+  constexpr operator value_type() const noexcept;
 
-  template<class U> @\wgAdd{constexpr }@reference operator=(U&& x) && noexcept;
+  template<class U> constexpr reference operator=(U&& x) && noexcept;
 
-  template<class U> @\wgAdd{constexpr }@reference operator+=(U&& x) && noexcept;
-  template<class U> @\wgAdd{constexpr }@reference operator-=(U&& x) && noexcept;
-  template<class U> @\wgAdd{constexpr }@reference operator*=(U&& x) && noexcept;
-  template<class U> @\wgAdd{constexpr }@reference operator/=(U&& x) && noexcept;
-  template<class U> @\wgAdd{constexpr }@reference operator%=(U&& x) && noexcept;
-  template<class U> @\wgAdd{constexpr }@reference operator|=(U&& x) && noexcept;
-  template<class U> @\wgAdd{constexpr }@reference operator&=(U&& x) && noexcept;
-  template<class U> @\wgAdd{constexpr }@reference operator^=(U&& x) && noexcept;
-  template<class U> @\wgAdd{constexpr }@reference operator<<=(U&& x) && noexcept;
-  template<class U> @\wgAdd{constexpr }@reference operator>>=(U&& x) && noexcept;
+  template<class U> constexpr reference operator+=(U&& x) && noexcept;
+  template<class U> constexpr reference operator-=(U&& x) && noexcept;
+  template<class U> constexpr reference operator*=(U&& x) && noexcept;
+  template<class U> constexpr reference operator/=(U&& x) && noexcept;
+  template<class U> constexpr reference operator%=(U&& x) && noexcept;
+  template<class U> constexpr reference operator|=(U&& x) && noexcept;
+  template<class U> constexpr reference operator&=(U&& x) && noexcept;
+  template<class U> constexpr reference operator^=(U&& x) && noexcept;
+  template<class U> constexpr reference operator<<=(U&& x) && noexcept;
+  template<class U> constexpr reference operator>>=(U&& x) && noexcept;
 
-  @\wgAdd{constexpr }@reference operator++() && noexcept;
-  @\wgAdd{constexpr }@value_type operator++(int) && noexcept;
-  @\wgAdd{constexpr }@reference operator--() && noexcept;
-  @\wgAdd{constexpr }@value_type operator--(int) && noexcept;
+  constexpr reference operator++() && noexcept;
+  constexpr value_type operator++(int) && noexcept;
+  constexpr reference operator--() && noexcept;
+  constexpr value_type operator--(int) && noexcept;
 
-  friend @\wgAdd{constexpr }@void swap(reference&& a, reference&& b) noexcept;
-  friend @\wgAdd{constexpr }@void swap(value_type& a, reference&& b) noexcept;
-  friend @\wgAdd{constexpr }@void swap(reference&& a, value_type& b) noexcept;
+  friend constexpr void swap(reference&& a, reference&& b) noexcept;
+  friend constexpr void swap(value_type& a, reference&& b) noexcept;
+  friend constexpr void swap(reference&& a, value_type& b) noexcept;
 };
 \end{codeblock}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@operator value_type() const noexcept;
+constexpr operator value_type() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -883,7 +822,7 @@ public:
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U> @\wgAdd{constexpr }@reference operator=(U&& x) && noexcept;
+template<class U> constexpr reference operator=(U&& x) && noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -898,16 +837,16 @@ template<class U> @\wgAdd{constexpr }@reference operator=(U&& x) && noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U> @\wgAdd{constexpr }@reference operator+=(U&& x) && noexcept;
-template<class U> @\wgAdd{constexpr }@reference operator-=(U&& x) && noexcept;
-template<class U> @\wgAdd{constexpr }@reference operator*=(U&& x) && noexcept;
-template<class U> @\wgAdd{constexpr }@reference operator/=(U&& x) && noexcept;
-template<class U> @\wgAdd{constexpr }@reference operator%=(U&& x) && noexcept;
-template<class U> @\wgAdd{constexpr }@reference operator|=(U&& x) && noexcept;
-template<class U> @\wgAdd{constexpr }@reference operator&=(U&& x) && noexcept;
-template<class U> @\wgAdd{constexpr }@reference operator^=(U&& x) && noexcept;
-template<class U> @\wgAdd{constexpr }@reference operator<<=(U&& x) && noexcept;
-template<class U> @\wgAdd{constexpr }@reference operator>>=(U&& x) && noexcept;
+template<class U> constexpr reference operator+=(U&& x) && noexcept;
+template<class U> constexpr reference operator-=(U&& x) && noexcept;
+template<class U> constexpr reference operator*=(U&& x) && noexcept;
+template<class U> constexpr reference operator/=(U&& x) && noexcept;
+template<class U> constexpr reference operator%=(U&& x) && noexcept;
+template<class U> constexpr reference operator|=(U&& x) && noexcept;
+template<class U> constexpr reference operator&=(U&& x) && noexcept;
+template<class U> constexpr reference operator^=(U&& x) && noexcept;
+template<class U> constexpr reference operator<<=(U&& x) && noexcept;
+template<class U> constexpr reference operator>>=(U&& x) && noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -922,8 +861,8 @@ template<class U> @\wgAdd{constexpr }@reference operator>>=(U&& x) && noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@reference operator++() && noexcept;
-@\wgAdd{constexpr }@reference operator--() && noexcept;
+constexpr reference operator++() && noexcept;
+constexpr reference operator--() && noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -938,8 +877,8 @@ template<class U> @\wgAdd{constexpr }@reference operator>>=(U&& x) && noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@value_type operator++(int) && noexcept;
-@\wgAdd{constexpr }@value_type operator--(int) && noexcept;
+constexpr value_type operator++(int) && noexcept;
+constexpr value_type operator--(int) && noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -954,9 +893,9 @@ template<class U> @\wgAdd{constexpr }@reference operator>>=(U&& x) && noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-friend @\wgAdd{constexpr }@void swap(reference&& a, reference&& b) noexcept;
-friend @\wgAdd{constexpr }@void swap(value_type& a, reference&& b) noexcept;
-friend @\wgAdd{constexpr }@void swap(reference&& a, value_type& b) noexcept;
+friend constexpr void swap(reference&& a, reference&& b) noexcept;
+friend constexpr void swap(value_type& a, reference&& b) noexcept;
+friend constexpr void swap(reference&& a, value_type& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -967,7 +906,7 @@ friend @\wgAdd{constexpr }@void swap(reference&& a, value_type& b) noexcept;
 \rSec2[simd.ctor]{\tcode{simd} constructors}
 
 \begin{itemdecl}
-template<class U> @\wgAdd{constexpr }@simd(U&&) noexcept;
+template<class U> constexpr simd(U&&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -975,18 +914,18 @@ template<class U> @\wgAdd{constexpr }@simd(U&&) noexcept;
   Constructs an object with each element initialized to the value of the argument after conversion to \tcode{value_type}.
 
   \pnum\remarks
-  Let \tcode{From} denote the type \wgChange{\tcode{remove_cv_t<remove_reference_t<U>>}}{\tcode{remove_cvref_t<U>}}. This constructor shall not participate in overload resolution unless:
+  Let \tcode{From} denote the type \tcode{remove_cvref_t<U>}. This constructor shall not participate in overload resolution unless:
   \begin{itemize}
     \item \tcode{From} is a vectorizable type and every possibly value of \tcode{From} can be represented with type \tcode{value_type}, or
     \item \tcode{From} is not an arithmetic type and is implicitly convertible to \tcode{value_type}, or
     \item \tcode{From} is \tcode{int}, or
-    \item \tcode{From} is \tcode{unsigned int} and \wgChange{\tcode{value_type} is an unsigned integral type}{\tcode{is_unsigned_v<value_type>} is \tcode{true}}.% unsigned integer types excludes character types
+    \item \tcode{From} is \tcode{unsigned int} and \tcode{is_unsigned_v<value_type>} is \tcode{true}.% unsigned integer types excludes character types
   \end{itemize}
 
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U@\wgAdd{, class UAbi}@> @\diffbreak{2}\wgAdd{constexpr explicit(\seebelow) }@simd(const simd<U, @\wgChange{simd_abi::fixed_size<size()>}{UAbi}@>& x) noexcept;
+template<class U, class UAbi> constexpr explicit(\seebelow) simd(const simd<U, UAbi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -995,26 +934,19 @@ template<class U@\wgAdd{, class UAbi}@> @\diffbreak{2}\wgAdd{constexpr explicit(
 
   \pnum\remarks
   This constructor shall not participate in overload resolution unless
-  \wgAdd{\tcode{simd_size_v<U, UAbi> == size()}.}
-  \begin{itemize}
-    \wgItemRem \wgRem{\tcode{abi_type} is \tcode{simd_abi::fixed_size<size()>}, and}
-    \wgItemRem \wgRem{every possible value of \tcode{U} can be represented with type \tcode{value_type}, and}
-    \wgItemRem \wgRem{if both \tcode{U} and \tcode{value_type} are integral, the integer conversion rank (\mbox{\ref{conv.rank}}) of \tcode{value_type} is greater than the integer conversion rank of \tcode{U}.}
-  \end{itemize}
+  \tcode{simd_size_v<U, UAbi> == size()}.
 
-  \begin{wgBAdd}
     \pnum
-    \wgAdd{The constructor is \tcode{explicit} iff}
+    The constructor is \tcode{explicit} iff
     \begin{itemize}
-      \wgItemAdd \wgAdd{at least one possible value of \tcode{U} cannot be represented with type \tcode{value_type}, or}
-      \wgItemAdd \wgAdd{if both \tcode{U} and \tcode{value_type} are integral types, the integer conversion rank (\mbox{\ref{conv.rank}}) of \tcode{U} is greater than the integer conversion rank of \tcode{value_type}, or}
-      \wgItemAdd \wgAdd{if both \tcode{U} and \tcode{value_type} are floating-point types, the floating-point conversion rank (\mbox{\ref{conv.rank}}) of \tcode{U} is greater than the floating-point conversion rank of \tcode{value_type}.}
+      \item at least one possible value of \tcode{U} cannot be represented with type \tcode{value_type}, or
+      \item if both \tcode{U} and \tcode{value_type} are integral types, the integer conversion rank (\mbox{\ref{conv.rank}}) of \tcode{U} is greater than the integer conversion rank of \tcode{value_type}, or
+      \item if both \tcode{U} and \tcode{value_type} are floating-point types, the floating-point conversion rank (\mbox{\ref{conv.rank}}) of \tcode{U} is greater than the floating-point conversion rank of \tcode{value_type}.
     \end{itemize}
-  \end{wgBAdd}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class G> @\wgAdd{constexpr }@simd(G&& gen) noexcept;
+template<class G> constexpr simd(G&& gen) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1029,12 +961,13 @@ template<class G> @\wgAdd{constexpr }@simd(G&& gen) noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = element_aligned_tag}@>
-  @\wgAdd{constexpr }@simd(const @\wgChange{U* mem}{It\& first}@, Flags@\wgAdd{ = \{\}}@);
+template<contiguous_iterator It, class Flags = element_aligned_tag>
+  constexpr simd(const It& first, Flags = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\wgAdd{\mbox{\constraints} \tcode{iter_value_t<It>} is a vectorizable type.}
+  \pnum\constraints
+  \tcode{iter_value_t<It>} is a vectorizable type.
 
   \pnum\requires
   \begin{itemize}
@@ -1048,20 +981,20 @@ template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = ele
   \pnum\remarks
   This constructor shall not participate in overload resolution unless
   \begin{itemize}
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}\wgAdd{.}\wgRem{, and}
-    \wgItemRem \wgRem{\tcode{U} is a vectorizable type.}
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
   \end{itemize}
 \end{itemdescr}
 
 \rSec2[simd.copy]{\tcode{simd} copy functions}
 
 \begin{itemdecl}
-template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = element_aligned_tag}@>
-  @\wgAdd{constexpr }@void copy_from(const @\wgChange{U* mem}{It\& first}@, Flags f@\wgAdd{ = \{\}}@);
+template<contiguous_iterator It, class Flags = element_aligned_tag>
+  constexpr void copy_from(const It& first, Flags f = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\wgAdd{\mbox{\constraints} \tcode{iter_value_t<It>} is a vectorizable type.}
+  \pnum\constraints
+  \tcode{iter_value_t<It>} is a vectorizable type.
 
   \pnum\requires
   \begin{itemize}
@@ -1075,19 +1008,19 @@ template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = ele
   \pnum\remarks
   This function shall not participate in overload resolution unless
   \begin{itemize}
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}\wgAdd{.}\wgRem{, and}
-    \wgItemRem\wgRem{\tcode{U} is a vectorizable type.}
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
   \end{itemize}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = element_aligned_tag}@>
-  @\wgAdd{requires output_iterator<It, value_type>}@
-  @\wgAdd{constexpr }@void copy_to(@\wgChange{U* mem}{const It\& first}@, Flags f@\wgAdd{ = \{\}}@) const;
+template<contiguous_iterator It, class Flags = element_aligned_tag>
+  requires output_iterator<It, value_type>
+  constexpr void copy_to(const It& first, Flags f = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\wgAdd{\mbox{\constraints} \tcode{iter_value_t<It>} is a vectorizable type.}
+  \pnum\constraints
+  \tcode{iter_value_t<It>} is a vectorizable type.
 
   \pnum\requires
   \begin{itemize}
@@ -1101,15 +1034,14 @@ template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = ele
   \pnum\remarks
   This function shall not participate in overload resolution unless
   \begin{itemize}
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}\wgAdd{.}\wgRem{, and}
-    \wgItemRem \wgRem{\tcode{U} is a vectorizable type.}
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
   \end{itemize}
 \end{itemdescr}
 
 \rSec2[simd.subscr]{\tcode{simd} subscript operators}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@reference operator[](size_t i);
+constexpr reference operator[](size_t i);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1123,7 +1055,7 @@ template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = ele
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@value_type operator[](size_t i) const;
+constexpr value_type operator[](size_t i) const;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1142,7 +1074,7 @@ template<@\wgChange{class U}{contiguous_iterator It}@, class Flags@\wgAdd{ = ele
 Effects in this subclause are applied as unary element-wise operations.
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@simd& operator++() noexcept;
+constexpr simd& operator++() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1154,7 +1086,7 @@ Effects in this subclause are applied as unary element-wise operations.
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@simd operator++(int) noexcept;
+constexpr simd operator++(int) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1166,7 +1098,7 @@ Effects in this subclause are applied as unary element-wise operations.
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@simd& operator--() noexcept;
+constexpr simd& operator--() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1178,7 +1110,7 @@ Effects in this subclause are applied as unary element-wise operations.
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@simd operator--(int) noexcept;
+constexpr simd operator--(int) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1190,7 +1122,7 @@ Effects in this subclause are applied as unary element-wise operations.
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@mask_type operator!() const noexcept;
+constexpr mask_type operator!() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1199,7 +1131,7 @@ Effects in this subclause are applied as unary element-wise operations.
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@simd operator~() const noexcept;
+constexpr simd operator~() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1211,7 +1143,7 @@ Effects in this subclause are applied as unary element-wise operations.
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@simd operator+() const noexcept;
+constexpr simd operator+() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1220,7 +1152,7 @@ Effects in this subclause are applied as unary element-wise operations.
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@simd operator-() const noexcept;
+constexpr simd operator-() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1233,16 +1165,16 @@ Effects in this subclause are applied as unary element-wise operations.
 \rSec2[simd.binary]{\tcode{simd} binary operators}
 
 \begin{itemdecl}
-friend @\wgAdd{constexpr }@simd operator+(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd operator-(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd operator*(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd operator/(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd operator%(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd operator&(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd operator|(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd operator^(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd operator<<(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd operator>>(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd operator+(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd operator-(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd operator*(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd operator/(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd operator%(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd operator&(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd operator|(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd operator^(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd operator<<(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd operator>>(const simd& lhs, const simd& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1254,8 +1186,8 @@ friend @\wgAdd{constexpr }@simd operator>>(const simd& lhs, const simd& rhs) noe
 \end{itemdescr}
 
 \begin{itemdecl}
-friend @\wgAdd{constexpr }@simd operator<<(const simd& v, int n) noexcept;
-friend @\wgAdd{constexpr }@simd operator>>(const simd& v, int n) noexcept;
+friend constexpr simd operator<<(const simd& v, int n) noexcept;
+friend constexpr simd operator>>(const simd& v, int n) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1269,16 +1201,16 @@ friend @\wgAdd{constexpr }@simd operator>>(const simd& v, int n) noexcept;
 \rSec2[simd.cassign]{\tcode{simd} compound assignment}
 
 \begin{itemdecl}
-friend @\wgAdd{constexpr }@simd& operator+=(simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd& operator-=(simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd& operator*=(simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd& operator/=(simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd& operator%=(simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd& operator&=(simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd& operator|=(simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd& operator^=(simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd& operator<<=(simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd& operator>>=(simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd& operator+=(simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd& operator-=(simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd& operator*=(simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd& operator/=(simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd& operator%=(simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd& operator&=(simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd& operator|=(simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd& operator^=(simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd& operator<<=(simd& lhs, const simd& rhs) noexcept;
+friend constexpr simd& operator>>=(simd& lhs, const simd& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1293,8 +1225,8 @@ friend @\wgAdd{constexpr }@simd& operator>>=(simd& lhs, const simd& rhs) noexcep
 \end{itemdescr}
 
 \begin{itemdecl}
-friend @\wgAdd{constexpr }@simd& operator<<=(simd& lhs, int n) noexcept;
-friend @\wgAdd{constexpr }@simd& operator>>=(simd& lhs, int n) noexcept;
+friend constexpr simd& operator<<=(simd& lhs, int n) noexcept;
+friend constexpr simd& operator>>=(simd& lhs, int n) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1308,12 +1240,12 @@ friend @\wgAdd{constexpr }@simd& operator>>=(simd& lhs, int n) noexcept;
 \rSec2[simd.comparison]{\tcode{simd} compare operators}
 
 \begin{itemdecl}
-friend @\wgAdd{constexpr }@mask_type operator==(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@mask_type operator!=(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@mask_type operator>=(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@mask_type operator<=(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@mask_type operator>(const simd& lhs, const simd& rhs) noexcept;
-friend @\wgAdd{constexpr }@mask_type operator<(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr mask_type operator==(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr mask_type operator!=(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr mask_type operator>=(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr mask_type operator<=(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr mask_type operator>(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr mask_type operator<(const simd& lhs, const simd& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1321,14 +1253,14 @@ friend @\wgAdd{constexpr }@mask_type operator<(const simd& lhs, const simd& rhs)
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.reductions]{\texorpdfstring{\wgChange{R}{\tcode{simd} r}}{simd r}eductions}
+\rSec2[simd.reductions]{\texorpdfstring{\tcode{simd} r}{simd r}eductions}
 
 \pnum
 In this subclause, \tcode{BinaryOperation} shall be a binary element-wise operation.
 
 \begin{itemdecl}
 template<class T, class Abi, class BinaryOperation = plus<>>
-  @\wgAdd{constexpr }@T reduce(const simd<T, Abi>& x, BinaryOperation binary_op = {});
+  constexpr T reduce(const simd<T, Abi>& x, BinaryOperation binary_op = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1345,7 +1277,7 @@ template<class T, class Abi, class BinaryOperation = plus<>>
 
 \begin{itemdecl}
 template<class M, class V, class BinaryOperation>
-  @\wgAdd{constexpr }@typename V::value_type reduce(const const_where_expression<M, V>& x,
+  constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
                                 typename V::value_type identity_element,
                                 BinaryOperation binary_op = {});
 \end{itemdecl}
@@ -1363,7 +1295,7 @@ template<class M, class V, class BinaryOperation>
 
 \begin{itemdecl}
 template<class M, class V>
-  @\wgAdd{constexpr }@typename V::value_type reduce(const const_where_expression<M, V>& x, plus<> binary_op) noexcept;
+  constexpr typename V::value_type reduce(const const_where_expression<M, V>& x, plus<> binary_op) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1373,7 +1305,7 @@ template<class M, class V>
 
 \begin{itemdecl}
 template<class M, class V>
-  @\wgAdd{constexpr }@typename V::value_type reduce(const const_where_expression<M, V>& x, multiplies<> binary_op) noexcept;
+  constexpr typename V::value_type reduce(const const_where_expression<M, V>& x, multiplies<> binary_op) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1383,7 +1315,7 @@ template<class M, class V>
 
 \begin{itemdecl}
 template<class M, class V>
-  @\wgAdd{constexpr }@typename V::value_type reduce(const const_where_expression<M, V>& x, bit_and<> binary_op) noexcept;
+  constexpr typename V::value_type reduce(const const_where_expression<M, V>& x, bit_and<> binary_op) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1396,9 +1328,9 @@ template<class M, class V>
 
 \begin{itemdecl}
 template<class M, class V>
-  @\wgAdd{constexpr }@typename V::value_type reduce(const const_where_expression<M, V>& x, bit_or<> binary_op) noexcept;
+  constexpr typename V::value_type reduce(const const_where_expression<M, V>& x, bit_or<> binary_op) noexcept;
 template<class M, class V>
-  @\wgAdd{constexpr }@typename V::value_type reduce(const const_where_expression<M, V>& x, bit_xor<> binary_op) noexcept;
+  constexpr typename V::value_type reduce(const const_where_expression<M, V>& x, bit_xor<> binary_op) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1410,7 +1342,7 @@ template<class M, class V>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> @\wgAdd{constexpr }@T hmin(const simd<T, Abi>& x) noexcept;
+template<class T, class Abi> constexpr T hmin(const simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1419,7 +1351,7 @@ template<class T, class Abi> @\wgAdd{constexpr }@T hmin(const simd<T, Abi>& x) n
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class M, class V> @\wgAdd{constexpr }@typename V::value_type hmin(const const_where_expression<M, V>& x) noexcept;
+template<class M, class V> constexpr typename V::value_type hmin(const const_where_expression<M, V>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1428,7 +1360,7 @@ template<class M, class V> @\wgAdd{constexpr }@typename V::value_type hmin(const
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> @\wgAdd{constexpr }@T hmax(const simd<T, Abi>& x) noexcept;
+template<class T, class Abi> constexpr T hmax(const simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1437,7 +1369,7 @@ template<class T, class Abi> @\wgAdd{constexpr }@T hmax(const simd<T, Abi>& x) n
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class M, class V> @\wgAdd{constexpr }@typename V::value_type hmax(const const_where_expression<M, V>& x) noexcept;
+template<class M, class V> constexpr typename V::value_type hmax(const const_where_expression<M, V>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1447,110 +1379,12 @@ template<class M, class V> @\wgAdd{constexpr }@typename V::value_type hmax(const
 
 \rSec2[simd.casts]{Casts}
 
-\begin{wgBRem}
-\begin{itemdecl}
-@\wgRem{template<class T, class U, class Abi> \seebelow simd_cast(const simd<U, Abi>\& x) noexcept;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum
-  \wgRem{Let \tcode{To} denote \tcode{T::value_type} if \tcode{is_simd_v<T>} is \tcode{true}, or \tcode{T} otherwise.}
-
-  \pnum\wgRem{\returns
-  A \tcode{simd} object with the $i^\text{th}$ element initialized to \tcode{static_cast<To>(x[$i$])} \foralli.}
-
-  \pnum\wgRem{\remarks
-  The function shall not participate in overload resolution unless}
-  \begin{itemize}
-    \wgItemRem \wgRem{every possible value of type \tcode{U} can be represented with type \tcode{To}, and}
-    \wgItemRem \wgRem{either}
-      \begin{itemize}
-        \wgItemRem \wgRem{\tcode{is_simd_v<T>} is \tcode{false}, or}
-        \wgItemRem \wgRem{\tcode{T::size() == simd<U, Abi>::size()} is \tcode{true}.}
-      \end{itemize}
-  \end{itemize}
-
-  \pnum
-  \wgRem{The return type is}
-  \begin{itemize}
-    \wgItemRem \wgRem{\tcode{T} if \tcode{is_simd_v<T>} is \tcode{true};}
-    \wgItemRem \wgRem{otherwise, \tcode{simd<T, Abi>} if \tcode{U} is the same type as \tcode{T};}
-    \wgItemRem \wgRem{otherwise, \tcode{simd<T, simd_abi::fixed_size<simd<U, Abi>::size()>>}}
-  \end{itemize}
-\end{itemdescr}
-
-\begin{itemdecl}
-@\wgRem{template<class T, class U, class Abi> \seebelow static_simd_cast(const simd<U, Abi>\& x) noexcept;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum
-  \wgRem{Let \tcode{To} denote \tcode{T::value_type} if \tcode{is_simd_v<T>} is \tcode{true} or \tcode{T} otherwise.}
-
-  \pnum\wgRem{\returns
-  A \tcode{simd} object with the $i^\text{th}$ element initialized to \tcode{static_cast<To>(x[$i$])} \foralli.}
-
-  \pnum\wgRem{\remarks
-  The function shall not participate in overload resolution unless either}
-  \begin{itemize}
-    \wgItemRem \wgRem{\tcode{is_simd_v<T>} is \tcode{false}, or}
-    \wgItemRem \wgRem{\tcode{T::size() == simd<U, Abi>::size()} is \tcode{true}.}
-  \end{itemize}
-
-  \pnum
-  \wgRem{The return type is}
-  \begin{itemize}
-    \wgItemRem \wgRem{\tcode{T} if \tcode{is_simd_v<T>} is \tcode{true};}
-    \wgItemRem \wgRem{otherwise, \tcode{simd<T, Abi>} if either \tcode{U} is the same type as \tcode{T} or \tcode{make_signed_t<U>} is the same type as \tcode{make_signed_t<T>};}
-    \wgItemRem \wgRem{otherwise, \tcode{simd<T, simd_abi::fixed_size<simd<U, Abi>::size()>>}.}
-  \end{itemize}
-\end{itemdescr}
-
-\begin{itemdecl}
-@\wgRem{template<class T, class Abi>}\diffbreak{2}%
-  \wgRem{fixed_size_simd<T, simd_size_v<T, Abi>> to_fixed_size(const simd<T, Abi>\& x) noexcept;}\diffbreak{0}%
-\wgRem{template<class T, class Abi>}\diffbreak{2}%
-  \wgRem{fixed_size_simd_mask<T, simd_size_v<T, Abi>> to_fixed_size(const simd_mask<T, Abi>\& x) noexcept;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\wgRem{\returns
-A data-parallel object with the $i^\text{th}$ element initialized to \tcode{x[$i$]} \foralli.}
-\end{itemdescr}
-
-\begin{itemdecl}
-@\wgRem{template<class T, int N> native_simd<T> to_native(const fixed_size_simd<T, N>\& x) noexcept;}\diffbreak{0}%
-\wgRem{template<class T, int N> native_simd_mask<T> to_native(const fixed_size_simd_mask<T, N>\& x) noexcept;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\wgRem{\returns
-  A data-parallel object with the $i^\text{th}$ element initialized to \tcode{x[$i$]} \foralli.}
-
-  \pnum\wgRem{\remarks
-  These functions shall not participate in overload resolution unless \tcode{simd_size_v<T, simd_abi::native<T>> == N} is \tcode{true}.}
-\end{itemdescr}
-
-\begin{itemdecl}
-@\wgRem{template<class T, int N> simd<T> to_compatible(const fixed_size_simd<T, N>\& x) noexcept;}\diffbreak{0}%
-\wgRem{template<class T, int N> simd_mask<T> to_compatible(const fixed_size_simd_mask<T, N>\& x) noexcept;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\wgRem{\returns
-  A data-parallel object with the $i^\text{th}$ element initialized to \tcode{x[$i$]} \foralli.}
-
-  \pnum\wgRem{\remarks
-  These functions shall not participate in overload resolution unless \tcode{simd_size_v<T, simd_abi::compatible<T>> == N} is \tcode{true}.}
-\end{itemdescr}
-\end{wgBRem}
-
 \begin{itemdecl}
 template<size_t... Sizes, class T, class Abi>
-  @\wgAdd{constexpr }@tuple<simd<T, simd_abi::deduce_t<T, Sizes>>...>
+  constexpr tuple<simd<T, simd_abi::deduce_t<T, Sizes>>...>
     split(const simd<T, Abi>& x) noexcept;
 template<size_t... Sizes, class T, class Abi>
-  @\wgAdd{constexpr }@tuple<simd_mask<T, simd_abi::deduce_t<T, Sizes>>...>
+  constexpr tuple<simd_mask<T, simd_abi::deduce_t<T, Sizes>>...>
     split(const simd_mask<T, Abi>& x) noexcept;
 \end{itemdecl}
 
@@ -1564,10 +1398,10 @@ template<size_t... Sizes, class T, class Abi>
 
 \begin{itemdecl}
 template<class V, class Abi>
-  @\wgAdd{constexpr }@array<V, simd_size_v<typename V::value_type, Abi> / V::size()>
+  constexpr array<V, simd_size_v<typename V::value_type, Abi> / V::size()>
     split(const simd<typename V::value_type, Abi>& x) noexcept;
 template<class V, class Abi>
-  @\wgAdd{constexpr }@array<V, simd_size_v<typename V::simd_type::value_type, Abi> / V::size()>
+  constexpr array<V, simd_size_v<typename V::simd_type::value_type, Abi> / V::size()>
     split(const simd_mask<typename V::simd_type::value_type, Abi>& x) noexcept;
 \end{itemdecl}
 
@@ -1585,10 +1419,10 @@ template<class V, class Abi>
 
 \begin{itemdecl}
 template<size_t N, class T, class A>
-  @\wgAdd{constexpr }@array<resize_simd<simd_size_v<T, A> / N, simd<T, A>>, N>
+  constexpr array<resize_simd<simd_size_v<T, A> / N, simd<T, A>>, N>
     split_by(const simd<T, A>& x) noexcept;
 template<size_t N, class T, class A>
-  @\wgAdd{constexpr }@array<resize_simd<simd_size_v<T, A> / N, simd_mask<T, A>>, N>
+  constexpr array<resize_simd<simd_size_v<T, A> / N, simd_mask<T, A>>, N>
     split_by(const simd_mask<T, A>& x) noexcept;
 \end{itemdecl}
 
@@ -1602,10 +1436,10 @@ template<size_t N, class T, class A>
 
 \begin{itemdecl}
 template<class T, class... Abis>
-  @\wgAdd{constexpr }@simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(
+  constexpr simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(
     const simd<T, Abis>&... xs) noexcept;
 template<class T, class... Abis>
-  @\wgAdd{constexpr }@simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(
+  constexpr simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(
     const simd_mask<T, Abis>&... xs) noexcept;
 \end{itemdecl}
 
@@ -1616,10 +1450,10 @@ template<class T, class... Abis>
 
 \begin{itemdecl}
   template<class T, class Abi, size_t N>
-    @\wgAdd{constexpr }@resize_simd<simd_size_v<T, Abi> * N, simd<T, Abi>>
+    constexpr resize_simd<simd_size_v<T, Abi> * N, simd<T, Abi>>
       concat(const array<simd<T, Abi>, N>& arr) noexcept;
   template<class T, class Abi, size_t N>
-    @\wgAdd{constexpr }@resize_simd<simd_size_v<T, Abi> * N, simd_mask<T, Abi>>
+    constexpr resize_simd<simd_size_v<T, Abi> * N, simd_mask<T, Abi>>
       concat(const array<simd_mask<T, Abi>, N>& arr) noexcept;
 \end{itemdecl}
 
@@ -1631,7 +1465,7 @@ template<class T, class... Abis>
 \rSec2[simd.alg]{Algorithms}
 
 \begin{itemdecl}
-template<class T, class Abi> @\wgAdd{constexpr }@simd<T, Abi> min(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
+template<class T, class Abi> constexpr simd<T, Abi> min(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1640,7 +1474,7 @@ template<class T, class Abi> @\wgAdd{constexpr }@simd<T, Abi> min(const simd<T, 
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> @\wgAdd{constexpr }@simd<T, Abi> max(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
+template<class T, class Abi> constexpr simd<T, Abi> max(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1650,7 +1484,7 @@ template<class T, class Abi> @\wgAdd{constexpr }@simd<T, Abi> max(const simd<T, 
 
 \begin{itemdecl}
 template<class T, class Abi>
-  @\wgAdd{constexpr }@pair<simd<T, Abi>, simd<T, Abi>> minmax(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
+  constexpr pair<simd<T, Abi>, simd<T, Abi>> minmax(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1664,7 +1498,7 @@ template<class T, class Abi>
 
 \begin{itemdecl}
 template<class T, class Abi> simd<T, Abi>
-  @\wgAdd{constexpr }@clamp(const simd<T, Abi>& v, const simd<T, Abi>& lo, const simd<T, Abi>& hi);
+  constexpr clamp(const simd<T, Abi>& v, const simd<T, Abi>& lo, const simd<T, Abi>& hi);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1675,7 +1509,7 @@ template<class T, class Abi> simd<T, Abi>
   The result of element-wise application of \tcode{std::clamp(v[$i$], lo[$i$], hi[$i$])} \foralli.
 \end{itemdescr}
 
-\rSec2[simd.math]{\texorpdfstring{\wgChange{M}{\tcode{simd} m}ath}{simd math} library}
+\rSec2[simd.math]{\texorpdfstring{\tcode{simd} math}{simd math} library}
 
 \pnum
 For each set of overloaded functions within \tcode{<cmath>}, there shall be additional overloads sufficient to ensure that if any argument corresponding to a \tcode{double} parameter has type \tcode{simd<T, Abi>}, where \tcode{is_floating_point_v<T>} is \tcode{true}, then:
@@ -1692,13 +1526,11 @@ It is unspecified whether a call to these overloads with arguments that are all 
 Each function overload produced by the above rules applies the indicated \tcode{<cmath>} function element-wise. For the mathematical functions, the results per element only need to be approximately equal to the application of the function which is overloaded for the element type.
 
 \pnum
-The \wgChange{behavior is undefined}{result is unspecified} if a domain, pole, or range error occurs when the input argument(s) are applied to the indicated \tcode{<cmath>} function.
-\wgAdd{\noteintro{Note} Implementations are encouraged to follow the C specification (especially Annex F). \noteoutro{note}}
+The result is unspecified if a domain, pole, or range error occurs when the input argument(s) are applied to the indicated \tcode{<cmath>} function.
+\begin{note}Implementations are encouraged to follow the C specification (especially Annex F).\end{note}
 
-\begin{wgBAdd}
-  \pnum
-  TODO: Allow \tcode{abs(simd<\textrm{signed-integral}>)}.
-\end{wgBAdd}
+\pnum
+TODO: Allow \tcode{abs(simd<\textrm{signed-integral}>)}.
 
 \pnum
 If \tcode{abs} is called with an argument of type \tcode{simd<X, Abi>} for which \tcode{is_unsigned_v<X>} is \tcode{true}, the program is ill-formed.
@@ -1715,47 +1547,47 @@ public:
   using simd_type = simd<T, Abi>;
   using abi_type = Abi;
 
-  static constexpr @\wgChange{size_t size() noexcept}{typename simd_size<T, Abi>::type size}@;
+  static constexpr typename simd_size<T, Abi>::type size;
 
-  @\wgAdd{constexpr }@simd_mask() noexcept = default;
+  constexpr simd_mask() noexcept = default;
 
-  // \ref{simd.mask.ctor}, \wgChange{C}{\tcode{simd_mask} c}onstructors
-  @\wgAdd{constexpr} @explicit simd_mask(value_type) noexcept;
-  template<class U@\wgAdd{, class UAbi}@>
-    @\wgAdd{constexpr explicit(sizeof(U) != sizeof(T)) }\diffbreak{4}@simd_mask(const simd_mask<U, @\wgChange{simd_abi::fixed_size<size()>}{UAbi}@>&) noexcept;
-  @\wgAdd{template<class G> constexpr explicit simd_mask(G\&\& gen) noexcept;}@
-  template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned_tag}@>
-    @\wgAdd{constexpr }@simd_mask(const @\wgChange{value_type* mem}{It\& first}@, Flags@\wgAdd{ = \{\}}@);
+  // \ref{simd.mask.ctor}, \tcode{simd_mask} constructors
+  constexpr explicit simd_mask(value_type) noexcept;
+  template<class U, class UAbi>
+    constexpr explicit(sizeof(U) != sizeof(T)) simd_mask(const simd_mask<U, UAbi>&) noexcept;
+  template<class G> constexpr explicit simd_mask(G&& gen) noexcept;
+  template<contiguous_iterator It, class Flags = element_aligned_tag>
+    constexpr simd_mask(const It& first, Flags = {});
 
-  // \ref{simd.mask.copy}, \wgChange{C}{\tcode{simd_mask} c}opy functions
-  template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned_tag}@>
-    @\wgAdd{constexpr}@ void copy_from(const @\wgChange{value_type* mem}{It\& first}@, Flags@\wgAdd{ = \{\}}@);
-  template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned_tag}@>
-    @\wgAdd{requires output_iterator<It, value_type>}@
-    @\wgAdd{constexpr}@ void copy_to(@\wgChange{value_type* mem}{const It\& first}@, Flags@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
+  // \ref{simd.mask.copy}, \tcode{simd_mask} copy functions
+  template<contiguous_iterator It, class Flags = element_aligned_tag>
+    constexpr void copy_from(const It& first, Flags = {});
+  template<contiguous_iterator It, class Flags = element_aligned_tag>
+    requires output_iterator<It, value_type>
+    constexpr void copy_to(const It& first, Flags = {}) const;
 
-  // \ref{simd.mask.subscr}, \wgChange{S}{\tcode{simd_mask} s}ubscript operators
-  @\wgAdd{constexpr }@reference operator[](size_t);
-  @\wgAdd{constexpr }@value_type operator[](size_t) const;
+  // \ref{simd.mask.subscr}, \tcode{simd_mask} subscript operators
+  constexpr reference operator[](size_t);
+  constexpr value_type operator[](size_t) const;
 
-  // \ref{simd.mask.unary}, \wgChange{U}{\tcode{simd_mask} u}nary operators
-  @\wgAdd{constexpr }@simd_mask operator!() const noexcept;
+  // \ref{simd.mask.unary}, \tcode{simd_mask} unary operators
+  constexpr simd_mask operator!() const noexcept;
 
-  // \ref{simd.mask.binary}, \wgChange{B}{\tcode{simd_mask} b}inary operators
-  friend @\wgAdd{constexpr }@simd_mask operator&&(const simd_mask&, const simd_mask&) noexcept;
-  friend @\wgAdd{constexpr }@simd_mask operator||(const simd_mask&, const simd_mask&) noexcept;
-  friend @\wgAdd{constexpr }@simd_mask operator&(const simd_mask&, const simd_mask&) noexcept;
-  friend @\wgAdd{constexpr }@simd_mask operator|(const simd_mask&, const simd_mask&) noexcept;
-  friend @\wgAdd{constexpr }@simd_mask operator^(const simd_mask&, const simd_mask&) noexcept;
+  // \ref{simd.mask.binary}, \tcode{simd_mask} binary operators
+  friend constexpr simd_mask operator&&(const simd_mask&, const simd_mask&) noexcept;
+  friend constexpr simd_mask operator||(const simd_mask&, const simd_mask&) noexcept;
+  friend constexpr simd_mask operator&(const simd_mask&, const simd_mask&) noexcept;
+  friend constexpr simd_mask operator|(const simd_mask&, const simd_mask&) noexcept;
+  friend constexpr simd_mask operator^(const simd_mask&, const simd_mask&) noexcept;
 
-  // \ref{simd.mask.cassign}, \wgChange{C}{\tcode{simd_mask} c}ompound assignment
-  friend @\wgAdd{constexpr }@simd_mask& operator&=(simd_mask&, const simd_mask&) noexcept;
-  friend @\wgAdd{constexpr }@simd_mask& operator|=(simd_mask&, const simd_mask&) noexcept;
-  friend @\wgAdd{constexpr }@simd_mask& operator^=(simd_mask&, const simd_mask&) noexcept;
+  // \ref{simd.mask.cassign}, \tcode{simd_mask} compound assignment
+  friend constexpr simd_mask& operator&=(simd_mask&, const simd_mask&) noexcept;
+  friend constexpr simd_mask& operator|=(simd_mask&, const simd_mask&) noexcept;
+  friend constexpr simd_mask& operator^=(simd_mask&, const simd_mask&) noexcept;
 
-  // \ref{simd.mask.comparison}, \wgChange{C}{\tcode{simd_mask} c}omparisons
-  friend @\wgAdd{constexpr }@simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
-  friend @\wgAdd{constexpr }@simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
+  // \ref{simd.mask.comparison}, \tcode{simd_mask} comparisons
+  friend constexpr simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
+  friend constexpr simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
 };
 \end{codeblock}
 
@@ -1763,7 +1595,7 @@ public:
 The class template \tcode{simd_mask} is a data-parallel type with the element type \tcode{bool}. The width of a given \tcode{simd_mask} specialization is a constant expression, determined by the template parameters. Specifically, \tcode{simd_mask<T, Abi>::size() == simd<T, Abi>::size()}.
 
 \pnum
-Every specialization of \tcode{simd_mask} \wgChange{shall be}{is} a complete type. The specialization \tcode{simd_mask<T, Abi>} is supported if \tcode{T} is a vectorizable type and
+Every specialization of \tcode{simd_mask} is a complete type. The specialization \tcode{simd_mask<T, Abi>} is supported if \tcode{T} is a vectorizable type and
 \begin{itemize}
   \item \tcode{Abi} is \tcode{simd_abi::scalar}, or
   \item \tcode{Abi} is \tcode{simd_abi::fixed_size<N>}, with \tcode{N} constrained as defined in (\ref{simd.abi}).
@@ -1786,8 +1618,8 @@ Default initialization performs no intialization of the elements; value-initiali
 Implementations should enable explicit conversion from and to implementation-defined types. This adds one or more of the following declarations to class \tcode{simd_mask}:
 
 \begin{codeblock}
-@\wgAdd{constexpr }@explicit operator @\impdef@() const;
-@\wgAdd{constexpr }@explicit simd_mask(const @\impdef@& init) const;
+constexpr explicit operator @\impdef@() const;
+constexpr explicit simd_mask(const @\impdef@& init) const;
 \end{codeblock}
 
 \pnum
@@ -1796,7 +1628,7 @@ The member type \tcode{reference} has the same interface as \tcode{simd<T, Abi>:
 \rSec2[simd.mask.width]{\tcode{simd_mask} width}
 
 \begin{itemdecl}
-static constexpr @\wgChange{size_t size() noexcept}{typename simd_size<T, Abi>::type size}@;
+static constexpr typename simd_size<T, Abi>::type size;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1804,10 +1636,10 @@ static constexpr @\wgChange{size_t size() noexcept}{typename simd_size<T, Abi>::
   The width of \tcode{simd<T, Abi>}.
 \end{itemdescr}
 
-\rSec2[simd.mask.ctor]{\texorpdfstring{\wgChange{C}{\tcode{simd_mask} c}onstructors}{simd_mask constructors}}
+\rSec2[simd.mask.ctor]{\texorpdfstring{\tcode{simd_mask} constructors}{simd_mask constructors}}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@explicit simd_mask(value_type x) noexcept;
+constexpr explicit simd_mask(value_type x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1816,8 +1648,8 @@ static constexpr @\wgChange{size_t size() noexcept}{typename simd_size<T, Abi>::
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U@\wgAdd{, class UAbi}@>
-  @\wgAdd{constexpr explicit(sizeof(U) != sizeof(T)) }@simd_mask(const simd_mask<U, @\wgChange{simd_abi::fixed_size<size()>}{UAbi}@>& x) noexcept;
+template<class U, class UAbi>
+  constexpr explicit(sizeof(U) != sizeof(T)) simd_mask(const simd_mask<U, UAbi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1825,12 +1657,11 @@ template<class U@\wgAdd{, class UAbi}@>
   Constructs an object of type \tcode{simd_mask} where the $i^\text{th}$ element equals \tcode{x[$i$]} \foralli.
 
   \pnum\remarks
-  This constructor shall not participate in overload resolution unless \wgChange{\tcode{abi_type} is \tcode{simd_abi::fixed_size<size()>}}{\tcode{simd_size_v<U, UAbi> == size()}}.
+  This constructor shall not participate in overload resolution unless \tcode{simd_size_v<U, UAbi> == size()}.
 \end{itemdescr}
 
-\begin{wgBAdd}
 \begin{itemdecl}
-@\wgAdd{template<class G> constexpr explicit simd_mask(G\&\& gen) noexcept;}@
+template<class G> constexpr explicit simd_mask(G&& gen) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1844,15 +1675,15 @@ template<class U@\wgAdd{, class UAbi}@>
   The calls to \tcode{gen} are unsequenced with respect to each other.
   Vectorization-unsafe standard library functions may not be invoked by \tcode{gen} (\ref{algorithms.parallel.exec}).
 \end{itemdescr}
-\end{wgBAdd}
 
 \begin{itemdecl}
-template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned_tag}@>
-  @\wgAdd{constexpr }@simd_mask(const @\wgChange{value_type* mem}{It\& first}@, Flags@\wgAdd{ = \{\}}@);
+template<contiguous_iterator It, class Flags = element_aligned_tag>
+  constexpr simd_mask(const It& first, Flags = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\wgAdd{\mbox{\constraints} \tcode{iter_value_t<It>} is of type \tcode{bool}.}
+  \pnum\constraints
+  \tcode{iter_value_t<It>} is of type \tcode{bool}.
 
   \pnum\requires
   \begin{itemize}
@@ -1870,15 +1701,16 @@ template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned
 
 \end{itemdescr}
 
-\rSec2[simd.mask.copy]{\texorpdfstring{\wgChange{C}{\tcode{simd_mask} c}opy}{simd_mask copy} functions}
+\rSec2[simd.mask.copy]{\texorpdfstring{\tcode{simd_mask} copy}{simd_mask copy} functions}
 
 \begin{itemdecl}
-template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned_tag}@>
-  @\wgAdd{constexpr}@ void copy_from(const @\wgChange{value_type* mem}{It\& first}@, Flags@\wgAdd{ = \{\}}@);
+template<contiguous_iterator It, class Flags = element_aligned_tag>
+  constexpr void copy_from(const It& first, Flags = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\wgAdd{\mbox{\constraints} \tcode{iter_value_t<It>} is of type \tcode{bool}.}
+  \pnum\constraints
+  \tcode{iter_value_t<It>} is of type \tcode{bool}.
 
   \pnum\requires
   \begin{itemize}
@@ -1897,13 +1729,14 @@ template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned
 \end{itemdescr}
 
 \begin{itemdecl}
-template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned_tag}@>
-  @\wgAdd{requires output_iterator<It, value_type>}@
-  @\wgAdd{constexpr}@ void copy_to(@\wgChange{value_type* mem}{const It\& first}@, Flags@\wgAdd{ = \{\}}@)@\wgAdd{ const}@;
+template<contiguous_iterator It, class Flags = element_aligned_tag>
+  requires output_iterator<It, value_type>
+  constexpr void copy_to(const It& first, Flags = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\wgAdd{\mbox{\constraints} \tcode{iter_value_t<It>} is of type \tcode{bool}.}
+  \pnum\constraints
+  \tcode{iter_value_t<It>} is of type \tcode{bool}.
 
   \pnum\requires
   \begin{itemize}
@@ -1920,10 +1753,10 @@ template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned
   This function shall not participate in overload resolution unless \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
 \end{itemdescr}
 
-\rSec2[simd.mask.subscr]{\texorpdfstring{\wgChange{S}{\tcode{simd_mask} s}ubscript}{simd_mask subscript} operators}
+\rSec2[simd.mask.subscr]{\texorpdfstring{\tcode{simd_mask} subscript}{simd_mask subscript} operators}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@reference operator[](size_t i);
+constexpr reference operator[](size_t i);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1937,7 +1770,7 @@ template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@value_type operator[](size_t i) const;
+constexpr value_type operator[](size_t i) const;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1950,10 +1783,10 @@ template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned
   \pnum\throws Nothing.
 \end{itemdescr}
 
-\rSec2[simd.mask.unary]{\texorpdfstring{\wgChange{U}{\tcode{simd_mask} u}nary}{simd_mask unary} operators}
+\rSec2[simd.mask.unary]{\texorpdfstring{\tcode{simd_mask} unary}{simd_mask unary} operators}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@simd_mask operator!() const noexcept;
+constexpr simd_mask operator!() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1963,14 +1796,14 @@ template<@\wgAdd{contiguous_iterator It, }@class Flags@\wgAdd{ = element_aligned
 
 \rSec1[simd.mask.nonmembers]{Non-member operations}
 
-\rSec2[simd.mask.binary]{\texorpdfstring{\wgChange{B}{\tcode{simd_mask} b}inary}{simd_mask binary} operators}
+\rSec2[simd.mask.binary]{\texorpdfstring{\tcode{simd_mask} binary}{simd_mask binary} operators}
 
 \begin{itemdecl}
-friend @\wgAdd{constexpr }@simd_mask operator&&(const simd_mask& lhs, const simd_mask& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd_mask operator||(const simd_mask& lhs, const simd_mask& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd_mask operator& (const simd_mask& lhs, const simd_mask& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd_mask operator| (const simd_mask& lhs, const simd_mask& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd_mask operator^ (const simd_mask& lhs, const simd_mask& rhs) noexcept;
+friend constexpr simd_mask operator&&(const simd_mask& lhs, const simd_mask& rhs) noexcept;
+friend constexpr simd_mask operator||(const simd_mask& lhs, const simd_mask& rhs) noexcept;
+friend constexpr simd_mask operator& (const simd_mask& lhs, const simd_mask& rhs) noexcept;
+friend constexpr simd_mask operator| (const simd_mask& lhs, const simd_mask& rhs) noexcept;
+friend constexpr simd_mask operator^ (const simd_mask& lhs, const simd_mask& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1978,12 +1811,12 @@ friend @\wgAdd{constexpr }@simd_mask operator^ (const simd_mask& lhs, const simd
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.mask.cassign]{\texorpdfstring{\wgChange{C}{\tcode{simd_mask} c}ompound}{simd_mask compound} assignment}
+\rSec2[simd.mask.cassign]{\texorpdfstring{\tcode{simd_mask} compound}{simd_mask compound} assignment}
 
 \begin{itemdecl}
-friend @\wgAdd{constexpr }@simd_mask& operator&=(simd_mask& lhs, const simd_mask& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd_mask& operator|=(simd_mask& lhs, const simd_mask& rhs) noexcept;
-friend @\wgAdd{constexpr }@simd_mask& operator^=(simd_mask& lhs, const simd_mask& rhs) noexcept;
+friend constexpr simd_mask& operator&=(simd_mask& lhs, const simd_mask& rhs) noexcept;
+friend constexpr simd_mask& operator|=(simd_mask& lhs, const simd_mask& rhs) noexcept;
+friend constexpr simd_mask& operator^=(simd_mask& lhs, const simd_mask& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1994,11 +1827,11 @@ friend @\wgAdd{constexpr }@simd_mask& operator^=(simd_mask& lhs, const simd_mask
   \tcode{lhs}.
 \end{itemdescr}
 
-\rSec2[simd.mask.comparison]{\texorpdfstring{\wgChange{C}{\tcode{simd_mask} c}omparisons}{simd_mask comparisons}}
+\rSec2[simd.mask.comparison]{\texorpdfstring{\tcode{simd_mask} comparisons}{simd_mask comparisons}}
 
 \begin{itemdecl}
-friend @\wgAdd{constexpr }@simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
-friend @\wgAdd{constexpr }@simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
+friend constexpr simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
+friend constexpr simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -2006,10 +1839,10 @@ friend @\wgAdd{constexpr }@simd_mask operator!=(const simd_mask&, const simd_mas
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.mask.reductions]{\texorpdfstring{\wgChange{R}{\tcode{simd_mask} r}eductions}{simd_mask reductions}}
+\rSec2[simd.mask.reductions]{\texorpdfstring{\tcode{simd_mask} reductions}{simd_mask reductions}}
 
 \begin{itemdecl}
-template<class T, class Abi> @\wgAdd{constexpr }@bool all_of(const simd_mask<T, Abi>& k) noexcept;
+template<class T, class Abi> constexpr bool all_of(const simd_mask<T, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -2018,7 +1851,7 @@ template<class T, class Abi> @\wgAdd{constexpr }@bool all_of(const simd_mask<T, 
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> @\wgAdd{constexpr }@bool any_of(const simd_mask<T, Abi>& k) noexcept;
+template<class T, class Abi> constexpr bool any_of(const simd_mask<T, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -2027,7 +1860,7 @@ template<class T, class Abi> @\wgAdd{constexpr }@bool any_of(const simd_mask<T, 
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> @\wgAdd{constexpr }@bool none_of(const simd_mask<T, Abi>& k) noexcept;
+template<class T, class Abi> constexpr bool none_of(const simd_mask<T, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -2036,7 +1869,7 @@ template<class T, class Abi> @\wgAdd{constexpr }@bool none_of(const simd_mask<T,
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> @\wgAdd{constexpr }@bool some_of(const simd_mask<T, Abi>& k) noexcept;
+template<class T, class Abi> constexpr bool some_of(const simd_mask<T, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -2045,7 +1878,7 @@ template<class T, class Abi> @\wgAdd{constexpr }@bool some_of(const simd_mask<T,
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> @\wgAdd{constexpr }@int popcount(const simd_mask<T, Abi>& k) noexcept;
+template<class T, class Abi> constexpr int popcount(const simd_mask<T, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -2054,7 +1887,7 @@ template<class T, class Abi> @\wgAdd{constexpr }@int popcount(const simd_mask<T,
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> @\wgAdd{constexpr }@int find_first_set(const simd_mask<T, Abi>& k);
+template<class T, class Abi> constexpr int find_first_set(const simd_mask<T, Abi>& k);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -2068,7 +1901,7 @@ template<class T, class Abi> @\wgAdd{constexpr }@int find_first_set(const simd_m
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> @\wgAdd{constexpr }@int find_last_set(const simd_mask<T, Abi>& k);
+template<class T, class Abi> constexpr int find_last_set(const simd_mask<T, Abi>& k);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -2082,11 +1915,11 @@ template<class T, class Abi> @\wgAdd{constexpr }@int find_last_set(const simd_ma
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@bool all_of(@\UNSP{T}@) noexcept;
-@\wgAdd{constexpr }@bool any_of(@\UNSP{T}@) noexcept;
-@\wgAdd{constexpr }@bool none_of(@\UNSP{T}@) noexcept;
-@\wgAdd{constexpr }@bool some_of(@\UNSP{T}@) noexcept;
-@\wgAdd{constexpr }@int popcount(@\UNSP{T}@) noexcept;
+constexpr bool all_of(@\UNSP{T}@) noexcept;
+constexpr bool any_of(@\UNSP{T}@) noexcept;
+constexpr bool none_of(@\UNSP{T}@) noexcept;
+constexpr bool some_of(@\UNSP{T}@) noexcept;
+constexpr int popcount(@\UNSP{T}@) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -2098,8 +1931,8 @@ template<class T, class Abi> @\wgAdd{constexpr }@int find_last_set(const simd_ma
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{constexpr }@int find_first_set(@\UNSP{T}@);
-@\wgAdd{constexpr }@int find_last_set(@\UNSP{T}@);
+constexpr int find_first_set(@\UNSP{T}@);
+constexpr int find_last_set(@\UNSP{T}@);
 \end{itemdecl}
 
 \begin{itemdescr}
