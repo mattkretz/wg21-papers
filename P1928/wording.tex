@@ -17,23 +17,23 @@
 \rSec1[simd.general]{General}
 
 \pnum
-The data-parallel library consists of data-parallel types and operations on these types. A data-parallel type consists of elements of an underlying arithmetic type, called the \defn{element type}. The number of elements is a constant for each data-parallel type and called the \defn{width} of that type.
+The simd subclause defines data-parallel types and operations on these types. A data-parallel type consists of elements of an underlying vectorizable type, called the \defn{element type}. The number of elements is a constant for each data-parallel type and called the \defn{width} of that type.
 
 \pnum
-Throughout this Clause, the term \defn{data-parallel type} refers to all \defn{supported} (\ref{simd.overview}) specializations of the \tcode{simd} and \tcode{simd_mask} class templates. A \defn{data-parallel object} is an object of \term{data-parallel type}.
+The term \defn{data-parallel type} refers to all \defn{supported} (\ref{simd.overview}) specializations of the \tcode{simd} and \tcode{simd_mask} class templates. A \defn{data-parallel object} is an object of \term{data-parallel type}.
+
+\pnum
+The set of \defn{vectorizable types} comprises all cv-unqualified arithmetic types other than \tcode{bool}.
 
 \pnum
 An \defn{element-wise operation} applies a specified operation to the elements of one or more data-parallel objects. Each such application is unsequenced with respect to the others. A \defn{unary element-wise operation} is an element-wise operation that applies a unary operation to each element of a data-parallel object. A \defn{binary element-wise operation} is an element-wise operation that applies a binary operation to corresponding elements of two data-parallel objects.
-
-\pnum
-Throughout this Clause, the set of \defn{vectorizable types} for a data-parallel type comprises all cv-unqualified arithmetic types other than \tcode{bool}.
 
 \pnum
 \begin{note}
 The intent is to support acceleration through data-parallel execution resources, such as SIMD registers and instructions or execution units driven by a common instruction decoder. If such execution resources are unavailable, the interfaces support a transparent fallback to sequential execution.
 \end{note}
 
-\rSec1[simd.synopsis]{Header \texorpdfstring{\tcode{<simd>}}{<simd>} synopsis}
+\rSec1[simd.syn]{Header \texorpdfstring{\tcode{<simd>}}{<simd>} synopsis}
 
 %\indexhdr{simd}
 \begin{codeblock}
