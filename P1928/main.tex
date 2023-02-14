@@ -852,7 +852,7 @@ This needs more work and is not reflected in the wording at this point.
 %          candidate ([over.match.general]) from the overloads provided by the
 %          implementation; otherwise
 %        % now all simd arguments have equal width, or arguments are non-simd
-%        \item every argument that is a specialization of \tcode{simd} 
+%        \item every argument that is a specialization of \tcode{simd}
 %      \end{itemize}
 %      if every argument corresponding to a \term{floating-point-type} parameter
 %      has arithmetic type or is a specialization of \tcode{simd}, then every
@@ -1280,6 +1280,13 @@ The wording still needs work:
   \item Replace \code{where} \& \code{where_expression} wording with \code{conditional_operator} and masked overloads.
   \item Apply the new library specification style from P0788R3.
 \end{itemize}
+
+\begin{wgText}[In {[version.syn]}, add]
+  \begin{codeblock}
+    #define __cpp_lib_simd YYYYMML // also in <simd>
+  \end{codeblock}
+\end{wgText}
+Adjust the placeholder value as needed so as to denote this proposal's date of adoption.
 
 \begin{wgText}[Add a new subclause after §28.8 {[numerics.numbers]}]
   \setcounter{WGClause}{28}
