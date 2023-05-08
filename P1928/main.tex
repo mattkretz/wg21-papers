@@ -1245,13 +1245,30 @@ I do not believe that using ``safe'' is a good term here.
 \code{simd} itself is not a container \cite{P0851R0}.
 The value of a data-parallel object is not an array of elements but rather needs to be understood as a single opaque value that happens to have means for reading and writing element values.
 I.e. \code{simd<int> x = \{\};} does not start the lifetime of \type{int} objects.
-This implies that \code{simd} cannot model a contiguous range but only a random-access range.
-\code{simd} can trivially model \code{input_range}.
-However, in order to model \code{output_range}, the iterator of every non-const \code{simd} would have to return an \code{element_reference} on dereference.
-Without the ability of \code{element_reference} to decay to the element type (similar to how arrays decay to pointers on deduction), I would prefer to simply make \code{simd} model only \code{input_range}.
+This implies that \code{simd} cannot model a contiguous range.
+But \code{simd} can trivially model \code{random_access_range}.
+However, in order to model \code{output_range}, the iterator of every non-const
+\code{simd} would have to return an \code{element_reference} on dereference.
+Without the ability of \code{element_reference} to decay to the element type
+(similar to how arrays decay to pointers on deduction), I would prefer to
+simply make \code{simd} model only \code{random_access_range}.
 
-I plan to pursue adding iterators and conversions to array and from random-access ranges, specifically \code{span} with static extent, in a follow-up paper.
-I believe it is not necessary to resolve this question before merging \code{simd} from the TS.
+If \code{simd} is a range, then \code{std::vector<std::simd<float>> data} can
+be flattened trivially via \code{data | std::views::join}.
+This makes the use of ``arrays of \code{simd<T>}'' easier to integrate into
+existing interfaces the expect ``array of \code{T}''.
+
+I plan to pursue adding iterators and conversions to array and from
+random-access ranges, specifically \code{span} with static extent, in a
+follow-up paper.
+I believe it is not necessary to resolve this question before merging
+\code{simd} from the TS.
+
+\subsection{Formatting support}\label{sec:formatting}
+If \code{simd} \emph{is a} range, as suggested above and to be proposed in a
+follow-up paper, then \code{simd} will automatically be formatted as a range.
+This seems to be a good solution unless there is a demand to format \code{simd}
+objects differently from \code{random_access_range}.
 
 \subsection{Correct place for \code{simd} in the IS?}
 
