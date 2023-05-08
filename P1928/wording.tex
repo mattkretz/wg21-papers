@@ -647,14 +647,14 @@ public:
     constexpr explicit(\seebelow) simd(const simd<U, UAbi>&) noexcept;
   template<class G> constexpr explicit simd(G&& gen) noexcept;
   template<contiguous_iterator It, class Flags = element_aligned_tag>
-    constexpr simd(const It& first, Flags = {});
+    constexpr simd(It first, Flags = {});
 
   // \ref{simd.copy}, \tcode{simd} copy functions
   template<contiguous_iterator It, class Flags = element_aligned_tag>
-    constexpr void copy_from(const It& first, Flags f = {});
+    constexpr void copy_from(It first, Flags f = {});
   template<contiguous_iterator It, class Flags = element_aligned_tag>
     requires output_iterator<It, value_type>
-    constexpr void copy_to(const It& first, Flags f = {}) const;
+    constexpr void copy_to(It first, Flags f = {}) const;
 
   // \ref{simd.subscr}, \tcode{simd} subscript operators
   constexpr reference operator[](size_t);
@@ -962,7 +962,7 @@ template<class G> constexpr simd(G&& gen) noexcept;
 
 \begin{itemdecl}
 template<contiguous_iterator It, class Flags = element_aligned_tag>
-  constexpr simd(const It& first, Flags = {});
+  constexpr simd(It first, Flags = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -989,7 +989,7 @@ template<contiguous_iterator It, class Flags = element_aligned_tag>
 
 \begin{itemdecl}
 template<contiguous_iterator It, class Flags = element_aligned_tag>
-  constexpr void copy_from(const It& first, Flags f = {});
+  constexpr void copy_from(It first, Flags f = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1015,7 +1015,7 @@ template<contiguous_iterator It, class Flags = element_aligned_tag>
 \begin{itemdecl}
 template<contiguous_iterator It, class Flags = element_aligned_tag>
   requires output_iterator<It, value_type>
-  constexpr void copy_to(const It& first, Flags f = {}) const;
+  constexpr void copy_to(It first, Flags f = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1557,14 +1557,14 @@ public:
     constexpr explicit(sizeof(U) != sizeof(T)) simd_mask(const simd_mask<U, UAbi>&) noexcept;
   template<class G> constexpr explicit simd_mask(G&& gen) noexcept;
   template<contiguous_iterator It, class Flags = element_aligned_tag>
-    constexpr simd_mask(const It& first, Flags = {});
+    constexpr simd_mask(It first, Flags = {});
 
   // \ref{simd.mask.copy}, \tcode{simd_mask} copy functions
   template<contiguous_iterator It, class Flags = element_aligned_tag>
-    constexpr void copy_from(const It& first, Flags = {});
+    constexpr void copy_from(It first, Flags = {});
   template<contiguous_iterator It, class Flags = element_aligned_tag>
     requires output_iterator<It, value_type>
-    constexpr void copy_to(const It& first, Flags = {}) const;
+    constexpr void copy_to(It first, Flags = {}) const;
 
   // \ref{simd.mask.subscr}, \tcode{simd_mask} subscript operators
   constexpr reference operator[](size_t);
@@ -1678,7 +1678,7 @@ template<class G> constexpr explicit simd_mask(G&& gen) noexcept;
 
 \begin{itemdecl}
 template<contiguous_iterator It, class Flags = element_aligned_tag>
-  constexpr simd_mask(const It& first, Flags = {});
+  constexpr simd_mask(It first, Flags = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1705,7 +1705,7 @@ template<contiguous_iterator It, class Flags = element_aligned_tag>
 
 \begin{itemdecl}
 template<contiguous_iterator It, class Flags = element_aligned_tag>
-  constexpr void copy_from(const It& first, Flags = {});
+  constexpr void copy_from(It first, Flags = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1731,7 +1731,7 @@ template<contiguous_iterator It, class Flags = element_aligned_tag>
 \begin{itemdecl}
 template<contiguous_iterator It, class Flags = element_aligned_tag>
   requires output_iterator<It, value_type>
-  constexpr void copy_to(const It& first, Flags = {}) const;
+  constexpr void copy_to(It first, Flags = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}

@@ -495,11 +495,11 @@ Therefore, the merge generalizes the load/store interfaces to look like
 }]
 template <contiguous_iterator It, typename Flags = element_aligned_tag>
 requires detail::vectorizable<iter_value_t<It>>
-constexpr void copy_from(const It& first, Flags f = {});
+constexpr void copy_from(It first, Flags f = {});
 
 template <contiguous_iterator It, typename Flags = element_aligned_tag>
 requires output_iterator<It, Tp> && detail::vectorizable<iter_value_t<It>>
-constexpr void copy_to(const It& first, Flags f = {}) const;
+constexpr void copy_to(It first, Flags f = {}) const;
 \end{lstlisting}
 
 \subsection{\code{constexpr} everything}
