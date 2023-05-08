@@ -646,7 +646,7 @@ public:
   // \ref{simd.ctor}, \tcode{simd} constructors
   template<class U> constexpr simd(U&& value) noexcept;
   template<class U, class UAbi>
-    constexpr explicit(\seebelow) simd(const simd<U, UAbi>&) noexcept;
+    constexpr explicit(@\seebelow@) simd(const simd<U, UAbi>&) noexcept;
   template<class G> constexpr explicit simd(G&& gen) noexcept;
   template<contiguous_iterator It, class Flags = element_aligned_tag>
     constexpr simd(It first, Flags = {});
@@ -927,7 +927,7 @@ template<class U> constexpr simd(U&&) noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U, class UAbi> constexpr explicit(\seebelow) simd(const simd<U, UAbi>& x) noexcept;
+template<class U, class UAbi> constexpr explicit(@\seebelow@) simd(const simd<U, UAbi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
