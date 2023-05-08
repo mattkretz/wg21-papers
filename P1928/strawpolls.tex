@@ -11,3 +11,69 @@ version (the TS version with improvements) of \code{std::simd} target the IS (\C
 \code{std::simd} should go directly to LEWG.
 (We do not believe there are SG1 issues with \code{std::simd} today.)}
 {9&8&0&0&0}
+
+\subsection{LEWG at Issaquah 2023}
+\wgPoll{Change the default SIMD ABI tag to simd_abi::native instead of simd_abi::compatible.}
+{16&12&0&0&1}
+
+\wgPoll{Change simd_abi::fixed_size to not recommend implementations make it ABI compatible.}
+{16&7&1&0&1}
+
+\wgPoll{Make simd::size an integral_constant instead of a static member function.}
+{9&8&7&1&0}
+
+\wgVote{Poll: simd masked operations should look like (vote for as many options as you'd like):}
+{r|r}
+{Option&Votes\\
+  \hline
+where(u > 0, v).copy_from(ptr) &12 \\
+v.copy_from_if(u > 0, ptr) &1 \\
+v.copy_from_if(ptr, u > 0) &2 \\
+v.copy_from(ptr, u > 0)  &14 \\
+v.copy_from(u > 0, ptr)  &3 \\
+v.copy_from_where(u > 0, ptr)  &4 \\
+v.copy_from_where(ptr, u > 0)  &11}\bigskip
+
+\wgVote{Poll: simd masked operations should look like (vote once for your favorite):}
+{r|r}
+{Option&Votes\\
+  \hline
+where(u > 0, v).copy_from(ptr) &5\\
+v.copy_from(ptr, u > 0)  &12\\
+v.copy_from_where(ptr, u > 0)  &6}\bigskip
+
+\wgPoll{Make copy_to, copy_from, and the load constructor only do value-preserving conversions by default and require passing a flag to do non-value-preserving conversions.}
+{14&9&1&0&0}
+
+\wgPoll{SIMD types and operations should be value preserving, even if that means they're inconsistent with the builtin numeric types.}
+{3&10&6&3&0}
+
+\wgPoll{2 * simd<float> should produce simd<double> (status quo: simd<float>).}
+{1&5&9&6&1}
+
+\wgPoll{Put SIMD types and operations into std:: and add the simd_ prefix to SIMD specific things (such as split and vector_aligned).}
+{4&5&4&9&2}
+
+\wgPoll{Put SIMD types and operations into a nested namespace in std::.}
+{4&7&0&5&9}
+
+\wgPoll{simd should be a range.}
+{4&9&5&4&4}
+
+\wgPoll{There should be an explicit way to get a view to a simd.}
+{8&12&3&3&0}
+
+\wgPoll{simd should have explicitly named functions for horizontal minimum and horizontal maximum.}
+{4&5&7&4&2}
+
+\wgPoll{Rename all_of/ any_of/none_of to reduce_all_of/reduce_any_of/reduce_none_of.}
+{2&1&1&8&5}
+
+\wgPoll{Rename all_of/any_of/none_of to reduce_and/reduce_or/reduce_nand.}
+{2&6&2&4&3}
+
+\wgPoll{Rename popcount to reduce_count.}
+{4&9&2&1&2}
+
+\wgPoll{Rename find_first_set/find_last_set to reduce_min_index/reduce_max_index.}
+{2&7&3&2&3}
