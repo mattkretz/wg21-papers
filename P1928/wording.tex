@@ -13,6 +13,10 @@
 \item If the template parameter \tcode{Flags} is \tcode{element_aligned_tag}, \tcode{mem} shall point to storage aligned by \tcode{alignof(#2)}.
 }
 
+\newcommand\ConstraintOperatorTWellFormed[1][the indicated operator]{%
+\constraints Application of #1 to objects of type \tcode{value_type} is well-formed.
+}
+
 \rSec0[simd]{Data-Parallel Types}
 \rSec1[simd.general]{General}
 
@@ -1078,6 +1082,8 @@ constexpr simd& operator++() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed[unary \tcode{++}]
+
   \pnum\effects
   Increments every element by one.
 
@@ -1090,6 +1096,8 @@ constexpr simd operator++(int) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed[unary \tcode{++}]
+
   \pnum\effects
   Increments every element by one.
 
@@ -1102,6 +1110,8 @@ constexpr simd& operator--() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed[unary \tcode{--}]
+
   \pnum\effects
   Decrements every element by one.
 
@@ -1114,6 +1124,8 @@ constexpr simd operator--(int) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed[unary \tcode{--}]
+
   \pnum\effects
   Decrements every element by one.
 
@@ -1126,6 +1138,8 @@ constexpr mask_type operator!() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed[unary \tcode{!}]
+
   \pnum\returns
   A \tcode{simd_mask} object with the $i^\text{th}$ element set to \tcode{!operator[]($i$)} \foralli.
 \end{itemdescr}
@@ -1135,11 +1149,10 @@ constexpr simd operator~() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed[unary \tcode{\~{}}]
+
   \pnum\returns
   A \tcode{simd} object where each bit is the inverse of the corresponding bit in \tcode{*this}.
-
-  \pnum\remarks
-  This operator shall not participate in overload resolution unless \tcode{T} is an integral type.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1147,6 +1160,8 @@ constexpr simd operator+() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed[unary \tcode{+}]
+
   \pnum\returns
   \tcode{*this}.
 \end{itemdescr}
@@ -1156,6 +1171,8 @@ constexpr simd operator-() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed[unary \tcode{-}]
+
   \pnum\returns
   A \tcode{simd} object where the $i^\text{th}$ element is initialized to \tcode{-operator[]($i$)} \foralli.
 \end{itemdescr}
@@ -1178,11 +1195,10 @@ friend constexpr simd operator>>(const simd& lhs, const simd& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed
+
   \pnum\returns
   A \tcode{simd} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
-
-  \pnum\remarks
-  Each of these operators shall not participate in overload resolution unless the indicated operator can be applied to objects of type \tcode{value_type}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1191,11 +1207,10 @@ friend constexpr simd operator>>(const simd& v, int n) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed
+
   \pnum\returns
   A \tcode{simd} object where the $i^\text{th}$ element is initialized to the result of applying the indicated operator to \tcode{v[$i$]} and \tcode{n} \foralli.
-
-  \pnum\remarks
-  These operators shall not participate in overload resolution unless the indicated operator can be applied to objects of type \tcode{value_type}.
 \end{itemdescr}
 
 \rSec2[simd.cassign]{\tcode{simd} compound assignment}
@@ -1214,14 +1229,13 @@ friend constexpr simd& operator>>=(simd& lhs, const simd& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed
+
   \pnum\effects
   These operators apply the indicated operator to \tcode{lhs} and \tcode{rhs} as an element-wise operation.
 
   \pnum\returns
   \tcode{lhs}.
-
-  \pnum\remarks
-  These operators shall not participate in overload resolution unless the indicated operator can be applied to objects of type \tcode{value_type}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1230,11 +1244,10 @@ friend constexpr simd& operator>>=(simd& lhs, int n) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed
+
   \pnum\effects
   Equivalent to: \tcode{return operator@=(lhs, simd(n));}
-
-  \pnum\remarks
-  These operators shall not participate in overload resolution unless the indicated operator can be applied to objects of type \tcode{value_type}.
 \end{itemdescr}
 
 \rSec2[simd.comparison]{\tcode{simd} compare operators}
@@ -1249,6 +1262,8 @@ friend constexpr mask_type operator<(const simd& lhs, const simd& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\ConstraintOperatorTWellFormed
+
   \pnum\returns
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
