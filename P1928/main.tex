@@ -876,6 +876,16 @@ This needs more work and is not reflected in the wording at this point.
 %  \end{enumerate}
 %\end{wgText}
 
+\subsection{Add lvalue-qualifier to non-const subscript}\label{sec:lvalue-subscript}
+The \code{operator[]} overloads of \code{simd} and \code{simd_mask} returned a
+proxy reference object for non-\code{const} objects and the \code{value_type}
+for \code{const} objects.
+This made expressions such as \code{(x * 2)[0] = 1} well-formed.
+However, assignment to temporaries can only be an error in the code (or code obfuscation).
+Both \code{operator[]} overloads should be lvalue-ref qualified to make
+\code{(x * 2)[0]} pick the const overload, which returns a prvalue that is not
+assignable.
+
 \section{Open questions}
 
 \subsection{Alternatives to \code{hmin} and \code{hmax}}

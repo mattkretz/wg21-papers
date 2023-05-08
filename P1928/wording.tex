@@ -657,8 +657,8 @@ public:
     constexpr void copy_to(It first, Flags f = {}) const;
 
   // \ref{simd.subscr}, \tcode{simd} subscript operators
-  constexpr reference operator[](size_t);
-  constexpr value_type operator[](size_t) const;
+  constexpr reference operator[](size_t) &;
+  constexpr value_type operator[](size_t) const&;
 
   // \ref{simd.unary}, \tcode{simd} unary operators
   constexpr simd& operator++() noexcept;
@@ -1041,7 +1041,7 @@ template<contiguous_iterator It, class Flags = element_aligned_tag>
 \rSec2[simd.subscr]{\tcode{simd} subscript operators}
 
 \begin{itemdecl}
-constexpr reference operator[](size_t i);
+constexpr reference operator[](size_t i) &;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1055,7 +1055,7 @@ constexpr reference operator[](size_t i);
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr value_type operator[](size_t i) const;
+constexpr value_type operator[](size_t i) const&;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1567,8 +1567,8 @@ public:
     constexpr void copy_to(It first, Flags = {}) const;
 
   // \ref{simd.mask.subscr}, \tcode{simd_mask} subscript operators
-  constexpr reference operator[](size_t);
-  constexpr value_type operator[](size_t) const;
+  constexpr reference operator[](size_t) &;
+  constexpr value_type operator[](size_t) const&;
 
   // \ref{simd.mask.unary}, \tcode{simd_mask} unary operators
   constexpr simd_mask operator!() const noexcept;
@@ -1756,7 +1756,7 @@ template<contiguous_iterator It, class Flags = element_aligned_tag>
 \rSec2[simd.mask.subscr]{\texorpdfstring{\tcode{simd_mask} subscript}{simd_mask subscript} operators}
 
 \begin{itemdecl}
-constexpr reference operator[](size_t i);
+constexpr reference operator[](size_t i) &;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1770,7 +1770,7 @@ constexpr reference operator[](size_t i);
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr value_type operator[](size_t i) const;
+constexpr value_type operator[](size_t i) const&;
 \end{itemdecl}
 
 \begin{itemdescr}
