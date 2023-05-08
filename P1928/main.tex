@@ -105,89 +105,15 @@ There is also a lot of valuable feedback published in \wglink{P2638} ``Intel’s
 This paper captures the major change requests but should still be considered a work-in-progress.
 
 \subsection{improve ABI tags}
-I received consistent feedback that \simdabi\code{compatible<T>} is the wrong default and it should rather be \simdabi\code{native<T>} instead.
-All my tutorial material instructed users to use \stdx\code{native_simd<T>}.
-There really is little use for \simdabi\code{compatible<T>}.
-The preferred approach should be the use of \simdabi\code{native<T>} together with compiler flags that limit the available registers and instructions to whatever the user deems “compatible”.
-Consequently, there is no reason to keep \simdabi\code{compatible<T>} in its current form.
-
-Another common question was about a “fixed size” ABI tag, similar to \stdx\simdabi\code{fixed_size<N>} but without the ABI compatibility cost.%
-\footnote{Implementations of the TS are encouraged to make passing \code{fixed_size} objects ABI compatible between different hardware generations and/or even different architectures.}
-Basically, the ABI footgun should be as dangerous as \stdx\simdabi\code{native<T>}.
-The answer to that FAQ is to use \stdx\simdabi\code{deduce_t<T, N>} as ABI tag.
-This will provide you with a high-performance footgun, if supported, but might also fall back to \stdx\simdabi\code{fixed_size<N>}.
-With \stdx\simdabi\code{deduce_t<T, N>} turning out to be used potentially more often than \stdx\simdabi\code{fixed_size<N>} the aliases and names should be revisited.
-My proposal:
-
-\begin{description}
-  \item[\code{A0 = \simdabi native<T>}] \emph{(no change from the TS semantics)}\\
-    \code{simd<T, A0>} abstracts a SIMD register (or similar) with highest performance on the target system (typically widest available register, but that's a QoI choice).
-    Consequently, the number of elements is chosen by the implementation and may differ for different \code{T} and different compiler flags.
-    \simdabi\code{native<T>} is an alias for an unspecified type.
-    \simdabi\code{native<T>} can be an alias for \simdabi\code{scalar}.
-    If \code{sizeof(simd<T, A0>)} or \code{alignof(\MayBreak{}simd\MayBreak{}<\MayBreak{}T, A0>)} in TU1 differ from the same expressions in TU2, then the types \code{A0} in TU1 and TU2 have a different name.
-
-  \item[\code{A1 = \simdabi fixed_size<T, N>}] \emph{(different to the TS semantics)}\\
-    \code{simd<T, A1>} abstracts one or more registers storing \code{N} values.
-    The actual hardware resources might store more values; but instructions are generated to make it appear as if there are exactly \code{N} values stored and manipulated.
-
-    Parameter passing may be ABI incompatible between different TUs when compiled with different compiler flags.
-    Therefore, if \code{sizeof(simd<T, A0>)}%
-    \footnote{\code{A0} is not a typo; this depends on \simdabi\code{native<T>}}
-    or \code{alignof(\MayBreak{}simd\MayBreak{}<\MayBreak{}T, A0>)} in TU1
-    differ from the same expressions in TU2, then the types \code{A1} in TU1
-    and TU2 have a different name.
-    This new requirement (wrt. the TS) is the reason for the additional
-    \code{T} parameter.
-    This allows an implementation to define the \code{fixed_size} alias as e.g.
-    \lstinline@template <typename T, @
-    \lstinline@int N> @
-    \lstinline@using fixed_size @
-    \lstinline@= _Fixed<N, native<T>>;@.
-    \code{A1} and \code{A0} are always different types, i.e. even if \code{simd_size_v<T, A0> == N}.
-
-    A major difference to \stdx\simdabi\code{fixed_size<N>} in the TS is about \code{simd_mask}.
-    In order to support ABI stability the \code{simd_mask} implementation must choose one form of storage for all possible targets:
-    \begin{itemize}
-      \item full SIMD registers with all bits set to 1 or 0 per corresponding element
-      \item bitmasks
-      \item an array of \code{bool} or similar
-    \end{itemize}
-    The new intent for the \code{fixed_size<T, N>} ABI tag would be to allow \code{simd_mask<T, A1>} to use either choice depending only on compiler flags.
-
-  \item[\code{A2 = \simdabi scalar}]\ \\
-    No change.
-\end{description}
-
-At this point the \simdabi\code{deduce} facility seems to be obsolete.
-However, it is still a useful tool for implementing the \code{rebind_simd} and \code{resize_simd} traits.
-Without more compelling reason for removal, it should be merged as is.
-%In theory, its ability to take an optional pack of ABI tags into account for its decision would be lost when removing \simdabi\code{deduce}.
-%However, I have not heard of any users who want to use this feature.
-%My recommendation is removal.%
-%\footnote{For reference: my implementation simply ignores the pack of ABI tags given to \simdabi\code{deduce}.}
-
-\subsubsection{Naming discussion}
-
-For context on naming, consider the use-cases that the ABI tags serve:
-
-\begin{description}
-  \item[\simdabi\code{native<T>}] The equivalent to \code{T}: a direct abstraction of available hardware resources in terms of registers and instructions.
-
-  \item[\simdabi\code{fixed_size<T, N>}] Higher abstraction level than \code{native<T>}: the user/algorithm dictates the number of elements to be processed in parallel.
-    The objects might not be direct mappings to hardware resources, but they use the best that is available on the given target system.
-
-  \item[\simdabi\code{scalar}] The actual type of \code{native<T>} if the target hardware has no support for parallel processing of elements of \code{T}.%
-    \footnote{A typical example is \simdabi\code{native<long double>}.}
-    In addition, \code{simd<T, simd_abi::scalar>} can be a useful debugging tool.
-\end{description}
-
-For reference, the name \code{fixed_size} is my preference over the following alternatives:
+Summary:
 \begin{itemize}
-  \item \code{simd_abi::fixed_native<N>} with \code{simd} alias \code{fixed_native_simd<T, N>}
-  \item \code{simd_abi::fixed<N>} with \code{simd} alias \code{fixed_simd<T, N>}
-  \item \code{simd_abi::sized<N>} with \code{simd} alias \code{sized_simd<T, N>}
+  \item Change the default SIMD ABI tag to \simdabi\code{native<T>} instead of \simdabi\code{compatible<T>}.
+  \item Change \simdabi\code{fixed_size} to not recommend implementations make it ABI compatible.
 \end{itemize}
+
+For a discussion, see \wglink{P1928R3} Section 4.1.
+
+Follow-up open questions are discussed in \sect{sec:simplifyfixedsize}.
 
 \subsection{Simplify/generalize casts}\label{sec:casts}
 
@@ -1129,6 +1055,69 @@ I am seeking feedback before making a recommendation.
 It may be better to define its requirements in a list of requirements or a table instead.
 
 This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
+
+\subsection{Simplify fixed_size}\label{sec:simplifyfixedsize}
+To understand the following discussion it is worth remembering that given an
+element type \code{T} and SIMD width \code{N}, the ABI tag is not necessarily
+distinct.
+For example, given AVX-512, \code{fixed_size_simd<float, 16>} could either be
+one \code{zmm} register or two \code{ymm} registers.
+Orthogonally, the \code{simd_mask} type could either be stored as a bit-mask or
+as a vector-mask.
+Thus, we already have four reasonable choices for the ABI tag.
+
+There are only three possible reasons why \simdabi\code{fixed_size<T, N>} should
+not be an alias for \simdabi\code{deduce_t<T, N>} (or rather a rename of
+\code{deduce_t}):
+\begin{enumerate}
+  \item We want \code{N} in \code{fixed_size_simd<T, N>} to be deducible.
+
+  \item We want to support overloading via differently named ABI tags (i.e. if
+    the user types a different name, then the actual type should be different).
+
+  \item We want the actual type name of \simdabi\code{fixed_size<T, N>} to be
+    recognizable as ``fixed size'' and not just hide behind some
+    implementation-defined ABI tag.
+\end{enumerate}
+
+In the TS, \code{fixed_size_simd<T, N>} is required to be deducible.
+However, after the changes we did to \code{fixed_size} and conversions, there is
+no good motivation over deducing \code{fixed_size_simd<T, N>} instead of
+\code{simd<T, Abi>}.
+Let's just communicate that \code{simd<T, Abi>} is the one and only way to
+deduce arbitrary length \code{simd} types.
+
+In the TS, a user could write the following overload set:
+\medskip\begin{lstlisting}
+void f(stdx::native_simd<float>);
+
+template <int N>
+void f(stdx::fixed_size_simd<float, N>);
+\end{lstlisting}
+Besides \code{N} not being deducible anymore, if \code{N ==
+stdx::native_simd<float>::size()}, then the overloads would clash, using the
+same argument type.
+However, again, after the changes we did to \code{fixed_size} and conversions,
+there is probably no good reason left for declaring such an overload set.
+Instead a user should write a single function template passing
+\code{simd<float, Abi>}, deducing \code{Abi} and potentially constraining the
+function using Concepts.
+
+That leaves the question of diagnostics / debugging with regard to ABI tag names.
+This argument can also go the other way:
+By hiding the actual ABI tag used for implementing \code{fixed_size<T, N>} the
+user has a harder time understanding what is going on.
+So I don't think this argument has much weight.
+
+\subsubsection{Suggested Poll}
+
+Consequently, I propose the following poll:\\
+\wgPoll{Remove \simdabi\code{fixed_size}, rename \simdabi\code{deduce_t} to
+  \simdabi\code{fixed_size}, and remove (no public API) \simdabi\code{deduce}.
+  Require \code{fixed_size_simd<T, simd_size_v<T>>} to be the same type as
+  \code{simd<T>}. Require \code{fixed_size_simd<T, 1>} to be the same type as
+  \code{simd<T, \simdabi{}scalar>}.}
+{&&&&}
 
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 
