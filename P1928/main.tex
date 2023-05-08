@@ -102,7 +102,6 @@ and are basically blocked on this paper.
 \cite{P1915R0} (Expected Feedback from \code{simd} in the Parallelism TS 2) was published in 2019, asking for feedback to the TS.
 I received feedback on the TS via the GitHub issue tracker, e-mails, and personal conversations.
 There is also a lot of valuable feedback published in \wglink{P2638} ``Intel’s response to \wglink{P1915R0} for \code{std::simd}''.
-This paper captures the major change requests but should still be considered a work-in-progress.
 
 \subsection{improve ABI tags}
 Summary:
@@ -113,7 +112,7 @@ Summary:
 
 For a discussion, see \wglink{P1928R3} Section 4.1.
 
-Follow-up open questions are discussed in \sect{sec:simplifyfixedsize}.
+Follow-up open questions are discussed in \sect{sec:simplifyfixedsize} and \sect{sec:basicsimdmask}.
 
 \subsection{Simplify/generalize casts}\label{sec:casts}
 
@@ -1117,6 +1116,74 @@ Consequently, I propose the following poll:\\
   Require \code{fixed_size_simd<T, simd_size_v<T>>} to be the same type as
   \code{simd<T>}. Require \code{fixed_size_simd<T, 1>} to be the same type as
   \code{simd<T, \simdabi{}scalar>}.}
+{&&&&}
+
+\subsection{Basic mask type?}\label{sec:basicsimdmask}
+Now that \mask types have become interconvertible, the distinction between
+\mask[<T, Abi>] and \mask[<U, Abi>] with \code{sizeof(T) == sizeof(U)} is gone.
+Actually, the fact that the type is interconvertible makes it harder to use
+(because it is easier to construct ambiguous overloads).
+
+Solution: \emph{Make \mask[<T, Abi>] an alias for \code{basic_simd_mask<sizeof(T), Abi>}.}
+
+\begin{description}
+  \item[Pros]
+    \begin{itemize}
+      \item reduces the number of template instantiations
+
+      \item equivalent masks can now trivially be used on mixed type simd
+
+      \item choosing the right template parameters for \mask is still simple
+        and consistent with \simd
+    \end{itemize}
+
+  \item[Cons]
+    \begin{itemize}
+      \item It may be surprising that \mask[<T, Abi>] and \mask[<U, Abi>] are
+        not different types.
+        E.g. if someone wants to distinguish an overload set (why, though?).
+        This is resolved by the alternative solution below.
+
+      \item The \code{simd_mask::simd_type} member type must be removed or
+        defined to an integer type of the corresponding \code{sizeof}.
+        I.e. the mapping from mask type to simd type changes or doesn't exist
+        anymore.
+
+      \item Unary minus and unary plus on \mask objects must return an integer
+        simd type.\\
+        (\code{-(x < 0)} with \code{x} of type \code{simd<float>} would be of
+        type \code{simd<int>} instead of \code{simd<float>})
+
+      \item \code{sizeof(T) > sizeof(long long)} needs a different rule to
+        determine the \code{simd_type} member and/or the unary operator return
+        types.
+        (E.g. \code{sizeof(long double) == 12} on Linux 32-bit,
+        \code{sizeof(long double)} == 16 on Linux 64-bit)
+        Proposed solution: Define \code{simd_mask<B, Abi>::simd_type} as
+        \code{simd<I, Abi>} with \code{I} the largest standard signed integer
+        type where \code{sizeof(I) <= B}.
+    \end{itemize}
+\end{description}
+
+Alternative: \emph{Define the class template \code{template <size_t Bytes,
+class Abi> class simd_mask;} and let users deal with the difference in template
+parameters.}
+
+Note that \code{simd<T, Abi>::mask_type} exists and is basically equivalent to
+an alias template parameterized on \code{T} and \code{Abi}.
+
+\subsubsection{Suggested Polls}
+
+\wgPoll{Respecify \code{simd_mask<T, Abi>} as alias for \code{basic_simd_mask<sizeof(T), Abi>}.}
+{&&&&}
+
+\wgPoll{Specify \mask as \code{simd_mask<Bytes, Abi>}.}
+{&&&&}
+
+\wgPoll{Define \code{simd_mask<B, Abi>::simd_type} as \code{simd<I, Abi>} with \code{I} the largest standard signed integer type where \code{sizeof(I) <= B}.}
+{&&&&}
+
+\wgPoll{Do not define a \code{simd_type} member type, but use the above rule for the return type of unary minus and unary plus.}
 {&&&&}
 
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
