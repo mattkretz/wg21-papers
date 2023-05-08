@@ -133,18 +133,16 @@ namespace std {
   template<class T, class Abi> constexpr bool all_of(const simd_mask<T, Abi>&) noexcept;
   template<class T, class Abi> constexpr bool any_of(const simd_mask<T, Abi>&) noexcept;
   template<class T, class Abi> constexpr bool none_of(const simd_mask<T, Abi>&) noexcept;
-  template<class T, class Abi> constexpr bool some_of(const simd_mask<T, Abi>&) noexcept;
-  template<class T, class Abi> constexpr int popcount(const simd_mask<T, Abi>&) noexcept;
-  template<class T, class Abi> constexpr int find_first_set(const simd_mask<T, Abi>&);
-  template<class T, class Abi> constexpr int find_last_set(const simd_mask<T, Abi>&);
+  template<class T, class Abi> constexpr int reduce_count(const simd_mask<T, Abi>&) noexcept;
+  template<class T, class Abi> constexpr int reduce_min_index(const simd_mask<T, Abi>&);
+  template<class T, class Abi> constexpr int reduce_max_index(const simd_mask<T, Abi>&);
 
   constexpr bool all_of(@\UNSP{T}@) noexcept;
   constexpr bool any_of(@\UNSP{T}@) noexcept;
   constexpr bool none_of(@\UNSP{T}@) noexcept;
-  constexpr bool some_of(@\UNSP{T}@) noexcept;
-  constexpr int popcount(@\UNSP{T}@) noexcept;
-  constexpr int find_first_set(@\UNSP{T}@);
-  constexpr int find_last_set(@\UNSP{T}@);
+  constexpr int reduce_count(@\UNSP{T}@) noexcept;
+  constexpr int reduce_min_index(@\UNSP{T}@);
+  constexpr int reduce_max_index(@\UNSP{T}@);
 
   // \ref{simd.whereexpr}, Where expression class templates
   template<class M, class T> class const_where_expression;
@@ -1884,16 +1882,7 @@ template<class T, class Abi> constexpr bool none_of(const simd_mask<T, Abi>& k) 
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr bool some_of(const simd_mask<T, Abi>& k) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\returns
-  \tcode{true} if at least one of the one boolean elements in \tcode{k} is \tcode{true} and at least one of the boolean elements in \tcode{k} is \tcode{false}, \tcode{false} otherwise.
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class T, class Abi> constexpr int popcount(const simd_mask<T, Abi>& k) noexcept;
+template<class T, class Abi> constexpr int reduce_count(const simd_mask<T, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1902,7 +1891,7 @@ template<class T, class Abi> constexpr int popcount(const simd_mask<T, Abi>& k) 
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr int find_first_set(const simd_mask<T, Abi>& k);
+template<class T, class Abi> constexpr int reduce_min_index(const simd_mask<T, Abi>& k);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1916,7 +1905,7 @@ template<class T, class Abi> constexpr int find_first_set(const simd_mask<T, Abi
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr int find_last_set(const simd_mask<T, Abi>& k);
+template<class T, class Abi> constexpr int reduce_max_index(const simd_mask<T, Abi>& k);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1933,21 +1922,20 @@ template<class T, class Abi> constexpr int find_last_set(const simd_mask<T, Abi>
 constexpr bool all_of(@\UNSP{T}@) noexcept;
 constexpr bool any_of(@\UNSP{T}@) noexcept;
 constexpr bool none_of(@\UNSP{T}@) noexcept;
-constexpr bool some_of(@\UNSP{T}@) noexcept;
-constexpr int popcount(@\UNSP{T}@) noexcept;
+constexpr int reduce_count(@\UNSP{T}@) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
-  \tcode{all_of} and \tcode{any_of} return their arguments; \tcode{none_of} returns the negation of its argument; \tcode{some_of} returns \tcode{false}; \tcode{popcount} returns the integral representation of its argument.
+  \tcode{all_of} and \tcode{any_of} return their arguments; \tcode{none_of} returns the negation of its argument; \tcode{reduce_count} returns the integral representation of its argument.
 
   \pnum\remarks
   The parameter type \tcode{T} is an unspecified type that is only constructible via implicit conversion from \tcode{bool}.
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr int find_first_set(@\UNSP{T}@);
-constexpr int find_last_set(@\UNSP{T}@);
+constexpr int reduce_min_index(@\UNSP{T}@);
+constexpr int reduce_max_index(@\UNSP{T}@);
 \end{itemdecl}
 
 \begin{itemdescr}

@@ -886,6 +886,17 @@ Both \code{operator[]} overloads should be lvalue-ref qualified to make
 \code{(x * 2)[0]} pick the const overload, which returns a prvalue that is not
 assignable.
 
+\subsection{Rename \code{simd_mask} reductions}
+Summary:
+\begin{itemize}
+  \item The function \stdx\code{some_of} was removed.
+  \item The function \stdx\code{popcount} was renamed to \std\code{reduce_count}.
+  \item The function \stdx\code{find_first_set} was renamed to \std\code{reduce_min_index}.
+  \item The function \stdx\code{find_last_set} was renamed to \std\code{reduce_max_index}.
+\end{itemize}
+
+For a discussion of this topic see \wglink{P1928R3} Section 5.2.
+
 \section{Open questions}
 
 \subsection{Alternatives to \code{hmin} and \code{hmax}}
@@ -935,184 +946,6 @@ status quo is not acceptable for the IS.}
 {&&&&}
 
 \wgPoll{Remove \code{hmin} and \code{hmax} expecting \code{simd} to become a range.}
-{&&&&}
-
-\subsection{Make \code{simd_mask} reductions consistent with \code{<bit>}}
-The functions in \code{<bit>} were added in \CC{}20 \cite{P0553R4} and now
-\code{simd_mask} needs to adjust for consistency.
-Overloads for \code{simd<\textit{unsigned integer type}>} will also have to be
-added.
-But not with this \emph{merge} paper.
-I promise to write a follow-up paper.
-
-The three relevant functions in the TS are
-\begin{itemize}
-  \item \code{popcount(simd_mask)} and \code{popcount(}\textit{bool}\code{)}:\\
-    The names match.
-    However, currently \code{popcount(bool)} is ill-formed.
-    This would be very unfortunate for generic code that calls \code{popcount}
-    on the result of a comparison.
-    For \code{simd_mask<T>} this operation provides value, for \code{T} it
-    simply casts the \code{bool} to an \code{int}.
-    The TS merge would therefore add \code{bool} to the list of valid types for
-    \code{popcount}.
-
-  \item \code{find_first_set(simd_mask)} and \code{find_first_set(}\textit{bool}\code{)}:\\
-    This matches either \code{countl_zero} or \code{countr_zero}, except that
-    the \code{simd_mask} version has a precondition.
-    Same issue for \code{bool} as discussed for \code{popcount}.
-
-  \item \code{find_last_set(simd_mask)} and \code{find_last_set(}\textit{bool}\code{)}:\\
-    This matches either \code{countl_zero} or \code{countr_zero}, except that
-    the \code{simd_mask} version has a precondition.
-    Same issue for \code{bool} as discussed for \code{popcount}.
-\end{itemize}
-
-I believe we should remove the precondition on the \code{simd_mask} reductions
-and allow masks where \code{none_of} returns \code{true}.
-Then behavior is identical to \code{countl_zero} and \code{countr_zero}.
-The reason for the precondition was efficiency on older ISAs.
-At this point, especially with the precedent set by the \code{count[lr]}
-functions, I don't believe the performance issue is worth the UB.
-
-Renaming the \code{find_first/last_set} functions is not obvious though.
-Consider that a \code{simd_mask k} can be indexed via subscript operator.
-Then \code{k[0]} identifies the first element in \code{k}.
-For all of us who think left-to-right, it would therefore be intuitive to have
-\code{countl_zero} be the replacement for \code{find_first_set}.
-But if you were to convert \code{k} into a \std\code{bitset} and convert the
-\code{bitset} into an unsigned integer, then \code{countl_zero} would have the
-opposite meaning (starting from the most significant bit).
-Indexing a \code{simd_mask} and a \code{bitset} is consistent as is the
-confusion about left and right with regard to the integer representation of a
-\code{bitset}\footnote{cf. \url{https://godbolt.org/z/ov78q1751}}.
-
-I believe it was wrong to call a bit position left or right.
-That is always ambiguous.
-Assuming that we will not change the existing names, the consistent name to use
-for \stdx\code{find_first_set} is \std\code{countr_zero}.
-To put the new name into perspective take a look at \lst{lst:searchwithsimd}.
-\begin{lstlisting}[numbers=left,float={hbtp},label=lst:searchwithsimd,caption={
-    SIMD algorithm to find a \code{char} in a \code{string}
-}]
-int find(char needle, const std::string& hay) {
-  using V = std::simd<char>;
-  for (std::size_t i = 0; i + V::size <= hay.size(); i += V::size) {
-    const V chunk(hay.data() + i);
-    if (any_of(chunk == needle)) {
-      return i + countr_zero(chunk == needle);
-      // was: i + find_first_set(chunk == needle) in the TS
-    }
-  }
-}
-\end{lstlisting}
-My mental model is iterating the \code{string} from left to right, but on every
-SIMD chunk I need a twist and search right to left.
-I believe \code{countr_zero} is an indefensible name for returning the lowest
-index where the mask is \code{true}.
-On the other hand, using \code{countl_zero} would be too inconsistent.
-
-My recommendation is to overload \code{count[lr]_zero}/\code{one} for
-\code{simd} but \emph{not} for \code{simd_mask}.
-Unless \ldots
-
-\subsubsection{The story of element-wise operations}\label{sec:maskreductionsrename}
-\begin{quote}{}
-  Everything you can do with \code{T} you can do with \code{simd<T>},
-  only that the operations apply element-wise.
-\end{quote}
-Since \code{simd_mask<T>} is the return type of \code{simd<T>} comparisons, the
-goal for \code{simd_mask} is:
-\begin{quote}{}
-  Everything you can do with \code{bool} you can do with \code{simd_mask<T>},
-  only that the operations apply element-wise.
-\end{quote}
-
-By that reasoning, \code{popcount(simd_mask)} should be element-wise
-\code{popcount(bool)}, and \code{countr_zero(simd_mask)} should be element-wise
-\code{countr_zero(bool)}.
-The \code{<bit>} functions would therefore not be mask reductions.
-If \code{<bit>} were extended to include \code{bool} overloads, there should
-also be \code{simd_mask} overloads, applying element-wise.
-
-As a consquence, the mask reductions need a different name than the
-\code{<bit>} functions.
-See Table \ref{tab:maskreductions} for a suggestion.
-\begin{table}[hbtp]
-  \caption{Mask reductions}
-  \label{tab:maskreductions}
-  \smaller
-  \begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
-    TS names & alternative names \\
-\hline
-  \begin{lstlisting}
-void f(stdx::native_simd_mask<int> k) {
-  bool all  = all_of(k);
-  bool any  = any_of(k);
-  bool none = none_of(k);
-  int count = popcount(k);
-  int first = find_first_set(k);
-  int last  = find_last_set(k);
-}
-  \end{lstlisting}
-  &
-  \begin{lstlisting}
-void f(std::simd_mask<int> k) {
-  bool all  = reduce_and(k);
-  bool any  = reduce_or(k);
-  bool none = reduce_nand(k);
-  int count = reduce_count(k); // or reduce_add
-  int first = reduce_min_index(k);
-  int last  = reduce_max_index(k);
-}
-  \end{lstlisting}
-\end{tabular}%
-\end{table}%
-Note that if \code{simd_mask} becomes a \stdranges\code{input_range}, then
-\stdranges\code{all_of(simd_mask)} will be well-formed and agree with the
-result of \stdx\code{all_of}.
-(Same for \code{any_of} and \code{none_of}.)
-The naming precedent suggests that \code{all_of}, \code{any_of}, and
-\code{none_of} should not be renamed.
-
-My recommendation is to merge \code{all_of}, \code{any_of}, and
-\code{none_of} without change and rename \code{popcount},
-\code{find_first_set}, and \code{find_last_set} according to Table
-\ref{tab:preferredmaskreductionnames}.
-\begin{table}[htbp]
-  \caption{Recommended renaming of mask reductions}
-  \label{tab:preferredmaskreductionnames}
-\begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
-  TS name & IS name \\
-\hline
-\code{all_of} & \code{all_of} \\
-\code{any_of} & \code{any_of} \\
-\code{none_of} & \code{none_of} \\
-\code{popcount} & \code{reduce_count} \\
-\code{find_first_set} & \code{reduce_min_index} \\
-\code{find_last_set} & \code{reduce_max_index} \\
-\end{tabular}%
-\end{table}%
-
-\subsubsection{Remove \code{some_of}}
-
-While we're at the topic.
-Let's drop \stdx\code{some_of}.
-Nobody understands or wants the reduction, apparently.
-It can be added back later if really needed (unlikely).
-
-\subsubsection{Suggested Polls}
-
-\wgPoll{Mask reductions should use the \code{<bit>} functions.}
-{&&&&}
-
-\wgPoll{Rename mask reductions as proposed in \wgDocumentNumber{} Table \ref{tab:preferredmaskreductionnames}.}
-{&&&&}
-
-\wgPoll{Remove UB of \code{find_first_set} / \code{find_last_set}.}
-{&&&&}
-
-\wgPoll{Do note merge / remove \code{some_of}.}
 {&&&&}
 
 \subsection{Argument order and naming of masked overloads}\label{sec:maskedOverloads}
