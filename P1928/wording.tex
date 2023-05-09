@@ -5,8 +5,9 @@
   \or\error
 \fi}
 
-%\renewcommand\foralli[1][]{for all $i$ in the range of \tcode{[0, #1size())}}
+\renewcommand\foralli[1][]{for all $i$ in the range of \tcode{[0, #1size())}}
 %\renewcommand\forallmaskedi{for all selected indices $i$}
+\newcommand\validMaskedRange[1][first]{For all selected indices $i$, \tcode{[#1, #1 + $i$)} is a valid range.}
 \newcommand\flagsRequires[2]{
 \item If the template parameter \tcode{Flags} is \tcode{vector_aligned_tag}, \tcode{mem} shall point to storage aligned by \tcode{memory_alignment_v<#1>}.
 \item If the template parameter \tcode{Flags} is \tcode{overaligned_tag<N>}, \tcode{mem} shall point to storage aligned by \tcode{N}.
@@ -31,6 +32,12 @@ The set of \defn{vectorizable types} comprises all cv-unqualified arithmetic typ
 
 \pnum
 An \defn{element-wise operation} applies a specified operation to the elements of one or more data-parallel objects. Each such application is unsequenced with respect to the others. A \defn{unary element-wise operation} is an element-wise operation that applies a unary operation to each element of a data-parallel object. A \defn{binary element-wise operation} is an element-wise operation that applies a binary operation to corresponding elements of two data-parallel objects.
+
+\pnum
+Given a \tcode{simd_mask<T, Abi>} object \tcode{mask},
+the \defn{selected indices} signify the integers $i \in \{j \in \mathbb{N}_0 | j < \tcode{mask.size()} \wedge \tcode{mask[}j\tcode{]}\}$.
+Given an additional object \tcode{data} of type \tcode{simd<T, Abi>} or \tcode{simd_mask<T, Abi>},
+the \defn{selected elements} signify the elements \tcode{data[$i$]} for all selected indices $i$.
 
 \pnum
 \begin{note}
@@ -461,8 +468,6 @@ public:
   T operator-() const && noexcept;
   T operator+() const && noexcept;
   T operator~() const && noexcept;
-
-  template<class U, class Flags = element_aligned_tag> void copy_to(U* mem, Flags f = {}) const &&;
 };
 
 template<class M, class T>
@@ -484,8 +489,6 @@ public:
   void operator++(int) && noexcept;
   void operator--() && noexcept;
   void operator--(int) && noexcept;
-
-  template<class U, class Flags = element_aligned_tag> void copy_from(const U* mem, Flags = {}) &&;
 };
 \end{codeblock}
 
@@ -500,9 +503,6 @@ If \tcode{M} is \tcode{bool}, \tcode{T} shall be a cv-unqualified arithmetic typ
 
 \pnum
 In this subclause, if \tcode{M} is \tcode{bool}, \tcode{data[0]} is used interchangably for \tcode{data}, \tcode{mask[0]} is used interchangably for \tcode{mask}, and \tcode{M::size()} is used interchangably for \tcode{1}.
-
-\pnum
-The \defn{selected indices} signify the integers $i \in \{j \in \mathbb{N} | j < \tcode{M::size()} \wedge \tcode{mask[}j\tcode{]}\}$. The \defn{selected elements} signify the elements \tcode{data[$i$]} for all selected indices $i$.
 
 \pnum
 In this subclause, the type \tcode{value_type} is an alias for \tcode{T} if \tcode{M} is \tcode{bool}, or an alias for \tcode{typename T::value_type} if \tcode{is_simd_mask_v<M>} is \tcode{true}.
@@ -521,34 +521,6 @@ T operator~() const && noexcept;
 \begin{itemdescr}
   \pnum\returns
   A copy of \tcode{data} with the indicated unary operator applied to all selected elements.
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class U, class Flags = element_aligned_tag> void copy_to(U* mem, Flags = {}) const &&;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\requires
-  \begin{itemize}
-    \item If \tcode{M} is not \tcode{bool}, the largest selected index is less than the number of values pointed to by \tcode{mem}.
-    \flagsRequires{T, U}{U}
-  \end{itemize}
-
-  \pnum\effects
-  Copies the selected elements as if \tcode{mem[$i$] = static_cast<U>(data[$i$])} for all selected indices $i$.
-
-  \pnum\throws Nothing.
-
-  \pnum\remarks
-  This function shall not participate in overload resolution unless
-  \begin{itemize}
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}, and
-    \item either
-      \begin{itemize}
-        \item \tcode{U} is \tcode{bool} and \tcode{value_type} is \tcode{bool}, or
-        \item \tcode{U} is a vectorizable type and \tcode{value_type} is not \tcode{bool}.
-      \end{itemize}
-  \end{itemize}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -599,34 +571,6 @@ void operator--(int) && noexcept;
   Each of these operators shall not participate in overload resolution unless the indicated operator can be applied to objects of type \tcode{T}.
 \end{itemdescr}
 
-\begin{itemdecl}
-template<class U, class Flags = element_aligned_tag> void copy_from(const U* mem, Flags = {}) &&;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\requires
-  \begin{itemize}
-    \item If \tcode{is_simd_flag_type_v<U>} is \tcode{true}, for all selected indices $i$, $i$ shall be less than the number of values pointed to by \tcode{mem}.
-    \flagsRequires{T, U}{U}
-  \end{itemize}
-
-  \pnum\effects
-  Replaces the selected elements as if \tcode{data[$i$] = static_cast<value_type>(mem[$i$])} for all selected indices $i$.
-
-  \pnum\throws Nothing.
-
-  \pnum\remarks
-  This function shall not participate in overload resolution unless
-  \begin{itemize}
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}, and
-    \item either
-      \begin{itemize}
-        \item \tcode{U} is \tcode{bool} and \tcode{value_type} is \tcode{bool}, or
-        \item \tcode{U} is a vectorizable type and \tcode{value_type} is not \tcode{bool}.
-      \end{itemize}
-  \end{itemize}
-\end{itemdescr}
-
 \rSec1[simd.class]{Class template \tcode{simd}}
 
 \rSec2[simd.overview]{Class template \tcode{simd} overview}
@@ -650,13 +594,20 @@ public:
   template<class G> constexpr explicit simd(G&& gen) noexcept;
   template<contiguous_iterator It, class Flags = element_aligned_tag>
     constexpr simd(It first, Flags = {});
+  template<contiguous_iterator It, class Flags = element_aligned_tag>
+    constexpr simd(It first, const mask_type& mask, Flags = {});
 
   // \ref{simd.copy}, \tcode{simd} copy functions
   template<contiguous_iterator It, class Flags = element_aligned_tag>
     constexpr void copy_from(It first, Flags f = {});
   template<contiguous_iterator It, class Flags = element_aligned_tag>
+    constexpr void copy_from(It first, const mask_type& mask, Flags f = {});
+  template<contiguous_iterator It, class Flags = element_aligned_tag>
     requires output_iterator<It, value_type>
     constexpr void copy_to(It first, Flags f = {}) const;
+  template<contiguous_iterator It, class Flags = element_aligned_tag>
+    requires output_iterator<It, value_type>
+    constexpr void copy_to(It first, const mask_type& mask, Flags f = {}) const;
 
   // \ref{simd.subscr}, \tcode{simd} subscript operators
   constexpr reference operator[](size_t) &;
@@ -969,22 +920,45 @@ template<contiguous_iterator It, class Flags = element_aligned_tag>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{iter_value_t<It>} is a vectorizable type.
+  \begin{itemize}
+    \item \tcode{iter_value_t<It>} is a vectorizable type, and
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+  \end{itemize}
 
-  \pnum\requires
+  \pnum\expects
   \begin{itemize}
     \item \tcode{[first, first + size())} is a valid range.
-    \flagsRequires{simd, U}{U}
+    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
   \end{itemize}
 
   \pnum\effects
-  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{static_cast<T>(mem[$i$])} \foralli.
+  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{static_cast<T>(first[$i$])} \foralli.
 
-  \pnum\remarks
-  This constructor shall not participate in overload resolution unless
+  \pnum\throws Nothing.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<contiguous_iterator It, class Flags = element_aligned_tag>
+  constexpr simd(It first, const mask_type& mask, Flags = {});
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
   \begin{itemize}
+    \item \tcode{iter_value_t<It>} is a vectorizable type, and
     \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
   \end{itemize}
+
+  \pnum\expects
+  \begin{itemize}
+    \item \validMaskedRange
+    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
+  \end{itemize}
+
+  \pnum\effects
+  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{mask[$i$] ? static_cast<T>(first[$i$]) : T()} \foralli.
+
+  \pnum\throws Nothing.
 \end{itemdescr}
 
 \rSec2[simd.copy]{\tcode{simd} copy functions}
@@ -996,22 +970,45 @@ template<contiguous_iterator It, class Flags = element_aligned_tag>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{iter_value_t<It>} is a vectorizable type.
+  \begin{itemize}
+    \item \tcode{iter_value_t<It>} is a vectorizable type.
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+  \end{itemize}
 
   \pnum\requires
   \begin{itemize}
-    \item \tcode{[mem, mem + size())} is a valid range.
-    \flagsRequires{simd, U}{U}
+    \item \tcode{[first, first + size())} is a valid range.
+    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
   \end{itemize}
 
   \pnum\effects
-  Replaces the elements of the \tcode{simd} object such that the $i^\text{th}$ element is assigned with \tcode{static_cast<T>(mem[$i$])} \foralli.
+  Replaces the elements of the \tcode{simd} object such that the $i^\text{th}$ element is assigned with \tcode{static_cast<T>(first[$i$])} \foralli.
 
-  \pnum\remarks
-  This function shall not participate in overload resolution unless
+  \pnum\throws Nothing.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<contiguous_iterator It, class Flags = element_aligned_tag>
+  constexpr void copy_from(It first, const mask_type& mask, Flags f = {});
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
   \begin{itemize}
+    \item \tcode{iter_value_t<It>} is a vectorizable type.
     \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
   \end{itemize}
+
+  \pnum\requires
+  \begin{itemize}
+    \item \validMaskedRange
+    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
+  \end{itemize}
+
+  \pnum\effects
+  Replaces the selected elements of the \tcode{simd} object such that the $i^\text{th}$ element is replaced with \tcode{static_cast<T>(first[$i$])} \forallmaskedi.
+
+  \pnum\throws Nothing.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1022,22 +1019,46 @@ template<contiguous_iterator It, class Flags = element_aligned_tag>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{iter_value_t<It>} is a vectorizable type.
+  \begin{itemize}
+    \item \tcode{iter_value_t<It>} is a vectorizable type.
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+  \end{itemize}
 
   \pnum\requires
   \begin{itemize}
-    \item \tcode{[mem, mem + size())} is a valid range.
-    \flagsRequires{simd, U}{U}
+    \item \tcode{[first, first + size())} is a valid range.
+    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
   \end{itemize}
 
   \pnum\effects
-  Copies all \tcode{simd} elements as if \tcode{mem[$i$] = static_cast<U>(operator[]($i$))} \foralli.
+  Copies all \tcode{simd} elements as if \tcode{first[$i$] = static_cast<iter_value_t<It>>(operator[]($i$))} \foralli.
 
-  \pnum\remarks
-  This function shall not participate in overload resolution unless
+  \pnum\throws Nothing.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<contiguous_iterator It, class Flags = element_aligned_tag>
+  requires output_iterator<It, value_type>
+  constexpr void copy_to(It first, const mask_type& mask, Flags f = {}) const;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
   \begin{itemize}
+    \item \tcode{iter_value_t<It>} is a vectorizable type.
     \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
   \end{itemize}
+
+  \pnum\requires
+  \begin{itemize}
+    \item \validMaskedRange
+    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
+  \end{itemize}
+
+  \pnum\effects
+  Copies the selected elements as if \tcode{first[$i$] = static_cast<iter_value_t<It>>(operator[]($i$))} \forallmaskedi.
+
+  \pnum\throws Nothing.
 \end{itemdescr}
 
 \rSec2[simd.subscr]{\tcode{simd} subscript operators}
@@ -1571,13 +1592,20 @@ public:
   template<class G> constexpr explicit simd_mask(G&& gen) noexcept;
   template<contiguous_iterator It, class Flags = element_aligned_tag>
     constexpr simd_mask(It first, Flags = {});
+  template<contiguous_iterator It, class Flags = element_aligned_tag>
+    constexpr simd_mask(It first, const simd_mask& mask, Flags = {});
 
   // \ref{simd.mask.copy}, \tcode{simd_mask} copy functions
   template<contiguous_iterator It, class Flags = element_aligned_tag>
     constexpr void copy_from(It first, Flags = {});
   template<contiguous_iterator It, class Flags = element_aligned_tag>
+    constexpr void copy_from(It first, const simd_mask& mask, Flags = {});
+  template<contiguous_iterator It, class Flags = element_aligned_tag>
     requires output_iterator<It, value_type>
     constexpr void copy_to(It first, Flags = {}) const;
+  template<contiguous_iterator It, class Flags = element_aligned_tag>
+    requires output_iterator<It, value_type>
+    constexpr void copy_to(It first, const simd_mask& mask, Flags = {}) const;
 
   // \ref{simd.mask.subscr}, \tcode{simd_mask} subscript operators
   constexpr reference operator[](size_t) &;
@@ -1696,22 +1724,45 @@ template<contiguous_iterator It, class Flags = element_aligned_tag>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{iter_value_t<It>} is of type \tcode{bool}.
+  \begin{itemize}
+    \item \tcode{iter_value_t<It>} is of type \tcode{bool}.
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+  \end{itemize}
 
   \pnum\requires
   \begin{itemize}
-    \item \tcode{[mem, mem + size())} is a valid range.
+    \item \tcode{[first, first + size())} is a valid range.
     \flagsRequires{simd_mask}{value_type}
   \end{itemize}
 
   \pnum\effects
-  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{mem[$i$]} \foralli.
+  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{first[$i$]} \foralli.
 
   \pnum\throws Nothing.
+\end{itemdescr}
 
-  \pnum\remarks
-  This constructor shall not participate in overload resolution unless \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+\begin{itemdecl}
+template<contiguous_iterator It, class Flags = element_aligned_tag>
+  constexpr simd_mask(It first, const simd_mask& mask, Flags = {});
+\end{itemdecl}
 
+\begin{itemdescr}
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{iter_value_t<It>} is of type \tcode{bool}.
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+  \end{itemize}
+
+  \pnum\requires
+  \begin{itemize}
+    \item \validMaskedRange
+    \flagsRequires{simd_mask}{value_type}
+  \end{itemize}
+
+  \pnum\effects
+  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{mask[$i$] ? first[$i$] : false} \foralli.
+
+  \pnum\throws Nothing.
 \end{itemdescr}
 
 \rSec2[simd.mask.copy]{\texorpdfstring{\tcode{simd_mask} copy}{simd_mask copy} functions}
@@ -1723,22 +1774,45 @@ template<contiguous_iterator It, class Flags = element_aligned_tag>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{iter_value_t<It>} is of type \tcode{bool}.
+  \begin{itemize}
+    \item \tcode{iter_value_t<It>} is of type \tcode{bool}.
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+  \end{itemize}
 
   \pnum\requires
   \begin{itemize}
-    \item \tcode{[mem, mem + size())} is a valid range.
+    \item \tcode{[first, first + size())} is a valid range.
     \flagsRequires{simd_mask}{value_type}
   \end{itemize}
 
   \pnum\effects
-  Replaces the elements of the \tcode{simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{mem[$i$]} \foralli.
+  Replaces the elements of the \tcode{simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{first[$i$]} \foralli.
 
   \pnum\throws Nothing.
+\end{itemdescr}
 
-  \pnum\remarks
-  This function shall not participate in overload resolution unless \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+\begin{itemdecl}
+template<contiguous_iterator It, class Flags = element_aligned_tag>
+  constexpr void copy_from(It first, const simd_mask& mask, Flags = {});
+\end{itemdecl}
 
+\begin{itemdescr}
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{iter_value_t<It>} is of type \tcode{bool}.
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+  \end{itemize}
+
+  \pnum\requires
+  \begin{itemize}
+    \item \validMaskedRange
+    \flagsRequires{simd_mask}{value_type}
+  \end{itemize}
+
+  \pnum\effects
+  Replaces the selected elements of the \tcode{simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{first[$i$]} \forallmaskedi.
+
+  \pnum\throws Nothing.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1749,21 +1823,46 @@ template<contiguous_iterator It, class Flags = element_aligned_tag>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{iter_value_t<It>} is of type \tcode{bool}.
+  \begin{itemize}
+    \item \tcode{iter_value_t<It>} is of type \tcode{bool}.
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+  \end{itemize}
 
   \pnum\requires
   \begin{itemize}
-    \item \tcode{[mem, mem + size())} is a valid range.
+    \item \tcode{[first, first + size())} is a valid range.
     \flagsRequires{simd_mask}{value_type}
   \end{itemize}
 
   \pnum\effects
-  Copies all \tcode{simd_mask} elements as if \tcode{mem[$i$] = operator[]($i$)} \foralli.
+  Copies all \tcode{simd_mask} elements as if \tcode{first[$i$] = operator[]($i$)} \foralli.
 
   \pnum\throws Nothing.
+\end{itemdescr}
 
-  \pnum\remarks
-  This function shall not participate in overload resolution unless \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+\begin{itemdecl}
+template<contiguous_iterator It, class Flags = element_aligned_tag>
+  requires output_iterator<It, value_type>
+  constexpr void copy_to(It first, const simd_mask& mask, Flags = {}) const;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{iter_value_t<It>} is of type \tcode{bool}.
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+  \end{itemize}
+
+  \pnum\requires
+  \begin{itemize}
+    \item \validMaskedRange
+    \flagsRequires{simd_mask}{value_type}
+  \end{itemize}
+
+  \pnum\effects
+  Copies the selected elements as if \tcode{first[$i$] = operator[]($i$)} \forallmaskedi.
+
+  \pnum\throws Nothing.
 \end{itemdescr}
 
 \rSec2[simd.mask.subscr]{\texorpdfstring{\tcode{simd_mask} subscript}{simd_mask subscript} operators}
