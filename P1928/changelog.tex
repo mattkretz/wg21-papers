@@ -59,6 +59,7 @@
 \item Add open question on first template parameter of \code{simd_mask} (\sect{sec:basicsimdmask}).
 \item Overload loads and stores with mask argument (\ref{sec:simd.ctor}, \ref{sec:simd.copy}, \ref{sec:simd.mask.ctor}, \ref{sec:simd.mask.copy}).
 \item Respecify \simd reductions to use a \mask argument instead of \code{const_where_expression} (\ref{sec:simd.reductions}).
+\item Add \mask operators returning a \simd (\ref{sec:simd.mask.unary}, \ref{sec:simd.mask.conv})
   \todo Replace \code{where} wording.
   \todo Apply the new library specification style from P0788R3.
   \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.

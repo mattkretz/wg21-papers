@@ -1622,6 +1622,13 @@ public:
 
   // \ref{simd.mask.unary}, \tcode{simd_mask} unary operators
   constexpr simd_mask operator!() const noexcept;
+  constexpr simd_type operator+() const noexcept;
+  constexpr simd_type operator-() const noexcept;
+  constexpr simd_type operator~() const noexcept;
+
+  // \ref{simd.mask.conv}, \tcode{simd_mask} conversion operators
+  template <class U, class A>
+    constexpr explicit(sizeof(U) != sizeof(T)) operator simd<U, A>() const noexcept;
 
   // \ref{simd.mask.binary}, \tcode{simd_mask} binary operators
   friend constexpr simd_mask operator&&(const simd_mask&, const simd_mask&) noexcept;
@@ -1904,7 +1911,7 @@ constexpr value_type operator[](size_t i) const&;
   \pnum\throws Nothing.
 \end{itemdescr}
 
-\rSec2[simd.mask.unary]{\texorpdfstring{\tcode{simd_mask} unary}{simd_mask unary} operators}
+\rSec2[simd.mask.unary]{\texorpdfstring{\tcode{simd_mask}}{simd_mask} unary operators}
 
 \begin{itemdecl}
 constexpr simd_mask operator!() const noexcept;
@@ -1913,6 +1920,35 @@ constexpr simd_mask operator!() const noexcept;
 \begin{itemdescr}
   \pnum\returns
   The result of the element-wise appliation of \tcode{operator!}.
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr simd_type operator+() const noexcept;
+constexpr simd_type operator-() const noexcept;
+constexpr simd_type operator~() const noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
+  Application of the indicated unary operator to objects of type \tcode{T} is well-formed.
+
+  \pnum\returns
+  The result of applying the indicated operator to \tcode{static_cast<simd_type>(*this)}.
+\end{itemdescr}
+
+\rSec2[simd.mask.conv]{\texorpdfstring{\tcode{simd_mask}}{simd_mask} conversion operators}
+
+\begin{itemdecl}
+template <class U, class A>
+  constexpr explicit(sizeof(U) != sizeof(T)) operator simd<U, A>() const noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
+  \tcode{simd_size_v<U, A> == simd_size_v<T, Abi>}.
+
+  \pnum\returns
+  An object where the $i^\text{th}$ element is initialized to \tcode{static_cast<U>(operator[]($i$))}.
 \end{itemdescr}
 
 \rSec1[simd.mask.nonmembers]{Non-member operations}

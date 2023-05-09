@@ -186,6 +186,18 @@ The following load/store overloads have been added as a replacement for
   \item \code{simd_mask::copy_to(contiguous_iterator, const mask_type\&, Flags = \{\})} (selected elements are copied to given range)
 \end{itemize}
 
+The \code{reduce}, \code{hmin}, and \code{hmax} overloads with
+\code{const_where_expression} argument have been replaced by overloads with
+\simd and \mask arguments.
+
+The following operators were added to \mask:
+\begin{itemize}
+  \item \code{simd_mask::operator simd<U, A>() const noexcept}
+  \item \code{simd_mask::operator+() const noexcept}
+  \item \code{simd_mask::operator-() const noexcept}
+  \item \code{simd_mask::operator\~{}() const noexcept}
+\end{itemize}
+
 For a discussion, see \wglink{P1928R3} Section 4.8.
 
 \subsection{Make use of \code{int} and \code{size_t} consistent}
