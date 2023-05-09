@@ -182,37 +182,35 @@ namespace std {
 
   // \ref{simd.reductions}, \tcode{simd} reductions
   template<class T, class Abi, class BinaryOperation = plus<>>
-    constexpr T reduce(const simd<T, Abi>&,
-                       BinaryOperation = {});
+    constexpr T reduce(const simd<T, Abi>&, BinaryOperation = {});
 
-  template<class M, class V, class BinaryOperation>
-    constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
-                                            typename V::value_type identity_element,
-                                            BinaryOperation binary_op);
-  template<class M, class V>
-    constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
-                                            plus<> binary_op = {}) noexcept;
-  template<class M, class V>
-    constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
-                                            multiplies<> binary_op) noexcept;
-  template<class M, class V>
-    constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
-                                            bit_and<> binary_op) noexcept;
-  template<class M, class V>
-    constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
-                                            bit_or<> binary_op) noexcept;
-  template<class M, class V>
-    constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
-                                            bit_xor<> binary_op) noexcept;
+  template<class T, class Abi, class BinaryOperation>
+    constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+                       T identity_element, BinaryOperation binary_op);
+  template<class T, class Abi>
+    constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+                       plus<> binary_op = {}) noexcept;
+  template<class T, class Abi>
+    constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+                       multiplies<> binary_op) noexcept;
+  template<class T, class Abi>
+    constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+                       bit_and<> binary_op) noexcept;
+  template<class T, class Abi>
+    constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+                       bit_or<> binary_op) noexcept;
+  template<class T, class Abi>
+    constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+                       bit_xor<> binary_op) noexcept;
 
   template<class T, class Abi>
-    constexpr T hmin(const simd<T, abi>&) noexcept;
-  template<class M, class V>
-    constexpr typename V::value_type hmin(const const_where_expression<M, V>&) noexcept;
+    constexpr T hmin(const simd<T, Abi>&) noexcept;
   template<class T, class Abi>
-    constexpr T hmax(const simd<T, abi>&) noexcept;
-  template<class M, class V>
-    constexpr typename V::value_type hmax(const const_where_expression<M, V>&) noexcept;
+    constexpr T hmin(const simd<T, Abi>&, const typename simd<T, Abi>::mask_type&) noexcept;
+  template<class T, class Abi>
+    constexpr T hmax(const simd<T, Abi>&) noexcept;
+  template<class T, class Abi>
+    constexpr T hmax(const simd<T, Abi>&, const typename simd<T, Abi>::mask_type&) noexcept;
 
   // \ref{simd.alg}, Algorithms
   template<class T, class Abi>
@@ -229,7 +227,7 @@ namespace std {
       clamp(const simd<T, Abi>& v,
             const simd<T, Abi>& lo,
             const simd<T, Abi>& hi);
-|-}-|}
+}
 \end{codeblock}
 
 \pnum
@@ -1298,81 +1296,88 @@ template<class T, class Abi, class BinaryOperation = plus<>>
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\requires
-  \tcode{binary_op} shall be callable with two arguments of type \tcode{T} returning \tcode{T}, or callable with two arguments of type \tcode{simd<T, A1>} returning \tcode{simd<T, A1>} for every \tcode{A1} that is an ABI tag type.
+  \pnum\mandates
+  \tcode{binary_op} can be invoked with two arguments of type \tcode{simd<T, A1>} returning \tcode{simd<T, A1>} for every \tcode{A1} that is an ABI tag type.
 
   \pnum\returns
   \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x.data[$i$], ...)} \foralli (\ref{numerics.defns}).
 
   \pnum\throws
   Any exception thrown from \tcode{binary_op}.
-
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class M, class V, class BinaryOperation>
-  constexpr typename V::value_type reduce(const const_where_expression<M, V>& x,
-                                typename V::value_type identity_element,
-                                BinaryOperation binary_op = {});
+template<class T, class Abi, class BinaryOperation>
+  constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+                     T identity_element, BinaryOperation binary_op);
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\requires
-  \tcode{binary_op} shall be callable with two arguments of type \tcode{T} returning \tcode{T}, or callable with two arguments of type \tcode{simd<T, A1>} returning \tcode{simd<T, A1>} for every \tcode{A1} that is an ABI tag type. The results of \tcode{binary_op(identity_element, x)} and \tcode{binary_op(x, identity_element)} shall be equal to \tcode{x} for all finite values \tcode{x} representable by \tcode{V::value_type}.
+  \pnum\mandates
+  \tcode{binary_op} can be invoked with two arguments of type \tcode{simd<T, A1>} returning \tcode{simd<T, A1>} for every \tcode{A1} that is an ABI tag type.
+
+  \pnum\expects
+  The results of \tcode{all_of(x == binary_op(simd<T, A1>(identity_element), simd<T, A1>(x)))} and \tcode{all_of(simd<T, A1>(x) == binary_op(x, simd<T, A1>(identity_element)))} shall be \tcode{true} for every \tcode{A1} that is an ABI tag type and for all finite values \tcode{x} representable by \tcode{T}.
 
   \pnum\returns
-  If \tcode{none_of(x.mask)}, returns \tcode{identity_element}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x.data[$i$], ...)} \forallmaskedi.
+  If \tcode{none_of(mask)}, returns \tcode{identity_element}.
+  Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
 
   \pnum\throws
   Any exception thrown from \tcode{binary_op}.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class M, class V>
-  constexpr typename V::value_type reduce(const const_where_expression<M, V>& x, plus<> binary_op) noexcept;
+template<class T, class Abi>
+  constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+                     plus<> binary_op = {}) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
-  If \tcode{none_of(x.mask)}, returns \tcode{0}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x.data[$i$], ...)} \forallmaskedi.
+  If \tcode{none_of(mask)}, returns \tcode{T()}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class M, class V>
-  constexpr typename V::value_type reduce(const const_where_expression<M, V>& x, multiplies<> binary_op) noexcept;
+template<class T, class Abi>
+  constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+                     multiplies<> binary_op) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
-  If \tcode{none_of(x.mask)}, returns \tcode{1}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x.data[$i$], ...)} \forallmaskedi.
+  If \tcode{none_of(x)}, returns \tcode{1}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class M, class V>
-  constexpr typename V::value_type reduce(const const_where_expression<M, V>& x, bit_and<> binary_op) noexcept;
+template<class T, class Abi>
+  constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+                     bit_and<> binary_op) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\requires
-  \tcode{is_integral_v<V::value_type>} is \tcode{true}.
+  \pnum\constraints
+  \tcode{is_integral_v<T>} is \tcode{true}.
 
   \pnum\returns
-  If \tcode{none_of(x.mask)}, returns \tcode{\~{}V::value_type()}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x.data[$i$], ...)} \forallmaskedi.
+  If \tcode{none_of(mask)}, returns \tcode{\~{}T()}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class M, class V>
-  constexpr typename V::value_type reduce(const const_where_expression<M, V>& x, bit_or<> binary_op) noexcept;
-template<class M, class V>
-  constexpr typename V::value_type reduce(const const_where_expression<M, V>& x, bit_xor<> binary_op) noexcept;
+template<class T, class Abi>
+  constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+                     bit_or<> binary_op) noexcept;
+template<class T, class Abi>
+  constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+                     bit_xor<> binary_op) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\requires
-  \tcode{is_integral_v<V::value_type>} is \tcode{true}.
+  \pnum\constraints
+  \tcode{is_integral_v<T>} is \tcode{true}.
 
   \pnum\returns
-  If \tcode{none_of(x.mask)}, returns \tcode{0}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x.data[$i$], ...)} \forallmaskedi.
+  If \tcode{none_of(mask)}, returns \tcode{T()}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1380,17 +1385,25 @@ template<class T, class Abi> constexpr T hmin(const simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\expects
+  TODO: UB on NaNs as input.
+
   \pnum\returns
   The value of an element \tcode{x[$j$]} for which \tcode{x[$j$] <= x[$i$]} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class M, class V> constexpr typename V::value_type hmin(const const_where_expression<M, V>& x) noexcept;
+template<class T, class Abi>
+  constexpr T hmin(const simd<T, Abi>&, const typename simd<T, Abi>::mask_type&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\expects
+  TODO: UB on NaNs as input.
+
   \pnum\returns
-  If \tcode{none_of(x.mask)}, the return value is \tcode{numeric_limits<V::value_type>::max()}. Otherwise, returns the value of an element \tcode{x.data[$j$]} for which \tcode{x.mask[$j$] == true} and \tcode{x.data[$j$] <= x.data[$i$]} \forallmaskedi.
+  If \tcode{none_of(mask)}, returns \tcode{numeric_limits<T>::max()}.
+  Otherwise, returns the value of a selected element \tcode{x[$j$]} for which \tcode{x[$j$] <= x[$i$]} \forallmaskedi.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1398,17 +1411,25 @@ template<class T, class Abi> constexpr T hmax(const simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\expects
+  TODO: UB on NaNs as input.
+
   \pnum\returns
   The value of an element \tcode{x[$j$]} for which \tcode{x[$j$] >= x[$i$]} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class M, class V> constexpr typename V::value_type hmax(const const_where_expression<M, V>& x) noexcept;
+template<class T, class Abi>
+  constexpr T hmax(const simd<T, Abi>&, const typename simd<T, Abi>::mask_type&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\expects
+  TODO: UB on NaNs as input.
+
   \pnum\returns
-  If \tcode{none_of(x.mask)}, the return value is \tcode{numeric_limits<V::value_type>::lowest()}. Otherwise, returns the value of an element \tcode{x.data[$j$]} for which \tcode{x.mask[$j$] == true} and \tcode{x.data[$j$] >= x.data[$i$]} \forallmaskedi.
+  If \tcode{none_of(mask)}, returns \tcode{numeric_limits<V::value_type>::lowest()}.
+  Otherwise, returns the value of a selected element \tcode{x.data[$j$]} for which \tcode{x.data[$j$] >= x.data[$i$]} \forallmaskedi.
 \end{itemdescr}
 
 \rSec2[simd.casts]{Casts}
