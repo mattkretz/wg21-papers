@@ -1385,11 +1385,8 @@ template<class T, class Abi> constexpr T hmin(const simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\expects
-  TODO: UB on NaNs as input.
-
   \pnum\returns
-  The value of an element \tcode{x[$j$]} for which \tcode{x[$j$] <= x[$i$]} \foralli.
+  The value of an element \tcode{x[$j$]} for which \tcode{x[$i$] < x[$j$]} is \tcode{false} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1398,12 +1395,9 @@ template<class T, class Abi>
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\expects
-  TODO: UB on NaNs as input.
-
   \pnum\returns
   If \tcode{none_of(mask)}, returns \tcode{numeric_limits<T>::max()}.
-  Otherwise, returns the value of a selected element \tcode{x[$j$]} for which \tcode{x[$j$] <= x[$i$]} \forallmaskedi.
+  Otherwise, returns the value of a selected element \tcode{x[$j$]} for which \tcode{x[$i$] < x[$j$]} is \tcode{false} \forallmaskedi.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1411,11 +1405,8 @@ template<class T, class Abi> constexpr T hmax(const simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\expects
-  TODO: UB on NaNs as input.
-
   \pnum\returns
-  The value of an element \tcode{x[$j$]} for which \tcode{x[$j$] >= x[$i$]} \foralli.
+  The value of an element \tcode{x[$j$]} for which \tcode{x[$j$] < x[$i$]} is \tcode{false} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1424,12 +1415,9 @@ template<class T, class Abi>
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\expects
-  TODO: UB on NaNs as input.
-
   \pnum\returns
   If \tcode{none_of(mask)}, returns \tcode{numeric_limits<V::value_type>::lowest()}.
-  Otherwise, returns the value of a selected element \tcode{x.data[$j$]} for which \tcode{x.data[$j$] >= x.data[$i$]} \forallmaskedi.
+  Otherwise, returns the value of a selected element \tcode{x.data[$j$]} for which \tcode{x.data[$j$] < x.data[$i$]} is \tcode{false} \forallmaskedi.
 \end{itemdescr}
 
 \rSec2[simd.casts]{Casts}
