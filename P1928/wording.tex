@@ -590,22 +590,20 @@ public:
   template<class U, class UAbi>
     constexpr explicit(@\seebelow@) simd(const simd<U, UAbi>&) noexcept;
   template<class G> constexpr explicit simd(G&& gen) noexcept;
-  template<contiguous_iterator It, class Flags = element_aligned_tag>
+  template<typename It, class Flags = element_aligned_tag>
     constexpr simd(It first, Flags = {});
-  template<contiguous_iterator It, class Flags = element_aligned_tag>
+  template<typename It, class Flags = element_aligned_tag>
     constexpr simd(It first, const mask_type& mask, Flags = {});
 
   // \ref{simd.copy}, \tcode{simd} copy functions
-  template<contiguous_iterator It, class Flags = element_aligned_tag>
+  template<typename It, class Flags = element_aligned_tag>
     constexpr void copy_from(It first, Flags f = {});
-  template<contiguous_iterator It, class Flags = element_aligned_tag>
+  template<typename It, class Flags = element_aligned_tag>
     constexpr void copy_from(It first, const mask_type& mask, Flags f = {});
-  template<contiguous_iterator It, class Flags = element_aligned_tag>
-    requires output_iterator<It, value_type>
-    constexpr void copy_to(It first, Flags f = {}) const;
-  template<contiguous_iterator It, class Flags = element_aligned_tag>
-    requires output_iterator<It, value_type>
-    constexpr void copy_to(It first, const mask_type& mask, Flags f = {}) const;
+  template<typename Out, class Flags = element_aligned_tag>
+    constexpr void copy_to(Out first, Flags f = {}) const;
+  template<typename Out, class Flags = element_aligned_tag>
+    constexpr void copy_to(Out first, const mask_type& mask, Flags f = {}) const;
 
   // \ref{simd.subscr}, \tcode{simd} subscript operators
   constexpr reference operator[](size_t) &;
@@ -911,152 +909,114 @@ template<class G> constexpr simd(G&& gen) noexcept;
   The calls to \tcode{gen} are unsequenced with respect to each other. Vectorization-unsafe standard library functions may not be invoked by \tcode{gen} (\ref{algorithms.parallel.exec}).
 \end{itemdescr}
 
+\newcommand\SimdLoadDescr[2]{
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}, and
+    \item \tcode{iter_value_t<It>} is a vectorizable type, and
+    \item \tcode{It} satisfies \tcode{contiguous_iterator}.
+  \end{itemize}
+
+  \pnum\expects
+  \begin{itemize}
+    \item #1
+    \item \tcode{It} models \tcode{contiguous_iterator}.
+    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
+  \end{itemize}
+
+  \pnum\effects #2
+
+  \pnum\throws Nothing.
+}
+
 \begin{itemdecl}
-template<contiguous_iterator It, class Flags = element_aligned_tag>
+template<typename It, class Flags = element_aligned_tag>
   constexpr simd(It first, Flags = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<It>} is a vectorizable type, and
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
-  \end{itemize}
-
-  \pnum\expects
-  \begin{itemize}
-    \item \tcode{[first, first + size())} is a valid range.
-    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
-  \end{itemize}
-
-  \pnum\effects
-  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{static_cast<T>(first[$i$])} \foralli.
-
-  \pnum\throws Nothing.
+  \SimdLoadDescr
+    {\tcode{[first, first + size())} is a valid range.}
+    {Constructs an object where the $i^\text{th}$ element is initialized to \tcode{static_cast<T>(first[$i$])} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<contiguous_iterator It, class Flags = element_aligned_tag>
+template<typename It, class Flags = element_aligned_tag>
   constexpr simd(It first, const mask_type& mask, Flags = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<It>} is a vectorizable type, and
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
-  \end{itemize}
-
-  \pnum\expects
-  \begin{itemize}
-    \item \validMaskedRange
-    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
-  \end{itemize}
-
-  \pnum\effects
-  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{mask[$i$] ? static_cast<T>(first[$i$]) : T()} \foralli.
-
-  \pnum\throws Nothing.
+  \SimdLoadDescr
+    {\validMaskedRange}
+    {Constructs an object where the $i^\text{th}$ element is initialized to \tcode{mask[$i$] ? static_cast<T>(first[$i$]) : T()} \foralli.}
 \end{itemdescr}
 
 \rSec2[simd.copy]{\tcode{simd} copy functions}
 
 \begin{itemdecl}
-template<contiguous_iterator It, class Flags = element_aligned_tag>
+template<typename It, class Flags = element_aligned_tag>
   constexpr void copy_from(It first, Flags f = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<It>} is a vectorizable type.
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
-  \end{itemize}
-
-  \pnum\requires
-  \begin{itemize}
-    \item \tcode{[first, first + size())} is a valid range.
-    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
-  \end{itemize}
-
-  \pnum\effects
-  Replaces the elements of the \tcode{simd} object such that the $i^\text{th}$ element is assigned with \tcode{static_cast<T>(first[$i$])} \foralli.
-
-  \pnum\throws Nothing.
+  \SimdLoadDescr
+    {\tcode{[first, first + size())} is a valid range.}
+    {Replaces the elements of the \tcode{simd} object such that the $i^\text{th}$ element is assigned with \tcode{static_cast<T>(first[$i$])} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<contiguous_iterator It, class Flags = element_aligned_tag>
+template<typename It, class Flags = element_aligned_tag>
   constexpr void copy_from(It first, const mask_type& mask, Flags f = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<It>} is a vectorizable type.
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
-  \end{itemize}
-
-  \pnum\requires
-  \begin{itemize}
-    \item \validMaskedRange
-    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
-  \end{itemize}
-
-  \pnum\effects
-  Replaces the selected elements of the \tcode{simd} object such that the $i^\text{th}$ element is replaced with \tcode{static_cast<T>(first[$i$])} \forallmaskedi.
-
-  \pnum\throws Nothing.
+  \SimdLoadDescr
+    {\validMaskedRange}
+    {Replaces the selected elements of the \tcode{simd} object such that the $i^\text{th}$ element is replaced with \tcode{static_cast<T>(first[$i$])} \forallmaskedi.}
 \end{itemdescr}
 
+\newcommand\SimdStoreDescr[2]{
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}, and
+    \item \tcode{iter_value_t<Out>} is a vectorizable type, and
+    \item \tcode{Out} satisfies \tcode{contiguous_iterator}, and
+    \item \tcode{Out} satisfies \tcode{output_iterator<value_type>}.
+  \end{itemize}
+
+  \pnum\expects
+  \begin{itemize}
+    \item #1
+    \item \tcode{Out} models \tcode{contiguous_iterator}.
+    \item \tcode{Out} models \tcode{output_iterator<value_type>}.
+    \flagsRequires{simd, iter_value_t<Out>}{iter_value_t<Out>}
+  \end{itemize}
+
+  \pnum\effects #2
+
+  \pnum\throws Nothing.
+}
+
 \begin{itemdecl}
-template<contiguous_iterator It, class Flags = element_aligned_tag>
-  requires output_iterator<It, value_type>
-  constexpr void copy_to(It first, Flags f = {}) const;
+template<typename Out, class Flags = element_aligned_tag>
+  constexpr void copy_to(Out first, Flags f = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<It>} is a vectorizable type.
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
-  \end{itemize}
-
-  \pnum\requires
-  \begin{itemize}
-    \item \tcode{[first, first + size())} is a valid range.
-    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
-  \end{itemize}
-
-  \pnum\effects
-  Copies all \tcode{simd} elements as if \tcode{first[$i$] = static_cast<iter_value_t<It>>(operator[]($i$))} \foralli.
-
-  \pnum\throws Nothing.
+  \SimdStoreDescr
+    {\tcode{[first, first + size())} is a valid range.}
+    {Copies all \tcode{simd} elements as if \tcode{first[$i$] = static_cast<iter_value_t<Out>>(operator[]($i$))} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<contiguous_iterator It, class Flags = element_aligned_tag>
-  requires output_iterator<It, value_type>
-  constexpr void copy_to(It first, const mask_type& mask, Flags f = {}) const;
+template<typename Out, class Flags = element_aligned_tag>
+  constexpr void copy_to(Out first, const mask_type& mask, Flags f = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<It>} is a vectorizable type.
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
-  \end{itemize}
-
-  \pnum\requires
-  \begin{itemize}
-    \item \validMaskedRange
-    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
-  \end{itemize}
-
-  \pnum\effects
-  Copies the selected elements as if \tcode{first[$i$] = static_cast<iter_value_t<It>>(operator[]($i$))} \forallmaskedi.
-
-  \pnum\throws Nothing.
+  \SimdStoreDescr
+    {\validMaskedRange}
+    {Copies the selected elements as if \tcode{first[$i$] = static_cast<iter_value_t<Out>>(operator[]($i$))} \forallmaskedi.}
 \end{itemdescr}
 
 \rSec2[simd.subscr]{\tcode{simd} subscript operators}
@@ -1599,22 +1559,20 @@ public:
   template<class U, class UAbi>
     constexpr explicit(sizeof(U) != sizeof(T)) simd_mask(const simd_mask<U, UAbi>&) noexcept;
   template<class G> constexpr explicit simd_mask(G&& gen) noexcept;
-  template<contiguous_iterator It, class Flags = element_aligned_tag>
+  template<typename It, class Flags = element_aligned_tag>
     constexpr simd_mask(It first, Flags = {});
-  template<contiguous_iterator It, class Flags = element_aligned_tag>
+  template<typename It, class Flags = element_aligned_tag>
     constexpr simd_mask(It first, const simd_mask& mask, Flags = {});
 
   // \ref{simd.mask.copy}, \tcode{simd_mask} copy functions
-  template<contiguous_iterator It, class Flags = element_aligned_tag>
+  template<typename It, class Flags = element_aligned_tag>
     constexpr void copy_from(It first, Flags = {});
-  template<contiguous_iterator It, class Flags = element_aligned_tag>
+  template<typename It, class Flags = element_aligned_tag>
     constexpr void copy_from(It first, const simd_mask& mask, Flags = {});
-  template<contiguous_iterator It, class Flags = element_aligned_tag>
-    requires output_iterator<It, value_type>
-    constexpr void copy_to(It first, Flags = {}) const;
-  template<contiguous_iterator It, class Flags = element_aligned_tag>
-    requires output_iterator<It, value_type>
-    constexpr void copy_to(It first, const simd_mask& mask, Flags = {}) const;
+  template<typename Out, class Flags = element_aligned_tag>
+    constexpr void copy_to(Out first, Flags = {}) const;
+  template<typename Out, class Flags = element_aligned_tag>
+    constexpr void copy_to(Out first, const simd_mask& mask, Flags = {}) const;
 
   // \ref{simd.mask.subscr}, \tcode{simd_mask} subscript operators
   constexpr reference operator[](size_t) &;
@@ -1733,152 +1691,114 @@ template<class G> constexpr explicit simd_mask(G&& gen) noexcept;
   Vectorization-unsafe standard library functions may not be invoked by \tcode{gen} (\ref{algorithms.parallel.exec}).
 \end{itemdescr}
 
+\newcommand\MaskLoadDescr[2]{
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}, and
+    \item \tcode{iter_value_t<It>} is of type \tcode{bool}, and
+    \item \tcode{It} satisfies \tcode{contiguous_iterator}.
+  \end{itemize}
+
+  \pnum\expects
+  \begin{itemize}
+    \item #1
+    \item \tcode{It} models \tcode{contiguous_iterator}.
+    \flagsRequires{simd_mask}{value_type}
+  \end{itemize}
+
+  \pnum\effects #2
+
+  \pnum\throws Nothing.
+}
+
 \begin{itemdecl}
-template<contiguous_iterator It, class Flags = element_aligned_tag>
+template<typename It, class Flags = element_aligned_tag>
   constexpr simd_mask(It first, Flags = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<It>} is of type \tcode{bool}.
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
-  \end{itemize}
-
-  \pnum\requires
-  \begin{itemize}
-    \item \tcode{[first, first + size())} is a valid range.
-    \flagsRequires{simd_mask}{value_type}
-  \end{itemize}
-
-  \pnum\effects
-  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{first[$i$]} \foralli.
-
-  \pnum\throws Nothing.
+  \MaskLoadDescr
+    {\tcode{[first, first + size())} is a valid range.}
+    {Constructs an object where the $i^\text{th}$ element is initialized to \tcode{first[$i$]} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<contiguous_iterator It, class Flags = element_aligned_tag>
+template<typename It, class Flags = element_aligned_tag>
   constexpr simd_mask(It first, const simd_mask& mask, Flags = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<It>} is of type \tcode{bool}.
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
-  \end{itemize}
-
-  \pnum\requires
-  \begin{itemize}
-    \item \validMaskedRange
-    \flagsRequires{simd_mask}{value_type}
-  \end{itemize}
-
-  \pnum\effects
-  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{mask[$i$] ? first[$i$] : false} \foralli.
-
-  \pnum\throws Nothing.
+  \MaskLoadDescr
+    {\validMaskedRange}
+    {Constructs an object where the $i^\text{th}$ element is initialized to \tcode{mask[$i$] ? first[$i$] : false} \foralli.}
 \end{itemdescr}
 
 \rSec2[simd.mask.copy]{\texorpdfstring{\tcode{simd_mask} copy}{simd_mask copy} functions}
 
 \begin{itemdecl}
-template<contiguous_iterator It, class Flags = element_aligned_tag>
+template<typename It, class Flags = element_aligned_tag>
   constexpr void copy_from(It first, Flags = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<It>} is of type \tcode{bool}.
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
-  \end{itemize}
-
-  \pnum\requires
-  \begin{itemize}
-    \item \tcode{[first, first + size())} is a valid range.
-    \flagsRequires{simd_mask}{value_type}
-  \end{itemize}
-
-  \pnum\effects
-  Replaces the elements of the \tcode{simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{first[$i$]} \foralli.
-
-  \pnum\throws Nothing.
+  \MaskLoadDescr
+  {\tcode{[first, first + size())} is a valid range.}
+  {Replaces the elements of the \tcode{simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{first[$i$]} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<contiguous_iterator It, class Flags = element_aligned_tag>
+template<typename It, class Flags = element_aligned_tag>
   constexpr void copy_from(It first, const simd_mask& mask, Flags = {});
 \end{itemdecl}
 
 \begin{itemdescr}
+  \MaskLoadDescr
+    {\validMaskedRange}
+    {Replaces the selected elements of the \tcode{simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{first[$i$]} \forallmaskedi.}
+\end{itemdescr}
+
+\newcommand\MaskStoreDescr[2]{
   \pnum\constraints
   \begin{itemize}
-    \item \tcode{iter_value_t<It>} is of type \tcode{bool}.
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
+    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}, and
+    \item \tcode{iter_value_t<Out>} is of type \tcode{bool}, and
+    \item \tcode{Out} satisfies \tcode{contiguous_iterator}, and
+    \item \tcode{Out} satisfies \tcode{output_iterator<value_type>}.
   \end{itemize}
 
-  \pnum\requires
+  \pnum\expects
   \begin{itemize}
-    \item \validMaskedRange
+    \item #1
+    \item \tcode{Out} models \tcode{contiguous_iterator}.
+    \item \tcode{Out} models \tcode{output_iterator<value_type>}.
     \flagsRequires{simd_mask}{value_type}
   \end{itemize}
 
-  \pnum\effects
-  Replaces the selected elements of the \tcode{simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{first[$i$]} \forallmaskedi.
+  \pnum\effects #2
 
   \pnum\throws Nothing.
-\end{itemdescr}
+}
 
 \begin{itemdecl}
-template<contiguous_iterator It, class Flags = element_aligned_tag>
-  requires output_iterator<It, value_type>
-  constexpr void copy_to(It first, Flags = {}) const;
+template<typename Out, class Flags = element_aligned_tag>
+  constexpr void copy_to(Out first, Flags = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<It>} is of type \tcode{bool}.
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
-  \end{itemize}
-
-  \pnum\requires
-  \begin{itemize}
-    \item \tcode{[first, first + size())} is a valid range.
-    \flagsRequires{simd_mask}{value_type}
-  \end{itemize}
-
-  \pnum\effects
-  Copies all \tcode{simd_mask} elements as if \tcode{first[$i$] = operator[]($i$)} \foralli.
-
-  \pnum\throws Nothing.
+  \MaskStoreDescr
+    {\tcode{[first, first + size())} is a valid range.}
+    {Copies all \tcode{simd_mask} elements as if \tcode{first[$i$] = operator[]($i$)} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<contiguous_iterator It, class Flags = element_aligned_tag>
-  requires output_iterator<It, value_type>
-  constexpr void copy_to(It first, const simd_mask& mask, Flags = {}) const;
+template<typename Out, class Flags = element_aligned_tag>
+  constexpr void copy_to(Out first, const simd_mask& mask, Flags = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<It>} is of type \tcode{bool}.
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}.
-  \end{itemize}
-
-  \pnum\requires
-  \begin{itemize}
-    \item \validMaskedRange
-    \flagsRequires{simd_mask}{value_type}
-  \end{itemize}
-
-  \pnum\effects
-  Copies the selected elements as if \tcode{first[$i$] = operator[]($i$)} \forallmaskedi.
-
-  \pnum\throws Nothing.
+  \MaskStoreDescr
+  {\validMaskedRange}
+  {Copies the selected elements as if \tcode{first[$i$] = operator[]($i$)} \forallmaskedi.}
 \end{itemdescr}
 
 \rSec2[simd.mask.subscr]{\texorpdfstring{\tcode{simd_mask} subscript}{simd_mask subscript} operators}
