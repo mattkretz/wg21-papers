@@ -196,6 +196,15 @@ The following operators were added to \mask:
   \item \code{simd_mask::operator+() const noexcept}
   \item \code{simd_mask::operator-() const noexcept}
   \item \code{simd_mask::operator\~{}() const noexcept}
+  \item \code{simd_mask::operator?:() const noexcept}
+  \item \code{onstexpr simd_mask operator?:(const simd_mask\&, const simd_mask\&, const simd_mask\&) noexcept}
+  \item \code{onstexpr simd_mask operator?:(const simd_mask\&, bool, bool) noexcept}
+  \item \code{operator?:(const simd_mask\&, const T0\&, const T1\&) noexcept}
+\end{itemize}
+
+The following operator was added to \simd:
+\begin{itemize}
+  \item \code{operator?:(const mask_type\& mask, const simd\& a, const simd\& b) noexcept}
 \end{itemize}
 
 For a discussion, see \wglink{P1928R3} Section 4.8.
@@ -652,11 +661,17 @@ an alias template parameterized on \code{T} and \code{Abi}.
 The following section presents the wording to be applied against the \CC{}
 working draft.
 
-The wording still needs work:
-\begin{itemize}
-  \item Replace \code{where} \& \code{where_expression} wording with \code{conditional_operator} and masked overloads.
-  \item Apply the new library specification style from P0788R3.
-\end{itemize}
+This wording overloads \code{operator?:} even though that's not possible (yet).
+As long as we don't have the language feature for overloading \code{?:} the following needs to happen:
+\begin{enumerate}
+  \item Replace \code{operator?:} by \code{conditional_operator_impl}.
+  \item Add a \std\code{conditional_operator(cond, a, b)} CPO that tries the following:
+    \begin{itemize}
+      \item If \code{conditional_operator_impl(cond, a, b)} can be found via ADL calls \code{conditional_operator_impl(cond, a, b)} unqualified, otherwise
+      \item if \code{cond ? a : b} is well-formed, return its result, otherwise
+      \item if \code{std::common_type_t<decltype(a), decltype(b)>} exists, cast \code{a} and \code{b} to this common type and apply \code{?:}.
+    \end{itemize}
+\end{enumerate}
 
 \begin{wgText}[In {[version.syn]}, add]
   \begin{codeblock}

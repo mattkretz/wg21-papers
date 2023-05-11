@@ -60,7 +60,8 @@
 \item Overload loads and stores with mask argument (\ref{sec:simd.ctor}, \ref{sec:simd.copy}, \ref{sec:simd.mask.ctor}, \ref{sec:simd.mask.copy}).
 \item Respecify \simd reductions to use a \mask argument instead of \code{const_where_expression} (\ref{sec:simd.reductions}).
 \item Add \mask operators returning a \simd (\ref{sec:simd.mask.unary}, \ref{sec:simd.mask.conv})
-  \todo Replace \code{where} wording.
+\item Add conditional operator overloads as hidden friends to \simd and \mask
+  (\ref{sec:simd.cond}, \ref{sec:simd.mask.cond}).
   \todo Apply the new library specification style from P0788R3.
   \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.
   \todo Consider adding a note that recommends implementations to let simd primary operations behave like operations of arithmetic types to never be function calls. (cf. GCC PR108030)
