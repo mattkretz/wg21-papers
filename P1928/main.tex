@@ -656,6 +656,32 @@ an alias template parameterized on \code{T} and \code{Abi}.
 \wgPoll{Do not define a \code{simd_type} member type, but use the above rule for the return type of unary minus and unary plus.}
 {&&&&}
 
+\subsection{std::hash}\label{sec:hash}
+
+Is there a use case for \code{std::hash<simd<T>>}?
+In other words, is there a use case for using \code{simd<T>} as a map key?
+Recall that we do not consider \code{simd} to be a product type \cite{P0851R0}.
+If there's no use case for hashing a \simd object as one, is there a use case
+for multiple look-ups into a map, parallelizing the lookup as much as possible?
+
+Consider a hash map with \code{int} keys and the task of looking up multiple
+keys in arbitrary order (unordered).
+In this case, one might want to pass a \code{simd<int>}, compute the hashes of
+\code{simd<int>::\MayBreak{}size()} keys in parallel (using SIMD instructions), and
+potentially determine the addresses (or offsets in contiguous memory) of the
+corresponding values in parallel.
+The value lookup could then use a SIMD gather instruction.
+
+If we consider this use case important (or at least interesting), is
+\code{std::hash<simd<T>>} the right interface to compute hashes element-wise?
+After all, \code{simd} operations act element-wise unless strong hints in the
+API suggest otherwise.
+
+At this point I would prefer to wait for concrete use cases of hashing \simd
+objects before providing any standard interface.
+Specifically, at this point \emph{we do not want \std\code{hash} support for
+\simd}.
+
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 
 The following section presents the wording to be applied against the \CC{}
