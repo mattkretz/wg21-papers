@@ -1345,6 +1345,8 @@ template<class T, class Abi> constexpr T hmin(const simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{totally_ordered<T>} is \tcode{true}
   \pnum\returns
   The value of an element \tcode{x[$j$]} for which \tcode{x[$i$] < x[$j$]} is \tcode{false} \foralli.
 \end{itemdescr}
@@ -1355,6 +1357,8 @@ template<class T, class Abi>
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{totally_ordered<T>} is \tcode{true}
   \pnum\returns
   If \tcode{none_of(mask)}, returns \tcode{numeric_limits<T>::max()}.
   Otherwise, returns the value of a selected element \tcode{x[$j$]} for which \tcode{x[$i$] < x[$j$]} is \tcode{false} \forallmaskedi.
@@ -1365,6 +1369,8 @@ template<class T, class Abi> constexpr T hmax(const simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{totally_ordered<T>} is \tcode{true}
   \pnum\returns
   The value of an element \tcode{x[$j$]} for which \tcode{x[$j$] < x[$i$]} is \tcode{false} \foralli.
 \end{itemdescr}
@@ -1375,6 +1381,9 @@ template<class T, class Abi>
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{totally_ordered<T>} is \tcode{true}
+
   \pnum\returns
   If \tcode{none_of(mask)}, returns \tcode{numeric_limits<V::value_type>::lowest()}.
   Otherwise, returns the value of a selected element \tcode{x.data[$j$]} for which \tcode{x.data[$j$] < x.data[$i$]} is \tcode{false} \forallmaskedi.
@@ -1472,6 +1481,8 @@ template<class T, class Abi> constexpr simd<T, Abi> min(const simd<T, Abi>& a, c
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{totally_ordered<T>} is \tcode{true}
   \pnum\returns
   The result of the element-wise application of \tcode{std::min(a[$i$], b[$i$])} \foralli.
 \end{itemdescr}
@@ -1481,6 +1492,8 @@ template<class T, class Abi> constexpr simd<T, Abi> max(const simd<T, Abi>& a, c
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{totally_ordered<T>} is \tcode{true}
   \pnum\returns
   The result of the element-wise application of \tcode{std::max(a[$i$], b[$i$])} \foralli.
 \end{itemdescr}
@@ -1491,6 +1504,8 @@ template<class T, class Abi>
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{totally_ordered<T>} is \tcode{true}
   \pnum\returns
   A \tcode{pair} initialized with
   \begin{itemize}
@@ -1505,6 +1520,8 @@ template<class T, class Abi> simd<T, Abi>
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{totally_ordered<T>} is \tcode{true}
   \pnum\requires
   No element in \tcode{lo} shall be greater than the corresponding element in \tcode{hi}.
 
