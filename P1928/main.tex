@@ -691,6 +691,136 @@ objects before providing any standard interface.
 Specifically, at this point \emph{we do not want \std\code{hash} support for
 \simd}.
 
+\subsection{Reconsider conversion rules}\label{sec:reconsider_conversions}
+
+LEWG discussed conversion in Issaquah 2023.
+There was some consensus in favor of: ``SIMD types and operations should be
+value preserving, even if that means they're inconsistent with the builtin
+numeric types.''
+Comments on this poll were:
+\begin{itemize}
+  \item WF: I generally like the direction, in the sense of safety, but I'm
+    not sure of the consequences of such a design.
+
+  \item N: I would rather be consistently wrong than inconsistent.
+
+  \item WA: I don't want to be inconsistent with how things have been for the last 30 years.
+
+  \item WF: I'm not sure if we've evaluated the performance impact of this.
+
+  \item N: Just because we've made a mistake in the past doesn't mean we have to keep making it. I'm not convinced that the new approach is the right thing.
+\end{itemize}
+
+LEWG then noticed a specifically tricky case when mixing \code{int} and \code{float}.
+Which of these do we want?
+\begin{itemize}
+  \item \code{int * simd<float> = simd<float>}
+  \item \code{int * simd<float> = simd<double>}
+\end{itemize}
+
+There was no consensus on how to resolve this correctly.
+Note that \code{int} (and to some extent \code{unsigned int}) have a special
+exception in the \emph{value-preserving} conversion rules.
+Otherwise, a lot of code would be much more cumbersome to write (especially for
+types that have no matching literals, e.g. \code{short}).
+
+With the discussion on safety and correctness in \CC{} getting more traction,
+there is a plausible chance that we will see a set of types that exhibit
+``safer'' conversion behavior in the future.
+A possible approach could be via \cite{P2509R0}, defining a trait for
+value-preserving conversions.
+This trait could then be used to define a numeric type, wrapping the existing
+arithmetic types with conversions being conditionally \code{explicit} depending
+on that trait.
+
+When that happens, we will likely want to make these types \emph{vectorizable}
+and then inherit the conversion rules of those types.
+
+So why not let \code{simd<T>} inherit conversion behavior via
+\std\code{constructible_from} and \std\code{convertible_to}?
+Then such future numeric types conversion behavior will just fall in place.
+
+The problem is that builtin arithmetic types behave differently to class types.
+\begin{itemize}
+  \item They are all interconvertible.
+  \item When a binary operator is called with mixed types, there are rules
+    ([expr.arith.conv]) to determine a common type that go beyond anything a
+    class type can do.
+  \item Integral promotions.
+  \item And to top it off, there are no literals for \code{(un)signed char} and
+    \code{(un)signed short} (i.e. you cannot initialize without an implicit or
+    explicit conversion --- except value-init).
+\end{itemize}
+
+We could make all \code{simd} types interconvertible and implement binary
+operators with elaborate template magic to behave like builtin arithmetic
+types.
+Though, we surely want to ignore integral promotions (otherwise
+\code{simd<char>() + simd<char>()} has surprisingly bad performance
+characteristics).
+
+This would be going back to the original Vc library that was the basis of the
+\code{simd} proposal (back in 2014).
+Meaning, it has been done and it can be done.
+But those binary operators are not pretty.
+And error messages when something goes wrong even less.
+
+The comment ``I would rather be consistently wrong than inconsistent.'' above was missing this information.
+There is no reasonable possiblity to be ``consistently wrong'' here.
+We have no other choice than being inconsistent.
+Our only choice is what that inconsistency looks like.
+
+Choices:
+\begin{enumerate}
+  \item Try to be as consistently wrong as possible, at the cost of
+    interconvertible types (leads to ambiguity errors), complex binary
+    operators, and many subtle ways to unintentionally change types and
+    potentially also pay in performance.
+
+  \item\label{enum:valuepreserving} Stick to the \emph{value-preserving} rules with exceptions for
+    \code{int} and \code{unsigned int} as introduced in the TS.
+
+  \item\label{enum:commontype} Consider a new rule-set that tries to derive conversion rules from the
+    common type of the participating types.
+\end{enumerate}
+
+Choice \ref{enum:commontype} would basically make conversions conditionally
+explicit via \code{explicit(not std::same_as<nopromo_common_type_t<T, U>, T>)}.
+\code{nopromo_common_type_t} would be \code{common_type_t} but without integral
+promotions.
+
+In such an implementation \code{int * simd<float>} is still of type
+\code{simd<float>} (as is \code{simd<int> * simd<float>} and \code{simd<long
+long> * simd<float>}).
+
+With choice \ref{enum:valuepreserving} the \code{simd<int> * simd<float>} and \code{simd<long
+long> * simd<float>} cases are ill-formed.
+
+However, choice \ref{enum:commontype} makes initialization of
+\code{simd<short>} (and similar) cumbersome, since no literal other than a
+\code{char} literal is convertible to the \simd.
+This is true for the plain value-preserving approach as well, which is why it
+has exceptions for \code{int} and \code{unsigned int} on broadcast constructor
+arguments.
+This same exception could be used for choice \ref{enum:valuepreserving}, of course.
+
+Or, instead, we could allow arbitrary types if the library can determine at
+compile-time that the \emph{value} of the argument can be converted without narrowing.
+This would be possible with \code{integral_constant} arguments, or rather
+anything with a \code{static constexpr value} data member.
+Then, \code{std::simd<short> x = std::cc<1>;} is well-formed while
+\code{std::simd<short> x = 1;} is not.%
+\footnote{Then we only need a language feature to turn constant expressions into \code{integral_constant}/\code{constexpr_t}/etc. via opt-in on the constructor/function argument and \code{std::cc} becomes transparent.}
+
+\subsubsection{Suggested Polls}
+
+\wgPoll{Base \simd conversion rules on the non-promoting common-type method instead of value-preserving conversions.}
+{&&&&}
+
+\wgPoll{Remove broadcast ctor exceptions for \code{int} and \code{unsigned int}, instead ensure \code{integral_constant}-like arguments work correctly.}
+{&&&&}
+
+
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 
 The following section presents the wording to be applied against the \CC{}
