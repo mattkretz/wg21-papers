@@ -60,6 +60,9 @@
 \item Overload loads and stores with mask argument (\ref{sec:simd.ctor}, \ref{sec:simd.copy}, \ref{sec:simd.mask.ctor}, \ref{sec:simd.mask.copy}).
 \item Respecify \simd reductions to use a \mask argument instead of \code{const_where_expression} (\ref{sec:simd.reductions}).
 \item Add \mask operators returning a \simd (\ref{sec:simd.mask.unary}, \ref{sec:simd.mask.conv})
+\item Add conditional operator overloads as hidden friends to \simd and \mask
+  (\ref{sec:simd.cond}, \ref{sec:simd.mask.cond}).
+\item Discuss \std\code{hash} for \simd (\sect{sec:hash}).
 \item Constrain some functions (e.g., min, max, clamp) to be \code{totally_ordered} (\ref{sec:simd.reductions}, \ref{sec:simd.alg}).
   \todo Replace \code{where} wording.
   \todo Apply the new library specification style from P0788R3.

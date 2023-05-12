@@ -654,6 +654,9 @@ public:
   friend constexpr mask_type operator<=(const simd&, const simd&) noexcept;
   friend constexpr mask_type operator>(const simd&, const simd&) noexcept;
   friend constexpr mask_type operator<(const simd&, const simd&) noexcept;
+
+  // \ref{simd.cond}, \tcode{simd} conditional operators
+  friend constexpr simd operator?:(const mask_type&, const simd&, const simd&) noexcept;
 };
 \end{codeblock}
 
@@ -1245,6 +1248,16 @@ friend constexpr mask_type operator<(const simd& lhs, const simd& rhs) noexcept;
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
+\rSec2[simd.cond]{\texorpdfstring{\tcode{simd}}{simd} conditional operators}
+
+\begin{itemdecl}
+friend constexpr simd operator?:(const mask_type& mask, const simd& a, const simd& b) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\returns
+  A \tcode{simd} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a[$i$] : b[$i$]} \foralli.
+\end{itemdescr}
 \rSec2[simd.reductions]{\texorpdfstring{\tcode{simd} r}{simd r}eductions}
 
 \pnum
@@ -1651,6 +1664,13 @@ public:
   // \ref{simd.mask.comparison}, \tcode{simd_mask} comparisons
   friend constexpr simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
   friend constexpr simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
+
+  // \ref{simd.mask.cond}, \tcode{simd_mask} conditional operators
+  friend constexpr simd_mask operator?:(const simd_mask&, const simd_mask&, const simd_mask&) noexcept;
+  friend constexpr simd_mask operator?:(const simd_mask&, bool, bool) noexcept;
+  template <class T0, class T1>
+    friend constexpr simd<common_type_t<T0, T1>, Abi>
+      operator?:(const simd_mask&, const T0&, const T1&) noexcept;
 };
 \end{codeblock}
 
@@ -1962,6 +1982,46 @@ friend constexpr simd_mask operator!=(const simd_mask&, const simd_mask&) noexce
 \begin{itemdescr}
   \pnum\returns
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
+\end{itemdescr}
+
+\rSec2[simd.mask.cond]{\texorpdfstring{\tcode{simd_mask}}{simd_mask} conditional operators}
+
+\begin{itemdecl}
+friend constexpr simd operator?:(const simd_mask& mask, const simd_mask& a, const simd_mask& b) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\returns
+  A \tcode{simd_mask} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a[$i$] : b[$i$]} \foralli.
+\end{itemdescr}
+
+\begin{itemdecl}
+friend constexpr simd_mask operator?:(const simd_mask& mask, bool a, bool b) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\returns
+  A \tcode{simd_mask} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a : b} \foralli.
+\end{itemdescr}
+
+\begin{itemdecl}
+template <class T0, class T1>
+  friend constexpr simd<common_type_t<T0, T1>, Abi>
+    operator?:(const simd_mask& mask, const T0& a, const T1& b) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum Let \tcode{U} be the type \tcode{common_type_t<T0, T1>}.
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{U} is a vectorizable type, and
+    \item \tcode{sizeof(U) == sizeof(T)}, and
+    \item \tcode{T0} satisfies \tcode{convertible_to<simd<U, Abi>>}, and
+    \item \tcode{T1} satisfies \tcode{convertible_to<simd<U, Abi>>}.
+  \end{itemize}
+
+  \pnum\returns
+  A \tcode{simd} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a : b} \foralli.
 \end{itemdescr}
 
 \rSec2[simd.mask.reductions]{\texorpdfstring{\tcode{simd_mask} reductions}{simd_mask reductions}}
