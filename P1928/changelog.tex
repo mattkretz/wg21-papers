@@ -63,6 +63,8 @@
 \item Add conditional operator overloads as hidden friends to \simd and \mask
   (\ref{sec:simd.cond}, \ref{sec:simd.mask.cond}).
 \item Discuss \std\code{hash} for \simd (\sect{sec:hash}).
+\item Constrain some functions (e.g., min, max, clamp) to be \code{totally_ordered} (\ref{sec:simd.reductions}, \ref{sec:simd.alg}).
+  \todo Replace \code{where} wording.
   \todo Apply the new library specification style from P0788R3.
   \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.
   \todo Consider adding a note that recommends implementations to let simd primary operations behave like operations of arithmetic types to never be function calls. (cf. GCC PR108030)
