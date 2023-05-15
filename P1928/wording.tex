@@ -53,11 +53,7 @@ the \defn{selected elements} signify the elements \tcode{data[$i$]} for all sele
 
 \pnum
 The conversion from vectorizable type \tcode{U} to vectorizable type \tcode{T} is \defn{value-preserving} if
-\begin{itemize}
-  \item all possible values of \tcode{U} can be represented with type \tcode{T}, and
-  \item if both \tcode{U} and \tcode{T} are integral types, the integer conversion rank (\iref{conv.rank}) of \tcode{U} is greater than the integer conversion rank of \tcode{T}, and
-  \item if both \tcode{U} and \tcode{T} are floating-point types, the floating-point conversion rank (\iref{conv.rank}) of \tcode{U} is greater than the floating-point conversion rank of \tcode{T}.
-\end{itemize}
+all possible values of \tcode{U} can be represented with type \tcode{T}.
 
 \pnum
 \begin{note}
@@ -828,8 +824,19 @@ template<class U, class UAbi> constexpr explicit(@\seebelow@) simd(const simd<U,
   Constructs an object where the $i^\text{th}$ element equals \tcode{static_cast<T>(x[$i$])} \foralli.
 
   \pnum\remarks
-  The constructor is \tcode{explicit} iff the conversion from \tcode{U} to
-  \tcode{value_type} is not value-preserving.
+  The constructor is \tcode{explicit}
+  \begin{itemize}
+    \item if the conversion from \tcode{U} to \tcode{value_type} is not
+      value-preserving, or
+
+    \item if both \tcode{U} and \tcode{value_type} are integral types and the
+      integer conversion rank (\iref{conv.rank}) of \tcode{U} is greater than
+      the integer conversion rank of \tcode{value_type}, or
+
+    \item if both \tcode{U} and \tcode{value_type} are floating-point types and
+      the floating-point conversion rank (\iref{conv.rank}) of \tcode{U} is
+      greater than the floating-point conversion rank of \tcode{value_type}.
+  \end{itemize}
 \end{itemdescr}
 
 \begin{itemdecl}
