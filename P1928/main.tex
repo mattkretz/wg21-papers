@@ -208,6 +208,36 @@ The following operator was added to \simd:
   \item \code{operator?:(const mask_type\& mask, const simd\& a, const simd\& b) noexcept}
 \end{itemize}
 
+At this point, the use of \code{operator?:} obviously cannot work.
+As long as we don't have the language feature for overloading \code{?:} the
+following needs to happen (also reproduced at the beginning of the wording
+section):
+\begin{enumerate}
+  \item Replace \code{operator?:} by \code{conditional_operator_impl}.
+  \item Add a \std\code{conditional_operator(cond, a, b)} CPO that tries the following:
+    \begin{itemize}
+      \item If \code{conditional_operator_impl(cond, a, b)} can be found via ADL calls \code{conditional_operator_impl(cond, a, b)} unqualified, otherwise
+      \item if \code{cond ? a : b} is well-formed, return its result, otherwise
+      \item if \code{std::common_type_t<decltype(a), decltype(b)>} exists, cast \code{a} and \code{b} to this common type and apply \code{?:}.
+    \end{itemize}
+\end{enumerate}
+Obviously, the use of a function (or CPO) instead of overloading
+\code{operator?:} has a significant impact on generic code that would prefer to
+keep the semantics of \code{?:}, which doesn't evaluate an expression unless
+its result is actually needed.
+For a function, we cannot pass expressions but only their results.
+Relevant papers: \cite{P0927R2}, \cite{D0917}.
+
+A list of alternative names for \std\code{conditional_operator}:
+\begin{itemize}
+  \item \std\code{ternary(cond, a, b)}
+  \item \std\code{inline_if(cond, a, b)}
+  \item \std\code{iif(cond, a, b)}
+  \item \std\code{blend(cond, a, b)}
+  \item \std\code{select(cond, a, b)}
+  \item \std\code{choose(cond, a, b)}
+\end{itemize}
+
 For a discussion, see \wglink{P1928R3} Section 4.8.
 
 \subsection{Make use of \code{int} and \code{size_t} consistent}
