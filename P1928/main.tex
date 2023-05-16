@@ -11,7 +11,7 @@
 \hypersetup{bookmarksdepth=5}
 \usepackage{changelog}
 \usepackage{underscore}
-\usepackage{comment}
+\usepackage{multirow}
 
 \addbibresource{extra.bib}
 
@@ -102,7 +102,7 @@ and are basically blocked on this paper.
 \section{Changes after TS feedback}\label{sec:changes}
 \cite{P1915R0} (Expected Feedback from \code{simd} in the Parallelism TS 2) was published in 2019, asking for feedback to the TS.
 I received feedback on the TS via the GitHub issue tracker, e-mails, and personal conversations.
-There is also a lot of valuable feedback published in \wglink{P2638} ``Intel’s response to \wglink{P1915R0} for \code{std::simd}''.
+There is also a lot of valuable feedback published in \wglink{P2638} ``Intel’s response to \wglink{P1915R0} for \std\code{simd}''.
 
 \subsection{improve ABI tags}
 Summary:
@@ -218,7 +218,7 @@ section):
     \begin{itemize}
       \item If \code{conditional_operator_impl(cond, a, b)} can be found via ADL calls \code{conditional_operator_impl(cond, a, b)} unqualified, otherwise
       \item if \code{cond ? a : b} is well-formed, return its result, otherwise
-      \item if \code{std::common_type_t<decltype(a), decltype(b)>} exists, cast \code{a} and \code{b} to this common type and apply \code{?:}.
+      \item if \std\code{common_type_t<decltype(a), decltype(b)>} exists, cast \code{a} and \code{b} to this common type and apply \code{?:}.
     \end{itemize}
 \end{enumerate}
 Obviously, the use of a function (or CPO) instead of overloading
@@ -250,8 +250,8 @@ For a discussion, see \wglink{P1928R3} Section 4.9.
 
 \subsection{Clean up math function overloads}
 The wording that produces \code{simd} overloads misses a few cases and leaves room for ambiguity.
-There is also no explicit mention of integral overloads that are supported in \code{<cmath>} (e.g. \code{std::cos(1)} calling \code{std::cos(double)}).
-At the very least, \code{std::abs(simd<\textit{signed-integral}>)} should be specified.
+There is also no explicit mention of integral overloads that are supported in \code{<cmath>} (e.g. \std\code{cos(1)} calling \std\code{cos(double)}).
+At the very least, \std\code{abs(simd<\textit{signed-integral}>)} should be specified.
 
 Also, from implementation experience, ``undefined behavior'' for domain, pole,
 or range error is unnecessary.
@@ -461,7 +461,7 @@ The functions \code{hmin(simd)} and \code{hmax(simd)} are basically
 specializations of \code{reduce(simd)}.
 I received feedback asking for better names.
 
-With \CC{}17, there was nothing equivalent to \code{std::plus<>} for minimum
+With \CC{}17, there was nothing equivalent to \std\code{plus<>} for minimum
 and maximum.
 Since the merge of Ranges (\CC{}20), we have \stdranges\code{min} and
 \stdranges\code{max}.
@@ -653,7 +653,7 @@ Without the ability of \code{element_reference} to decay to the element type
 (similar to how arrays decay to pointers on deduction), I would prefer to
 simply make \code{simd} model only \code{random_access_range}.
 
-If \code{simd} is a range, then \code{std::vector<std::simd<float>> data} can
+If \code{simd} is a range, then \std\code{vector<std::simd<float>> data} can
 be flattened trivially via \code{data | std::views::join}.
 This makes the use of ``arrays of \code{simd<T>}'' easier to integrate into
 existing interfaces the expect ``array of \code{T}''.
@@ -820,7 +820,7 @@ an alias template parameterized on \code{T} and \code{Abi}.
 
 \subsection{std::hash}\label{sec:hash}
 
-Is there a use case for \code{std::hash<simd<T>>}?
+Is there a use case for \std\code{hash<simd<T>>}?
 In other words, is there a use case for using \code{simd<T>} as a map key?
 Recall that we do not consider \code{simd} to be a product type \cite{P0851R0}.
 If there's no use case for hashing a \simd object as one, is there a use case
@@ -835,7 +835,7 @@ corresponding values in parallel.
 The value lookup could then use a SIMD gather instruction.
 
 If we consider this use case important (or at least interesting), is
-\code{std::hash<simd<T>>} the right interface to compute hashes element-wise?
+\std\code{hash<simd<T>>} the right interface to compute hashes element-wise?
 After all, \code{simd} operations act element-wise unless strong hints in the
 API suggest otherwise.
 
@@ -906,48 +906,78 @@ The problem is that builtin arithmetic types behave differently to class types.
 \end{itemize}
 
 We could make all \code{simd} types interconvertible and implement binary
-operators with elaborate template magic to behave like builtin arithmetic
-types.
+operators similar to \code{simd<another_common_type_t<T, U>>(simd<T>,
+simd<U>)}\footnote{which is basically what my first paper on SIMD vector types
+proposed \cite{N4184}}.
 Though, we surely want to ignore integral promotions (otherwise
 \code{simd<char>() + simd<char>()} has surprisingly bad performance
 characteristics).
-
 This would be going back to the original Vc library that was the basis of the
 \code{simd} proposal (back in 2014).
 Meaning, it has been done and it can be done.
-But those binary operators are not pretty.
+But those binary operators are not really a pretty solution either.
 And error messages when something goes wrong even less.
 
-The comment ``I would rather be consistently wrong than inconsistent.'' above was missing this information.
-There is no reasonable possiblity to be ``consistently wrong'' here.
+The type trait \code{another_common_type<T, U>} could implement
+\code{common_type} without integer promotion (and assorted other tweaks to
+reduce surprises\footnote{Who knew that
+\code{common_type_t<std::integral_constant<int, -1>, unsigned short>} is
+\code{unsigned short}?}).
+
+The comment ``I would rather be consistently wrong than inconsistent.'' above
+was missing this information.
+There is no reasonable possibility to be ``consistently wrong'' here.
 We have no other choice than being inconsistent.
 Our only choice is what that inconsistency looks like.
+
+In Issaquah, the idea of a ``value-preserving common type'' was voiced.
+This would presumably mean that \code{int + float} can turn into \code{double}.
+The trouble with such a trait is how to determine the correct answer if none of
+the argument types is a value-preserving common type.
+The situation is manageable as long as \code{simd} only supports arithmetic types.
+But there exists a plausible future where fixed-point numbers, rational numbers,
+\code{_BitInt}-like numbers, \ldots become \code{vectorizable}.
+While I believe a solution could be developed, I am not convinced that it would
+serve users well.
+The tricky cases are probably best flagged as compile-time errors and resolved
+via explicit cast.
 
 Choices:
 \begin{enumerate}
   \item Try to be as consistently wrong as possible, at the cost of
-    interconvertible types (leads to ambiguity errors), complex binary
+    interconvertible types (leads to ambiguity errors), more complex binary
     operators, and many subtle ways to unintentionally change types and
     potentially also pay in performance.
 
-  \item\label{enum:valuepreserving} Stick to the \emph{value-preserving} rules with exceptions for
-    \code{int} and \code{unsigned int} as introduced in the TS.
+  \item\label{enum:binaryoptemplates} Variant of the above: Don't make \simd
+    interconvertible, by defining the \simd conversion constructor as in the
+    wording below.
+    However, the broadcast constructor is a simple \code{simd(value_type x)},
+    without any further constraints.
+    Binary operators derive the return type (and common type for evaluating the
+    operations) from a non-promoting common type of the operands.
 
-  \item\label{enum:commontype} Consider a new rule-set that tries to derive conversion rules from the
-    common type of the participating types.
+  \item\label{enum:valuepreserving} Stick to the \emph{value-preserving} rules
+    with (or without) exceptions for \code{int} and \code{unsigned int} as
+    introduced in the TS.
+
+  \item\label{enum:commontype} Consider a new rule-set that derives conversion
+    rules (i.e. constraints on broadcast and conversion constructor) from a
+    non-promoting common type of the participating types.
+    Binary operators are still a simple hidden friend \code{simd
+    operator+(simd, simd)}, requiring that the operands determine one of the
+    operand types as their common type.
 \end{enumerate}
 
 Choice \ref{enum:commontype} would basically make conversions conditionally
-explicit via \code{explicit(not std::same_as<nopromo_common_type_t<T, U>, T>)}.
-\code{nopromo_common_type_t} would be \code{common_type_t} but without integral
-promotions.
+explicit via \code{explicit(not std::same_as<another_common_type_t<T, U>, T>)}.
 
 In such an implementation \code{int * simd<float>} is still of type
 \code{simd<float>} (as is \code{simd<int> * simd<float>} and \code{simd<long
 long> * simd<float>}).
 
-With choice \ref{enum:valuepreserving} the \code{simd<int> * simd<float>} and \code{simd<long
-long> * simd<float>} cases are ill-formed.
+With choice \ref{enum:valuepreserving} the \code{simd<int> * simd<float>} and
+\code{simd<long long> * simd<float>} cases are ill-formed.
 
 However, choice \ref{enum:commontype} makes initialization of
 \code{simd<short>} (and similar) cumbersome, since no literal other than a
@@ -955,24 +985,206 @@ However, choice \ref{enum:commontype} makes initialization of
 This is true for the plain value-preserving approach as well, which is why it
 has exceptions for \code{int} and \code{unsigned int} on broadcast constructor
 arguments.
-This same exception could be used for choice \ref{enum:valuepreserving}, of course.
+This same exception could be used for choice \ref{enum:valuepreserving}, of
+course.
 
 Or, instead, we could allow arbitrary types if the library can determine at
-compile-time that the \emph{value} of the argument can be converted without narrowing.
+compile-time that the \emph{value} of the argument can be converted without
+narrowing.
 This would be possible with \code{integral_constant} arguments, or rather
 anything with a \code{static constexpr value} data member.
-Then, \code{std::simd<short> x = std::cc<1>;} is well-formed while
-\code{std::simd<short> x = 1;} is not.%
-\footnote{Then we only need a language feature to turn constant expressions into \code{integral_constant}/\code{constexpr_t}/etc. via opt-in on the constructor/function argument and \code{std::cc} becomes transparent.}
+Then, \std\code{simd<short> x = std::cc<1>;} is well-formed while
+\std\code{simd<short> x = 1;} is not.%
+\footnote{Then we only need a language feature to turn constant expressions
+into \code{integral_constant}/\code{constexpr_t}/etc. via opt-in on the
+constructor/function argument and \std\code{cc} becomes transparent.}
+
+For a better understanding, Tables
+\ref{tab:binopresults1}--\ref{tab:binopresults2} present the result type of
+binary \code{operator+} for different conversion strategies.
+Note that \emph{the broadcast constructor has no influence on the results of
+choice \ref{enum:binaryoptemplates}}.
+This is why a simple broadcast constructor expecting a \code{value_type}
+argument should be the more consistent choice for this scenario.
+
+\begingroup
+  \def\err{\textbf{\color{constants}ERROR}}
+  \def\schar{\code{\color{types}schar}}
+  \def\uchar{\code{\color{types}uchar}}
+  \def\sshort{\code{\color{types}short}}
+  \def\ushort{\code{\color{types}ushort}}
+  \def\sint{\code{\color{types}int}}
+  \def\uint{\code{\color{types}uint}}
+  \def\slong{\code{\color{types}long}}
+  \def\ulong{\code{\color{types}ulong}}
+  \def\sllong{\code{\color{types}llong}}
+  \def\ullong{\code{\color{types}ullong}}
+  \def\float{\code{\color{types}float}}
+  \def\double{\code{\color{types}double}}
+  \def\bool{\code{\color{types}bool}}
+  \def\Vschar{\simd[<\schar>]}
+  \def\Vuchar{\simd[<\uchar>]}
+  \def\Vsshort{\simd[<\sshort>]}
+  \def\Vushort{\simd[<\ushort>]}
+  \def\Vsint{\simd[<\sint>]}
+  \def\Vuint{\simd[<\uint>]}
+  \def\Vslong{\simd[<\slong>]}
+  \def\Vulong{\simd[<\ulong>]}
+  \def\Vsllong{\simd[<\sllong>]}
+  \def\Vullong{\simd[<\ullong>]}
+  \def\Vfloat{\simd[<\float>]}
+  \def\Vdouble{\simd[<\double>]}
+  \def\mca#1{\multicolumn{2}{c|}{#1}}
+  \def\mcb#1{\multicolumn{3}{c|}{#1}}
+  \def\LHS{\simd[<operand1>]}
+  \def\LHSa{\mca{\LHS}}
+  \def\LHSb{\mcb{\LHS}}
+  \def\RHSa{\mca{\RHS}}
+  \def\RHSb{\mcb{\RHS}}
+  \def\erra{\mca{\err}}
+  \def\errb{\mcb{\err}}
+  \def\Rrr{\RHS (\err)}
+  \newenvironment{TypeTable}[2]{
+    \begin{table}[htbp]
+      \caption{Binary operator results with #1 for operand 2}
+      \label{#2}
+      \smaller
+      \begin{tabular}{>{\raggedright}p{0.47\textwidth}|c|c|c|}
+        operand 1
+        & \wgDocumentNumber{} (choice \ref{enum:valuepreserving})
+        & choice \ref{enum:commontype}
+        & choice \ref{enum:binaryoptemplates} \\\hline
+        \gdef\RHS{#1}
+  }{
+      \end{tabular}
+    \end{table}
+  }
+  \begin{TypeTable}{\Vsshort}{tab:binopresults1}
+    \schar, \uchar, \sshort, \Vschar, \Vuchar, \Vsshort
+    & \RHSb \\\hline
+
+    \ushort, \uint, \slong, \ulong, \sllong, \ullong, \float, \double
+    & \erra & \LHS \\\hline
+
+    \sint
+    & \Rrr & \err & \LHS \\\hline
+
+    \bool
+    & \err & \RHSa \\\hline
+
+    \simd[<\ushort>], \simd[<\uint>], \simd[<\ulong>], \simd[<\ullong>]
+    & \err & \LHSa \\\hline
+
+    \simd[<\sint>], \simd[<\slong>], \simd[<\sllong>], \simd[<\float>],
+    \simd[<\double>]
+    & \LHSb
+  \end{TypeTable}
+
+  \begin{TypeTable}{\Vushort}{}
+    \uchar, \ushort,
+    \simd[<\uchar>], \simd[<\ushort>]
+    & \RHSb \\\hline
+
+    \slong, \ulong, \sllong, \ullong, \float, \double
+    & \erra & \LHS \\\hline
+
+    \sint, \uint
+    & \Rrr & \err & \LHS \\\hline
+
+    \schar, \sshort, \bool
+    & \err & \RHSa \\\hline
+
+    \simd[<\schar>], \simd[<\sshort>]
+    & \err & \RHSa \\\hline
+
+    \simd[<\sint>], \simd[<\uint>], \simd[<\slong>], \simd[<\ulong>],
+    \simd[<\sllong>], \simd[<\ullong>], \simd[<\float>], \simd[<\double>]
+    & \LHSb
+  \end{TypeTable}
+
+  \begin{TypeTable}{\Vuint}{}
+    \uchar, \ushort, \uint,
+    \simd[<\uchar>], \simd[<\ushort>], \simd[<\uint>]
+    & \RHSb \\\hline
+
+    \sint & \Rrr & \RHSa \\\hline
+
+    \simd[<\slong>], \simd[<\ulong>], \simd[<\sllong>], \simd[<\ullong>],
+    \simd[<\double>]
+    & \LHSb \\\hline
+
+    \slong, \ulong, \sllong, \ullong, \float, \double
+    & \erra & \LHS \\\hline
+
+    \schar, \sshort, \bool,
+    \simd[<\schar>], \simd[<\sshort>], \simd[<\sint>],
+    & \err & \RHSa \\\hline
+
+    \simd[<\float>] & \err & \LHSa
+  \end{TypeTable}
+
+  \begin{TypeTable}{\Vulong}{}
+    \uchar, \ushort, \uint, \ulong, \Vuchar, \Vushort, \Vuint, \Vulong
+    & \RHSb \\\hline
+
+    \sint & \Rrr & \RHSa \\\hline
+
+    \schar, \sshort, \slong, \bool, \Vschar, \Vsshort, \Vsint, \Vslong
+    & \err & \RHSa \\\hline
+
+    \sllong, \Vsllong & \erra & \Vullong \\\hline
+
+    \ullong & \RHS & \err & \Vullong \\\hline
+
+    \Vullong & \mcb{\Vullong} \\\hline
+
+    \float, \double & \erra & \LHS \\\hline
+
+    \Vfloat, \Vdouble & \err & \LHSa
+  \end{TypeTable}
+
+  \begin{TypeTable}{\Vfloat}{}
+    \schar, \uchar, \sshort, \ushort, \float, \Vschar, \Vuchar, \Vsshort, \Vushort,
+    \Vfloat
+    & \RHSb \\\hline
+
+    \uint, \slong, \ulong, \sllong, \ullong, \bool, \Vsint, \Vuint, \Vslong,
+    \Vulong, \Vsllong, \Vullong
+    & \err & \RHSa \\\hline
+
+    \sint & \Rrr & \RHSa \\\hline
+
+    \double & \erra & \Vdouble \\\hline
+
+    \Vdouble & \mcb{\Vdouble}
+  \end{TypeTable}
+
+  \begin{TypeTable}{\Vdouble}{tab:binopresults2}
+    \schar, \uchar, \sshort, \ushort, \sint, \uint, \float, \double, \Vschar,
+    \Vuchar, \Vsshort, \Vushort, \Vsint, \Vuint, \Vfloat, \Vdouble
+    & \RHSb \\\hline
+
+    \slong, \ulong, \sllong, \ullong, \bool, \Vslong, \Vulong, \Vsllong,
+    \Vullong
+    & \err & \RHSa
+  \end{TypeTable}
+\endgroup
 
 \subsubsection{Suggested Polls}
 
-\wgPoll{Base \simd conversion rules on the non-promoting common-type method instead of value-preserving conversions.}
+\wgPoll{Base \simd conversion rules on the non-promoting common-type method
+instead of value-preserving conversions (choice \ref{enum:commontype} in
+\wgDocumentNumber).}
 {&&&&}
 
-\wgPoll{Remove broadcast ctor exceptions for \code{int} and \code{unsigned int}, instead ensure \code{integral_constant}-like arguments work correctly.}
+\wgPoll{Base \simd binary operator result types on the non-promoting
+common-type method while simplifying the broadcast constructor (choice
+\ref{enum:binaryoptemplates} in \wgDocumentNumber).}
 {&&&&}
 
+\wgPoll{Remove broadcast ctor exceptions for \code{int} and \code{unsigned
+int}, instead ensure \code{integral_constant}-like arguments work correctly.}
+{&&&&}
 
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 
@@ -987,7 +1199,7 @@ As long as we don't have the language feature for overloading \code{?:} the foll
     \begin{itemize}
       \item If \code{conditional_operator_impl(cond, a, b)} can be found via ADL calls \code{conditional_operator_impl(cond, a, b)} unqualified, otherwise
       \item if \code{cond ? a : b} is well-formed, return its result, otherwise
-      \item if \code{std::common_type_t<decltype(a), decltype(b)>} exists, cast \code{a} and \code{b} to this common type and apply \code{?:}.
+      \item if \std\code{common_type_t<decltype(a), decltype(b)>} exists, cast \code{a} and \code{b} to this common type and apply \code{?:}.
     \end{itemize}
 \end{enumerate}
 
