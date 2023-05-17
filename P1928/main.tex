@@ -456,7 +456,7 @@ void f(std::simd<double> x) {
 
 \section{Open questions}
 
-\subsection{Alternatives to \code{hmin} and \code{hmax}}
+\subsection{Renaming \code{hmin} and \code{hmax} or else}\label{sec:hminhmax}
 The functions \code{hmin(simd)} and \code{hmax(simd)} are basically
 specializations of \code{reduce(simd)}.
 I received feedback asking for better names.
@@ -487,8 +487,54 @@ the box.
 We could then leave it up to QoI to recognize the opportunity for a SIMD
 implementation of the reduction.
 
-Alternatively (or in addition) we could rename the TS functions to
-\code{reduce_min(simd)} and \code{reduce_max(simd)}.
+Alternatively (or in addition) we could rename the TS functions to:
+\begin{enumerate}
+  \item\label{enum:reduce_min} \code{reduce_min(simd)} and
+    \code{reduce_max(simd)}
+    \begin{description}
+      \item[Pro] Clearly states that a reduction operation happens (optimized
+        implementation will use tree reduction).
+      \item[Con] Generic name, but \simd-specific (at this point).
+    \end{description}
+
+  \item\label{enum:min_element} \code{min_element(simd)} and
+    \code{max_element(simd)}
+    \begin{description}
+      \item[Pro] Clearly states that it returns a single element, not a \simd.
+      \item[Con] Mismatching behavior to \stdranges\code{min_element}, which
+        returns an iterator.
+    \end{description}
+
+  \item\label{enum:reduce_min_element} \code{reduce_min_element(simd)} and
+    \code{reduce_max_element(simd)}
+    \begin{description}
+      \item[Pro] Most explicit about performing a reduction and returning a
+        single element.
+      \item[Con] Rather verbose. Also the use of \code{min_element} in the name
+        is again a mismatch with \stdranges\code{min_element}.
+    \end{description}
+
+  \item\label{enum:horizontal_min} \code{horizontal_min(simd)} and
+    \code{horizontal_max(simd)}
+    \begin{description}
+      \item[Pro] States that a horizontal operation is applied.
+      \item[Con] We don't use the term „horizontal'' anywhere else.
+    \end{description}
+
+  \item\label{enum:extract_min} \code{extract_min(simd)} and
+    \code{extract_max(simd)} (\emph{my recommendation --- unless convinced
+    otherwise})
+    \begin{description}
+      \item[Pro] The term „extract'' states that a single element will be
+        extracted. Likely a good matching name to the \code{extract} facility
+        that we might add later.
+      \item[Con] Inconsistent with \std\code{reduce(simd)} (maybe okay because
+        slightly different: \code{reduce(simd)} returns an aggregate of all
+        elements in the \simd, \code{extract_max} „searches'' for a certain
+        element and returns its value)
+    \end{description}
+
+\end{enumerate}
 
 \subsubsection{Suggested Polls}
 
@@ -496,13 +542,15 @@ Alternatively (or in addition) we could rename the TS functions to
 status quo is not acceptable for the IS.}
 {&&&&}
 
-\wgPoll{Rename to \code{reduce_min} and \code{reduce_max}.}
+\wgPoll{Rename to \code{extract_min} and \code{extract_max}.}
 {&&&&}
 
-\wgPoll{Extend \stdranges\code{min} and \code{max} to allow prvalue return types.}
+\wgPoll{Extend \stdranges\code{min} and \code{max} to allow prvalue return
+types (and remove \code{hmin}/\code{hmax}).}
 {&&&&}
 
-\wgPoll{Remove \code{hmin} and \code{hmax} expecting \code{simd} to become a range.}
+\wgPoll{Remove \code{hmin} and \code{hmax} expecting \code{simd} to become a
+range.}
 {&&&&}
 
 \subsection{Argument order and naming of masked overloads}\label{sec:maskedOverloads}
