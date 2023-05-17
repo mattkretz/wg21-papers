@@ -611,7 +611,10 @@ For example, given AVX-512, \code{fixed_size_simd<float, 16>} could either be
 one \code{zmm} register or two \code{ymm} registers.
 Orthogonally, the \code{simd_mask} type could either be stored as a bit-mask or
 as a vector-mask.
-Thus, we already have four reasonable choices for the ABI tag.
+Thus, we already have four (somewhat) reasonable choices for the ABI tag.
+If we consider different TUs compiled with different ``\code{-m}'' flags then
+the possible set of ABI tags for ``\code{float}, \code{16}'' becomes even
+larger.
 
 There are only three possible reasons why \simdabi\code{fixed_size<T, N>} should
 not be an alias for \simdabi\code{deduce_t<T, N>} (or rather a rename of
@@ -629,8 +632,8 @@ not be an alias for \simdabi\code{deduce_t<T, N>} (or rather a rename of
 
 In the TS, \code{fixed_size_simd<T, N>} is required to be deducible.
 However, after the changes we did to \code{fixed_size} and conversions, there is
-no good motivation over deducing \code{fixed_size_simd<T, N>} instead of
-\code{simd<T, Abi>}.
+no good motivation for deducing \code{fixed_size_simd<T, N>} instead of
+deducing \code{simd<T, Abi>}.
 Let's just communicate that \code{simd<T, Abi>} is the one and only way to
 deduce arbitrary length \code{simd} types.
 
@@ -670,7 +673,7 @@ Consequently, I propose the following poll:\\
 Now that \mask types have become interconvertible, the distinction between
 \mask[<T, Abi>] and \mask[<U, Abi>] with \code{sizeof(T) == sizeof(U)} is gone.
 Actually, the fact that the type is interconvertible makes it harder to use
-(because it is easier to construct ambiguous overloads).
+(because it is easier to construct ambiguities).
 
 Solution: \emph{Make \mask[<T, Abi>] an alias for \code{basic_simd_mask<sizeof(T), Abi>}.}
 
