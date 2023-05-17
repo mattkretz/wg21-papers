@@ -1234,6 +1234,22 @@ common-type method while simplifying the broadcast constructor (choice
 int}, instead ensure \code{integral_constant}-like arguments work correctly.}
 {&&&&}
 
+\subsection{Freestanding SIMD}\label{sec:freestanding}
+Should \code{simd} be enabled for freestanding?
+
+It seems we maybe don't want to enable \simd for freestanding.
+Kernel code typically wants to have a small state for more efficient
+context switching.
+Therefore floating-point and SIMD registers are not used.
+However, we could limit \simd to integers and the scalar ABI for freestanding.
+The utility of such a crippled \simd is highly questionable.
+
+So the question we need answered is whether there are uses cases for
+freestanding \simd, or whether \emph{all} freestanding code would outlaw \simd
+anyway.
+In other words, do we have or will we have users asking for \simd in
+freestanding?
+
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 
 The following section presents the wording to be applied against the \CC{}
