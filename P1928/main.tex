@@ -556,53 +556,6 @@ types (and remove \code{hmin}/\code{hmax}).}
 range.}
 {&&&&}
 
-%
-\subsection{Integration with ranges}\label{sec:ranges}
-\code{simd} itself is not a container \cite{P0851R0}.
-The value of a data-parallel object is not an array of elements but rather needs to be understood as a single opaque value that happens to have means for reading and writing element values.
-I.e. \code{simd<int> x = \{\};} does not start the lifetime of \type{int} objects.
-This implies that \code{simd} cannot model a contiguous range.
-But \code{simd} can trivially model \code{random_access_range}.
-However, in order to model \code{output_range}, the iterator of every non-const
-\code{simd} would have to return an \code{element_reference} on dereference.
-Without the ability of \code{element_reference} to decay to the element type
-(similar to how arrays decay to pointers on deduction), I would prefer to
-simply make \code{simd} model only \code{random_access_range}.
-
-If \code{simd} is a range, then \std\code{vector<std::simd<float>> data} can
-be flattened trivially via \code{data | std::views::join}.
-This makes the use of ``arrays of \code{simd<T>}'' easier to integrate into
-existing interfaces the expect ``array of \code{T}''.
-
-I plan to pursue adding iterators and conversions to array and from
-random-access ranges, specifically \code{span} with static extent, in a
-follow-up paper.
-I believe it is not necessary to resolve this question before merging
-\code{simd} from the TS.
-
-\subsection{Formatting support}\label{sec:formatting}
-If \code{simd} \emph{is a} range, as suggested above and to be proposed in a
-follow-up paper, then \code{simd} will automatically be formatted as a range.
-This seems to be a good solution unless there is a demand to format \code{simd}
-objects differently from \code{random_access_range}.
-
-\subsection{Correct place for \code{simd} in the IS?}
-
-While \code{simd} is certainly very important for numerics and therefore fits into the “Numerics library” clause, it is also more than that.
-E.g. \code{simd} can be used for vectorization of text processing.
-In principle \code{simd} should be understood similar to fundamental types.
-Is the “General utilities library” clause a better place?
-Or rename “Concurrency support library” to “Parallelism and concurrency support library” and put it there?
-Alternatively, add a new library clause?
-
-I am seeking feedback before making a recommendation.
-
-\subsection{\code{element_reference} is overspecified}
-\code{element_reference} is spelled out in a lot of detail.
-It may be better to define its requirements in a list of requirements or a table instead.
-
-This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
-
 \subsection{Simplify fixed_size}\label{sec:simplifyfixedsize}
 To understand the following discussion it is worth remembering that given an
 element type \code{T} and SIMD width \code{N}, the ABI tag is not necessarily
@@ -736,32 +689,6 @@ an alias template parameterized on \code{T} and \code{Abi}.
 
 \wgPoll{Do not define a \code{simd_type} member type, but use the above rule for the return type of unary minus and unary plus.}
 {&&&&}
-
-\subsection{std::hash}\label{sec:hash}
-
-Is there a use case for \std\code{hash<simd<T>>}?
-In other words, is there a use case for using \code{simd<T>} as a map key?
-Recall that we do not consider \code{simd} to be a product type \cite{P0851R0}.
-If there's no use case for hashing a \simd object as one, is there a use case
-for multiple look-ups into a map, parallelizing the lookup as much as possible?
-
-Consider a hash map with \code{int} keys and the task of looking up multiple
-keys in arbitrary order (unordered).
-In this case, one might want to pass a \code{simd<int>}, compute the hashes of
-\code{simd<int>::\MayBreak{}size()} keys in parallel (using SIMD instructions), and
-potentially determine the addresses (or offsets in contiguous memory) of the
-corresponding values in parallel.
-The value lookup could then use a SIMD gather instruction.
-
-If we consider this use case important (or at least interesting), is
-\std\code{hash<simd<T>>} the right interface to compute hashes element-wise?
-After all, \code{simd} operations act element-wise unless strong hints in the
-API suggest otherwise.
-
-At this point I would prefer to wait for concrete use cases of hashing \simd
-objects before providing any standard interface.
-Specifically, at this point \emph{we do not want \std\code{hash} support for
-\simd}.
 
 \subsection{Reconsider conversion rules}\label{sec:reconsider_conversions}
 
@@ -1105,6 +1032,62 @@ common-type method while simplifying the broadcast constructor (choice
 int}, instead ensure \code{integral_constant}-like arguments work correctly.}
 {&&&&}
 
+%
+\subsection{Integration with ranges}\label{sec:ranges}
+\code{simd} itself is not a container \cite{P0851R0}.
+The value of a data-parallel object is not an array of elements but rather needs to be understood as a single opaque value that happens to have means for reading and writing element values.
+I.e. \code{simd<int> x = \{\};} does not start the lifetime of \type{int} objects.
+This implies that \code{simd} cannot model a contiguous range.
+But \code{simd} can trivially model \code{random_access_range}.
+However, in order to model \code{output_range}, the iterator of every non-const
+\code{simd} would have to return an \code{element_reference} on dereference.
+Without the ability of \code{element_reference} to decay to the element type
+(similar to how arrays decay to pointers on deduction), I would prefer to
+simply make \code{simd} model only \code{random_access_range}.
+
+If \code{simd} is a range, then \std\code{vector<std::simd<float>> data} can
+be flattened trivially via \code{data | std::views::join}.
+This makes the use of ``arrays of \code{simd<T>}'' easier to integrate into
+existing interfaces the expect ``array of \code{T}''.
+
+I plan to pursue adding iterators and conversions to array and from
+random-access ranges, specifically \code{span} with static extent, in a
+follow-up paper.
+I believe it is not necessary to resolve this question before merging
+\code{simd} from the TS.
+
+\subsection{Formatting support}\label{sec:formatting}
+If \code{simd} \emph{is a} range, as suggested above and to be proposed in a
+follow-up paper, then \code{simd} will automatically be formatted as a range.
+This seems to be a good solution unless there is a demand to format \code{simd}
+objects differently from \code{random_access_range}.
+
+\subsection{std::hash}\label{sec:hash}
+
+Is there a use case for \std\code{hash<simd<T>>}?
+In other words, is there a use case for using \code{simd<T>} as a map key?
+Recall that we do not consider \code{simd} to be a product type \cite{P0851R0}.
+If there's no use case for hashing a \simd object as one, is there a use case
+for multiple look-ups into a map, parallelizing the lookup as much as possible?
+
+Consider a hash map with \code{int} keys and the task of looking up multiple
+keys in arbitrary order (unordered).
+In this case, one might want to pass a \code{simd<int>}, compute the hashes of
+\code{simd<int>::\MayBreak{}size()} keys in parallel (using SIMD instructions), and
+potentially determine the addresses (or offsets in contiguous memory) of the
+corresponding values in parallel.
+The value lookup could then use a SIMD gather instruction.
+
+If we consider this use case important (or at least interesting), is
+\std\code{hash<simd<T>>} the right interface to compute hashes element-wise?
+After all, \code{simd} operations act element-wise unless strong hints in the
+API suggest otherwise.
+
+At this point I would prefer to wait for concrete use cases of hashing \simd
+objects before providing any standard interface.
+Specifically, at this point \emph{we do not want \std\code{hash} support for
+\simd}.
+
 \subsection{Freestanding SIMD}\label{sec:freestanding}
 Should \code{simd} be enabled for freestanding?
 
@@ -1120,6 +1103,23 @@ freestanding \simd, or whether \emph{all} freestanding code would outlaw \simd
 anyway.
 In other words, do we have or will we have users asking for \simd in
 freestanding?
+
+\subsection{Correct place for \code{simd} in the IS?}
+
+While \code{simd} is certainly very important for numerics and therefore fits into the “Numerics library” clause, it is also more than that.
+E.g. \code{simd} can be used for vectorization of text processing.
+In principle \code{simd} should be understood similar to fundamental types.
+Is the “General utilities library” clause a better place?
+Or rename “Concurrency support library” to “Parallelism and concurrency support library” and put it there?
+Alternatively, add a new library clause?
+
+I am seeking feedback before making a recommendation.
+
+\subsection{\code{element_reference} is overspecified}
+\code{element_reference} is spelled out in a lot of detail.
+It may be better to define its requirements in a list of requirements or a table instead.
+
+This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
 
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 
