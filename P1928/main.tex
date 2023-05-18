@@ -1038,7 +1038,150 @@ common-type method while simplifying the broadcast constructor (choice
 int}, instead ensure \code{integral_constant}-like arguments work correctly.}
 {&&&&}
 
-%
+\subsection{Keep or remove split and concat or parts of it}\label{sec:splitandconcat}
+The TS includes the following functions for splitting \simd and \mask objects:
+\begin{enumerate}
+  \item\label{enum:split1} \stdx\code{split<N0, N1, N2, ...>(x)} returns a
+    \std\code{tuple} of \simd/\mask (\code{x.size()} must be \code{N0 + N1 + N2
+    ...})
+
+  \item\label{enum:split2} \stdx\code{split<T>(x)} returns a \std\code{array<T,
+    ...>} (\code{T} is a \simd/\mask and \code{x.size()} must be a multiple of
+    \code{V::size()})
+
+  \item\label{enum:split3} \stdx\code{split_by<N>(x)} returns a
+    \std\code{array} of \simd/\mask (\code{x.size()} must be a multiple of
+    \code{N})
+\end{enumerate}
+
+For concatenation the TS includes:
+\begin{itemize}
+  \item \stdx\code{concat(x, y, z)} returns a single \simd/\mask object
+    containing the elements of \code{x}, \code{y}, and \code{z} (requires
+    arguments to have the same element type)
+
+  \item \stdx\code{concat(array_of_simd_or_mask)} returns a single \simd/\mask
+    object containing the elements of the \simd/\mask objects in the
+    \std\code{array}.
+\end{itemize}
+
+An obvious candidate for removal is the \code{concat(array)} overload, since
+the same can be expressed using \std\code{apply}.
+If it is not removed then why are there no additional overloads for all the
+other tuple-like types?
+
+The concatenation facility for \simd/\mask is useful and necessary for some of
+the permutation examples presented in \cite{P2664R2}.
+At this point there exists no good motivation for removal of \code{concat}
+since we would expect a later paper to re-add this facility otherwise.
+
+For \code{split} and \code{split_by} we should reconsider the usefulness of
+each of the three overloads in light of the intent to add an ``extract''
+function, which is supposed to return a slice of the input \simd/\mask as a
+smaller \simd/\mask.
+Such a function would be a replacement for the \ref{enum:split1}.~\code{split}
+function.
+The \ref{enum:split2}. and \ref{enum:split3}. function are equivalent:
+\code{split_by<\MayBreak{}N>(\MayBreak{}T)} is the same as
+\code{split<\MayBreak{}resize_simd_t<\MayBreak{}V::\MayBreak{}size() / N,
+T>>(T)}; \code{split<U>(T)} is the same as
+\code{split_by<\MayBreak{}T::\MayBreak{}size() /\MayBreak{}
+U::\MayBreak{}size()\MayBreak{}>(T)}.
+We could therefore consider reducing \code{split} to a single interface.
+
+The use case I came across when wanting to use \code{split} is the splitting of
+an “oversized” \simd into register-sized parts.
+Example: \code{fixed_size_simd<float, 20>} could be made up of one AVX-512 and
+one SSE register on an x86 target.
+So I'd be interested in a simple interface of splitting
+\code{fixed_size_simd<float, 20>} into \code{simd<float>} and
+\code{simd<\MayBreak{}float, impl-defined-abi-tag>}%
+\footnote{same as \code{fixed_size_simd<float, 4>} depending on
+\sect{sec:simplifyfixedsize}}.
+\stdx\code{split<16, 4>(x)} would achieve that.
+But in generic code the derivation of these numbers is not trivial.
+
+An extended \code{split<T>(x)} interface could instead do the following:
+\code{split<simd<float>>(x)} returns a \code{tuple} of as many
+\code{simd<float>} as \code{x.size()} allows plus an “epilogue” of
+\code{simd<float, impl-defined-abi-tag} objects as are necessary to return all
+elements of \code{x}.
+Then \code{split<simd<float>>(fixed_size_simd<float, 20>)} returns
+\begin{itemize}
+  \item \code{tuple<simd<float>, resize_simd_t<4, simd<float>>>} with AVX-512,
+  \item \code{tuple<simd<float>, simd<float>, resize_simd_t<4, simd<float>>>} with AVX, and
+  \item \code{tuple<simd<float>, simd<float>, simd<float>, simd<float>, simd<float>>} with SSE.
+\end{itemize}
+If no “epilogue” is necessary, the return type could be an \code{array} instead
+of a \code{tuple}, in which case the SSE case above would instead return
+\begin{itemize}
+  \item \code{array<simd<float>, 5>}.
+\end{itemize}
+
+More precise, the only remaining \code{split} function could be:
+\begin{wgText}
+\begin{itemdecl}
+template<class V, class Abi>
+  constexpr auto split(const simd<typename V::value_type, Abi>& x) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  % probably not necessary/helpful:
+  %\pnum\mandates \tcode{V::size() <= simd_size_v<V::value_type, Abi>}.
+
+  \pnum Let $N$ be \tcode{x.size() / V::size()}.
+
+  \pnum\returns
+  \begin{itemize}
+    \item If \tcode{x.size() \% V::size() == 0}, an \tcode{array<V, $N$>} with
+      the $i^\text{th}$ \simd element of the $j^\text{th}$ \tcode{array}
+      element initialized to the value of the element in \tcode{x} with index
+      \tcode{$i$ + $j$ * V::size()}.
+
+    \item Otherwise, a \tcode{tuple} of $N$ objects of type \tcode{V} and one
+      or more objects of types \tcode{resize_simd_t<Sizes, V>...} such that
+      \tcode{(Sizes + ...)} is equal to \tcode{x.size() \% V::size()}.
+      The $i^\text{th}$ \tcode{simd} element of the $j^\text{th}$ \tcode{tuple}
+      element of type \tcode{V} is initialized to the value of the element in
+      \tcode{x} with index \tcode{$i$ + $j$ * V::size()}.
+      The $i^\text{th}$ \tcode{simd} element of the $j^\text{th}$ \tcode{tuple}
+      with $j \ge N$ is initialized to the value of the element in \tcode{x}
+      with index \tcode{$i$ + $N$ * V::size() +} sum of the first $j - N$
+      values in the \tcode{Sizes} pack.
+  \end{itemize}
+\end{itemdescr}
+\end{wgText}
+
+\subsubsection{Renaming split and concat}
+
+The names \code{split} and \code{concat} are very general.
+We have naming precedent with \code{tuple_cat}.
+If we follow the \code{tuple_cat} precedent the functions should be called
+\code{simd_split} and \code{simd_cat}.
+
+There is an alternative, where we envision making \std\code{concat} the name
+for concatenation of all kinds of things in the standard library: simds,
+strings, arrays, vectors, \ldots\footnote{all kinds of ranges?}.
+The \code{split} interface, taking a template type to determine the split
+granularity, is not as obvious to generalize.
+\code{split<array<int, 4>>(array<int, 7>)}?
+For strings the interface should likely look more like
+\code{vector<string_view> split(string_view, string_view)}.
+
+\subsubsection{Suggested Polls}
+
+\wgPoll{Remove \code{concat(array<simd>)} overload.}
+{&&&&}
+
+\wgPoll{Replace all \code{split}/\code{split_by} functions by proposed
+\code{split} function.}
+{&&&&}
+
+\wgPoll{Rename \code{split} to \code{simd_split} and \code{concat} to
+\code{simd_cat}.}
+{&&&&}
+
+
 \subsection{Integration with ranges}\label{sec:ranges}
 \code{simd} itself is not a container \cite{P0851R0}.
 The value of a data-parallel object is not an array of elements but rather needs to be understood as a single opaque value that happens to have means for reading and writing element values.
