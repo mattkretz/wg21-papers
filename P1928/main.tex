@@ -790,10 +790,10 @@ via explicit cast.
 
 Choices:
 \begin{enumerate}
-  \item Try to be as consistently wrong as possible, at the cost of
-    interconvertible types (leads to ambiguity errors), more complex binary
-    operators, and many subtle ways to unintentionally change types and
-    potentially also pay in performance.
+  \item Try to be as “consistently wrong” (i.e. consistent with builtin types)
+    as possible, at the cost of interconvertible types (leads to ambiguity
+    errors), more complex binary operators, and many subtle ways to
+    unintentionally change types and potentially also pay in performance.
 
   \item\label{enum:binaryoptemplates} Variant of the above: Don't make \simd
     interconvertible, by defining the \simd conversion constructor as in the
