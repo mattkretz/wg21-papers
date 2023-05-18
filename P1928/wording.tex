@@ -1616,7 +1616,7 @@ public:
   friend constexpr simd_mask operator?:(const simd_mask&, const simd_mask&, const simd_mask&) noexcept;
   friend constexpr simd_mask operator?:(const simd_mask&, bool, bool) noexcept;
   template <class T0, class T1>
-    friend constexpr simd<common_type_t<T0, T1>, Abi>
+    friend constexpr simd<@\seebelow@, Abi>
       operator?:(const simd_mask&, const T0&, const T1&) noexcept;
 };
 \end{codeblock}
@@ -1953,12 +1953,15 @@ friend constexpr simd_mask operator?:(const simd_mask& mask, bool a, bool b) noe
 
 \begin{itemdecl}
 template <class T0, class T1>
-  friend constexpr simd<common_type_t<T0, T1>, Abi>
+  friend constexpr simd<@\seebelow@, Abi>
     operator?:(const simd_mask& mask, const T0& a, const T1& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum Let \tcode{U} be the type \tcode{common_type_t<T0, T1>}.
+  \pnum Let \tcode{U} be the common type of \tcode{T0} and \tcode{T1} without
+  applying integral promotions on integral types with integer conversion rank
+  less than the rank of \tcode{int}.
+
   \pnum\constraints
   \begin{itemize}
     \item \tcode{U} is a vectorizable type, and
@@ -1968,7 +1971,7 @@ template <class T0, class T1>
   \end{itemize}
 
   \pnum\returns
-  A \tcode{simd} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a : b} \foralli.
+  A \tcode{simd<U, Abi>} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a : b} \foralli.
 \end{itemdescr}
 
 \rSec2[simd.mask.reductions]{\texorpdfstring{\tcode{simd_mask} reductions}{simd_mask reductions}}

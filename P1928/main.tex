@@ -207,9 +207,9 @@ The following operators were added to \mask:
   \item \code{simd_mask::operator-() const noexcept}
   \item \code{simd_mask::operator\~{}() const noexcept}
   \item \code{simd_mask::operator?:() const noexcept}
-  \item \code{onstexpr simd_mask operator?:(const simd_mask\&, const simd_mask\&, const simd_mask\&) noexcept}
-  \item \code{onstexpr simd_mask operator?:(const simd_mask\&, bool, bool) noexcept}
-  \item \code{operator?:(const simd_mask\&, const T0\&, const T1\&) noexcept}
+  \item \code{simd_mask operator?:(const simd_mask\&, const simd_mask\&, const simd_mask\&) noexcept}
+  \item \code{simd_mask operator?:(const simd_mask\&, bool, bool) noexcept}
+  \item \code{simd<nonpromoting_common_type_t<T0, T1> operator?:(const simd_mask\&, const T0\&, const T1\&) noexcept}
 \end{itemize}
 
 The following operator was added to \simd:
