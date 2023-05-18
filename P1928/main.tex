@@ -125,8 +125,17 @@ Summary of changes wrt. TS:
     \code{simd_size_v<T0, A0> == simd_size_v<T1, A1>}.
 
   \item \code{simd<T0, A0>} is implicitly convertible to \code{simd<T1, A1>}
-    if, additionally, the conversion \code{T0} to \code{T1} is
-    value-preserving.
+    if, additionally,
+    \begin{itemize}
+      \item the conversion \code{T0} to \code{T1} is value-preserving, and
+      \item if both \code{T0} and \code{T1} are integral types, the integer
+        conversion rank of \code{T1} is greater than or equal to the integer
+        conversion rank of \code{T0}, and
+      \item if both \code{T0} and \code{T1} are floating-point types, the
+        floating-point conversion rank of \code{T1} is greater than or equal to
+        the floating-point conversion rank of \code{T0}.
+    \end{itemize}
+
 
   \item \code{simd_mask<T0, A0>} is convertible to \code{simd_mask<T1, A1>} if
     \code{simd_size_v<T0, A0> == simd_size_v<T1, A1>}.
