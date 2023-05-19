@@ -116,6 +116,7 @@ namespace std {
   template<class T, class Abi = simd_abi::native<T>> class simd_mask;
   template<class T, size_t N> using fixed_size_simd_mask = simd_mask<T, simd_abi::fixed_size<T, N>>;
 
+  // \ref{simd.creation}, \tcode{simd} and \tcode{simd_mask} creation
   template<size_t... Sizes, class T, class Abi>
     constexpr tuple<simd<T, simd_abi::deduce_t<T, Sizes>>...>
       split(const simd<T, Abi>&) noexcept;
@@ -706,14 +707,14 @@ template<class U> constexpr reference operator=(U&& x) && noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{declval<value_type\&>() = std\colcol{}forward<U>(x)} is well-formed.
+
   \pnum\effects
   Replaces the referred to element in \tcode{simd} or \tcode{simd_mask} with \tcode{static_cast<value_type>(std\colcol{}forward<U>(x))}.
 
   \pnum\returns
   A copy of \tcode{*this}.
-
-  \pnum\remarks
-  This function shall not participate in overload resolution unless \tcode{declval<value_type\&>() = std\colcol{}forward<U>(x)} is well-formed.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -730,14 +731,14 @@ template<class U> constexpr reference operator>>=(U&& x) && noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{declval<value_type\&>() @= std\colcol{}forward<U>(x)} (where \tcode{@=} denotes the indicated compound assignment operator) is well-formed.
+
   \pnum\effects
   Applies the indicated compound operator to the referred to element in \tcode{simd} or \tcode{simd_mask} and \tcode{std\colcol{}forward<U>(x)}.
 
   \pnum\returns
   A copy of \tcode{*this}.
-
-  \pnum\remarks
-  This function shall not participate in overload resolution unless \tcode{declval<value_type\&>() @= std\colcol{}forward<U>(x)} (where \tcode{@=} denotes the indicated compound assignment operator) is well-formed.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -746,14 +747,14 @@ constexpr reference operator--() && noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  The indicated operator can be applied to objects of type \tcode{value_type}.
+
   \pnum\effects
   Applies the indicated operator to the referred to element in \tcode{simd} or \tcode{simd_mask}.
 
   \pnum\returns
   A copy of \tcode{*this}.
-
-  \pnum\remarks
-  This function shall not participate in overload resolution unless the indicated operator can be applied to objects of type \tcode{value_type}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -762,14 +763,14 @@ constexpr value_type operator--(int) && noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\remarks
+  The indicated operator can be applied to objects of type \tcode{value_type}.
+
   \pnum\effects
   Applies the indicated operator to the referred to element in \tcode{simd} or \tcode{simd_mask}.
 
   \pnum\returns
   A copy of the referred to element before applying the indicated operator.
-
-  \pnum\remarks
-  This function shall not participate in overload resolution unless the indicated operator can be applied to objects of type \tcode{value_type}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -809,7 +810,6 @@ template<class U> constexpr simd(U&&) noexcept;
 
   \pnum\effects
   Constructs an object with each element initialized to the value of the argument after conversion to \tcode{value_type}.
-
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -976,7 +976,7 @@ constexpr reference operator[](size_t i) &;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\requires
+  \pnum\expects
   \tcode{i < size()}.
 
   \pnum\returns
@@ -990,7 +990,7 @@ constexpr value_type operator[](size_t i) const&;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\requires
+  \pnum\expects
   \tcode{i < size()}.
 
   \pnum\returns
@@ -1195,7 +1195,7 @@ friend constexpr mask_type operator<(const simd& lhs, const simd& rhs) noexcept;
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.cond]{\texorpdfstring{\tcode{simd}}{simd} conditional operators}
+\rSec2[simd.cond]{\tcode{simd} conditional operators}
 
 \begin{itemdecl}
 friend constexpr simd operator?:(const mask_type& mask, const simd& a, const simd& b) noexcept;
@@ -1205,7 +1205,7 @@ friend constexpr simd operator?:(const mask_type& mask, const simd& a, const sim
   \pnum\returns
   A \tcode{simd} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a[$i$] : b[$i$]} \foralli.
 \end{itemdescr}
-\rSec2[simd.reductions]{\texorpdfstring{\tcode{simd} r}{simd r}eductions}
+\rSec2[simd.reductions]{\tcode{simd} reductions}
 
 \pnum
 In this subclause, \tcode{BinaryOperation} shall be a binary element-wise operation.
@@ -1364,7 +1364,7 @@ template<class T, class Abi>
   Otherwise, returns the value of a selected element \tcode{x.data[$j$]} for which \tcode{x.data[$j$] < x.data[$i$]} is \tcode{false} \forallmaskedi.
 \end{itemdescr}
 
-\rSec2[simd.casts]{Casts}
+\rSec2[simd.creation]{\tcode{simd} and \tcode{simd_mask} creation}
 
 \begin{itemdecl}
 template<size_t... Sizes, class T, class Abi>
@@ -1376,11 +1376,11 @@ template<size_t... Sizes, class T, class Abi>
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  The sum of all values in the \tcode{Sizes} pack is equal to \tcode{simd_size_v<T, Abi>}.
+
   \pnum\returns
   A \tcode{tuple} of data-parallel objects with the $i^\text{th}$ \tcode{simd}/\tcode{simd_mask} element of the $j^\text{th}$ \tcode{tuple} element initialized to the value of the element \tcode{x} with index $i$ + sum of the first $j$ values in the \tcode{Sizes} pack.
-
-  \pnum\remarks
-  These functions shall not participate in overload resolution unless the sum of all values in the \tcode{Sizes} pack is equal to \tcode{simd_size_v<T, Abi>}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1393,15 +1393,14 @@ template<class V, class Abi>
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\returns
-  An \tcode{array} of data-parallel objects with the $i^\text{th}$ \tcode{simd}/\tcode{simd_mask} element of the $j^\text{th}$ \tcode{array} element initialized to the value of the element in \tcode{x} with index \tcode{$i$ + $j$ * V::size()}.
-
-  \pnum\remarks
-  These functions shall not participate in overload resolution unless either:
+  \pnum\constraints
   \begin{itemize}
     \item \tcode{is_simd_v<V>} is \tcode{true} and \tcode{simd_size_v<typename V::value_type, Abi>} is an integral multiple of \tcode{V::size()}, or
     \item \tcode{is_simd_mask_v<V>} is \tcode{true} and \tcode{simd_size_v<typename V::simd_type::value_type, Abi>} is an integral multiple of \tcode{V::size()}.
   \end{itemize}
+
+  \pnum\returns
+  An \tcode{array} of data-parallel objects with the $i^\text{th}$ \tcode{simd}/\tcode{simd_mask} element of the $j^\text{th}$ \tcode{array} element initialized to the value of the element in \tcode{x} with index \tcode{$i$ + $j$ * V::size()}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1414,11 +1413,11 @@ template<size_t N, class T, class A>
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{simd_size_v<T, A>} is an integral multiple of \tcode N.
+
   \pnum\returns
   An array \tcode{arr}, where \tcode{arr[$i$][$j$]} is initialized by \tcode{x[$i$ * (simd_size_v<T, A> / N) + $j$]}.
-
-  \pnum\remarks
-  The functions shall not participate in overload resolution unless \tcode{simd_size_v<T, A>} is an integral multiple of \tcode N.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1513,14 +1512,14 @@ template<class T, class Abi> simd<T, Abi>
   \pnum\expects
   \tcode{T} models \tcode{totally_ordered}.
 
-  \pnum\requires
+  \pnum\expects
   No element in \tcode{lo} shall be greater than the corresponding element in \tcode{hi}.
 
   \pnum\returns
   The result of element-wise application of \tcode{std::clamp(v[$i$], lo[$i$], hi[$i$])} \foralli.
 \end{itemdescr}
 
-\rSec2[simd.math]{\texorpdfstring{\tcode{simd} math}{simd math} library}
+\rSec2[simd.math]{\tcode{simd} math library}
 
 \pnum
 For each set of overloaded functions within \tcode{<cmath>}, there shall be additional overloads sufficient to ensure that if any argument corresponding to a \tcode{double} parameter has type \tcode{simd<T, Abi>}, where \tcode{is_floating_point_v<T>} is \tcode{true}, then:
@@ -1666,7 +1665,7 @@ static constexpr typename simd_size<T, Abi>::type size;
   The width of \tcode{simd<T, Abi>}.
 \end{itemdescr}
 
-\rSec2[simd.mask.ctor]{\texorpdfstring{\tcode{simd_mask} constructors}{simd_mask constructors}}
+\rSec2[simd.mask.ctor]{\tcode{simd_mask} constructors}
 
 \begin{itemdecl}
 constexpr explicit simd_mask(value_type x) noexcept;
@@ -1683,11 +1682,11 @@ template<class U, class UAbi>
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{simd_size_v<U, UAbi> == size()}.
+
   \pnum\effects
   Constructs an object of type \tcode{simd_mask} where the $i^\text{th}$ element equals \tcode{x[$i$]} \foralli.
-
-  \pnum\remarks
-  This constructor shall not participate in overload resolution unless \tcode{simd_size_v<U, UAbi> == size()}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1695,11 +1694,11 @@ template<class G> constexpr explicit simd_mask(G&& gen) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{static_cast<bool>(gen(integral_constant<size_t, i>()))} is well-formed \foralli.
+
   \pnum\effects
   Constructs an object where the $i^\text{th}$ element is initialized to \tcode{gen(integral_constant<size_t, i>())}.
-
-  \pnum\remarks
-  This constructor shall not participate in overload resolution unless \tcode{static_cast<bool>(gen(integral_constant<size_t, i>()))} is well-formed \foralli.
 
   \pnum
   The calls to \tcode{gen} are unsequenced with respect to each other.
@@ -1748,7 +1747,7 @@ template<typename It, class... Flags>
     {Constructs an object where the $i^\text{th}$ element is initialized to \tcode{mask[$i$] ? first[$i$] : false} \foralli.}
 \end{itemdescr}
 
-\rSec2[simd.mask.copy]{\texorpdfstring{\tcode{simd_mask} copy}{simd_mask copy} functions}
+\rSec2[simd.mask.copy]{\tcode{simd_mask} copy functions}
 
 \begin{itemdecl}
 template<typename It, class... Flags>
@@ -1816,14 +1815,14 @@ template<typename Out, class... Flags>
   {Copies the selected elements as if \tcode{first[$i$] = operator[]($i$)} \forallmaskedi.}
 \end{itemdescr}
 
-\rSec2[simd.mask.subscr]{\texorpdfstring{\tcode{simd_mask} subscript}{simd_mask subscript} operators}
+\rSec2[simd.mask.subscr]{\tcode{simd_mask} subscript operators}
 
 \begin{itemdecl}
 constexpr reference operator[](size_t i) &;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\requires
+  \pnum\expects
   \tcode{i < size()}.
 
   \pnum\returns
@@ -1837,7 +1836,7 @@ constexpr value_type operator[](size_t i) const&;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\requires
+  \pnum\expects
   \tcode{i < size()}.
 
   \pnum\returns
@@ -1846,7 +1845,7 @@ constexpr value_type operator[](size_t i) const&;
   \pnum\throws Nothing.
 \end{itemdescr}
 
-\rSec2[simd.mask.unary]{\texorpdfstring{\tcode{simd_mask}}{simd_mask} unary operators}
+\rSec2[simd.mask.unary]{\tcode{simd_mask} unary operators}
 
 \begin{itemdecl}
 constexpr simd_mask operator!() const noexcept;
@@ -1871,7 +1870,7 @@ constexpr simd_type operator~() const noexcept;
   The result of applying the indicated operator to \tcode{static_cast<simd_type>(*this)}.
 \end{itemdescr}
 
-\rSec2[simd.mask.conv]{\texorpdfstring{\tcode{simd_mask}}{simd_mask} conversion operators}
+\rSec2[simd.mask.conv]{\tcode{simd_mask} conversion operators}
 
 \begin{itemdecl}
 template <class U, class A>
@@ -1888,7 +1887,7 @@ template <class U, class A>
 
 \rSec1[simd.mask.nonmembers]{Non-member operations}
 
-\rSec2[simd.mask.binary]{\texorpdfstring{\tcode{simd_mask} binary}{simd_mask binary} operators}
+\rSec2[simd.mask.binary]{\tcode{simd_mask} binary operators}
 
 \begin{itemdecl}
 friend constexpr simd_mask operator&&(const simd_mask& lhs, const simd_mask& rhs) noexcept;
@@ -1903,7 +1902,7 @@ friend constexpr simd_mask operator^ (const simd_mask& lhs, const simd_mask& rhs
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.mask.cassign]{\texorpdfstring{\tcode{simd_mask} compound}{simd_mask compound} assignment}
+\rSec2[simd.mask.cassign]{\tcode{simd_mask} compound assignment}
 
 \begin{itemdecl}
 friend constexpr simd_mask& operator&=(simd_mask& lhs, const simd_mask& rhs) noexcept;
@@ -1919,7 +1918,7 @@ friend constexpr simd_mask& operator^=(simd_mask& lhs, const simd_mask& rhs) noe
   \tcode{lhs}.
 \end{itemdescr}
 
-\rSec2[simd.mask.comparison]{\texorpdfstring{\tcode{simd_mask} comparisons}{simd_mask comparisons}}
+\rSec2[simd.mask.comparison]{\tcode{simd_mask} comparisons}
 
 \begin{itemdecl}
 friend constexpr simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
@@ -1931,7 +1930,7 @@ friend constexpr simd_mask operator!=(const simd_mask&, const simd_mask&) noexce
   A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.mask.cond]{\texorpdfstring{\tcode{simd_mask}}{simd_mask} conditional operators}
+\rSec2[simd.mask.cond]{\tcode{simd_mask} conditional operators}
 
 \begin{itemdecl}
 friend constexpr simd operator?:(const simd_mask& mask, const simd_mask& a, const simd_mask& b) noexcept;
@@ -1974,7 +1973,7 @@ template <class T0, class T1>
   A \tcode{simd<U, Abi>} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a : b} \foralli.
 \end{itemdescr}
 
-\rSec2[simd.mask.reductions]{\texorpdfstring{\tcode{simd_mask} reductions}{simd_mask reductions}}
+\rSec2[simd.mask.reductions]{\tcode{simd_mask} reductions}
 
 \begin{itemdecl}
 template<class T, class Abi> constexpr bool all_of(const simd_mask<T, Abi>& k) noexcept;
@@ -2017,7 +2016,7 @@ template<class T, class Abi> constexpr int reduce_min_index(const simd_mask<T, A
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\requires
+  \pnum\expects
   \tcode{any_of(k)} returns \tcode{true}.
 
   \pnum\returns
@@ -2031,7 +2030,7 @@ template<class T, class Abi> constexpr int reduce_max_index(const simd_mask<T, A
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\requires
+  \pnum\expects
   \tcode{any_of(k)} returns \tcode{true}.
 
   \pnum\returns
@@ -2061,7 +2060,7 @@ constexpr int reduce_max_index(@\UNSP{T}@);
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\requires
+  \pnum\expects
   The value of the argument is \tcode{true}.
 
   \pnum\returns

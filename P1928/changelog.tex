@@ -70,7 +70,10 @@
 \item Update \code{hmin}/\code{hmax} discussion with more extensive naming discussion (\sect{sec:hminhmax}).
 \item Discuss freestanding \simd (\sect{sec:freestanding}).
 \item Discuss \code{split} and \code{concat} (\sect{sec:splitandconcat}).
-  \todo Apply the new library specification style from P0788R3.
-  \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.
-  \todo Consider adding a note that recommends implementations to let simd primary operations behave like operations of arithmetic types to never be function calls. (cf. GCC PR108030)
+\item Apply the new library specification style from P0788R3.
 \end{revision}
+
+%\begin{revision}
+%  \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.
+%  \todo Consider adding a note that recommends implementations to let simd primary operations behave like operations of arithmetic types to never be function calls. (cf. GCC PR108030)
+%\end{revision}
