@@ -135,13 +135,6 @@ namespace std {
     constexpr basic_simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>>
       concat(const basic_simd_mask<T, Abis>&...) noexcept;
 
-  template<class T, class Abi, size_t N>
-    constexpr resize_simd_t<simd_size_v<T, Abi> * N, basic_simd<T, Abi>>
-      concat(const array<basic_simd<T, Abi>, N>& arr) noexcept;
-  template<class T, class Abi, size_t N>
-    constexpr resize_simd_t<simd_size_v<T, Abi> * N, basic_simd_mask<T, Abi>>
-      concat(const array<basic_simd_mask<T, Abi>, N>& arr) noexcept;
-
   // \ref{basic_simd.mask.reductions}, \tcode{basic_simd_mask} reductions
   template<class T, class Abi> constexpr bool all_of(const basic_simd_mask<T, Abi>&) noexcept;
   template<class T, class Abi> constexpr bool any_of(const basic_simd_mask<T, Abi>&) noexcept;
@@ -1395,20 +1388,6 @@ template<class T, class... Abis>
 \begin{itemdescr}
   \pnum\returns
   A data-parallel object initialized with the concatenated values in the \tcode{xs} pack of data-parallel objects: The $i^\text{th}$ \tcode{basic_simd}/\tcode{basic_simd_mask} element of the $j^\text{th}$ parameter in the \tcode{xs} pack is copied to the return value's element with index $i$ + the sum of the width of the first $j$ parameters in the \tcode{xs} pack.
-\end{itemdescr}
-
-\begin{itemdecl}
-  template<class T, class Abi, size_t N>
-    constexpr resize_simd<simd_size_v<T, Abi> * N, basic_simd<T, Abi>>
-      concat(const array<basic_simd<T, Abi>, N>& arr) noexcept;
-  template<class T, class Abi, size_t N>
-    constexpr resize_simd<simd_size_v<T, Abi> * N, basic_simd_mask<T, Abi>>
-      concat(const array<basic_simd_mask<T, Abi>, N>& arr) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\returns
-  A data-parallel object, the $i^\text{th}$ element of which is initialized by \tcode{arr[$i$ / simd_size_v<T, Abi>][$i$ \% simd_size_v<T, Abi>]}.
 \end{itemdescr}
 
 \rSec2[basic_simd.alg]{Algorithms}
