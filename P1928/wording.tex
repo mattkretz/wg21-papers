@@ -14,7 +14,7 @@
 \newcommand\flagsRequires[2]{
 \item If the template parameter pack \tcode{Flags} contains the type
   identifying \tcode{simd_flag_aligned}, \tcode{addressof(*first)} shall
-  point to storage aligned by \tcode{memory_alignment_v<#1>}.
+  point to storage aligned by \tcode{simd_alignment_v<#1>}.
 \item If the template parameter pack \tcode{Flags} contains the type
   identifying \tcode{simd_flag_overaligned<N>}, \tcode{addressof(*first)}
   shall point to storage aligned by \tcode{N}.
@@ -69,20 +69,16 @@ The intent is to support acceleration through data-parallel execution resources,
 %\indexhdr{simd}
 \begin{codeblock}
 namespace std {
+  // \ref{simd.abi}, \tcode{simd} ABI tags
   using @\simdsizetype@ = int; // \expos
 
   template<class T> using @\nativeabi@ = @\seebelow@; // \expos
   template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@; // \expos
 
-  // \ref{simd.traits}, \tcode{basic_simd} type traits
-
-  template<class T, class Abi = @\nativeabi@<T>> struct simd_size;
-  template<class T, class Abi = @\nativeabi@<T>>
-    inline constexpr size_t simd_size_v = simd_size<T,Abi>::value;
-
-  template<class T, class U = typename T::value_type> struct memory_alignment;
+  // \ref{simd.traits}, \tcode{simd} type traits
+  template<class T, class U = typename T::value_type> struct simd_alignment;
   template<class T, class U = typename T::value_type>
-    inline constexpr size_t memory_alignment_v = memory_alignment<T,U>::value;
+    inline constexpr size_t simd_alignment_v = simd_alignment<T,U>::value;
 
   template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   template<class T, class V> using rebind_simd_t = typename rebind_simd<T, V>::type;
@@ -116,10 +112,10 @@ namespace std {
       split(const basic_simd_mask<typename V::value_type, Abi>& x) noexcept;
 
   template<class T, class... Abis>
-    constexpr basic_simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>>
+    constexpr basic_simd<T, simd_abi::deduce_t<T, (basic_simd<T, Abis>::size + ...)>>
       concat(const basic_simd<T, Abis>&...) noexcept;
   template<class T, class... Abis>
-    constexpr basic_simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>>
+    constexpr basic_simd_mask<T, simd_abi::deduce_t<T, (basic_simd<T, Abis>::size + ...)>>
       concat(const basic_simd_mask<T, Abis>&...) noexcept;
 
   // \ref{simd.mask.reductions}, \tcode{basic_simd_mask} reductions
@@ -223,7 +219,7 @@ TODO: \deducet<T, N> must produce a valid ABI tag at least for N in range [1, 32
 \pnum
 \tcode{\deducet<T, N>} is an alias for an unspecified ABI tag.
 Use of the \tcode{\deducet<T, N>} tag type requires data-parallel types to
-store \tcode{N} elements (i.e. \tcode{simd_size_v<T, \deducet<T, N>>} equals
+store \tcode{N} elements (i.e. \tcode{basic_simd<T, \deducet<T, N>>::size} equals
 \tcode{N}).
 \tcode{basic_simd<T, \deducet<T, N>>} and \tcode{basic_simd_mask<T, \deducet<T,
 N>>} with \tcode{N > 0} and \tcode{N <= 32} shall be supported.
@@ -269,7 +265,7 @@ The member \tcode{type} shall be present if and only if
 \pnum
 Where present, the member typedef \tcode{type} shall name an ABI tag type that satisfies
 \begin{itemize}
-  \item \tcode{simd_size<T, type> == N}, and
+  \item \tcode{basic_simd<T, type>::size == N}, and
   \item \tcode{basic_simd<T, type>} is default constructible (see \ref{simd.overview}).
 \end{itemize}
 If \tcode{N} is \tcode{1}, the member typedef \tcode{type} is \tcode{simd_abi::scalar}.
@@ -281,84 +277,25 @@ If \tcode{N} is \tcode{1}, the member typedef \tcode{type} is \tcode{simd_abi::s
 The behavior of a program that adds specializations for \tcode{deduce} is undefined.
 \end{itemdescr}
 
-\rSec1[simd.traits]{\tcode{basic_simd} type traits}
+\rSec1[simd.traits]{\tcode{simd} type traits}
 
 \begin{itemdecl}
-template<class T> struct is_abi_tag { @\seebelow@ };
+template<class T, class U = typename T::value_type> struct simd_alignment { @\seebelow@ };
 \end{itemdecl}
 
 \begin{itemdescr}
 \pnum
-The type \tcode{is_abi_tag<T>} is a \tcode{UnaryTypeTrait} with a base characteristic of \tcode{true_type} if \tcode{T} is a standard or extended ABI tag, and \tcode{false_type} otherwise.
-
-\pnum
-The behavior of a program that adds specializations for \tcode{is_abi_tag} is undefined.
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class T> struct is_simd { @\seebelow@ };
-\end{itemdecl}
-
-\begin{itemdescr}
-\pnum
-The type \tcode{is_simd<T>} is a \tcode{UnaryTypeTrait} with a base characteristic of \tcode{true_type} if \tcode{T} is a specialization of the \tcode{basic_simd} class template, and \tcode{false_type} otherwise.
-
-\pnum
-The behavior of a program that adds specializations for \tcode{is_simd} is undefined.
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class T> struct is_simd_mask { @\seebelow@ };
-\end{itemdecl}
-
-\begin{itemdescr}
-\pnum
-The type \tcode{is_simd_mask<T>} is a \tcode{UnaryTypeTrait} with a base characteristic of \tcode{true_type} if \tcode{T} is a specialization of the \tcode{basic_simd_mask} class template, and \tcode{false_type} otherwise.
-
-\pnum
-The behavior of a program that adds specializations for \tcode{is_simd_mask} is undefined.
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class T, class Abi = @\nativeabi@<T>> struct simd_size { @\seebelow@ };
-\end{itemdecl}
-
-\begin{itemdescr}
-\pnum
-\tcode{simd_size<T, Abi>} shall have a member \tcode{value} if and only if
+\tcode{simd_alignment<T, U>} shall have a member \tcode{value} if and only if
 \begin{itemize}
-  \item \tcode{T} is a vectorizable type, and
-  \item \tcode{is_abi_tag_v<Abi>} is \tcode{true}.
-\end{itemize}
-\begin{note}
-  The rules are different from those in (\ref{simd.overview}):
-  The member \tcode{value} is present even if \tcode{basic_simd<T, Abi>} is not supported for the currently targeted system.
-\end{note}
-
-\pnum
-If \tcode{value} is present, the type \tcode{simd_size<T, Abi>} is a \tcode{BinaryTypeTrait} with a base characteristic of \tcode{integral_constant<size_t, N>} with \tcode{N} equal to the number of elements in a \tcode{basic_simd<T, Abi>} object.
-
-\pnum
-The behavior of a program that adds specializations for \tcode{simd_size} is undefined.
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class T, class U = typename T::value_type> struct memory_alignment { @\seebelow@ };
-\end{itemdecl}
-
-\begin{itemdescr}
-\pnum
-\tcode{memory_alignment<T, U>} shall have a member \tcode{value} if and only if
-\begin{itemize}
-  \item \tcode{is_simd_mask_v<T>} is \tcode{true} and \tcode{U} is \tcode{bool}, or
-  \item \tcode{is_simd_v<T>} is \tcode{true} and \tcode{U} is a vectorizable type.
+  \item \tcode{T} is a specialization of \tcode{basic_simd_mask} and \tcode{U} is \tcode{bool}, or
+  \item \tcode{T} is a specialization of \tcode{basic_simd} and \tcode{U} is a vectorizable type.
 \end{itemize}
 
 \pnum
-If \tcode{value} is present, the type \tcode{memory_alignment<T, U>} is a \tcode{BinaryTypeTrait} with a base characteristic of \tcode{integral_constant<size_t, N>} for some implementation-defined \tcode{N} (see \ref{simd.copy} and \ref{simd.mask.copy}). \begin{note}\tcode{value} identifies the alignment restrictions on pointers used for (converting) loads and stores for the give type \tcode{T} on arrays of type \tcode{U}.\end{note}
+If \tcode{value} is present, the type \tcode{simd_alignment<T, U>} is a \tcode{BinaryTypeTrait} with a base characteristic of \tcode{integral_constant<size_t, N>} for some implementation-defined \tcode{N} (see \ref{simd.copy} and \ref{simd.mask.copy}). \begin{note}\tcode{value} identifies the alignment restrictions on pointers used for (converting) loads and stores for the give type \tcode{T} on arrays of type \tcode{U}.\end{note}
 
 \pnum
-The behavior of a program that adds specializations for \tcode{memory_alignment} is undefined.
+The behavior of a program that adds specializations for \tcode{simd_alignment} is undefined.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -371,11 +308,11 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   \begin{itemize}
     \item \tcode{V} is either \tcode{basic_simd<U, Abi0>} or \tcode{basic_simd_mask<U, Abi0>}, where \tcode{U} and \tcode{Abi0} are deduced from \tcode{V}, and
     \item \tcode{T} is a vectorizable type, and
-    \item \tcode{simd_abi::deduce<T, simd_size_v<U, Abi0>, Abi0>} has a member type \tcode{type}.
+    \item \tcode{simd_abi::deduce<T, basic_simd<U, Abi0>::size, Abi0>} has a member type \tcode{type}.
   \end{itemize}
 
   \pnum
-  Let \tcode{Abi1} denote the type \tcode{deduce_t<T, simd_size_v<U, Abi0>, Abi0>}.
+  Let \tcode{Abi1} denote the type \tcode{deduce_t<T, basic_simd<U, Abi0>::size, Abi0>}.
   Where present, the member typedef \tcode{type} names
   \tcode{basic_simd<T, Abi1>} if \tcode V is \tcode{basic_simd<U, Abi0>} or
   \tcode{basic_simd_mask<T, Abi1>} if \tcode V is \tcode{basic_simd_mask<U, Abi0>}.
@@ -460,7 +397,7 @@ public:
   using mask_type = basic_simd_mask<T, Abi>;
   using abi_type = Abi;
 
-  static constexpr typename simd_size<T, Abi>::type size;
+  static constexpr integral_constant<@\simdsizetype@, @\seebelow@> size;
 
   constexpr basic_simd() noexcept = default;
 
@@ -594,12 +531,12 @@ constexpr explicit basic_simd(const @\impdef@& init);
 \rSec2[simd.width]{\tcode{basic_simd} width}
 
 \begin{itemdecl}
-static constexpr typename simd_size<T, Abi>::type size;
+static constexpr integral_constant<@\simdsizetype@, @\seebelow@> size;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\returns
-  The width of \tcode{basic_simd<T, Abi>}.
+    \pnum \tcode{size} is an \tcode{integral_constant<size_t, N>} with \tcode{N} equal to the number of elements in a \tcode{basic_simd} object.
+    \pnum \begin{note}This member is present even if the particular \tcode{basic_simd} specialization is not supported.\end{note}
 \end{itemdescr}
 
 \rSec2[simd.reference]{Element references}
@@ -768,7 +705,7 @@ template<class U, class UAbi> constexpr explicit(@\seebelow@) basic_simd(const b
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{simd_size_v<U, UAbi> == size()}.
+  \tcode{basic_simd<U, UAbi>::size == size()}.
 
   \pnum\effects
   Constructs an object where the $i^\text{th}$ element equals \tcode{static_cast<T>(x[$i$])} \foralli.
@@ -875,7 +812,6 @@ template<typename It, class... Flags>
 \newcommand\SimdStoreDescr[2]{
   \pnum\constraints
   \begin{itemize}
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}, and
     \item \tcode{iter_value_t<Out>} is a vectorizable type, and
     \item \tcode{Out} satisfies \tcode{contiguous_iterator}, and
     \item \tcode{Out} satisfies \tcode{output_iterator<value_type>}.
@@ -1325,7 +1261,7 @@ template<class T, class Abi>
 
   \begin{itemdescr}
     % probably not necessary/helpful:
-    %\pnum\mandates \tcode{V::size() <= simd_size_v<V::value_type, Abi>}.
+    %\pnum\mandates \tcode{V::size() <= basic_simd<V::value_type, Abi>::size}.
 
     \pnum Let $N$ be \tcode{x.size() / V::size()}.
 
@@ -1351,10 +1287,10 @@ template<class T, class Abi>
 
 \begin{itemdecl}
 template<class T, class... Abis>
-  constexpr basic_simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(
+  constexpr basic_simd<T, simd_abi::deduce_t<T, (basic_simd<T, Abis>::size + ...)>> concat(
     const basic_simd<T, Abis>&... xs) noexcept;
 template<class T, class... Abis>
-  constexpr basic_simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(
+  constexpr basic_simd_mask<T, simd_abi::deduce_t<T, (basic_simd<T, Abis>::size + ...)>> concat(
     const basic_simd_mask<T, Abis>&... xs) noexcept;
 \end{itemdecl}
 
@@ -1441,9 +1377,9 @@ For each set of overloaded functions within \tcode{<cmath>}, there shall be addi
 \begin{itemize}
   \item All arguments corresponding to \tcode{double} parameters shall be convertible to \tcode{basic_simd<T, Abi>}.
   \item All arguments corresponding to \tcode{double*} parameters shall be of type \tcode{basic_simd<T, Abi>*}.
-  \item All arguments corresponding to parameters of integral type \tcode{U} shall be convertible to \tcode{fixed_size_simd<U, simd_size_v<T, Abi>>}.
-  \item All arguments corresponding to \tcode{U*}, where \tcode{U} is integral, shall be of type \tcode{fixed_size_simd<U, simd_size_v<T, Abi>>*}.
-  \item If the corresponding return type is \tcode{double}, the return type of the additional overloads is \tcode{basic_simd<T, Abi>}. Otherwise, if the corresponding return type is \tcode{bool}, the return type of the additional overload is \tcode{basic_simd_mask<T, Abi>}. Otherwise, the return type is \tcode{fixed_size_simd<R, simd_size_v<T, Abi>>}, with \tcode{R} denoting the corresponding return type.
+  \item All arguments corresponding to parameters of integral type \tcode{U} shall be convertible to \tcode{simd<U, basic_simd<T, Abi>::size>}.
+  \item All arguments corresponding to \tcode{U*}, where \tcode{U} is integral, shall be of type \tcode{simd<U, basic_simd<T, Abi>::size>*}.
+  \item If the corresponding return type is \tcode{double}, the return type of the additional overloads is \tcode{basic_simd<T, Abi>}. Otherwise, if the corresponding return type is \tcode{bool}, the return type of the additional overload is \tcode{basic_simd_mask<T, Abi>}. Otherwise, the return type is \tcode{simd<R, basic_simd<T, Abi>::size>}, with \tcode{R} denoting the corresponding return type.
 \end{itemize}
 It is unspecified whether a call to these overloads with arguments that are all convertible to \tcode{basic_simd<T, Abi>} but are not of type \tcode{basic_simd<T, Abi>} is well-formed.
 
@@ -1472,7 +1408,7 @@ public:
   using simd_type = basic_simd<T, Abi>;
   using abi_type = Abi;
 
-  static constexpr typename simd_size<T, Abi>::type size;
+  static constexpr auto size = basic_simd<TODO>::size;
 
   constexpr basic_simd_mask() noexcept = default;
 
@@ -1569,17 +1505,6 @@ constexpr explicit basic_simd_mask(const @\impdef@& init) const;
 \pnum
 The member type \tcode{reference} has the same interface as \tcode{basic_simd<T, Abi>::reference}, except its \tcode{value_type} is \tcode{bool}. (\ref{simd.reference})
 
-\rSec2[simd.mask.width]{\tcode{basic_simd_mask} width}
-
-\begin{itemdecl}
-static constexpr typename simd_size<T, Abi>::type size;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\returns
-  The width of \tcode{basic_simd<T, Abi>}.
-\end{itemdescr}
-
 \rSec2[simd.mask.ctor]{\tcode{basic_simd_mask} constructors}
 
 \begin{itemdecl}
@@ -1623,7 +1548,6 @@ template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
 \newcommand\MaskLoadDescr[2]{
   \pnum\constraints
   \begin{itemize}
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}, and
     \item \tcode{iter_value_t<It>} is of type \tcode{bool}, and
     \item \tcode{It} satisfies \tcode{contiguous_iterator}.
   \end{itemize}
@@ -1689,7 +1613,6 @@ template<typename It, class... Flags>
 \newcommand\MaskStoreDescr[2]{
   \pnum\constraints
   \begin{itemize}
-    \item \tcode{is_simd_flag_type_v<Flags>} is \tcode{true}, and
     \item \tcode{iter_value_t<Out>} is of type \tcode{bool}, and
     \item \tcode{Out} satisfies \tcode{contiguous_iterator}, and
     \item \tcode{Out} satisfies \tcode{output_iterator<value_type>}.
