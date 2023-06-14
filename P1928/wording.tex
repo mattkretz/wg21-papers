@@ -62,20 +62,22 @@ The intent is to support acceleration through data-parallel execution resources,
 
 \rSec1[basic_simd.syn]{Header \texorpdfstring{\tcode{<basic_simd>}}{<basic_simd>} synopsis}
 
+\newcommand\nativeabi{\UNSP{native-abi}}
+\newcommand\deducet{\UNSP{deduce-t}}
 \newcommand\simdsizetype{\UNSP{simd-size-type}}
 
 %\indexhdr{basic_simd}
 \begin{codeblock}
 namespace std {
-  template<class T> using @\UNSP{native-abi}@ = @\seebelow@;
-  template<class T, size_t N> using @\UNSP{deduce-t}@ = @\seebelow@;
+  template<class T> using @\nativeabi@ = @\seebelow@; // \expos
+  template<class T, size_t N> using @\deducet@ = @\seebelow@; // \expos
 
-  using @\simdsizetype@ = int;
+  using @\simdsizetype@ = int; // \expos
 
   // \ref{basic_simd.traits}, \tcode{basic_simd} type traits
 
-  template<class T, class Abi = simd_abi::native<T>> struct simd_size;
-  template<class T, class Abi = simd_abi::native<T>>
+  template<class T, class Abi = @\nativeabi@<T>> struct simd_size;
+  template<class T, class Abi = @\nativeabi@<T>>
     inline constexpr size_t simd_size_v = simd_size<T,Abi>::value;
 
   template<class T, class U = typename T::value_type> struct memory_alignment;
@@ -96,12 +98,14 @@ namespace std {
     inline constexpr loadstore_flags<@\seebelow@> loadstore_overaligned{};
 
   // \ref{basic_simd.class}, Class template \tcode{basic_simd}
-  template<class T, class Abi = @\UNSP{native-abi}@<T>> class basic_simd;
-  template<class T, @\simdsizetype@ N> using simd = basic_simd<T, @\UNSP{deduce-t}@<T, N>>;
+  template<class T, class Abi = @\nativeabi@<T>> class basic_simd;
+  template<class T, @\simdsizetype@ N = basic_simd<T>::size()>
+    using simd = basic_simd<T, @\deducet@<T, N>>;
 
   // \ref{basic_simd.mask.class}, Class template \tcode{basic_simd_mask}
-  template<size_t Bytes, class Abi = @\UNSP{native-abi}@<T>> class basic_simd_mask;
-  template<class T, @\simdsizetype@ N> using fixed_size_simd_mask = basic_simd_mask<T, simd_abi::fixed_size<T, N>>;
+  template<size_t Bytes, class Abi = @\nativeabi@<T>> class basic_simd_mask;
+  template<class T, @\simdsizetype@ N = basic_simd_mask<sizeof(T)>::size()>
+    using simd_mask = basic_simd_mask<sizeof(T), @\deducet@<T, N>>;
 
   // \ref{basic_simd.creation}, \tcode{basic_simd} and \tcode{basic_simd_mask} creation
   template<size_t... Sizes, class T, class Abi>
@@ -329,7 +333,7 @@ The behavior of a program that adds specializations for \tcode{is_simd_mask} is 
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi = simd_abi::native<T>> struct simd_size { @\seebelow@ };
+template<class T, class Abi = @\nativeabi@<T>> struct simd_size { @\seebelow@ };
 \end{itemdecl}
 
 \begin{itemdescr}
