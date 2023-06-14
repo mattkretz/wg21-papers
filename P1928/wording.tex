@@ -67,6 +67,7 @@ The intent is to support acceleration through data-parallel execution resources,
 \newcommand\simdsizetype{\UNSP{simd-size-type}}
 \newcommand\simdselect{\UNSP{simd-select-impl}}
 \newcommand\maskelementsize{\UNSP{mask-element-size}}
+\newcommand\integerfrom{\UNSP{integer-from}}
 
 %\indexhdr{simd}
 \begin{codeblock}
@@ -108,6 +109,9 @@ namespace std {
   template <typename T>
     constexpr std::size_t @\maskelementsize@ = @\seebelow@; // \expos
 
+  template <size_t Bytes>
+    using @\integerfrom@ = @\seebelow@; // \expos
+
   // \ref{simd.creation}, \tcode{basic_simd} and \tcode{basic_simd_mask} creation
   template<class V, class Abi>
     constexpr auto
@@ -120,7 +124,7 @@ namespace std {
     constexpr basic_simd<T, @\deducet@<T, (basic_simd<T, Abis>::size + ...)>>
       concat(const basic_simd<T, Abis>&...) noexcept;
   template<size_t Bytes, class... Abis>
-    constexpr @\seebelow@
+    constexpr constexpr basic_simd_mask<Bytes, @\deducet@<@\integerfrom@<Bytes>, (basic_simd_mask<Bytes, Abis>::size() + ...)>>
       concat(const basic_simd_mask<Bytes, Abis>&...) noexcept;
 
   // \ref{simd.mask.reductions}, \tcode{basic_simd_mask} reductions
@@ -304,7 +308,7 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   \pnum
   The member \tcode{type} is present if and only if
   \begin{itemize}
-    \item \tcode{V} is either \tcode{basic_simd<U, Abi0>} or \tcode{basic_simd_mask<U, Abi0>}, where \tcode{U} and \tcode{Abi0} are deduced from \tcode{V}, and
+    \item \tcode{V} is either \tcode{basic_simd<U, Abi0>} or \tcode{basic_simd_mask<UBytes, Abi0>}, where \tcode{U}, \tcode{UBytes}, and \tcode{Abi0} are deduced from \tcode{V}, and
     \item \tcode{T} is a vectorizable type, and
     \item \tcode{simd_abi::deduce<T, basic_simd<U, Abi0>::size, Abi0>} has a member type \tcode{type}.
   \end{itemize}
@@ -313,7 +317,7 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   Let \tcode{Abi1} denote the type \tcode{deduce_t<T, basic_simd<U, Abi0>::size, Abi0>}.
   Where present, the member typedef \tcode{type} names
   \tcode{basic_simd<T, Abi1>} if \tcode V is \tcode{basic_simd<U, Abi0>} or
-  \tcode{basic_simd_mask<sizeof(T), Abi1>} if \tcode V is \tcode{basic_simd_mask<U, Abi0>}.
+  \tcode{basic_simd_mask<sizeof(T), Abi1>} if \tcode V is \tcode{basic_simd_mask<UBytes, Abi0>}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1286,9 +1290,9 @@ template<class T, class Abi>
 template<class T, class... Abis>
   constexpr basic_simd<T, @\seebelow@<T, (basic_simd<T, Abis>::size + ...)>> concat(
     const basic_simd<T, Abis>&... xs) noexcept;
-template<class T, class... Abis>
-  constexpr basic_simd_mask<T, simd_abi::deduce_t<T, (basic_simd<T, Abis>::size + ...)>> concat(
-    const basic_simd_mask<T, Abis>&... xs) noexcept;
+template<size_t Bytes, class... Abis>
+  constexpr basic_simd_mask<Bytes, @\deducet@<@\integerfrom@<Bytes>, (basic_simd_mask<Bytes, Abis>::size() + ...)>> concat(
+    const basic_simd_mask<Bytes, Abis>&... xs) noexcept;
 
 \end{itemdecl}
 
@@ -1423,7 +1427,7 @@ public:
   using reference = @\seebelow@;
   using abi_type = Abi;
 
-  static constexpr auto size = basic_simd<TODO>::size;
+  static constexpr auto size = basic_simd<@\integerof@<Bytes>, Abi>::size;
 
   constexpr basic_simd_mask() noexcept = default;
 
