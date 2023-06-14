@@ -814,7 +814,7 @@ template<typename It, class... Flags>
   \begin{itemize}
     \item \tcode{iter_value_t<Out>} is a vectorizable type, and
     \item \tcode{Out} satisfies \tcode{contiguous_iterator}, and
-    \item \tcode{Out} satisfies \tcode{output_iterator<value_type>}.
+    \item \tcode{Out} satisfies \tcode{indirectly_writable<value_type>}.
   \end{itemize}
 
   \pnum\mandates
@@ -824,7 +824,7 @@ template<typename It, class... Flags>
   \begin{itemize}
     \item #1
     \item \tcode{Out} models \tcode{contiguous_iterator}.
-    \item \tcode{Out} models \tcode{output_iterator<value_type>}.
+    \item \tcode{Out} models \tcode{indirectly_writable<value_type>}.
     \flagsRequires{basic_simd, iter_value_t<Out>}{iter_value_t<Out>}
   \end{itemize}
 
@@ -1635,14 +1635,14 @@ template<typename It, class... Flags>
   \begin{itemize}
     \item \tcode{iter_value_t<Out>} is of type \tcode{bool}, and
     \item \tcode{Out} satisfies \tcode{contiguous_iterator}, and
-    \item \tcode{Out} satisfies \tcode{output_iterator<value_type>}.
+    \item \tcode{Out} satisfies \tcode{indirectly_writable<value_type>}.
   \end{itemize}
 
   \pnum\expects
   \begin{itemize}
     \item #1
     \item \tcode{Out} models \tcode{contiguous_iterator}.
-    \item \tcode{Out} models \tcode{output_iterator<value_type>}.
+    \item \tcode{Out} models \tcode{indirectly_writable<value_type>}.
     \flagsRequires{basic_simd_mask}{value_type}
   \end{itemize}
 
