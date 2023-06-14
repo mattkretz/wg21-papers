@@ -40,7 +40,7 @@ The basic_simd subclause defines data-parallel types and operations on these typ
 The term \defn{data-parallel type} refers to all \defn{supported} (\ref{basic_simd.overview}) specializations of the \tcode{basic_simd} and \tcode{basic_simd_mask} class templates. A \defn{data-parallel object} is an object of \term{data-parallel type}.
 
 \pnum
-The set of \defn{vectorizable types} comprises all cv-unqualified arithmetic types other than \tcode{bool}.
+The set of \defn{vectorizable types} comprises all cv-unqualified arithmetic types other than \tcode{bool} and \tcode{long double}.
 
 \pnum
 An \defn{element-wise operation} applies a specified operation to the elements of one or more data-parallel objects. Each such application is unsequenced with respect to the others. A \defn{unary element-wise operation} is an element-wise operation that applies a unary operation to each element of a data-parallel object. A \defn{binary element-wise operation} is an element-wise operation that applies a binary operation to corresponding elements of two data-parallel objects.
