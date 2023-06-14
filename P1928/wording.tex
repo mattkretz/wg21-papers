@@ -108,25 +108,12 @@ namespace std {
     using simd_mask = basic_simd_mask<sizeof(T), @\deducet@<T, N>>;
 
   // \ref{basic_simd.creation}, \tcode{basic_simd} and \tcode{basic_simd_mask} creation
-  template<size_t... Sizes, class T, class Abi>
-    constexpr tuple<basic_simd<T, simd_abi::deduce_t<T, Sizes>>...>
-      split(const basic_simd<T, Abi>&) noexcept;
-  template<size_t... Sizes, class T, class Abi>
-    constexpr tuple<basic_simd_mask<T, simd_mask_abi::deduce_t<T, Sizes>>...>
-      split(const basic_simd_mask<T, Abi>&) noexcept;
   template<class V, class Abi>
-    constexpr array<V, simd_size_v<typename V::value_type, Abi> / V::size()>
-      split(const basic_simd<typename V::value_type, Abi>&) noexcept;
+    constexpr auto
+      split(const basic_simd<typename V::value_type, Abi>& x) noexcept;
   template<class V, class Abi>
-    constexpr array<V, simd_size_v<typename V::simd_type::value_type, Abi> / V::size()>
-      split(const basic_simd_mask<typename V::simd_type::value_type, Abi>&) noexcept;
-
-  template<size_t N, class T, class A>
-    constexpr array<resize_simd_t<simd_size_v<T, A> / N, basic_simd<T, A>>, N>
-      split_by(const basic_simd<T, A>& x) noexcept;
-  template<size_t N, class T, class A>
-    constexpr array<resize_simd_t<simd_size_v<T, A> / N, basic_simd_mask<T, A>>, N>
-      split_by(const basic_simd_mask<T, A>& x) noexcept;
+    constexpr auto
+      split(const basic_simd_mask<typename V::value_type, Abi>& x) noexcept;
 
   template<class T, class... Abis>
     constexpr basic_simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>>
@@ -1323,58 +1310,37 @@ template<class T, class Abi>
 \rSec2[basic_simd.creation]{\tcode{basic_simd} and \tcode{basic_simd_mask} creation}
 
 \begin{itemdecl}
-template<size_t... Sizes, class T, class Abi>
-  constexpr tuple<basic_simd<T, simd_abi::deduce_t<T, Sizes>>...>
-    split(const basic_simd<T, Abi>& x) noexcept;
-template<size_t... Sizes, class T, class Abi>
-  constexpr tuple<basic_simd_mask<T, simd_abi::deduce_t<T, Sizes>>...>
-    split(const basic_simd_mask<T, Abi>& x) noexcept;
-\end{itemdecl}
+  template<class V, class Abi>
+    constexpr auto split(const basic_simd<typename V::value_type, Abi>& x) noexcept;
+  template<class V, class Abi>
+    constexpr auto split(const basic_simd_mask<typename V::value_type, Abi>& x) noexcept;
+  \end{itemdecl}
 
-\begin{itemdescr}
-  \pnum\constraints
-  The sum of all values in the \tcode{Sizes} pack is equal to \tcode{simd_size_v<T, Abi>}.
+  \begin{itemdescr}
+    % probably not necessary/helpful:
+    %\pnum\mandates \tcode{V::size() <= simd_size_v<V::value_type, Abi>}.
 
-  \pnum\returns
-  A \tcode{tuple} of data-parallel objects with the $i^\text{th}$ \tcode{basic_simd}/\tcode{basic_simd_mask} element of the $j^\text{th}$ \tcode{tuple} element initialized to the value of the element \tcode{x} with index $i$ + sum of the first $j$ values in the \tcode{Sizes} pack.
-\end{itemdescr}
+    \pnum Let $N$ be \tcode{x.size() / V::size()}.
 
-\begin{itemdecl}
-template<class V, class Abi>
-  constexpr array<V, simd_size_v<typename V::value_type, Abi> / V::size()>
-    split(const basic_simd<typename V::value_type, Abi>& x) noexcept;
-template<class V, class Abi>
-  constexpr array<V, simd_size_v<typename V::simd_type::value_type, Abi> / V::size()>
-    split(const basic_simd_mask<typename V::simd_type::value_type, Abi>& x) noexcept;
-\end{itemdecl}
+    \pnum\returns
+    \begin{itemize}
+      \item If \tcode{x.size() \% V::size() == 0}, an \tcode{array<V, $N$>} with
+        the $i^\text{th}$ \simd element of the $j^\text{th}$ \tcode{array}
+        element initialized to the value of the element in \tcode{x} with index
+        \tcode{$i$ + $j$ * V::size()}.
 
-\begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{is_simd_v<V>} is \tcode{true} and \tcode{simd_size_v<typename V::value_type, Abi>} is an integral multiple of \tcode{V::size()}, or
-    \item \tcode{is_simd_mask_v<V>} is \tcode{true} and \tcode{simd_size_v<typename V::simd_type::value_type, Abi>} is an integral multiple of \tcode{V::size()}.
-  \end{itemize}
-
-  \pnum\returns
-  An \tcode{array} of data-parallel objects with the $i^\text{th}$ \tcode{basic_simd}/\tcode{basic_simd_mask} element of the $j^\text{th}$ \tcode{array} element initialized to the value of the element in \tcode{x} with index \tcode{$i$ + $j$ * V::size()}.
-\end{itemdescr}
-
-\begin{itemdecl}
-template<size_t N, class T, class A>
-  constexpr array<resize_simd<simd_size_v<T, A> / N, basic_simd<T, A>>, N>
-    split_by(const basic_simd<T, A>& x) noexcept;
-template<size_t N, class T, class A>
-  constexpr array<resize_simd<simd_size_v<T, A> / N, basic_simd_mask<T, A>>, N>
-    split_by(const basic_simd_mask<T, A>& x) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\constraints
-  \tcode{simd_size_v<T, A>} is an integral multiple of \tcode N.
-
-  \pnum\returns
-  An array \tcode{arr}, where \tcode{arr[$i$][$j$]} is initialized by \tcode{x[$i$ * (simd_size_v<T, A> / N) + $j$]}.
-\end{itemdescr}
+      \item Otherwise, a \tcode{tuple} of $N$ objects of type \tcode{V} and one
+        or more objects of types \tcode{resize_simd_t<Sizes, V>...} such that
+        \tcode{(Sizes + ...)} is equal to \tcode{x.size() \% V::size()}.
+        The $i^\text{th}$ \tcode{simd} element of the $j^\text{th}$ \tcode{tuple}
+        element of type \tcode{V} is initialized to the value of the element in
+        \tcode{x} with index \tcode{$i$ + $j$ * V::size()}.
+        The $i^\text{th}$ \tcode{simd} element of the $j^\text{th}$ \tcode{tuple}
+        with $j \ge N$ is initialized to the value of the element in \tcode{x}
+        with index \tcode{$i$ + $N$ * V::size() +} sum of the first $j - N$
+        values in the \tcode{Sizes} pack.
+    \end{itemize}
+  \end{itemdescr}
 
 \begin{itemdecl}
 template<class T, class... Abis>
