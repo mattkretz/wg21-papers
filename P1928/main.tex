@@ -1316,6 +1316,13 @@ It's not worth the specification and implementation effort.
 \wgPoll{Remove \code{long double} from vectorizable types}
 {&&&&}
 
+\subsection{Increase minimum supported width to 64}
+
+Rationale: AVX-512 \code{simd<char>::size() == 64}.
+
+\wgPoll{Increase the minimum supported \code{simd} width to 64}
+{&&&&}
+
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 
 The following section presents the wording to be applied against the \CC{}
