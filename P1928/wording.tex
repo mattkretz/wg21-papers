@@ -742,7 +742,7 @@ template<class G> constexpr basic_simd(G&& gen) noexcept;
   Constructs an object where the $i^\text{th}$ element is initialized to \tcode{gen(integral_constant<size_t, i>())}.
 
   \pnum
-  The calls to \tcode{gen} are unsequenced with respect to each other. Vectorization-unsafe standard library functions may not be invoked by \tcode{gen} (\iref{algorithms.parallel.exec}).
+    The calls to \tcode{gen} are unsequenced with respect to each other. Vectorization-unsafe standard library functions may not be invoked by \tcode{gen} (\iref{algorithms.parallel.exec}). \tcode{gen} is invoked exactly once for each $i$.
 \end{itemdescr}
 
 \newcommand\SimdLoadDescr[2]{
