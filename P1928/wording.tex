@@ -127,16 +127,16 @@ namespace std {
   template<size_t Bytes, class Abi> constexpr bool all_of(const basic_simd_mask<Bytes, Abi>&) noexcept;
   template<size_t Bytes, class Abi> constexpr bool any_of(const basic_simd_mask<Bytes, Abi>&) noexcept;
   template<size_t Bytes, class Abi> constexpr bool none_of(const basic_simd_mask<Bytes, Abi>&) noexcept;
-  template<size_t Bytes, class Abi> constexpr int reduce_count(const basic_simd_mask<Bytes, Abi>&) noexcept;
-  template<size_t Bytes, class Abi> constexpr int reduce_min_index(const basic_simd_mask<Bytes, Abi>&);
-  template<size_t Bytes, class Abi> constexpr int reduce_max_index(const basic_simd_mask<Bytes, Abi>&);
+  template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_count(const basic_simd_mask<Bytes, Abi>&) noexcept;
+  template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bytes, Abi>&);
+  template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bytes, Abi>&);
 
   constexpr bool all_of(@\UNSP{T}@) noexcept;
   constexpr bool any_of(@\UNSP{T}@) noexcept;
   constexpr bool none_of(@\UNSP{T}@) noexcept;
-  constexpr int reduce_count(@\UNSP{T}@) noexcept;
-  constexpr int reduce_min_index(@\UNSP{T}@);
-  constexpr int reduce_max_index(@\UNSP{T}@);
+  constexpr @\simdsizetype@ reduce_count(@\UNSP{T}@) noexcept;
+  constexpr @\simdsizetype@ reduce_min_index(@\UNSP{T}@);
+  constexpr @\simdsizetype@ reduce_max_index(@\UNSP{T}@);
 
   // \ref{simd.reductions}, \tcode{basic_simd} reductions
   template<class T, class Abi, class BinaryOperation = plus<>>
@@ -329,7 +329,7 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
 \end{itemdescr}
 
 \begin{itemdecl}
-template<size_t N, class V> struct resize_simd { using type = @\seebelow@; };
+template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelow@; };
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -432,8 +432,8 @@ public:
     constexpr void copy_to(Out first, const mask_type& mask, simd_flags<Flags...> f = {}) const;
 
   // \ref{simd.subscr}, \tcode{basic_simd} subscript operators
-  constexpr reference operator[](size_t) &;
-  constexpr value_type operator[](size_t) const&;
+  constexpr reference operator[](@\simdsizetype@) &;
+  constexpr value_type operator[](@\simdsizetype@) const&;
 
   // \ref{simd.unary}, \tcode{basic_simd} unary operators
   constexpr basic_simd& operator++() noexcept;
@@ -456,8 +456,8 @@ public:
   friend constexpr basic_simd operator^(const basic_simd&, const basic_simd&) noexcept;
   friend constexpr basic_simd operator<<(const basic_simd&, const basic_simd&) noexcept;
   friend constexpr basic_simd operator>>(const basic_simd&, const basic_simd&) noexcept;
-  friend constexpr basic_simd operator<<(const basic_simd&, int) noexcept;
-  friend constexpr basic_simd operator>>(const basic_simd&, int) noexcept;
+  friend constexpr basic_simd operator<<(const basic_simd&, @\simdsizetype@) noexcept;
+  friend constexpr basic_simd operator>>(const basic_simd&, @\simdsizetype@) noexcept;
 
   // \ref{simd.cassign}, \tcode{basic_simd} compound assignment
   friend constexpr basic_simd& operator+=(basic_simd&, const basic_simd&) noexcept;
@@ -470,8 +470,8 @@ public:
   friend constexpr basic_simd& operator^=(basic_simd&, const basic_simd&) noexcept;
   friend constexpr basic_simd& operator<<=(basic_simd&, const basic_simd&) noexcept;
   friend constexpr basic_simd& operator>>=(basic_simd&, const basic_simd&) noexcept;
-  friend constexpr basic_simd& operator<<=(basic_simd&, int) noexcept;
-  friend constexpr basic_simd& operator>>=(basic_simd&, int) noexcept;
+  friend constexpr basic_simd& operator<<=(basic_simd&, @\simdsizetype@) noexcept;
+  friend constexpr basic_simd& operator>>=(basic_simd&, @\simdsizetype@) noexcept;
 
   // \ref{simd.comparison}, \tcode{basic_simd} compare operators
   friend constexpr mask_type operator==(const basic_simd&, const basic_simd&) noexcept;
@@ -545,7 +545,7 @@ static constexpr integral_constant<@\simdsizetype@, @\seebelow@> size;
 \end{itemdecl}
 
 \begin{itemdescr}
-    \pnum \tcode{size} is an \tcode{integral_constant<size_t, N>} with \tcode{N} equal to the number of elements in a \tcode{basic_simd} object.
+    \pnum \tcode{size} is an \tcode{integral_constant<@\simdsizetype@, N>} with \tcode{N} equal to the number of elements in a \tcode{basic_simd} object.
     \pnum \begin{note}This member is present even if the particular \tcode{basic_simd} specialization is not supported.\end{note}
 \end{itemdescr}
 
@@ -862,7 +862,7 @@ template<typename Out, class... Flags>
 \rSec2[simd.subscr]{\tcode{basic_simd} subscript operators}
 
 \begin{itemdecl}
-constexpr reference operator[](size_t i) &;
+constexpr reference operator[](@\simdsizetype@ i) &;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -876,7 +876,7 @@ constexpr reference operator[](size_t i) &;
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr value_type operator[](size_t i) const&;
+constexpr value_type operator[](@\simdsizetype@ i) const&;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1019,8 +1019,8 @@ friend constexpr basic_simd operator>>(const basic_simd& lhs, const basic_simd& 
 \end{itemdescr}
 
 \begin{itemdecl}
-friend constexpr basic_simd operator<<(const basic_simd& v, int n) noexcept;
-friend constexpr basic_simd operator>>(const basic_simd& v, int n) noexcept;
+friend constexpr basic_simd operator<<(const basic_simd& v, @\simdsizetype@ n) noexcept;
+friend constexpr basic_simd operator>>(const basic_simd& v, @\simdsizetype@ n) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1056,8 +1056,8 @@ friend constexpr basic_simd& operator>>=(basic_simd& lhs, const basic_simd& rhs)
 \end{itemdescr}
 
 \begin{itemdecl}
-friend constexpr basic_simd& operator<<=(basic_simd& lhs, int n) noexcept;
-friend constexpr basic_simd& operator>>=(basic_simd& lhs, int n) noexcept;
+friend constexpr basic_simd& operator<<=(basic_simd& lhs, @\simdsizetype@ n) noexcept;
+friend constexpr basic_simd& operator>>=(basic_simd& lhs, @\simdsizetype@ n) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1456,8 +1456,8 @@ public:
     constexpr void copy_to(Out first, const basic_simd_mask& mask, simd_flags<Flags...> = {}) const;
 
   // \ref{simd.mask.subscr}, \tcode{basic_simd_mask} subscript operators
-  constexpr reference operator[](size_t) &;
-  constexpr value_type operator[](size_t) const&;
+  constexpr reference operator[](@\simdsizetype@) &;
+  constexpr value_type operator[](@\simdsizetype@) const&;
 
   // \ref{simd.mask.unary}, \tcode{basic_simd_mask} unary operators
   constexpr basic_simd_mask operator!() const noexcept;
@@ -1679,7 +1679,7 @@ template<typename Out, class... Flags>
 \rSec2[simd.mask.subscr]{\tcode{basic_simd_mask} subscript operators}
 
 \begin{itemdecl}
-constexpr reference operator[](size_t i) &;
+constexpr reference operator[](@\simdsizetype@ i) &;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1693,7 +1693,7 @@ constexpr reference operator[](size_t i) &;
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr value_type operator[](size_t i) const&;
+constexpr value_type operator[](@\simdsizetype@ i) const&;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1864,7 +1864,7 @@ template<size_t Bytes, class Abi> constexpr bool none_of(const basic_simd_mask<B
 \end{itemdescr}
 
 \begin{itemdecl}
-template<size_t Bytes, class Abi> constexpr int reduce_count(const basic_simd_mask<Bytes, Abi>& k) noexcept;
+template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_count(const basic_simd_mask<Bytes, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1873,7 +1873,7 @@ template<size_t Bytes, class Abi> constexpr int reduce_count(const basic_simd_ma
 \end{itemdescr}
 
 \begin{itemdecl}
-template<size_t Bytes, class Abi> constexpr int reduce_min_index(const basic_simd_mask<Bytes, Abi>& k);
+template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bytes, Abi>& k);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1887,7 +1887,7 @@ template<size_t Bytes, class Abi> constexpr int reduce_min_index(const basic_sim
 \end{itemdescr}
 
 \begin{itemdecl}
-template<size_t Bytes, class Abi> constexpr int reduce_max_index(const basic_simd_mask<Bytes, Abi>& k);
+template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bytes, Abi>& k);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1904,7 +1904,7 @@ template<size_t Bytes, class Abi> constexpr int reduce_max_index(const basic_sim
 constexpr bool all_of(@\UNSP{T}@) noexcept;
 constexpr bool any_of(@\UNSP{T}@) noexcept;
 constexpr bool none_of(@\UNSP{T}@) noexcept;
-constexpr int reduce_count(@\UNSP{T}@) noexcept;
+constexpr @\simdsizetype@ reduce_count(@\UNSP{T}@) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1916,8 +1916,8 @@ constexpr int reduce_count(@\UNSP{T}@) noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr int reduce_min_index(@\UNSP{T}@);
-constexpr int reduce_max_index(@\UNSP{T}@);
+constexpr @\simdsizetype@ reduce_min_index(@\UNSP{T}@);
+constexpr @\simdsizetype@ reduce_max_index(@\UNSP{T}@);
 \end{itemdecl}
 
 \begin{itemdescr}
