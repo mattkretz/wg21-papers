@@ -249,6 +249,44 @@ A list of alternative names for \std\code{conditional_operator}:
 
 For a discussion, see \wglink{P1928R3} Section 4.8 and 5.3.
 
+\subsubsection{\code{simd_select} instead of \code{conditional_operator}}\label{sec:simd_select}
+LEWG feedback on Tuesday in Varna:
+\begin{itemize}
+  \item Don't make it a CPO: user's shouldn't extend this.
+  \item Make it “value based”, i.e. don't bother about references for non-simd arguments.
+  \item Call it \code{simd_select}.
+  \item Come back ASAP.
+\end{itemize}
+
+Proposal:
+\begin{lstlisting}[escapechar=@]
+namespace std
+{
+template <typename T, typename U>
+  constexpr common_type_t<T, U>
+  simd_select(bool c, T x, U y)
+  { return c ? x : y; }
+
+template <size_t N, typename Abi>
+  constexpr auto
+  simd_select(const basic_simd_mask<N, Abi>& k, const auto& x, const auto& y)
+  -> decltype(@\UNSP{simd-select-impl}@(k, x, y))
+  { return @\UNSP{simd-select-impl}@(k, x, y); }
+}
+\end{lstlisting}
+
+Replace \code{operator?:} hidden friends with \UNSP{simd-select-impl} hidden
+friends in \code{basic_simd} and \code{basic_simd_mask}.
+
+\begin{description}
+  \item[Pro] Continues to use the same conversion mechanisms as all the other
+    (binary) operators (requires the use of hidden friends).
+
+  \item[Con] Harder to discover/understand/document.
+\end{description}
+
+Wording TBD.
+
 \subsection{Make use of \code{int} and \code{size_t} consistent}
 
 Different to the TS, this paper uses \code{size_t} for
