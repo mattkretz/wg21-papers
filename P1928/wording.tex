@@ -69,10 +69,10 @@ The intent is to support acceleration through data-parallel execution resources,
 %\indexhdr{basic_simd}
 \begin{codeblock}
 namespace std {
-  template<class T> using @\nativeabi@ = @\seebelow@; // \expos
-  template<class T, size_t N> using @\deducet@ = @\seebelow@; // \expos
-
   using @\simdsizetype@ = int; // \expos
+
+  template<class T> using @\nativeabi@ = @\seebelow@; // \expos
+  template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@; // \expos
 
   // \ref{basic_simd.traits}, \tcode{basic_simd} type traits
 
@@ -190,40 +190,47 @@ namespace std {
 \pnum
 The header \tcode{<basic_simd>} defines class templates, tag types, trait types, and function templates for element-wise operations on data-parallel objects.
 
-\rSec1[basic_simd.abi]{\tcode{basic_simd} ABI tags}
+\rSec1[basic_simd.abi]{\tcode{simd} ABI tags}
 
 \begin{codeblock}
-namespace simd_abi {
-  using scalar = @\seebelow@;
-  template<class T, size_t N> using fixed_size = @\seebelow@;
-  template<class T> inline constexpr size_t max_fixed_size = @\impdef@;
-  template<class T> using native = @\impdef@;
-}
+template<class T> using @\nativeabi@ = @\seebelow@; // \expos
+template<class T, size_t N> using @\deducet@ = @\seebelow@; // \expos
 \end{codeblock}
 
 \pnum
-An \defn{ABI tag} is a type in the \tcode{std::simd_abi} namespace that indicates a choice of size and binary representation for objects of data-parallel type. \begin{note}The intent is for the size and binary representation to depend on the target architecture.\end{note} The ABI tag, together with a given element type implies a number of elements. ABI tag types are used as the second template argument to \tcode{basic_simd} and \tcode{basic_simd_mask}.
+An \defn{ABI tag} is a type that indicates a choice of size and binary
+representation for objects of data-parallel type.
+\begin{note}
+  The intent is for the size and binary representation to depend on the target
+  architecture.
+\end{note}
+The ABI tag, together with a given element type implies a number of elements.
+ABI tag types are used as the second template argument to \tcode{basic_simd}
+and \tcode{basic_simd_mask}.
 
 \pnum
-\begin{note}The ABI tag is orthogonal to selecting the machine instruction set. The selected machine instruction set limits the usable ABI tag types, though (see \ref{basic_simd.overview}). The ABI tags enable users to safely pass objects of data-parallel type between translation unit boundaries (e.g. function calls or I/O).\end{note}
+\begin{note}
+The ABI tag is orthogonal to selecting the machine instruction set.
+The selected machine instruction set limits the usable ABI tag types, though
+(see \ref{basic_simd.overview}).
+The ABI tags enable users to safely pass objects of data-parallel type between
+translation unit boundaries (e.g. function calls or I/O).
+\end{note}
 
 \pnum
-\tcode{scalar} is an alias for an unspecified ABI tag that is different from \tcode{fixed_size<1>}.
-Use of the \tcode{scalar} tag type requires data-parallel types to store a single element (i.e., \tcode{simd_size_v<T, simd_abi::scalar>} equals 1).
+TODO: \deducet<T, N> must produce a valid ABI tag at least for N in range [1, 32].
 
 \pnum
-The value of \tcode{max_fixed_size<T>} is at least 32.
-
-\pnum
-\tcode{fixed_size<N>} is an alias for an unspecified ABI tag.
-\tcode{fixed_size} does not introduce a non-deduced context.
-Use of the \tcode{simd_abi::fixed_size<N>} tag type requires data-parallel types to store \tcode{N}
-elements (i.e. \tcode{simd_size_v<T, simd_abi::fixed_size<N>>\relax} equals
-\tcode{N}). \tcode{basic_simd<T, fixed_size<N>>} and \tcode{basic_simd_mask<T,
-fixed_size<N>>} with \tcode{N > 0} and \tcode{N <= max_fixed_size<T>} shall be supported.
-Additionally, for every supported \tcode{basic_simd<T, Abi>} (see \ref{basic_simd.overview}), where \tcode{Abi}
-is an ABI tag that is not a specialization of \tcode{simd_abi::fixed_size}, \tcode{N == basic_simd<T,
-Abi>::size()} shall be supported.
+\tcode{\deducet<T, N>} is an alias for an unspecified ABI tag.
+Use of the \tcode{\deducet<T, N>} tag type requires data-parallel types to
+store \tcode{N} elements (i.e. \tcode{simd_size_v<T, \deducet<T, N>>} equals
+\tcode{N}).
+\tcode{basic_simd<T, \deducet<T, N>>} and \tcode{basic_simd_mask<T, \deducet<T,
+N>>} with \tcode{N > 0} and \tcode{N <= 32} shall be supported.
+%Additionally, for every supported \tcode{basic_simd<T, Abi>} (see
+%\ref{basic_simd.overview}), where \tcode{Abi} is an ABI tag that is not a
+%specialization of \tcode{simd_abi::fixed_size}, \tcode{N == basic_simd<T,
+%Abi>::size()} shall be supported.
 
 \pnum
 \begin{note}It is unspecified whether \tcode{basic_simd<T, fixed_size<N>>} with \tcode{N > max_fixed_size<T>} is supported. The value of \tcode{max_fixed_size<T>} can depend on compiler flags and can change between different compiler versions.\end{note}
