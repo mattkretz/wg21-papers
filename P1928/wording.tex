@@ -65,6 +65,7 @@ The intent is to support acceleration through data-parallel execution resources,
 \newcommand\nativeabi{\UNSP{native-abi}}
 \newcommand\deducet{\UNSP{deduce-t}}
 \newcommand\simdsizetype{\UNSP{simd-size-type}}
+\newcommand\simdselect{\UNSP{simd-select-impl}}
 \newcommand\maskelementsize{\UNSP{mask-element-size}}
 
 %\indexhdr{simd}
@@ -161,13 +162,13 @@ namespace std {
                        bit_xor<> binary_op) noexcept;
 
   template<class T, class Abi>
-    constexpr T hmin(const basic_simd<T, Abi>&) noexcept;
+    constexpr T reduce_min(const basic_simd<T, Abi>&) noexcept;
   template<class T, class Abi>
-    constexpr T hmin(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
+    constexpr T reduce_min(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
   template<class T, class Abi>
-    constexpr T hmax(const basic_simd<T, Abi>&) noexcept;
+    constexpr T reduce_max(const basic_simd<T, Abi>&) noexcept;
   template<class T, class Abi>
-    constexpr T hmax(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
+    constexpr T reduce_max(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 
   // \ref{simd.alg}, Algorithms
   template<class T, class Abi>
@@ -184,6 +185,11 @@ namespace std {
       clamp(const basic_simd<T, Abi>& v,
             const basic_simd<T, Abi>& lo,
             const basic_simd<T, Abi>& hi);
+
+  template<class T, class U>
+    constexpr auto simd_select(bool c, const T& a, const U& b) -> remove_cvref_t<decltype(c ? a : b)>;
+  template<size_t Bytes, class Abi, typename T, typename U>
+    constexpr auto simd_select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b);
 }
 \end{codeblock}
 
@@ -476,7 +482,7 @@ public:
   friend constexpr mask_type operator<(const basic_simd&, const basic_simd&) noexcept;
 
   // \ref{simd.cond}, \tcode{basic_simd} conditional operators
-  friend constexpr basic_simd operator?:(const mask_type&, const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd @\simdselect@(const mask_type&, const basic_simd&, const basic_simd&) noexcept;
 };
 \end{codeblock}
 
@@ -1088,13 +1094,14 @@ friend constexpr mask_type operator<(const basic_simd& lhs, const basic_simd& rh
 \rSec2[simd.cond]{\tcode{basic_simd} conditional operators}
 
 \begin{itemdecl}
-friend constexpr basic_simd operator?:(const mask_type& mask, const basic_simd& a, const basic_simd& b) noexcept;
+friend constexpr basic_simd @\simdselect@(const mask_type& mask, const basic_simd& a, const basic_simd& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
   A \tcode{basic_simd} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a[$i$] : b[$i$]} \foralli.
 \end{itemdescr}
+
 \rSec2[simd.reductions]{\tcode{basic_simd} reductions}
 
 \pnum
@@ -1191,7 +1198,7 @@ template<class T, class Abi>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr T hmin(const basic_simd<T, Abi>& x) noexcept;
+template<class T, class Abi> constexpr T reduce_min(const basic_simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1207,7 +1214,7 @@ template<class T, class Abi> constexpr T hmin(const basic_simd<T, Abi>& x) noexc
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr T hmin(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
+  constexpr T reduce_min(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1223,7 +1230,7 @@ template<class T, class Abi>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr T hmax(const basic_simd<T, Abi>& x) noexcept;
+template<class T, class Abi> constexpr T reduce_max(const basic_simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1239,7 +1246,7 @@ template<class T, class Abi> constexpr T hmax(const basic_simd<T, Abi>& x) noexc
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr T hmax(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
+  constexpr T reduce_max(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1375,6 +1382,24 @@ template<class T, class Abi> basic_simd<T, Abi>
   The result of element-wise application of \tcode{std::clamp(v[$i$], lo[$i$], hi[$i$])} \foralli.
 \end{itemdescr}
 
+\begin{itemdecl}
+  template<class T, class U>
+    constexpr auto simd_select(bool c, const T& a, const U& b) -> remove_cvref_t<decltype(c ? a : b)>;
+\end{itemdecl}
+
+\begin{itemdescr}
+    \pnum\returns As-if \tcode{c ? a : b}.
+\end{itemdescr}
+
+\begin{itemdecl}
+  template<size_t Bytes, class Abi, typename T, typename U>
+    constexpr auto simd_select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b);
+\end{itemdecl}
+
+\begin{itemdescr}
+    \pnum\returns As-if \tcode{\simdselect(c, a, b)}.
+\end{itemdescr}
+
 \rSec2[simd.math]{\tcode{basic_simd} math library}
 
 \pnum
@@ -1467,11 +1492,11 @@ public:
   friend constexpr basic_simd_mask operator!=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 
   // \ref{simd.mask.cond}, \tcode{basic_simd_mask} conditional operators
-  friend constexpr basic_simd_mask operator?:(const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept;
-  friend constexpr basic_simd_mask operator?:(const basic_simd_mask&, bool, bool) noexcept;
+  friend constexpr basic_simd_mask @\simdselect@(const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask @\simdselect@(const basic_simd_mask&, bool, bool) noexcept;
   template <class T0, class T1>
     friend constexpr basic_simd<@\seebelow@, Abi>
-      operator?:(const basic_simd_mask&, const T0&, const T1&) noexcept;
+      @\simdselect@(const basic_simd_mask&, const T0&, const T1&) noexcept;
 };
 \end{codeblock}
 
@@ -1775,7 +1800,7 @@ friend constexpr basic_simd_mask operator!=(const basic_simd_mask&, const basic_
 \rSec2[simd.mask.cond]{\tcode{basic_simd_mask} conditional operators}
 
 \begin{itemdecl}
-friend constexpr basic_simd operator?:(const basic_simd_mask& mask, const basic_simd_mask& a, const basic_simd_mask& b) noexcept;
+friend constexpr basic_simd @\simdselect@(const basic_simd_mask& mask, const basic_simd_mask& a, const basic_simd_mask& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1784,7 +1809,7 @@ friend constexpr basic_simd operator?:(const basic_simd_mask& mask, const basic_
 \end{itemdescr}
 
 \begin{itemdecl}
-friend constexpr basic_simd_mask operator?:(const basic_simd_mask& mask, bool a, bool b) noexcept;
+friend constexpr basic_simd_mask @\simdselect@(const basic_simd_mask& mask, bool a, bool b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1795,7 +1820,7 @@ friend constexpr basic_simd_mask operator?:(const basic_simd_mask& mask, bool a,
 \begin{itemdecl}
 template <class T0, class T1>
   friend constexpr basic_simd<@\seebelow@, Abi>
-    operator?:(const basic_simd_mask& mask, const T0& a, const T1& b) noexcept;
+    @\simdselect@(const basic_simd_mask& mask, const T0& a, const T1& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
