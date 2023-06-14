@@ -13,16 +13,16 @@
 
 \newcommand\flagsRequires[2]{
 \item If the template parameter pack \tcode{Flags} contains the type
-  identifying \tcode{loadstore_aligned}, \tcode{addressof(*first)} shall
+  identifying \tcode{simd_flag_aligned}, \tcode{addressof(*first)} shall
   point to storage aligned by \tcode{memory_alignment_v<#1>}.
 \item If the template parameter pack \tcode{Flags} contains the type
-  identifying \tcode{loadstore_overaligned<N>}, \tcode{addressof(*first)}
+  identifying \tcode{simd_flag_overaligned<N>}, \tcode{addressof(*first)}
   shall point to storage aligned by \tcode{N}.
 }
 
 \newcommand\conversionFlagsMandate[2]{
   If the template parameter pack \tcode{Flags} does not contain the type
-  identifying \tcode{loadstore_convert}, then the conversion from \tcode{#1} to
+  identifying \tcode{simd_flag_convert}, then the conversion from \tcode{#1} to
   \tcode{#2} is value-preserving.
 }
 
@@ -90,12 +90,12 @@ namespace std {
   template<@\simdsizetype@ N, class V> using resize_simd_t = typename resize_simd<N, V>::type;
 
   // \ref{basic_simd.flags}, Load and store flags
-  template <class... Flags> struct loadstore_flags;
-  inline constexpr loadstore_flags<> loadstore_default{};
-  inline constexpr loadstore_flags<@\seebelow@> loadstore_convert{};
-  inline constexpr loadstore_flags<@\seebelow@> loadstore_aligned{};
+  template <class... Flags> struct simd_flags;
+  inline constexpr simd_flags<> simd_flag_default{};
+  inline constexpr simd_flags<@\seebelow@> simd_flag_convert{};
+  inline constexpr simd_flags<@\seebelow@> simd_flag_aligned{};
   template<size_t N> requires (has_single_bit(N))
-    inline constexpr loadstore_flags<@\seebelow@> loadstore_overaligned{};
+    inline constexpr simd_flags<@\seebelow@> simd_flag_overaligned{};
 
   // \ref{basic_simd.class}, Class template \tcode{basic_simd}
   template<class T, class Abi = @\nativeabi@<T>> class basic_simd;
@@ -414,79 +414,51 @@ template<size_t N, class V> struct resize_simd { using type = @\seebelow@; };
 \rSec1[basic_simd.flags]{Load and store flags}
 
 \begin{itemdecl}
-inline constexpr loadstore_flags<@\seebelow@> loadstore_convert{};
-inline constexpr loadstore_flags<@\seebelow@> loadstore_aligned{};
+inline constexpr simd_flags<@\seebelow@> simd_flag_convert{};
+inline constexpr simd_flags<@\seebelow@> simd_flag_aligned{};
 template<size_t N> requires (has_single_bit<N>)
-  inline constexpr loadstore_flags<@\seebelow@> loadstore_overaligned{};
+  inline constexpr simd_flags<@\seebelow@> simd_flag_overaligned{};
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum
-  The template arguments to \tcode{loadstore_flags} are unspecified types used
+  The template arguments to \tcode{simd_flags} are unspecified types used
   by the implementation to identify the different load and store flags.
 
   \pnum
   There may be additional implementation-defined load and store flags.
 \end{itemdescr}
 
-\rSec2[basic_simd.flags.overview]{Class template \tcode{loadstore_flags} overview}
+\rSec2[basic_simd.flags.overview]{Class template \tcode{simd_flags} overview}
 
 \begin{codeblock}
-template <class... Flags> struct loadstore_flags {
-  // \ref{basic_simd.flags.oper}, \tcode{loadstore_flags} operators
+template <class... Flags> struct simd_flags {
+  // \ref{basic_simd.flags.oper}, \tcode{simd_flags} operators
   template <class... Other>
-    friend constexpr auto operator|(loadstore_flags, loadstore_flags<Other...>);
-
-  template <class... Other>
-    friend constexpr auto operator&(loadstore_flags, loadstore_flags<Other...>);
-
-  template <class... Other>
-    friend constexpr auto operator^(loadstore_flags, loadstore_flags<Other...>);
+    friend constexpr auto operator|(simd_flags, simd_flags<Other...>);
 };
 \end{codeblock}
 
 \pnum
-The class template \tcode{loadstore_flags} acts like a integer bit-flag for types.
+The class template \tcode{simd_flags} acts like a integer bit-flag for types.
 
 \pnum\constraints
 Every type in \code{Flags} is a valid template argument to one of
-\code{loadstore_convert}, \tcode{loadstore_aligned},
-\tcode{loadstore_overaligned}, or to one of the implementation-defined load and
+\code{simd_flag_convert}, \tcode{simd_flag_aligned},
+\tcode{simd_flag_overaligned}, or to one of the implementation-defined load and
 store flags.
 
-\rSec2[basic_simd.flags.oper]{\tcode{loadstore_flags} operators}
+\rSec2[basic_simd.flags.oper]{\tcode{simd_flags} operators}
 
 \begin{itemdecl}
 template <class... Other>
-  friend constexpr auto operator|(loadstore_flags a, loadstore_flags<Other...> b);
+  friend constexpr auto operator|(simd_flags a, simd_flags<Other...> b);
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
-  A specialization of \tcode{loadstore_flags} identifying all load and
+  A specialization of \tcode{simd_flags} identifying all load and
   store flags identified either by \tcode{a} or \tcode{b}.
-\end{itemdescr}
-
-\begin{itemdecl}
-template <class... Other>
-  friend constexpr auto operator&(loadstore_flags a, loadstore_flags<Other...> b);
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\returns
-  A specialization of \tcode{loadstore_flags} identifying all load and
-  store flags identified both by \tcode{a} and \tcode{b}.
-\end{itemdescr}
-
-\begin{itemdecl}
-template <class... Other>
-  friend constexpr auto operator^(loadstore_flags a, loadstore_flags<Other...> b);
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\returns
-  A specialization of \tcode{loadstore_flags} identifying all load and
-  store flags identified either by \tcode{a} or by \tcode{b}, but not both.
 \end{itemdescr}
 
 \rSec1[basic_simd.class]{Class template \tcode{basic_simd}}
@@ -511,19 +483,19 @@ public:
     constexpr explicit(@\seebelow@) basic_simd(const basic_simd<U, UAbi>&) noexcept;
   template<class G> constexpr explicit basic_simd(G&& gen) noexcept;
   template<typename It, class... Flags>
-    constexpr basic_simd(It first, loadstore_flags<Flags...> = {});
+    constexpr basic_simd(It first, simd_flags<Flags...> = {});
   template<typename It, class... Flags>
-    constexpr basic_simd(It first, const mask_type& mask, loadstore_flags<Flags...> = {});
+    constexpr basic_simd(It first, const mask_type& mask, simd_flags<Flags...> = {});
 
   // \ref{basic_simd.copy}, \tcode{basic_simd} copy functions
   template<typename It, class... Flags>
-    constexpr void copy_from(It first, loadstore_flags<Flags...> f = {});
+    constexpr void copy_from(It first, simd_flags<Flags...> f = {});
   template<typename It, class... Flags>
-    constexpr void copy_from(It first, const mask_type& mask, loadstore_flags<Flags...> f = {});
+    constexpr void copy_from(It first, const mask_type& mask, simd_flags<Flags...> f = {});
   template<typename Out, class... Flags>
-    constexpr void copy_to(Out first, loadstore_flags<Flags...> f = {}) const;
+    constexpr void copy_to(Out first, simd_flags<Flags...> f = {}) const;
   template<typename Out, class... Flags>
-    constexpr void copy_to(Out first, const mask_type& mask, loadstore_flags<Flags...> f = {}) const;
+    constexpr void copy_to(Out first, const mask_type& mask, simd_flags<Flags...> f = {}) const;
 
   // \ref{basic_simd.subscr}, \tcode{basic_simd} subscript operators
   constexpr reference operator[](size_t) &;
@@ -869,7 +841,7 @@ template<class G> constexpr basic_simd(G&& gen) noexcept;
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr basic_simd(It first, loadstore_flags<Flags...> = {});
+  constexpr basic_simd(It first, simd_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -880,7 +852,7 @@ template<typename It, class... Flags>
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr basic_simd(It first, const mask_type& mask, loadstore_flags<Flags...> = {});
+  constexpr basic_simd(It first, const mask_type& mask, simd_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -893,7 +865,7 @@ template<typename It, class... Flags>
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr void copy_from(It first, loadstore_flags<Flags...> f = {});
+  constexpr void copy_from(It first, simd_flags<Flags...> f = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -904,7 +876,7 @@ template<typename It, class... Flags>
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr void copy_from(It first, const mask_type& mask, loadstore_flags<Flags...> f = {});
+  constexpr void copy_from(It first, const mask_type& mask, simd_flags<Flags...> f = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -940,7 +912,7 @@ template<typename It, class... Flags>
 
 \begin{itemdecl}
 template<typename Out, class... Flags>
-  constexpr void copy_to(Out first, loadstore_flags<Flags...> f = {}) const;
+  constexpr void copy_to(Out first, simd_flags<Flags...> f = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -951,7 +923,7 @@ template<typename Out, class... Flags>
 
 \begin{itemdecl}
 template<typename Out, class... Flags>
-  constexpr void copy_to(Out first, const mask_type& mask, loadstore_flags<Flags...> f = {}) const;
+  constexpr void copy_to(Out first, const mask_type& mask, simd_flags<Flags...> f = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1560,17 +1532,17 @@ public:
   template<typename It, class... Flags>
     constexpr basic_simd_mask(It first, Flags = {});
   template<typename It, class... Flags>
-    constexpr basic_simd_mask(It first, const basic_simd_mask& mask, loadstore_flags<Flags...> = {});
+    constexpr basic_simd_mask(It first, const basic_simd_mask& mask, simd_flags<Flags...> = {});
 
   // \ref{basic_simd.mask.copy}, \tcode{basic_simd_mask} copy functions
   template<typename It, class... Flags>
-    constexpr void copy_from(It first, loadstore_flags<Flags...> = {});
+    constexpr void copy_from(It first, simd_flags<Flags...> = {});
   template<typename It, class... Flags>
-    constexpr void copy_from(It first, const basic_simd_mask& mask, loadstore_flags<Flags...> = {});
+    constexpr void copy_from(It first, const basic_simd_mask& mask, simd_flags<Flags...> = {});
   template<typename Out, class... Flags>
-    constexpr void copy_to(Out first, loadstore_flags<Flags...> = {}) const;
+    constexpr void copy_to(Out first, simd_flags<Flags...> = {}) const;
   template<typename Out, class... Flags>
-    constexpr void copy_to(Out first, const basic_simd_mask& mask, loadstore_flags<Flags...> = {}) const;
+    constexpr void copy_to(Out first, const basic_simd_mask& mask, simd_flags<Flags...> = {}) const;
 
   // \ref{basic_simd.mask.subscr}, \tcode{basic_simd_mask} subscript operators
   constexpr reference operator[](size_t) &;
@@ -1718,7 +1690,7 @@ template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr basic_simd_mask(It first, loadstore_flags<Flags...> = {});
+  constexpr basic_simd_mask(It first, simd_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1729,7 +1701,7 @@ template<typename It, class... Flags>
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr basic_simd_mask(It first, const basic_simd_mask& mask, loadstore_flags<Flags...> = {});
+  constexpr basic_simd_mask(It first, const basic_simd_mask& mask, simd_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1742,7 +1714,7 @@ template<typename It, class... Flags>
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr void copy_from(It first, loadstore_flags<Flags...> = {});
+  constexpr void copy_from(It first, simd_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1753,7 +1725,7 @@ template<typename It, class... Flags>
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr void copy_from(It first, const basic_simd_mask& mask, loadstore_flags<Flags...> = {});
+  constexpr void copy_from(It first, const basic_simd_mask& mask, simd_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1786,7 +1758,7 @@ template<typename It, class... Flags>
 
 \begin{itemdecl}
 template<typename Out, class... Flags>
-  constexpr void copy_to(Out first, loadstore_flags<Flags...> = {}) const;
+  constexpr void copy_to(Out first, simd_flags<Flags...> = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1797,7 +1769,7 @@ template<typename Out, class... Flags>
 
 \begin{itemdecl}
 template<typename Out, class... Flags>
-  constexpr void copy_to(Out first, const basic_simd_mask& mask, loadstore_flags<Flags...> = {}) const;
+  constexpr void copy_to(Out first, const basic_simd_mask& mask, simd_flags<Flags...> = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}
