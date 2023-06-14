@@ -72,9 +72,11 @@ The intent is to support acceleration through data-parallel execution resources,
 %\indexhdr{simd}
 \begin{codeblock}
 namespace std {
-  // \ref{simd.abi}, \tcode{simd} ABI tags
-  using @\simdsizetype@ = int; // \expos
+  using @\simdsizetype@ = @\seebelow@; // \expos
+  template <typename T> constexpr size_t @\maskelementsize@ = @\seebelow@; // \expos
+  template <size_t Bytes> using @\integerfrom@ = @\seebelow@; // \expos
 
+  // \ref{simd.abi}, \tcode{simd} ABI tags
   template<class T> using @\nativeabi@ = @\seebelow@; // \expos
   template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@; // \expos
 
@@ -106,26 +108,20 @@ namespace std {
   template<class T, @\simdsizetype@ N = basic_simd_mask<sizeof(T)>::size()>
     using simd_mask = basic_simd_mask<sizeof(T), @\deducet@<T, N>>;
 
-  template <typename T>
-    constexpr std::size_t @\maskelementsize@ = @\seebelow@; // \expos
-
-  template <size_t Bytes>
-    using @\integerfrom@ = @\seebelow@; // \expos
-
   // \ref{simd.creation}, \tcode{basic_simd} and \tcode{basic_simd_mask} creation
   template<class V, class Abi>
     constexpr auto
-      split(const basic_simd<typename V::value_type, Abi>& x) noexcept;
+      simd_split(const basic_simd<typename V::value_type, Abi>& x) noexcept;
   template<class M, class Abi>
     constexpr auto
-      split(const basic_simd_mask<@\maskelementsize@<M>, Abi>& x) noexcept;
+      simd_split(const basic_simd_mask<@\maskelementsize@<M>, Abi>& x) noexcept;
 
   template<class T, class... Abis>
     constexpr basic_simd<T, @\deducet@<T, (basic_simd<T, Abis>::size + ...)>>
-      concat(const basic_simd<T, Abis>&...) noexcept;
+      simd_cat(const basic_simd<T, Abis>&...) noexcept;
   template<size_t Bytes, class... Abis>
     constexpr constexpr basic_simd_mask<Bytes, @\deducet@<@\integerfrom@<Bytes>, (basic_simd_mask<Bytes, Abis>::size() + ...)>>
-      concat(const basic_simd_mask<Bytes, Abis>&...) noexcept;
+      simd_cat(const basic_simd_mask<Bytes, Abis>&...) noexcept;
 
   // \ref{simd.mask.reductions}, \tcode{basic_simd_mask} reductions
   template<size_t Bytes, class Abi> constexpr bool all_of(const basic_simd_mask<Bytes, Abi>&) noexcept;
@@ -199,6 +195,15 @@ namespace std {
 
 \pnum
 The header \tcode{<simd>} defines class templates, tag types, trait types, and function templates for element-wise operations on data-parallel objects.
+
+\pnum
+\simdsizetype is an exposition-only alias for a signed integer type.
+
+\pnum
+\tcode{\maskelementsize<basic_simd_mask<Bytes, Abi>>} has the value \tcode{Bytes}.
+
+\pnum
+\tcode{\integerfrom<Bytes>} is an alias for a signed integer type \tcode{T} so that \tcode{sizeof(T) == Bytes}.
 
 \rSec1[simd.abi]{\tcode{simd} ABI tags}
 
@@ -513,7 +518,9 @@ Otherwise, the following are true:
 \end{example}
 
 \pnum
-Default intialization performs no initialization of the elements; value-initialization initializes each element with \tcode{T()}. \begin{note}Thus, default initialization leaves the elements in an indeterminate state.\end{note}
+Default initialization performs no initialization of the elements;
+value-initialization initializes each element with \tcode{T()}.
+\begin{note}Thus, default initialization leaves the elements in an indeterminate state.\end{note}
 
 \pnum
 Implementations should enable explicit conversion from and to implementation-defined types. This adds one or more of the following declarations to class \tcode{basic_simd}:
@@ -1254,17 +1261,23 @@ template<class T, class Abi>
 \rSec2[simd.creation]{\tcode{basic_simd} and \tcode{basic_simd_mask} creation}
 
 \begin{itemdecl}
-  template<class V, class Abi>
-    constexpr auto split(const basic_simd<typename V::value_type, Abi>& x) noexcept;
-  template<class M, class Abi>
-    constexpr auto split(const basic_simd_mask<@\maskelementsize@<M>, Abi>& x) noexcept;
-  \end{itemdecl}
+template<class V, class Abi>
+  constexpr auto simd_split(const basic_simd<typename V::value_type, Abi>& x) noexcept;
+template<class M, class Abi>
+  constexpr auto simd_split(const basic_simd_mask<@\maskelementsize@<M>, Abi>& x) noexcept;
+\end{itemdecl}
 
-  \begin{itemdescr}
-    % probably not necessary/helpful:
-    %\pnum\mandates \tcode{V::size() <= basic_simd<V::value_type, Abi>::size}.
+\begin{itemdescr}
+  % probably not necessary/helpful:
+  %\pnum\mandates \tcode{V::size() <= basic_simd<V::value_type, Abi>::size}.
 
-    \pnum Let $N$ be \tcode{x.size() / V::size()}.
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{V} is a specialization of \tcode{basic_simd}.
+    \item \tcode{M} is a specialization of \tcode{basic_simd_mask}.
+  \end{itemize}
+
+  \pnum Let $N$ be \tcode{x.size() / V::size()}.
 
     \pnum\returns
     \begin{itemize}
@@ -1288,11 +1301,11 @@ template<class T, class Abi>
 
 \begin{itemdecl}
 template<class T, class... Abis>
-  constexpr basic_simd<T, @\seebelow@<T, (basic_simd<T, Abis>::size + ...)>> concat(
-    const basic_simd<T, Abis>&... xs) noexcept;
+  constexpr basic_simd<T, @\seebelow@<T, (basic_simd<T, Abis>::size + ...)>>
+    simd_cat(const basic_simd<T, Abis>&... xs) noexcept;
 template<size_t Bytes, class... Abis>
-  constexpr basic_simd_mask<Bytes, @\deducet@<@\integerfrom@<Bytes>, (basic_simd_mask<Bytes, Abis>::size() + ...)>> concat(
-    const basic_simd_mask<Bytes, Abis>&... xs) noexcept;
+  constexpr basic_simd_mask<Bytes, @\deducet@<@\integerfrom@<Bytes>, (basic_simd_mask<Bytes, Abis>::size() + ...)>>
+    simd_cat(const basic_simd_mask<Bytes, Abis>&... xs) noexcept;
 
 \end{itemdecl}
 
