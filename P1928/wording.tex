@@ -30,14 +30,14 @@
 \constraints Application of #1 to objects of type \tcode{value_type} is well-formed.
 }
 
-\rSec0[simd]{Data-Parallel Types}
-\rSec1[simd.general]{General}
+\rSec0[basic_simd]{Data-Parallel Types}
+\rSec1[basic_simd.general]{General}
 
 \pnum
-The simd subclause defines data-parallel types and operations on these types. A data-parallel type consists of elements of an underlying vectorizable type, called the \defn{element type}. The number of elements is a constant for each data-parallel type and called the \defn{width} of that type.
+The basic_simd subclause defines data-parallel types and operations on these types. A data-parallel type consists of elements of an underlying vectorizable type, called the \defn{element type}. The number of elements is a constant for each data-parallel type and called the \defn{width} of that type.
 
 \pnum
-The term \defn{data-parallel type} refers to all \defn{supported} (\ref{simd.overview}) specializations of the \tcode{simd} and \tcode{simd_mask} class templates. A \defn{data-parallel object} is an object of \term{data-parallel type}.
+The term \defn{data-parallel type} refers to all \defn{supported} (\ref{basic_simd.overview}) specializations of the \tcode{basic_simd} and \tcode{basic_simd_mask} class templates. A \defn{data-parallel object} is an object of \term{data-parallel type}.
 
 \pnum
 The set of \defn{vectorizable types} comprises all cv-unqualified arithmetic types other than \tcode{bool}.
@@ -46,9 +46,9 @@ The set of \defn{vectorizable types} comprises all cv-unqualified arithmetic typ
 An \defn{element-wise operation} applies a specified operation to the elements of one or more data-parallel objects. Each such application is unsequenced with respect to the others. A \defn{unary element-wise operation} is an element-wise operation that applies a unary operation to each element of a data-parallel object. A \defn{binary element-wise operation} is an element-wise operation that applies a binary operation to corresponding elements of two data-parallel objects.
 
 \pnum
-Given a \tcode{simd_mask<T, Abi>} object \tcode{mask},
+Given a \tcode{basic_simd_mask<T, Abi>} object \tcode{mask},
 the \defn{selected indices} signify the integers $i \in \{j \in \mathbb{N}_0 | j < \tcode{mask.size()} \wedge \tcode{mask[}j\tcode{]}\}$.
-Given an additional object \tcode{data} of type \tcode{simd<T, Abi>} or \tcode{simd_mask<T, Abi>},
+Given an additional object \tcode{data} of type \tcode{basic_simd<T, Abi>} or \tcode{basic_simd_mask<T, Abi>},
 the \defn{selected elements} signify the elements \tcode{data[$i$]} for all selected indices $i$.
 
 \pnum
@@ -60,104 +60,91 @@ all possible values of \tcode{U} can be represented with type \tcode{T}.
 The intent is to support acceleration through data-parallel execution resources, such as SIMD registers and instructions or execution units driven by a common instruction decoder. If such execution resources are unavailable, the interfaces support a transparent fallback to sequential execution.
 \end{note}
 
-\rSec1[simd.syn]{Header \texorpdfstring{\tcode{<simd>}}{<simd>} synopsis}
+\rSec1[basic_simd.syn]{Header \texorpdfstring{\tcode{<basic_simd>}}{<basic_simd>} synopsis}
 
-%\indexhdr{simd}
+\newcommand\simdsizetype{\UNSP{simd-size-type}}
+
+%\indexhdr{basic_simd}
 \begin{codeblock}
 namespace std {
-  namespace simd_abi {
-    using scalar = @\seebelow@;
-    template<class T, size_t N> using fixed_size = @\seebelow@;
-    template<class T> inline constexpr size_t max_fixed_size = @\impdef@;
-    template<class T> using native = @\impdef@;
+  template<class T> using @\UNSP{native-abi}@ = @\seebelow@;
+  template<class T, size_t N> using @\UNSP{deduce-t}@ = @\seebelow@;
 
-    template<class T, size_t N, class... Abis> struct deduce { using type = @\seebelow@; };
-    template<class T, size_t N, class... Abis> using deduce_t =
-      typename deduce<T, N, Abis...>::type;
-  }
+  using @\simdsizetype@ = int;
 
-  // \ref{simd.traits}, \tcode{simd} type traits
-  template<class T> struct is_abi_tag;
-  template<class T> inline constexpr bool is_abi_tag_v = is_abi_tag<T>::value;
-
-  template<class T> struct is_simd;
-  template<class T> inline constexpr bool is_simd_v = is_simd<T>::value;
-
-  template<class T> struct is_simd_mask;
-  template<class T> inline constexpr bool is_simd_mask_v = is_simd_mask<T>::value;
+  // \ref{basic_simd.traits}, \tcode{basic_simd} type traits
 
   template<class T, class Abi = simd_abi::native<T>> struct simd_size;
   template<class T, class Abi = simd_abi::native<T>>
     inline constexpr size_t simd_size_v = simd_size<T,Abi>::value;
 
-  // TODO: Rename to simd_alignment/simd_loadstore_alignment?
   template<class T, class U = typename T::value_type> struct memory_alignment;
   template<class T, class U = typename T::value_type>
     inline constexpr size_t memory_alignment_v = memory_alignment<T,U>::value;
 
   template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   template<class T, class V> using rebind_simd_t = typename rebind_simd<T, V>::type;
-  template<size_t N, class V> struct resize_simd { using type = @\seebelow@; };
-  template<size_t N, class V> using resize_simd_t = typename resize_simd<N, V>::type;
+  template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelow@; };
+  template<@\simdsizetype@ N, class V> using resize_simd_t = typename resize_simd<N, V>::type;
 
-  // \ref{simd.flags}, Load and store flags
+  // \ref{basic_simd.flags}, Load and store flags
   template <class... Flags> struct loadstore_flags;
   inline constexpr loadstore_flags<> loadstore_default{};
   inline constexpr loadstore_flags<@\seebelow@> loadstore_convert{};
   inline constexpr loadstore_flags<@\seebelow@> loadstore_aligned{};
-  template<size_t N> requires (has_single_bit<N>)
+  template<size_t N> requires (has_single_bit(N))
     inline constexpr loadstore_flags<@\seebelow@> loadstore_overaligned{};
 
-  // \ref{simd.class}, Class template \tcode{simd}
-  template<class T, class Abi = simd_abi::native<T>> class simd;
-  template<class T, size_t N> using fixed_size_simd = simd<T, simd_abi::fixed_size<T, N>>;
+  // \ref{basic_simd.class}, Class template \tcode{basic_simd}
+  template<class T, class Abi = @\UNSP{native-abi}@<T>> class basic_simd;
+  template<class T, @\simdsizetype@ N> using simd = basic_simd<T, @\UNSP{deduce-t}@<T, N>>;
 
-  // \ref{simd.mask.class}, Class template \tcode{simd_mask}
-  template<class T, class Abi = simd_abi::native<T>> class simd_mask;
-  template<class T, size_t N> using fixed_size_simd_mask = simd_mask<T, simd_abi::fixed_size<T, N>>;
+  // \ref{basic_simd.mask.class}, Class template \tcode{basic_simd_mask}
+  template<size_t Bytes, class Abi = @\UNSP{native-abi}@<T>> class basic_simd_mask;
+  template<class T, @\simdsizetype@ N> using fixed_size_simd_mask = basic_simd_mask<T, simd_abi::fixed_size<T, N>>;
 
-  // \ref{simd.creation}, \tcode{simd} and \tcode{simd_mask} creation
+  // \ref{basic_simd.creation}, \tcode{basic_simd} and \tcode{basic_simd_mask} creation
   template<size_t... Sizes, class T, class Abi>
-    constexpr tuple<simd<T, simd_abi::deduce_t<T, Sizes>>...>
-      split(const simd<T, Abi>&) noexcept;
+    constexpr tuple<basic_simd<T, simd_abi::deduce_t<T, Sizes>>...>
+      split(const basic_simd<T, Abi>&) noexcept;
   template<size_t... Sizes, class T, class Abi>
-    constexpr tuple<simd_mask<T, simd_mask_abi::deduce_t<T, Sizes>>...>
-      split(const simd_mask<T, Abi>&) noexcept;
+    constexpr tuple<basic_simd_mask<T, simd_mask_abi::deduce_t<T, Sizes>>...>
+      split(const basic_simd_mask<T, Abi>&) noexcept;
   template<class V, class Abi>
     constexpr array<V, simd_size_v<typename V::value_type, Abi> / V::size()>
-      split(const simd<typename V::value_type, Abi>&) noexcept;
+      split(const basic_simd<typename V::value_type, Abi>&) noexcept;
   template<class V, class Abi>
     constexpr array<V, simd_size_v<typename V::simd_type::value_type, Abi> / V::size()>
-      split(const simd_mask<typename V::simd_type::value_type, Abi>&) noexcept;
+      split(const basic_simd_mask<typename V::simd_type::value_type, Abi>&) noexcept;
 
   template<size_t N, class T, class A>
-    constexpr array<resize_simd_t<simd_size_v<T, A> / N, simd<T, A>>, N>
-      split_by(const simd<T, A>& x) noexcept;
+    constexpr array<resize_simd_t<simd_size_v<T, A> / N, basic_simd<T, A>>, N>
+      split_by(const basic_simd<T, A>& x) noexcept;
   template<size_t N, class T, class A>
-    constexpr array<resize_simd_t<simd_size_v<T, A> / N, simd_mask<T, A>>, N>
-      split_by(const simd_mask<T, A>& x) noexcept;
+    constexpr array<resize_simd_t<simd_size_v<T, A> / N, basic_simd_mask<T, A>>, N>
+      split_by(const basic_simd_mask<T, A>& x) noexcept;
 
   template<class T, class... Abis>
-    constexpr simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>>
-      concat(const simd<T, Abis>&...) noexcept;
+    constexpr basic_simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>>
+      concat(const basic_simd<T, Abis>&...) noexcept;
   template<class T, class... Abis>
-    constexpr simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>>
-      concat(const simd_mask<T, Abis>&...) noexcept;
+    constexpr basic_simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>>
+      concat(const basic_simd_mask<T, Abis>&...) noexcept;
 
   template<class T, class Abi, size_t N>
-    constexpr resize_simd_t<simd_size_v<T, Abi> * N, simd<T, Abi>>
-      concat(const array<simd<T, Abi>, N>& arr) noexcept;
+    constexpr resize_simd_t<simd_size_v<T, Abi> * N, basic_simd<T, Abi>>
+      concat(const array<basic_simd<T, Abi>, N>& arr) noexcept;
   template<class T, class Abi, size_t N>
-    constexpr resize_simd_t<simd_size_v<T, Abi> * N, simd_mask<T, Abi>>
-      concat(const array<simd_mask<T, Abi>, N>& arr) noexcept;
+    constexpr resize_simd_t<simd_size_v<T, Abi> * N, basic_simd_mask<T, Abi>>
+      concat(const array<basic_simd_mask<T, Abi>, N>& arr) noexcept;
 
-  // \ref{simd.mask.reductions}, \tcode{simd_mask} reductions
-  template<class T, class Abi> constexpr bool all_of(const simd_mask<T, Abi>&) noexcept;
-  template<class T, class Abi> constexpr bool any_of(const simd_mask<T, Abi>&) noexcept;
-  template<class T, class Abi> constexpr bool none_of(const simd_mask<T, Abi>&) noexcept;
-  template<class T, class Abi> constexpr int reduce_count(const simd_mask<T, Abi>&) noexcept;
-  template<class T, class Abi> constexpr int reduce_min_index(const simd_mask<T, Abi>&);
-  template<class T, class Abi> constexpr int reduce_max_index(const simd_mask<T, Abi>&);
+  // \ref{basic_simd.mask.reductions}, \tcode{basic_simd_mask} reductions
+  template<class T, class Abi> constexpr bool all_of(const basic_simd_mask<T, Abi>&) noexcept;
+  template<class T, class Abi> constexpr bool any_of(const basic_simd_mask<T, Abi>&) noexcept;
+  template<class T, class Abi> constexpr bool none_of(const basic_simd_mask<T, Abi>&) noexcept;
+  template<class T, class Abi> constexpr int reduce_count(const basic_simd_mask<T, Abi>&) noexcept;
+  template<class T, class Abi> constexpr int reduce_min_index(const basic_simd_mask<T, Abi>&);
+  template<class T, class Abi> constexpr int reduce_max_index(const basic_simd_mask<T, Abi>&);
 
   constexpr bool all_of(@\UNSP{T}@) noexcept;
   constexpr bool any_of(@\UNSP{T}@) noexcept;
@@ -166,60 +153,60 @@ namespace std {
   constexpr int reduce_min_index(@\UNSP{T}@);
   constexpr int reduce_max_index(@\UNSP{T}@);
 
-  // \ref{simd.reductions}, \tcode{simd} reductions
+  // \ref{basic_simd.reductions}, \tcode{basic_simd} reductions
   template<class T, class Abi, class BinaryOperation = plus<>>
-    constexpr T reduce(const simd<T, Abi>&, BinaryOperation = {});
+    constexpr T reduce(const basic_simd<T, Abi>&, BinaryOperation = {});
 
   template<class T, class Abi, class BinaryOperation>
-    constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                        T identity_element, BinaryOperation binary_op);
   template<class T, class Abi>
-    constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                        plus<> binary_op = {}) noexcept;
   template<class T, class Abi>
-    constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                        multiplies<> binary_op) noexcept;
   template<class T, class Abi>
-    constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                        bit_and<> binary_op) noexcept;
   template<class T, class Abi>
-    constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                        bit_or<> binary_op) noexcept;
   template<class T, class Abi>
-    constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                        bit_xor<> binary_op) noexcept;
 
   template<class T, class Abi>
-    constexpr T hmin(const simd<T, Abi>&) noexcept;
+    constexpr T hmin(const basic_simd<T, Abi>&) noexcept;
   template<class T, class Abi>
-    constexpr T hmin(const simd<T, Abi>&, const typename simd<T, Abi>::mask_type&) noexcept;
+    constexpr T hmin(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
   template<class T, class Abi>
-    constexpr T hmax(const simd<T, Abi>&) noexcept;
+    constexpr T hmax(const basic_simd<T, Abi>&) noexcept;
   template<class T, class Abi>
-    constexpr T hmax(const simd<T, Abi>&, const typename simd<T, Abi>::mask_type&) noexcept;
+    constexpr T hmax(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 
-  // \ref{simd.alg}, Algorithms
+  // \ref{basic_simd.alg}, Algorithms
   template<class T, class Abi>
-    constexpr simd<T, Abi>
-      min(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
+    constexpr basic_simd<T, Abi>
+      min(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
   template<class T, class Abi>
-    constexpr simd<T, Abi>
-      max(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
+    constexpr basic_simd<T, Abi>
+      max(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
   template<class T, class Abi>
-    constexpr pair<simd<T, Abi>, simd<T, Abi>>
-      minmax(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
+    constexpr pair<basic_simd<T, Abi>, basic_simd<T, Abi>>
+      minmax(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
   template<class T, class Abi>
-    constexpr simd<T, Abi>
-      clamp(const simd<T, Abi>& v,
-            const simd<T, Abi>& lo,
-            const simd<T, Abi>& hi);
+    constexpr basic_simd<T, Abi>
+      clamp(const basic_simd<T, Abi>& v,
+            const basic_simd<T, Abi>& lo,
+            const basic_simd<T, Abi>& hi);
 }
 \end{codeblock}
 
 \pnum
-The header \tcode{<simd>} defines class templates, tag types, trait types, and function templates for element-wise operations on data-parallel objects.
+The header \tcode{<basic_simd>} defines class templates, tag types, trait types, and function templates for element-wise operations on data-parallel objects.
 
-\rSec1[simd.abi]{\tcode{simd} ABI tags}
+\rSec1[basic_simd.abi]{\tcode{basic_simd} ABI tags}
 
 \begin{codeblock}
 namespace simd_abi {
@@ -231,10 +218,10 @@ namespace simd_abi {
 \end{codeblock}
 
 \pnum
-An \defn{ABI tag} is a type in the \tcode{std::simd_abi} namespace that indicates a choice of size and binary representation for objects of data-parallel type. \begin{note}The intent is for the size and binary representation to depend on the target architecture.\end{note} The ABI tag, together with a given element type implies a number of elements. ABI tag types are used as the second template argument to \tcode{simd} and \tcode{simd_mask}.
+An \defn{ABI tag} is a type in the \tcode{std::simd_abi} namespace that indicates a choice of size and binary representation for objects of data-parallel type. \begin{note}The intent is for the size and binary representation to depend on the target architecture.\end{note} The ABI tag, together with a given element type implies a number of elements. ABI tag types are used as the second template argument to \tcode{basic_simd} and \tcode{basic_simd_mask}.
 
 \pnum
-\begin{note}The ABI tag is orthogonal to selecting the machine instruction set. The selected machine instruction set limits the usable ABI tag types, though (see \ref{simd.overview}). The ABI tags enable users to safely pass objects of data-parallel type between translation unit boundaries (e.g. function calls or I/O).\end{note}
+\begin{note}The ABI tag is orthogonal to selecting the machine instruction set. The selected machine instruction set limits the usable ABI tag types, though (see \ref{basic_simd.overview}). The ABI tags enable users to safely pass objects of data-parallel type between translation unit boundaries (e.g. function calls or I/O).\end{note}
 
 \pnum
 \tcode{scalar} is an alias for an unspecified ABI tag that is different from \tcode{fixed_size<1>}.
@@ -248,14 +235,14 @@ The value of \tcode{max_fixed_size<T>} is at least 32.
 \tcode{fixed_size} does not introduce a non-deduced context.
 Use of the \tcode{simd_abi::fixed_size<N>} tag type requires data-parallel types to store \tcode{N}
 elements (i.e. \tcode{simd_size_v<T, simd_abi::fixed_size<N>>\relax} equals
-\tcode{N}). \tcode{simd<T, fixed_size<N>>} and \tcode{simd_mask<T,
+\tcode{N}). \tcode{basic_simd<T, fixed_size<N>>} and \tcode{basic_simd_mask<T,
 fixed_size<N>>} with \tcode{N > 0} and \tcode{N <= max_fixed_size<T>} shall be supported.
-Additionally, for every supported \tcode{simd<T, Abi>} (see \ref{simd.overview}), where \tcode{Abi}
-is an ABI tag that is not a specialization of \tcode{simd_abi::fixed_size}, \tcode{N == simd<T,
+Additionally, for every supported \tcode{basic_simd<T, Abi>} (see \ref{basic_simd.overview}), where \tcode{Abi}
+is an ABI tag that is not a specialization of \tcode{simd_abi::fixed_size}, \tcode{N == basic_simd<T,
 Abi>::size()} shall be supported.
 
 \pnum
-\begin{note}It is unspecified whether \tcode{simd<T, fixed_size<N>>} with \tcode{N > max_fixed_size<T>} is supported. The value of \tcode{max_fixed_size<T>} can depend on compiler flags and can change between different compiler versions.\end{note}
+\begin{note}It is unspecified whether \tcode{basic_simd<T, fixed_size<N>>} with \tcode{N > max_fixed_size<T>} is supported. The value of \tcode{max_fixed_size<T>} can depend on compiler flags and can change between different compiler versions.\end{note}
 
 \pnum
   The type of \tcode{fixed_size<T, N>} in TU1 differs from the type of
@@ -284,7 +271,7 @@ template<T, size_t N, class... Abis> struct deduce { using type = @\seebelow@; }
 The member \tcode{type} shall be present if and only if
 \begin{itemize}
   \item \tcode{T} is a vectorizable type, and
-  \item \tcode{simd_abi::fixed_size<N>} is supported (see \ref{simd.abi}), and
+  \item \tcode{simd_abi::fixed_size<N>} is supported (see \ref{basic_simd.abi}), and
   \item every type in the \tcode{Abis} pack is an ABI tag.
 \end{itemize}
 
@@ -292,7 +279,7 @@ The member \tcode{type} shall be present if and only if
 Where present, the member typedef \tcode{type} shall name an ABI tag type that satisfies
 \begin{itemize}
   \item \tcode{simd_size<T, type> == N}, and
-  \item \tcode{simd<T, type>} is default constructible (see \ref{simd.overview}).
+  \item \tcode{basic_simd<T, type>} is default constructible (see \ref{basic_simd.overview}).
 \end{itemize}
 If \tcode{N} is \tcode{1}, the member typedef \tcode{type} is \tcode{simd_abi::scalar}.
 \begin{note}
@@ -303,7 +290,7 @@ If \tcode{N} is \tcode{1}, the member typedef \tcode{type} is \tcode{simd_abi::s
 The behavior of a program that adds specializations for \tcode{deduce} is undefined.
 \end{itemdescr}
 
-\rSec1[simd.traits]{\tcode{simd} type traits}
+\rSec1[basic_simd.traits]{\tcode{basic_simd} type traits}
 
 \begin{itemdecl}
 template<class T> struct is_abi_tag { @\seebelow@ };
@@ -323,7 +310,7 @@ template<class T> struct is_simd { @\seebelow@ };
 
 \begin{itemdescr}
 \pnum
-The type \tcode{is_simd<T>} is a \tcode{UnaryTypeTrait} with a base characteristic of \tcode{true_type} if \tcode{T} is a specialization of the \tcode{simd} class template, and \tcode{false_type} otherwise.
+The type \tcode{is_simd<T>} is a \tcode{UnaryTypeTrait} with a base characteristic of \tcode{true_type} if \tcode{T} is a specialization of the \tcode{basic_simd} class template, and \tcode{false_type} otherwise.
 
 \pnum
 The behavior of a program that adds specializations for \tcode{is_simd} is undefined.
@@ -335,7 +322,7 @@ template<class T> struct is_simd_mask { @\seebelow@ };
 
 \begin{itemdescr}
 \pnum
-The type \tcode{is_simd_mask<T>} is a \tcode{UnaryTypeTrait} with a base characteristic of \tcode{true_type} if \tcode{T} is a specialization of the \tcode{simd_mask} class template, and \tcode{false_type} otherwise.
+The type \tcode{is_simd_mask<T>} is a \tcode{UnaryTypeTrait} with a base characteristic of \tcode{true_type} if \tcode{T} is a specialization of the \tcode{basic_simd_mask} class template, and \tcode{false_type} otherwise.
 
 \pnum
 The behavior of a program that adds specializations for \tcode{is_simd_mask} is undefined.
@@ -353,12 +340,12 @@ template<class T, class Abi = simd_abi::native<T>> struct simd_size { @\seebelow
   \item \tcode{is_abi_tag_v<Abi>} is \tcode{true}.
 \end{itemize}
 \begin{note}
-  The rules are different from those in (\ref{simd.overview}):
-  The member \tcode{value} is present even if \tcode{simd<T, Abi>} is not supported for the currently targeted system.
+  The rules are different from those in (\ref{basic_simd.overview}):
+  The member \tcode{value} is present even if \tcode{basic_simd<T, Abi>} is not supported for the currently targeted system.
 \end{note}
 
 \pnum
-If \tcode{value} is present, the type \tcode{simd_size<T, Abi>} is a \tcode{BinaryTypeTrait} with a base characteristic of \tcode{integral_constant<size_t, N>} with \tcode{N} equal to the number of elements in a \tcode{simd<T, Abi>} object.
+If \tcode{value} is present, the type \tcode{simd_size<T, Abi>} is a \tcode{BinaryTypeTrait} with a base characteristic of \tcode{integral_constant<size_t, N>} with \tcode{N} equal to the number of elements in a \tcode{basic_simd<T, Abi>} object.
 
 \pnum
 The behavior of a program that adds specializations for \tcode{simd_size} is undefined.
@@ -377,7 +364,7 @@ template<class T, class U = typename T::value_type> struct memory_alignment { @\
 \end{itemize}
 
 \pnum
-If \tcode{value} is present, the type \tcode{memory_alignment<T, U>} is a \tcode{BinaryTypeTrait} with a base characteristic of \tcode{integral_constant<size_t, N>} for some implementation-defined \tcode{N} (see \ref{simd.copy} and \ref{simd.mask.copy}). \begin{note}\tcode{value} identifies the alignment restrictions on pointers used for (converting) loads and stores for the give type \tcode{T} on arrays of type \tcode{U}.\end{note}
+If \tcode{value} is present, the type \tcode{memory_alignment<T, U>} is a \tcode{BinaryTypeTrait} with a base characteristic of \tcode{integral_constant<size_t, N>} for some implementation-defined \tcode{N} (see \ref{basic_simd.copy} and \ref{basic_simd.mask.copy}). \begin{note}\tcode{value} identifies the alignment restrictions on pointers used for (converting) loads and stores for the give type \tcode{T} on arrays of type \tcode{U}.\end{note}
 
 \pnum
 The behavior of a program that adds specializations for \tcode{memory_alignment} is undefined.
@@ -391,7 +378,7 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   \pnum
   The member \tcode{type} is present if and only if
   \begin{itemize}
-    \item \tcode{V} is either \tcode{simd<U, Abi0>} or \tcode{simd_mask<U, Abi0>}, where \tcode{U} and \tcode{Abi0} are deduced from \tcode{V}, and
+    \item \tcode{V} is either \tcode{basic_simd<U, Abi0>} or \tcode{basic_simd_mask<U, Abi0>}, where \tcode{U} and \tcode{Abi0} are deduced from \tcode{V}, and
     \item \tcode{T} is a vectorizable type, and
     \item \tcode{simd_abi::deduce<T, simd_size_v<U, Abi0>, Abi0>} has a member type \tcode{type}.
   \end{itemize}
@@ -399,8 +386,8 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   \pnum
   Let \tcode{Abi1} denote the type \tcode{deduce_t<T, simd_size_v<U, Abi0>, Abi0>}.
   Where present, the member typedef \tcode{type} names
-  \tcode{simd<T, Abi1>} if \tcode V is \tcode{simd<U, Abi0>} or
-  \tcode{simd_mask<T, Abi1>} if \tcode V is \tcode{simd_mask<U, Abi0>}.
+  \tcode{basic_simd<T, Abi1>} if \tcode V is \tcode{basic_simd<U, Abi0>} or
+  \tcode{basic_simd_mask<T, Abi1>} if \tcode V is \tcode{basic_simd_mask<U, Abi0>}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -411,16 +398,16 @@ template<size_t N, class V> struct resize_simd { using type = @\seebelow@; };
   \pnum
   The member \tcode{type} is present if and only if
   \begin{itemize}
-    \item \tcode{V} is either \tcode{simd<T, Abi0>} or \tcode{simd_mask<T, Abi0>}, where \tcode T and \tcode{Abi0} are deduced from \tcode V, and
+    \item \tcode{V} is either \tcode{basic_simd<T, Abi0>} or \tcode{basic_simd_mask<T, Abi0>}, where \tcode T and \tcode{Abi0} are deduced from \tcode V, and
     \item \tcode{simd_abi::deduce<T, N, Abi0>} has a member type \tcode{type}.
   \end{itemize}
 
   \pnum
   Let \tcode{Abi1} denote the type \tcode{deduce_t<T, N, Abi0>}.
-  Where present, the member typedef \tcode{type} names \tcode{simd<T, Abi1>} if \tcode V is \tcode{simd<T, Abi0>} or \tcode{simd_mask<T, Abi1>} if \tcode V is \tcode{simd_mask<T, Abi0>}.
+  Where present, the member typedef \tcode{type} names \tcode{basic_simd<T, Abi1>} if \tcode V is \tcode{basic_simd<T, Abi0>} or \tcode{basic_simd_mask<T, Abi1>} if \tcode V is \tcode{basic_simd_mask<T, Abi0>}.
 \end{itemdescr}
 
-\rSec1[simd.flags]{Load and store flags}
+\rSec1[basic_simd.flags]{Load and store flags}
 
 \begin{itemdecl}
 inline constexpr loadstore_flags<@\seebelow@> loadstore_convert{};
@@ -438,11 +425,11 @@ template<size_t N> requires (has_single_bit<N>)
   There may be additional implementation-defined load and store flags.
 \end{itemdescr}
 
-\rSec2[simd.flags.overview]{Class template \tcode{loadstore_flags} overview}
+\rSec2[basic_simd.flags.overview]{Class template \tcode{loadstore_flags} overview}
 
 \begin{codeblock}
 template <class... Flags> struct loadstore_flags {
-  // \ref{simd.flags.oper}, \tcode{loadstore_flags} operators
+  // \ref{basic_simd.flags.oper}, \tcode{loadstore_flags} operators
   template <class... Other>
     friend constexpr auto operator|(loadstore_flags, loadstore_flags<Other...>);
 
@@ -463,7 +450,7 @@ Every type in \code{Flags} is a valid template argument to one of
 \tcode{loadstore_overaligned}, or to one of the implementation-defined load and
 store flags.
 
-\rSec2[simd.flags.oper]{\tcode{loadstore_flags} operators}
+\rSec2[basic_simd.flags.oper]{\tcode{loadstore_flags} operators}
 
 \begin{itemdecl}
 template <class... Other>
@@ -498,33 +485,33 @@ template <class... Other>
   store flags identified either by \tcode{a} or by \tcode{b}, but not both.
 \end{itemdescr}
 
-\rSec1[simd.class]{Class template \tcode{simd}}
+\rSec1[basic_simd.class]{Class template \tcode{basic_simd}}
 
-\rSec2[simd.overview]{Class template \tcode{simd} overview}
+\rSec2[basic_simd.overview]{Class template \tcode{basic_simd} overview}
 
 \begin{codeblock}
-template<class T, class Abi> class simd {
+template<class T, class Abi> class basic_simd {
 public:
   using value_type = T;
   using reference = @\seebelow@;
-  using mask_type = simd_mask<T, Abi>;
+  using mask_type = basic_simd_mask<T, Abi>;
   using abi_type = Abi;
 
   static constexpr typename simd_size<T, Abi>::type size;
 
-  constexpr simd() noexcept = default;
+  constexpr basic_simd() noexcept = default;
 
-  // \ref{simd.ctor}, \tcode{simd} constructors
-  template<class U> constexpr simd(U&& value) noexcept;
+  // \ref{basic_simd.ctor}, \tcode{basic_simd} constructors
+  template<class U> constexpr basic_simd(U&& value) noexcept;
   template<class U, class UAbi>
-    constexpr explicit(@\seebelow@) simd(const simd<U, UAbi>&) noexcept;
-  template<class G> constexpr explicit simd(G&& gen) noexcept;
+    constexpr explicit(@\seebelow@) basic_simd(const basic_simd<U, UAbi>&) noexcept;
+  template<class G> constexpr explicit basic_simd(G&& gen) noexcept;
   template<typename It, class... Flags>
-    constexpr simd(It first, loadstore_flags<Flags...> = {});
+    constexpr basic_simd(It first, loadstore_flags<Flags...> = {});
   template<typename It, class... Flags>
-    constexpr simd(It first, const mask_type& mask, loadstore_flags<Flags...> = {});
+    constexpr basic_simd(It first, const mask_type& mask, loadstore_flags<Flags...> = {});
 
-  // \ref{simd.copy}, \tcode{simd} copy functions
+  // \ref{basic_simd.copy}, \tcode{basic_simd} copy functions
   template<typename It, class... Flags>
     constexpr void copy_from(It first, loadstore_flags<Flags...> f = {});
   template<typename It, class... Flags>
@@ -534,88 +521,88 @@ public:
   template<typename Out, class... Flags>
     constexpr void copy_to(Out first, const mask_type& mask, loadstore_flags<Flags...> f = {}) const;
 
-  // \ref{simd.subscr}, \tcode{simd} subscript operators
+  // \ref{basic_simd.subscr}, \tcode{basic_simd} subscript operators
   constexpr reference operator[](size_t) &;
   constexpr value_type operator[](size_t) const&;
 
-  // \ref{simd.unary}, \tcode{simd} unary operators
-  constexpr simd& operator++() noexcept;
-  constexpr simd operator++(int) noexcept;
-  constexpr simd& operator--() noexcept;
-  constexpr simd operator--(int) noexcept;
+  // \ref{basic_simd.unary}, \tcode{basic_simd} unary operators
+  constexpr basic_simd& operator++() noexcept;
+  constexpr basic_simd operator++(int) noexcept;
+  constexpr basic_simd& operator--() noexcept;
+  constexpr basic_simd operator--(int) noexcept;
   constexpr mask_type operator!() const noexcept;
-  constexpr simd operator~() const noexcept;
-  constexpr simd operator+() const noexcept;
-  constexpr simd operator-() const noexcept;
+  constexpr basic_simd operator~() const noexcept;
+  constexpr basic_simd operator+() const noexcept;
+  constexpr basic_simd operator-() const noexcept;
 
-  // \ref{simd.binary}, \tcode{simd} binary operators
-  friend constexpr simd operator+(const simd&, const simd&) noexcept;
-  friend constexpr simd operator-(const simd&, const simd&) noexcept;
-  friend constexpr simd operator*(const simd&, const simd&) noexcept;
-  friend constexpr simd operator/(const simd&, const simd&) noexcept;
-  friend constexpr simd operator%(const simd&, const simd&) noexcept;
-  friend constexpr simd operator&(const simd&, const simd&) noexcept;
-  friend constexpr simd operator|(const simd&, const simd&) noexcept;
-  friend constexpr simd operator^(const simd&, const simd&) noexcept;
-  friend constexpr simd operator<<(const simd&, const simd&) noexcept;
-  friend constexpr simd operator>>(const simd&, const simd&) noexcept;
-  friend constexpr simd operator<<(const simd&, int) noexcept;
-  friend constexpr simd operator>>(const simd&, int) noexcept;
+  // \ref{basic_simd.binary}, \tcode{basic_simd} binary operators
+  friend constexpr basic_simd operator+(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd operator-(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd operator*(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd operator/(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd operator%(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd operator&(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd operator|(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd operator^(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd operator<<(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd operator>>(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd operator<<(const basic_simd&, int) noexcept;
+  friend constexpr basic_simd operator>>(const basic_simd&, int) noexcept;
 
-  // \ref{simd.cassign}, \tcode{simd} compound assignment
-  friend constexpr simd& operator+=(simd&, const simd&) noexcept;
-  friend constexpr simd& operator-=(simd&, const simd&) noexcept;
-  friend constexpr simd& operator*=(simd&, const simd&) noexcept;
-  friend constexpr simd& operator/=(simd&, const simd&) noexcept;
-  friend constexpr simd& operator%=(simd&, const simd&) noexcept;
-  friend constexpr simd& operator&=(simd&, const simd&) noexcept;
-  friend constexpr simd& operator|=(simd&, const simd&) noexcept;
-  friend constexpr simd& operator^=(simd&, const simd&) noexcept;
-  friend constexpr simd& operator<<=(simd&, const simd&) noexcept;
-  friend constexpr simd& operator>>=(simd&, const simd&) noexcept;
-  friend constexpr simd& operator<<=(simd&, int) noexcept;
-  friend constexpr simd& operator>>=(simd&, int) noexcept;
+  // \ref{basic_simd.cassign}, \tcode{basic_simd} compound assignment
+  friend constexpr basic_simd& operator+=(basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd& operator-=(basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd& operator*=(basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd& operator/=(basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd& operator%=(basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd& operator&=(basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd& operator|=(basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd& operator^=(basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd& operator<<=(basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd& operator>>=(basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd& operator<<=(basic_simd&, int) noexcept;
+  friend constexpr basic_simd& operator>>=(basic_simd&, int) noexcept;
 
-  // \ref{simd.comparison}, \tcode{simd} compare operators
-  friend constexpr mask_type operator==(const simd&, const simd&) noexcept;
-  friend constexpr mask_type operator!=(const simd&, const simd&) noexcept;
-  friend constexpr mask_type operator>=(const simd&, const simd&) noexcept;
-  friend constexpr mask_type operator<=(const simd&, const simd&) noexcept;
-  friend constexpr mask_type operator>(const simd&, const simd&) noexcept;
-  friend constexpr mask_type operator<(const simd&, const simd&) noexcept;
+  // \ref{basic_simd.comparison}, \tcode{basic_simd} compare operators
+  friend constexpr mask_type operator==(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr mask_type operator!=(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr mask_type operator>=(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr mask_type operator<=(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr mask_type operator>(const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr mask_type operator<(const basic_simd&, const basic_simd&) noexcept;
 
-  // \ref{simd.cond}, \tcode{simd} conditional operators
-  friend constexpr simd operator?:(const mask_type&, const simd&, const simd&) noexcept;
+  // \ref{basic_simd.cond}, \tcode{basic_simd} conditional operators
+  friend constexpr basic_simd operator?:(const mask_type&, const basic_simd&, const basic_simd&) noexcept;
 };
 \end{codeblock}
 
 \pnum
-The class template \tcode{simd} is a data-parallel type. The width of a given \tcode{simd} specialization is a constant expression, determined by the template parameters.
+The class template \tcode{basic_simd} is a data-parallel type. The width of a given \tcode{basic_simd} specialization is a constant expression, determined by the template parameters.
 
 \pnum
-Every specialization of \tcode{simd} is a complete type. The specialization \tcode{simd<T, Abi>} is supported if \tcode{T} is a vectorizable type and
+Every specialization of \tcode{basic_simd} is a complete type. The specialization \tcode{basic_simd<T, Abi>} is supported if \tcode{T} is a vectorizable type and
 \begin{itemize}
   \item \tcode{Abi} is \tcode{simd_abi::scalar}, or
-  \item \tcode{Abi} is \tcode{simd_abi::fixed_size<N>}, with \tcode{N} constrained as defined in \ref{simd.abi}.
+  \item \tcode{Abi} is \tcode{simd_abi::fixed_size<N>}, with \tcode{N} constrained as defined in \ref{basic_simd.abi}.
 \end{itemize}
 
-If \tcode{Abi} is an extended ABI tag, it is implementation-defined whether \tcode{simd<T, Abi>} is supported. \begin{note}The intent is for implementations to decide on the basis of the currently targeted system.\end{note}
+If \tcode{Abi} is an extended ABI tag, it is implementation-defined whether \tcode{basic_simd<T, Abi>} is supported. \begin{note}The intent is for implementations to decide on the basis of the currently targeted system.\end{note}
 
-If \tcode{simd<T, Abi>} is not supported, the specialization shall have a deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
+If \tcode{basic_simd<T, Abi>} is not supported, the specialization shall have a deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
 Otherwise, the following are true:
 \begin{itemize}
-  \item \tcode{is_nothrow_move_constructible_v<simd<T, Abi>>}, and
-  \item \tcode{is_nothrow_move_assignable_v<simd<T, Abi>>}, and
-  \item \tcode{is_nothrow_default_constructible_v<simd<T, Abi>>}.
+  \item \tcode{is_nothrow_move_constructible_v<basic_simd<T, Abi>>}, and
+  \item \tcode{is_nothrow_move_assignable_v<basic_simd<T, Abi>>}, and
+  \item \tcode{is_nothrow_default_constructible_v<basic_simd<T, Abi>>}.
 \end{itemize}
 
 \begin{example}
   Consider an implementation that defines the extended ABI tags \tcode{__simd_x} and \tcode{__gpu_y}. When the compiler is invoked to translate to a machine that has support for the \tcode{__simd_x} ABI tag for all arithmetic types other than \tcode{long double} and no support for the \tcode{__gpu_y} ABI tag, then:
   \begin{itemize}
-    \item \tcode{simd<T, simd_abi::__gpu_y>} is not supported for any \tcode{T} and has a deleted constructor.
-    \item \tcode{simd<long double, simd_abi::__simd_x>} is not supported and has a deleted constructor.
-    \item \tcode{simd<double, simd_abi::__simd_x>} is supported.
-    \item \tcode{simd<long double, simd_abi::scalar>} is supported.
+    \item \tcode{basic_simd<T, simd_abi::__gpu_y>} is not supported for any \tcode{T} and has a deleted constructor.
+    \item \tcode{basic_simd<long double, simd_abi::__simd_x>} is not supported and has a deleted constructor.
+    \item \tcode{basic_simd<double, simd_abi::__simd_x>} is supported.
+    \item \tcode{basic_simd<long double, simd_abi::scalar>} is supported.
   \end{itemize}
 \end{example}
 
@@ -623,25 +610,25 @@ Otherwise, the following are true:
 Default intialization performs no initialization of the elements; value-initialization initializes each element with \tcode{T()}. \begin{note}Thus, default initialization leaves the elements in an indeterminate state.\end{note}
 
 \pnum
-Implementations should enable explicit conversion from and to implementation-defined types. This adds one or more of the following declarations to class \tcode{simd}:
+Implementations should enable explicit conversion from and to implementation-defined types. This adds one or more of the following declarations to class \tcode{basic_simd}:
 
 \begin{codeblock}
 constexpr explicit operator @\impdef@() const;
-constexpr explicit simd(const @\impdef@& init);
+constexpr explicit basic_simd(const @\impdef@& init);
 \end{codeblock}
 
 \begin{example}
   Consider an implementation that supports the type \tcode{__vec4f} and the function \tcode{__vec4f _vec4f_addsub(__vec4f, __vec4f)} for the currently targeted system.
   A user may require the use of \tcode{_vec4f_addsub} for maximum performance and thus writes:
   \begin{codeblock}
-    using V = simd<float, simd_abi::__simd128>;
+    using V = basic_simd<float, simd_abi::__simd128>;
     V addsub(V a, V b) {
       return static_cast<V>(_vec4f_addsub(static_cast<__vec4f>(a), static_cast<__vec4f>(b)));
     }
   \end{codeblock}
 \end{example}
 
-\rSec2[simd.width]{\tcode{simd} width}
+\rSec2[basic_simd.width]{\tcode{basic_simd} width}
 
 \begin{itemdecl}
 static constexpr typename simd_size<T, Abi>::type size;
@@ -649,13 +636,13 @@ static constexpr typename simd_size<T, Abi>::type size;
 
 \begin{itemdescr}
   \pnum\returns
-  The width of \tcode{simd<T, Abi>}.
+  The width of \tcode{basic_simd<T, Abi>}.
 \end{itemdescr}
 
-\rSec2[simd.reference]{Element references}
+\rSec2[basic_simd.reference]{Element references}
 
 \pnum
-A \tcode{reference} is an object that refers to an element in a \tcode{simd} or \tcode{simd_mask} object. \tcode{reference::value_type} is the same type as \tcode{simd::value_type} or \tcode{simd_mask::value_type}, respectively.
+A \tcode{reference} is an object that refers to an element in a \tcode{basic_simd} or \tcode{basic_simd_mask} object. \tcode{reference::value_type} is the same type as \tcode{simd::value_type} or \tcode{simd_mask::value_type}, respectively.
 
 \pnum
 Class \tcode{reference} is for exposition only. An implementation is permitted to provide equivalent functionality without providing a class with this name.
@@ -711,7 +698,7 @@ template<class U> constexpr reference operator=(U&& x) && noexcept;
   \tcode{declval<value_type\&>() = std\colcol{}forward<U>(x)} is well-formed.
 
   \pnum\effects
-  Replaces the referred to element in \tcode{simd} or \tcode{simd_mask} with \tcode{static_cast<value_type>(std\colcol{}forward<U>(x))}.
+  Replaces the referred to element in \tcode{basic_simd} or \tcode{basic_simd_mask} with \tcode{static_cast<value_type>(std\colcol{}forward<U>(x))}.
 
   \pnum\returns
   A copy of \tcode{*this}.
@@ -735,7 +722,7 @@ template<class U> constexpr reference operator>>=(U&& x) && noexcept;
   \tcode{declval<value_type\&>() @= std\colcol{}forward<U>(x)} (where \tcode{@=} denotes the indicated compound assignment operator) is well-formed.
 
   \pnum\effects
-  Applies the indicated compound operator to the referred to element in \tcode{simd} or \tcode{simd_mask} and \tcode{std\colcol{}forward<U>(x)}.
+  Applies the indicated compound operator to the referred to element in \tcode{basic_simd} or \tcode{basic_simd_mask} and \tcode{std\colcol{}forward<U>(x)}.
 
   \pnum\returns
   A copy of \tcode{*this}.
@@ -751,7 +738,7 @@ constexpr reference operator--() && noexcept;
   The indicated operator can be applied to objects of type \tcode{value_type}.
 
   \pnum\effects
-  Applies the indicated operator to the referred to element in \tcode{simd} or \tcode{simd_mask}.
+  Applies the indicated operator to the referred to element in \tcode{basic_simd} or \tcode{basic_simd_mask}.
 
   \pnum\returns
   A copy of \tcode{*this}.
@@ -767,7 +754,7 @@ constexpr value_type operator--(int) && noexcept;
   The indicated operator can be applied to objects of type \tcode{value_type}.
 
   \pnum\effects
-  Applies the indicated operator to the referred to element in \tcode{simd} or \tcode{simd_mask}.
+  Applies the indicated operator to the referred to element in \tcode{basic_simd} or \tcode{basic_simd_mask}.
 
   \pnum\returns
   A copy of the referred to element before applying the indicated operator.
@@ -784,10 +771,10 @@ friend constexpr void swap(reference&& a, value_type& b) noexcept;
   Exchanges the values \tcode{a} and \tcode{b} refer to.
 \end{itemdescr}
 
-\rSec2[simd.ctor]{\tcode{simd} constructors}
+\rSec2[basic_simd.ctor]{\tcode{basic_simd} constructors}
 
 \begin{itemdecl}
-template<class U> constexpr simd(U&&) noexcept;
+template<class U> constexpr basic_simd(U&&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -813,7 +800,7 @@ template<class U> constexpr simd(U&&) noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U, class UAbi> constexpr explicit(@\seebelow@) simd(const simd<U, UAbi>& x) noexcept;
+template<class U, class UAbi> constexpr explicit(@\seebelow@) basic_simd(const basic_simd<U, UAbi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -840,12 +827,12 @@ template<class U, class UAbi> constexpr explicit(@\seebelow@) simd(const simd<U,
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class G> constexpr simd(G&& gen) noexcept;
+template<class G> constexpr basic_simd(G&& gen) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{simd(gen(integral_constant<size_t, i>()))} is well-formed \foralli.
+  \tcode{basic_simd(gen(integral_constant<size_t, i>()))} is well-formed \foralli.
 
   \pnum\effects
   Constructs an object where the $i^\text{th}$ element is initialized to \tcode{gen(integral_constant<size_t, i>())}.
@@ -868,7 +855,7 @@ template<class G> constexpr simd(G&& gen) noexcept;
   \begin{itemize}
     \item #1
     \item \tcode{It} models \tcode{contiguous_iterator}.
-    \flagsRequires{simd, iter_value_t<It>}{iter_value_t<It>}
+    \flagsRequires{basic_simd, iter_value_t<It>}{iter_value_t<It>}
   \end{itemize}
 
   \pnum\effects #2
@@ -878,7 +865,7 @@ template<class G> constexpr simd(G&& gen) noexcept;
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr simd(It first, loadstore_flags<Flags...> = {});
+  constexpr basic_simd(It first, loadstore_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -889,7 +876,7 @@ template<typename It, class... Flags>
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr simd(It first, const mask_type& mask, loadstore_flags<Flags...> = {});
+  constexpr basic_simd(It first, const mask_type& mask, loadstore_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -898,7 +885,7 @@ template<typename It, class... Flags>
     {Constructs an object where the $i^\text{th}$ element is initialized to \tcode{mask[$i$] ? static_cast<T>(first[$i$]) : T()} \foralli.}
 \end{itemdescr}
 
-\rSec2[simd.copy]{\tcode{simd} copy functions}
+\rSec2[basic_simd.copy]{\tcode{basic_simd} copy functions}
 
 \begin{itemdecl}
 template<typename It, class... Flags>
@@ -908,7 +895,7 @@ template<typename It, class... Flags>
 \begin{itemdescr}
   \SimdLoadDescr
     {\tcode{[first, first + size())} is a valid range.}
-    {Replaces the elements of the \tcode{simd} object such that the $i^\text{th}$ element is assigned with \tcode{static_cast<T>(first[$i$])} \foralli.}
+    {Replaces the elements of the \tcode{basic_simd} object such that the $i^\text{th}$ element is assigned with \tcode{static_cast<T>(first[$i$])} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -919,7 +906,7 @@ template<typename It, class... Flags>
 \begin{itemdescr}
   \SimdLoadDescr
     {\validMaskedRange}
-    {Replaces the selected elements of the \tcode{simd} object such that the $i^\text{th}$ element is replaced with \tcode{static_cast<T>(first[$i$])} \forallmaskedi.}
+    {Replaces the selected elements of the \tcode{basic_simd} object such that the $i^\text{th}$ element is replaced with \tcode{static_cast<T>(first[$i$])} \forallmaskedi.}
 \end{itemdescr}
 
 \newcommand\SimdStoreDescr[2]{
@@ -939,7 +926,7 @@ template<typename It, class... Flags>
     \item #1
     \item \tcode{Out} models \tcode{contiguous_iterator}.
     \item \tcode{Out} models \tcode{output_iterator<value_type>}.
-    \flagsRequires{simd, iter_value_t<Out>}{iter_value_t<Out>}
+    \flagsRequires{basic_simd, iter_value_t<Out>}{iter_value_t<Out>}
   \end{itemize}
 
   \pnum\effects #2
@@ -955,7 +942,7 @@ template<typename Out, class... Flags>
 \begin{itemdescr}
   \SimdStoreDescr
     {\tcode{[first, first + size())} is a valid range.}
-    {Copies all \tcode{simd} elements as if \tcode{first[$i$] = static_cast<iter_value_t<Out>>(operator[]($i$))} \foralli.}
+    {Copies all \tcode{basic_simd} elements as if \tcode{first[$i$] = static_cast<iter_value_t<Out>>(operator[]($i$))} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -969,7 +956,7 @@ template<typename Out, class... Flags>
     {Copies the selected elements as if \tcode{first[$i$] = static_cast<iter_value_t<Out>>(operator[]($i$))} \forallmaskedi.}
 \end{itemdescr}
 
-\rSec2[simd.subscr]{\tcode{simd} subscript operators}
+\rSec2[basic_simd.subscr]{\tcode{basic_simd} subscript operators}
 
 \begin{itemdecl}
 constexpr reference operator[](size_t i) &;
@@ -980,7 +967,7 @@ constexpr reference operator[](size_t i) &;
   \tcode{i < size()}.
 
   \pnum\returns
-  A \tcode{reference} (see \ref{simd.reference}) referring to the $i^\text{th}$ element.
+  A \tcode{reference} (see \ref{basic_simd.reference}) referring to the $i^\text{th}$ element.
 
   \pnum\throws Nothing.
 \end{itemdescr}
@@ -999,13 +986,13 @@ constexpr value_type operator[](size_t i) const&;
   \pnum\throws Nothing.
 \end{itemdescr}
 
-\rSec2[simd.unary]{\tcode{simd} unary operators}
+\rSec2[basic_simd.unary]{\tcode{basic_simd} unary operators}
 
 \pnum
 Effects in this subclause are applied as unary element-wise operations.
 
 \begin{itemdecl}
-constexpr simd& operator++() noexcept;
+constexpr basic_simd& operator++() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1019,7 +1006,7 @@ constexpr simd& operator++() noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr simd operator++(int) noexcept;
+constexpr basic_simd operator++(int) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1033,7 +1020,7 @@ constexpr simd operator++(int) noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr simd& operator--() noexcept;
+constexpr basic_simd& operator--() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1047,7 +1034,7 @@ constexpr simd& operator--() noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr simd operator--(int) noexcept;
+constexpr basic_simd operator--(int) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1068,22 +1055,22 @@ constexpr mask_type operator!() const noexcept;
   \pnum\ConstraintOperatorTWellFormed[unary \tcode{!}]
 
   \pnum\returns
-  A \tcode{simd_mask} object with the $i^\text{th}$ element set to \tcode{!operator[]($i$)} \foralli.
+  A \tcode{basic_simd_mask} object with the $i^\text{th}$ element set to \tcode{!operator[]($i$)} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr simd operator~() const noexcept;
+constexpr basic_simd operator~() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\ConstraintOperatorTWellFormed[unary \tcode{\~{}}]
 
   \pnum\returns
-  A \tcode{simd} object where each bit is the inverse of the corresponding bit in \tcode{*this}.
+  A \tcode{basic_simd} object where each bit is the inverse of the corresponding bit in \tcode{*this}.
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr simd operator+() const noexcept;
+constexpr basic_simd operator+() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1094,65 +1081,65 @@ constexpr simd operator+() const noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr simd operator-() const noexcept;
+constexpr basic_simd operator-() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\ConstraintOperatorTWellFormed[unary \tcode{-}]
 
   \pnum\returns
-  A \tcode{simd} object where the $i^\text{th}$ element is initialized to \tcode{-operator[]($i$)} \foralli.
+  A \tcode{basic_simd} object where the $i^\text{th}$ element is initialized to \tcode{-operator[]($i$)} \foralli.
 \end{itemdescr}
 
-\rSec1[simd.nonmembers]{\tcode{simd} non-member operations}
+\rSec1[basic_simd.nonmembers]{\tcode{basic_simd} non-member operations}
 
-\rSec2[simd.binary]{\tcode{simd} binary operators}
+\rSec2[basic_simd.binary]{\tcode{basic_simd} binary operators}
 
 \begin{itemdecl}
-friend constexpr simd operator+(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd operator-(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd operator*(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd operator/(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd operator%(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd operator&(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd operator|(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd operator^(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd operator<<(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd operator>>(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr basic_simd operator+(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd operator-(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd operator*(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd operator/(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd operator%(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd operator&(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd operator|(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd operator^(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd operator<<(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd operator>>(const basic_simd& lhs, const basic_simd& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\ConstraintOperatorTWellFormed
 
   \pnum\returns
-  A \tcode{simd} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
+  A \tcode{basic_simd} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
 \begin{itemdecl}
-friend constexpr simd operator<<(const simd& v, int n) noexcept;
-friend constexpr simd operator>>(const simd& v, int n) noexcept;
+friend constexpr basic_simd operator<<(const basic_simd& v, int n) noexcept;
+friend constexpr basic_simd operator>>(const basic_simd& v, int n) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\ConstraintOperatorTWellFormed
 
   \pnum\returns
-  A \tcode{simd} object where the $i^\text{th}$ element is initialized to the result of applying the indicated operator to \tcode{v[$i$]} and \tcode{n} \foralli.
+  A \tcode{basic_simd} object where the $i^\text{th}$ element is initialized to the result of applying the indicated operator to \tcode{v[$i$]} and \tcode{n} \foralli.
 \end{itemdescr}
 
-\rSec2[simd.cassign]{\tcode{simd} compound assignment}
+\rSec2[basic_simd.cassign]{\tcode{basic_simd} compound assignment}
 
 \begin{itemdecl}
-friend constexpr simd& operator+=(simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd& operator-=(simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd& operator*=(simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd& operator/=(simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd& operator%=(simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd& operator&=(simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd& operator|=(simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd& operator^=(simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd& operator<<=(simd& lhs, const simd& rhs) noexcept;
-friend constexpr simd& operator>>=(simd& lhs, const simd& rhs) noexcept;
+friend constexpr basic_simd& operator+=(basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd& operator-=(basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd& operator*=(basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd& operator/=(basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd& operator%=(basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd& operator&=(basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd& operator|=(basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd& operator^=(basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd& operator<<=(basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr basic_simd& operator>>=(basic_simd& lhs, const basic_simd& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1166,58 +1153,58 @@ friend constexpr simd& operator>>=(simd& lhs, const simd& rhs) noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-friend constexpr simd& operator<<=(simd& lhs, int n) noexcept;
-friend constexpr simd& operator>>=(simd& lhs, int n) noexcept;
+friend constexpr basic_simd& operator<<=(basic_simd& lhs, int n) noexcept;
+friend constexpr basic_simd& operator>>=(basic_simd& lhs, int n) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\ConstraintOperatorTWellFormed
 
   \pnum\effects
-  Equivalent to: \tcode{return operator@=(lhs, simd(n));}
+  Equivalent to: \tcode{return operator@=(lhs, basic_simd(n));}
 \end{itemdescr}
 
-\rSec2[simd.comparison]{\tcode{simd} compare operators}
+\rSec2[basic_simd.comparison]{\tcode{basic_simd} compare operators}
 
 \begin{itemdecl}
-friend constexpr mask_type operator==(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr mask_type operator!=(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr mask_type operator>=(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr mask_type operator<=(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr mask_type operator>(const simd& lhs, const simd& rhs) noexcept;
-friend constexpr mask_type operator<(const simd& lhs, const simd& rhs) noexcept;
+friend constexpr mask_type operator==(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr mask_type operator!=(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr mask_type operator>=(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr mask_type operator<=(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr mask_type operator>(const basic_simd& lhs, const basic_simd& rhs) noexcept;
+friend constexpr mask_type operator<(const basic_simd& lhs, const basic_simd& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\ConstraintOperatorTWellFormed
 
   \pnum\returns
-  A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
+  A \tcode{basic_simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.cond]{\tcode{simd} conditional operators}
+\rSec2[basic_simd.cond]{\tcode{basic_simd} conditional operators}
 
 \begin{itemdecl}
-friend constexpr simd operator?:(const mask_type& mask, const simd& a, const simd& b) noexcept;
+friend constexpr basic_simd operator?:(const mask_type& mask, const basic_simd& a, const basic_simd& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
-  A \tcode{simd} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a[$i$] : b[$i$]} \foralli.
+  A \tcode{basic_simd} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a[$i$] : b[$i$]} \foralli.
 \end{itemdescr}
-\rSec2[simd.reductions]{\tcode{simd} reductions}
+\rSec2[basic_simd.reductions]{\tcode{basic_simd} reductions}
 
 \pnum
 In this subclause, \tcode{BinaryOperation} shall be a binary element-wise operation.
 
 \begin{itemdecl}
 template<class T, class Abi, class BinaryOperation = plus<>>
-  constexpr T reduce(const simd<T, Abi>& x, BinaryOperation binary_op = {});
+  constexpr T reduce(const basic_simd<T, Abi>& x, BinaryOperation binary_op = {});
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\mandates
-  \tcode{binary_op} can be invoked with two arguments of type \tcode{simd<T, A1>} returning \tcode{simd<T, A1>} for every \tcode{A1} that is an ABI tag type.
+  \tcode{binary_op} can be invoked with two arguments of type \tcode{basic_simd<T, A1>} returning \tcode{basic_simd<T, A1>} for every \tcode{A1} that is an ABI tag type.
 
   \pnum\returns
   \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x.data[$i$], ...)} \foralli (\iref{numerics.defns}).
@@ -1228,16 +1215,16 @@ template<class T, class Abi, class BinaryOperation = plus<>>
 
 \begin{itemdecl}
 template<class T, class Abi, class BinaryOperation>
-  constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+  constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                      T identity_element, BinaryOperation binary_op);
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\mandates
-  \tcode{binary_op} can be invoked with two arguments of type \tcode{simd<T, A1>} returning \tcode{simd<T, A1>} for every \tcode{A1} that is an ABI tag type.
+  \tcode{binary_op} can be invoked with two arguments of type \tcode{basic_simd<T, A1>} returning \tcode{basic_simd<T, A1>} for every \tcode{A1} that is an ABI tag type.
 
   \pnum\expects
-  The results of \tcode{all_of(x == binary_op(simd<T, A1>(identity_element), simd<T, A1>(x)))} and \tcode{all_of(simd<T, A1>(x) == binary_op(x, simd<T, A1>(identity_element)))} shall be \tcode{true} for every \tcode{A1} that is an ABI tag type and for all finite values \tcode{x} representable by \tcode{T}.
+  The results of \tcode{all_of(x == binary_op(basic_simd<T, A1>(identity_element), basic_simd<T, A1>(x)))} and \tcode{all_of(basic_simd<T, A1>(x) == binary_op(x, basic_simd<T, A1>(identity_element)))} shall be \tcode{true} for every \tcode{A1} that is an ABI tag type and for all finite values \tcode{x} representable by \tcode{T}.
 
   \pnum\returns
   If \tcode{none_of(mask)}, returns \tcode{identity_element}.
@@ -1249,7 +1236,7 @@ template<class T, class Abi, class BinaryOperation>
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+  constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                      plus<> binary_op = {}) noexcept;
 \end{itemdecl}
 
@@ -1260,7 +1247,7 @@ template<class T, class Abi>
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+  constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                      multiplies<> binary_op) noexcept;
 \end{itemdecl}
 
@@ -1271,7 +1258,7 @@ template<class T, class Abi>
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+  constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                      bit_and<> binary_op) noexcept;
 \end{itemdecl}
 
@@ -1285,10 +1272,10 @@ template<class T, class Abi>
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+  constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                      bit_or<> binary_op) noexcept;
 template<class T, class Abi>
-  constexpr T reduce(const simd<T, Abi>& x, const typename simd<T, Abi>::mask_type& mask,
+  constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                      bit_xor<> binary_op) noexcept;
 \end{itemdecl}
 
@@ -1301,7 +1288,7 @@ template<class T, class Abi>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr T hmin(const simd<T, Abi>& x) noexcept;
+template<class T, class Abi> constexpr T hmin(const basic_simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1317,7 +1304,7 @@ template<class T, class Abi> constexpr T hmin(const simd<T, Abi>& x) noexcept;
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr T hmin(const simd<T, Abi>&, const typename simd<T, Abi>::mask_type&) noexcept;
+  constexpr T hmin(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1333,7 +1320,7 @@ template<class T, class Abi>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr T hmax(const simd<T, Abi>& x) noexcept;
+template<class T, class Abi> constexpr T hmax(const basic_simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1349,7 +1336,7 @@ template<class T, class Abi> constexpr T hmax(const simd<T, Abi>& x) noexcept;
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr T hmax(const simd<T, Abi>&, const typename simd<T, Abi>::mask_type&) noexcept;
+  constexpr T hmax(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1364,15 +1351,15 @@ template<class T, class Abi>
   Otherwise, returns the value of a selected element \tcode{x.data[$j$]} for which \tcode{x.data[$j$] < x.data[$i$]} is \tcode{false} \forallmaskedi.
 \end{itemdescr}
 
-\rSec2[simd.creation]{\tcode{simd} and \tcode{simd_mask} creation}
+\rSec2[basic_simd.creation]{\tcode{basic_simd} and \tcode{basic_simd_mask} creation}
 
 \begin{itemdecl}
 template<size_t... Sizes, class T, class Abi>
-  constexpr tuple<simd<T, simd_abi::deduce_t<T, Sizes>>...>
-    split(const simd<T, Abi>& x) noexcept;
+  constexpr tuple<basic_simd<T, simd_abi::deduce_t<T, Sizes>>...>
+    split(const basic_simd<T, Abi>& x) noexcept;
 template<size_t... Sizes, class T, class Abi>
-  constexpr tuple<simd_mask<T, simd_abi::deduce_t<T, Sizes>>...>
-    split(const simd_mask<T, Abi>& x) noexcept;
+  constexpr tuple<basic_simd_mask<T, simd_abi::deduce_t<T, Sizes>>...>
+    split(const basic_simd_mask<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1380,16 +1367,16 @@ template<size_t... Sizes, class T, class Abi>
   The sum of all values in the \tcode{Sizes} pack is equal to \tcode{simd_size_v<T, Abi>}.
 
   \pnum\returns
-  A \tcode{tuple} of data-parallel objects with the $i^\text{th}$ \tcode{simd}/\tcode{simd_mask} element of the $j^\text{th}$ \tcode{tuple} element initialized to the value of the element \tcode{x} with index $i$ + sum of the first $j$ values in the \tcode{Sizes} pack.
+  A \tcode{tuple} of data-parallel objects with the $i^\text{th}$ \tcode{basic_simd}/\tcode{basic_simd_mask} element of the $j^\text{th}$ \tcode{tuple} element initialized to the value of the element \tcode{x} with index $i$ + sum of the first $j$ values in the \tcode{Sizes} pack.
 \end{itemdescr}
 
 \begin{itemdecl}
 template<class V, class Abi>
   constexpr array<V, simd_size_v<typename V::value_type, Abi> / V::size()>
-    split(const simd<typename V::value_type, Abi>& x) noexcept;
+    split(const basic_simd<typename V::value_type, Abi>& x) noexcept;
 template<class V, class Abi>
   constexpr array<V, simd_size_v<typename V::simd_type::value_type, Abi> / V::size()>
-    split(const simd_mask<typename V::simd_type::value_type, Abi>& x) noexcept;
+    split(const basic_simd_mask<typename V::simd_type::value_type, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1400,16 +1387,16 @@ template<class V, class Abi>
   \end{itemize}
 
   \pnum\returns
-  An \tcode{array} of data-parallel objects with the $i^\text{th}$ \tcode{simd}/\tcode{simd_mask} element of the $j^\text{th}$ \tcode{array} element initialized to the value of the element in \tcode{x} with index \tcode{$i$ + $j$ * V::size()}.
+  An \tcode{array} of data-parallel objects with the $i^\text{th}$ \tcode{basic_simd}/\tcode{basic_simd_mask} element of the $j^\text{th}$ \tcode{array} element initialized to the value of the element in \tcode{x} with index \tcode{$i$ + $j$ * V::size()}.
 \end{itemdescr}
 
 \begin{itemdecl}
 template<size_t N, class T, class A>
-  constexpr array<resize_simd<simd_size_v<T, A> / N, simd<T, A>>, N>
-    split_by(const simd<T, A>& x) noexcept;
+  constexpr array<resize_simd<simd_size_v<T, A> / N, basic_simd<T, A>>, N>
+    split_by(const basic_simd<T, A>& x) noexcept;
 template<size_t N, class T, class A>
-  constexpr array<resize_simd<simd_size_v<T, A> / N, simd_mask<T, A>>, N>
-    split_by(const simd_mask<T, A>& x) noexcept;
+  constexpr array<resize_simd<simd_size_v<T, A> / N, basic_simd_mask<T, A>>, N>
+    split_by(const basic_simd_mask<T, A>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1422,25 +1409,25 @@ template<size_t N, class T, class A>
 
 \begin{itemdecl}
 template<class T, class... Abis>
-  constexpr simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(
-    const simd<T, Abis>&... xs) noexcept;
+  constexpr basic_simd<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(
+    const basic_simd<T, Abis>&... xs) noexcept;
 template<class T, class... Abis>
-  constexpr simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(
-    const simd_mask<T, Abis>&... xs) noexcept;
+  constexpr basic_simd_mask<T, simd_abi::deduce_t<T, (simd_size_v<T, Abis> + ...)>> concat(
+    const basic_simd_mask<T, Abis>&... xs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
-  A data-parallel object initialized with the concatenated values in the \tcode{xs} pack of data-parallel objects: The $i^\text{th}$ \tcode{simd}/\tcode{simd_mask} element of the $j^\text{th}$ parameter in the \tcode{xs} pack is copied to the return value's element with index $i$ + the sum of the width of the first $j$ parameters in the \tcode{xs} pack.
+  A data-parallel object initialized with the concatenated values in the \tcode{xs} pack of data-parallel objects: The $i^\text{th}$ \tcode{basic_simd}/\tcode{basic_simd_mask} element of the $j^\text{th}$ parameter in the \tcode{xs} pack is copied to the return value's element with index $i$ + the sum of the width of the first $j$ parameters in the \tcode{xs} pack.
 \end{itemdescr}
 
 \begin{itemdecl}
   template<class T, class Abi, size_t N>
-    constexpr resize_simd<simd_size_v<T, Abi> * N, simd<T, Abi>>
-      concat(const array<simd<T, Abi>, N>& arr) noexcept;
+    constexpr resize_simd<simd_size_v<T, Abi> * N, basic_simd<T, Abi>>
+      concat(const array<basic_simd<T, Abi>, N>& arr) noexcept;
   template<class T, class Abi, size_t N>
-    constexpr resize_simd<simd_size_v<T, Abi> * N, simd_mask<T, Abi>>
-      concat(const array<simd_mask<T, Abi>, N>& arr) noexcept;
+    constexpr resize_simd<simd_size_v<T, Abi> * N, basic_simd_mask<T, Abi>>
+      concat(const array<basic_simd_mask<T, Abi>, N>& arr) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1448,10 +1435,10 @@ template<class T, class... Abis>
   A data-parallel object, the $i^\text{th}$ element of which is initialized by \tcode{arr[$i$ / simd_size_v<T, Abi>][$i$ \% simd_size_v<T, Abi>]}.
 \end{itemdescr}
 
-\rSec2[simd.alg]{Algorithms}
+\rSec2[basic_simd.alg]{Algorithms}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr simd<T, Abi> min(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
+template<class T, class Abi> constexpr basic_simd<T, Abi> min(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1466,7 +1453,7 @@ template<class T, class Abi> constexpr simd<T, Abi> min(const simd<T, Abi>& a, c
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr simd<T, Abi> max(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
+template<class T, class Abi> constexpr basic_simd<T, Abi> max(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1482,7 +1469,7 @@ template<class T, class Abi> constexpr simd<T, Abi> max(const simd<T, Abi>& a, c
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr pair<simd<T, Abi>, simd<T, Abi>> minmax(const simd<T, Abi>& a, const simd<T, Abi>& b) noexcept;
+  constexpr pair<basic_simd<T, Abi>, basic_simd<T, Abi>> minmax(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1501,8 +1488,8 @@ template<class T, class Abi>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> simd<T, Abi>
-  constexpr clamp(const simd<T, Abi>& v, const simd<T, Abi>& lo, const simd<T, Abi>& hi);
+template<class T, class Abi> basic_simd<T, Abi>
+  constexpr clamp(const basic_simd<T, Abi>& v, const basic_simd<T, Abi>& lo, const basic_simd<T, Abi>& hi);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1519,18 +1506,18 @@ template<class T, class Abi> simd<T, Abi>
   The result of element-wise application of \tcode{std::clamp(v[$i$], lo[$i$], hi[$i$])} \foralli.
 \end{itemdescr}
 
-\rSec2[simd.math]{\tcode{simd} math library}
+\rSec2[basic_simd.math]{\tcode{basic_simd} math library}
 
 \pnum
-For each set of overloaded functions within \tcode{<cmath>}, there shall be additional overloads sufficient to ensure that if any argument corresponding to a \tcode{double} parameter has type \tcode{simd<T, Abi>}, where \tcode{is_floating_point_v<T>} is \tcode{true}, then:
+For each set of overloaded functions within \tcode{<cmath>}, there shall be additional overloads sufficient to ensure that if any argument corresponding to a \tcode{double} parameter has type \tcode{basic_simd<T, Abi>}, where \tcode{is_floating_point_v<T>} is \tcode{true}, then:
 \begin{itemize}
-  \item All arguments corresponding to \tcode{double} parameters shall be convertible to \tcode{simd<T, Abi>}.
-  \item All arguments corresponding to \tcode{double*} parameters shall be of type \tcode{simd<T, Abi>*}.
+  \item All arguments corresponding to \tcode{double} parameters shall be convertible to \tcode{basic_simd<T, Abi>}.
+  \item All arguments corresponding to \tcode{double*} parameters shall be of type \tcode{basic_simd<T, Abi>*}.
   \item All arguments corresponding to parameters of integral type \tcode{U} shall be convertible to \tcode{fixed_size_simd<U, simd_size_v<T, Abi>>}.
   \item All arguments corresponding to \tcode{U*}, where \tcode{U} is integral, shall be of type \tcode{fixed_size_simd<U, simd_size_v<T, Abi>>*}.
-  \item If the corresponding return type is \tcode{double}, the return type of the additional overloads is \tcode{simd<T, Abi>}. Otherwise, if the corresponding return type is \tcode{bool}, the return type of the additional overload is \tcode{simd_mask<T, Abi>}. Otherwise, the return type is \tcode{fixed_size_simd<R, simd_size_v<T, Abi>>}, with \tcode{R} denoting the corresponding return type.
+  \item If the corresponding return type is \tcode{double}, the return type of the additional overloads is \tcode{basic_simd<T, Abi>}. Otherwise, if the corresponding return type is \tcode{bool}, the return type of the additional overload is \tcode{basic_simd_mask<T, Abi>}. Otherwise, the return type is \tcode{fixed_size_simd<R, simd_size_v<T, Abi>>}, with \tcode{R} denoting the corresponding return type.
 \end{itemize}
-It is unspecified whether a call to these overloads with arguments that are all convertible to \tcode{simd<T, Abi>} but are not of type \tcode{simd<T, Abi>} is well-formed.
+It is unspecified whether a call to these overloads with arguments that are all convertible to \tcode{basic_simd<T, Abi>} but are not of type \tcode{basic_simd<T, Abi>} is well-formed.
 
 \pnum
 Each function overload produced by the above rules applies the indicated \tcode{<cmath>} function element-wise. For the mathematical functions, the results per element only need to be approximately equal to the application of the function which is overloaded for the element type.
@@ -1540,121 +1527,121 @@ The result is unspecified if a domain, pole, or range error occurs when the inpu
 \begin{note}Implementations are encouraged to follow the C specification (especially Annex F).\end{note}
 
 \pnum
-TODO: Allow \tcode{abs(simd<\textrm{signed-integral}>)}.
+TODO: Allow \tcode{abs(basic_simd<\textrm{signed-integral}>)}.
 
 \pnum
-If \tcode{abs} is called with an argument of type \tcode{simd<X, Abi>} for which \tcode{is_unsigned_v<X>} is \tcode{true}, the program is ill-formed.
+If \tcode{abs} is called with an argument of type \tcode{basic_simd<X, Abi>} for which \tcode{is_unsigned_v<X>} is \tcode{true}, the program is ill-formed.
 
-\rSec1[simd.mask.class]{Class template \tcode{simd_mask}}
+\rSec1[basic_simd.mask.class]{Class template \tcode{basic_simd_mask}}
 
-\rSec2[simd.mask.overview]{Class template \tcode{simd_mask} overview}
+\rSec2[basic_simd.mask.overview]{Class template \tcode{basic_simd_mask} overview}
 
 \begin{codeblock}
-template<class T, class Abi> class simd_mask {
+template<class T, class Abi> class basic_simd_mask {
 public:
   using value_type = bool;
   using reference = @\seebelow@;
-  using simd_type = simd<T, Abi>;
+  using simd_type = basic_simd<T, Abi>;
   using abi_type = Abi;
 
   static constexpr typename simd_size<T, Abi>::type size;
 
-  constexpr simd_mask() noexcept = default;
+  constexpr basic_simd_mask() noexcept = default;
 
-  // \ref{simd.mask.ctor}, \tcode{simd_mask} constructors
-  constexpr explicit simd_mask(value_type) noexcept;
+  // \ref{basic_simd.mask.ctor}, \tcode{basic_simd_mask} constructors
+  constexpr explicit basic_simd_mask(value_type) noexcept;
   template<class U, class UAbi>
-    constexpr explicit(sizeof(U) != sizeof(T)) simd_mask(const simd_mask<U, UAbi>&) noexcept;
-  template<class G> constexpr explicit simd_mask(G&& gen) noexcept;
+    constexpr explicit(sizeof(U) != sizeof(T)) basic_simd_mask(const basic_simd_mask<U, UAbi>&) noexcept;
+  template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
   template<typename It, class... Flags>
-    constexpr simd_mask(It first, Flags = {});
+    constexpr basic_simd_mask(It first, Flags = {});
   template<typename It, class... Flags>
-    constexpr simd_mask(It first, const simd_mask& mask, loadstore_flags<Flags...> = {});
+    constexpr basic_simd_mask(It first, const basic_simd_mask& mask, loadstore_flags<Flags...> = {});
 
-  // \ref{simd.mask.copy}, \tcode{simd_mask} copy functions
+  // \ref{basic_simd.mask.copy}, \tcode{basic_simd_mask} copy functions
   template<typename It, class... Flags>
     constexpr void copy_from(It first, loadstore_flags<Flags...> = {});
   template<typename It, class... Flags>
-    constexpr void copy_from(It first, const simd_mask& mask, loadstore_flags<Flags...> = {});
+    constexpr void copy_from(It first, const basic_simd_mask& mask, loadstore_flags<Flags...> = {});
   template<typename Out, class... Flags>
     constexpr void copy_to(Out first, loadstore_flags<Flags...> = {}) const;
   template<typename Out, class... Flags>
-    constexpr void copy_to(Out first, const simd_mask& mask, loadstore_flags<Flags...> = {}) const;
+    constexpr void copy_to(Out first, const basic_simd_mask& mask, loadstore_flags<Flags...> = {}) const;
 
-  // \ref{simd.mask.subscr}, \tcode{simd_mask} subscript operators
+  // \ref{basic_simd.mask.subscr}, \tcode{basic_simd_mask} subscript operators
   constexpr reference operator[](size_t) &;
   constexpr value_type operator[](size_t) const&;
 
-  // \ref{simd.mask.unary}, \tcode{simd_mask} unary operators
-  constexpr simd_mask operator!() const noexcept;
+  // \ref{basic_simd.mask.unary}, \tcode{basic_simd_mask} unary operators
+  constexpr basic_simd_mask operator!() const noexcept;
   constexpr simd_type operator+() const noexcept;
   constexpr simd_type operator-() const noexcept;
   constexpr simd_type operator~() const noexcept;
 
-  // \ref{simd.mask.conv}, \tcode{simd_mask} conversion operators
+  // \ref{basic_simd.mask.conv}, \tcode{basic_simd_mask} conversion operators
   template <class U, class A>
-    constexpr explicit(sizeof(U) != sizeof(T)) operator simd<U, A>() const noexcept;
+    constexpr explicit(sizeof(U) != sizeof(T)) operator basic_simd<U, A>() const noexcept;
 
-  // \ref{simd.mask.binary}, \tcode{simd_mask} binary operators
-  friend constexpr simd_mask operator&&(const simd_mask&, const simd_mask&) noexcept;
-  friend constexpr simd_mask operator||(const simd_mask&, const simd_mask&) noexcept;
-  friend constexpr simd_mask operator&(const simd_mask&, const simd_mask&) noexcept;
-  friend constexpr simd_mask operator|(const simd_mask&, const simd_mask&) noexcept;
-  friend constexpr simd_mask operator^(const simd_mask&, const simd_mask&) noexcept;
+  // \ref{basic_simd.mask.binary}, \tcode{basic_simd_mask} binary operators
+  friend constexpr basic_simd_mask operator&&(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask operator||(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask operator&(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask operator|(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask operator^(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 
-  // \ref{simd.mask.cassign}, \tcode{simd_mask} compound assignment
-  friend constexpr simd_mask& operator&=(simd_mask&, const simd_mask&) noexcept;
-  friend constexpr simd_mask& operator|=(simd_mask&, const simd_mask&) noexcept;
-  friend constexpr simd_mask& operator^=(simd_mask&, const simd_mask&) noexcept;
+  // \ref{basic_simd.mask.cassign}, \tcode{basic_simd_mask} compound assignment
+  friend constexpr basic_simd_mask& operator&=(basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask& operator|=(basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask& operator^=(basic_simd_mask&, const basic_simd_mask&) noexcept;
 
-  // \ref{simd.mask.comparison}, \tcode{simd_mask} comparisons
-  friend constexpr simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
-  friend constexpr simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
+  // \ref{basic_simd.mask.comparison}, \tcode{basic_simd_mask} comparisons
+  friend constexpr basic_simd_mask operator==(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask operator!=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 
-  // \ref{simd.mask.cond}, \tcode{simd_mask} conditional operators
-  friend constexpr simd_mask operator?:(const simd_mask&, const simd_mask&, const simd_mask&) noexcept;
-  friend constexpr simd_mask operator?:(const simd_mask&, bool, bool) noexcept;
+  // \ref{basic_simd.mask.cond}, \tcode{basic_simd_mask} conditional operators
+  friend constexpr basic_simd_mask operator?:(const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask operator?:(const basic_simd_mask&, bool, bool) noexcept;
   template <class T0, class T1>
-    friend constexpr simd<@\seebelow@, Abi>
-      operator?:(const simd_mask&, const T0&, const T1&) noexcept;
+    friend constexpr basic_simd<@\seebelow@, Abi>
+      operator?:(const basic_simd_mask&, const T0&, const T1&) noexcept;
 };
 \end{codeblock}
 
 \pnum
-The class template \tcode{simd_mask} is a data-parallel type with the element type \tcode{bool}. The width of a given \tcode{simd_mask} specialization is a constant expression, determined by the template parameters. Specifically, \tcode{simd_mask<T, Abi>::size() == simd<T, Abi>::size()}.
+The class template \tcode{basic_simd_mask} is a data-parallel type with the element type \tcode{bool}. The width of a given \tcode{basic_simd_mask} specialization is a constant expression, determined by the template parameters. Specifically, \tcode{basic_simd_mask<T, Abi>::size() == basic_simd<T, Abi>::size()}.
 
 \pnum
-Every specialization of \tcode{simd_mask} is a complete type. The specialization \tcode{simd_mask<T, Abi>} is supported if \tcode{T} is a vectorizable type and
+Every specialization of \tcode{basic_simd_mask} is a complete type. The specialization \tcode{basic_simd_mask<T, Abi>} is supported if \tcode{T} is a vectorizable type and
 \begin{itemize}
   \item \tcode{Abi} is \tcode{simd_abi::scalar}, or
-  \item \tcode{Abi} is \tcode{simd_abi::fixed_size<N>}, with \tcode{N} constrained as defined in (\ref{simd.abi}).
+  \item \tcode{Abi} is \tcode{simd_abi::fixed_size<N>}, with \tcode{N} constrained as defined in (\ref{basic_simd.abi}).
 \end{itemize}
 
-If \tcode{Abi} is an extended ABI tag, it is implementation-defined whether \tcode{simd_mask<T, Abi>} is supported. \begin{note}The intent is for implementations to decide on the basis of the currently targeted system.\end{note}
+If \tcode{Abi} is an extended ABI tag, it is implementation-defined whether \tcode{basic_simd_mask<T, Abi>} is supported. \begin{note}The intent is for implementations to decide on the basis of the currently targeted system.\end{note}
 
-If \tcode{simd_mask<T, Abi>} is not supported, the specialization shall have a deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
+If \tcode{basic_simd_mask<T, Abi>} is not supported, the specialization shall have a deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
 Otherwise, the following are true:
 \begin{itemize}
-  \item \tcode{is_nothrow_move_constructible_v<simd_mask<T, Abi>>}, and
-  \item \tcode{is_nothrow_move_assignable_v<simd_mask<T, Abi>>}, and
-  \item \tcode{is_nothrow_default_constructible_v<simd_mask<T, Abi>>}.
+  \item \tcode{is_nothrow_move_constructible_v<basic_simd_mask<T, Abi>>}, and
+  \item \tcode{is_nothrow_move_assignable_v<basic_simd_mask<T, Abi>>}, and
+  \item \tcode{is_nothrow_default_constructible_v<basic_simd_mask<T, Abi>>}.
 \end{itemize}
 
 \pnum
 Default initialization performs no intialization of the elements; value-initialization initializes each element with \tcode{false}. \begin{note}Thus, default initialization leaves the elements in an indeterminate state.\end{note}
 
 \pnum
-Implementations should enable explicit conversion from and to implementation-defined types. This adds one or more of the following declarations to class \tcode{simd_mask}:
+Implementations should enable explicit conversion from and to implementation-defined types. This adds one or more of the following declarations to class \tcode{basic_simd_mask}:
 
 \begin{codeblock}
 constexpr explicit operator @\impdef@() const;
-constexpr explicit simd_mask(const @\impdef@& init) const;
+constexpr explicit basic_simd_mask(const @\impdef@& init) const;
 \end{codeblock}
 
 \pnum
-The member type \tcode{reference} has the same interface as \tcode{simd<T, Abi>::reference}, except its \tcode{value_type} is \tcode{bool}. (\ref{simd.reference})
+The member type \tcode{reference} has the same interface as \tcode{basic_simd<T, Abi>::reference}, except its \tcode{value_type} is \tcode{bool}. (\ref{basic_simd.reference})
 
-\rSec2[simd.mask.width]{\tcode{simd_mask} width}
+\rSec2[basic_simd.mask.width]{\tcode{basic_simd_mask} width}
 
 \begin{itemdecl}
 static constexpr typename simd_size<T, Abi>::type size;
@@ -1662,13 +1649,13 @@ static constexpr typename simd_size<T, Abi>::type size;
 
 \begin{itemdescr}
   \pnum\returns
-  The width of \tcode{simd<T, Abi>}.
+  The width of \tcode{basic_simd<T, Abi>}.
 \end{itemdescr}
 
-\rSec2[simd.mask.ctor]{\tcode{simd_mask} constructors}
+\rSec2[basic_simd.mask.ctor]{\tcode{basic_simd_mask} constructors}
 
 \begin{itemdecl}
-constexpr explicit simd_mask(value_type x) noexcept;
+constexpr explicit basic_simd_mask(value_type x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1678,7 +1665,7 @@ constexpr explicit simd_mask(value_type x) noexcept;
 
 \begin{itemdecl}
 template<class U, class UAbi>
-  constexpr explicit(sizeof(U) != sizeof(T)) simd_mask(const simd_mask<U, UAbi>& x) noexcept;
+  constexpr explicit(sizeof(U) != sizeof(T)) basic_simd_mask(const basic_simd_mask<U, UAbi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1686,11 +1673,11 @@ template<class U, class UAbi>
   \tcode{simd_size_v<U, UAbi> == size()}.
 
   \pnum\effects
-  Constructs an object of type \tcode{simd_mask} where the $i^\text{th}$ element equals \tcode{x[$i$]} \foralli.
+  Constructs an object of type \tcode{basic_simd_mask} where the $i^\text{th}$ element equals \tcode{x[$i$]} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class G> constexpr explicit simd_mask(G&& gen) noexcept;
+template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1717,7 +1704,7 @@ template<class G> constexpr explicit simd_mask(G&& gen) noexcept;
   \begin{itemize}
     \item #1
     \item \tcode{It} models \tcode{contiguous_iterator}.
-    \flagsRequires{simd_mask}{value_type}
+    \flagsRequires{basic_simd_mask}{value_type}
   \end{itemize}
 
   \pnum\effects #2
@@ -1727,7 +1714,7 @@ template<class G> constexpr explicit simd_mask(G&& gen) noexcept;
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr simd_mask(It first, loadstore_flags<Flags...> = {});
+  constexpr basic_simd_mask(It first, loadstore_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1738,7 +1725,7 @@ template<typename It, class... Flags>
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr simd_mask(It first, const simd_mask& mask, loadstore_flags<Flags...> = {});
+  constexpr basic_simd_mask(It first, const basic_simd_mask& mask, loadstore_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1747,7 +1734,7 @@ template<typename It, class... Flags>
     {Constructs an object where the $i^\text{th}$ element is initialized to \tcode{mask[$i$] ? first[$i$] : false} \foralli.}
 \end{itemdescr}
 
-\rSec2[simd.mask.copy]{\tcode{simd_mask} copy functions}
+\rSec2[basic_simd.mask.copy]{\tcode{basic_simd_mask} copy functions}
 
 \begin{itemdecl}
 template<typename It, class... Flags>
@@ -1757,18 +1744,18 @@ template<typename It, class... Flags>
 \begin{itemdescr}
   \MaskLoadDescr
   {\tcode{[first, first + size())} is a valid range.}
-  {Replaces the elements of the \tcode{simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{first[$i$]} \foralli.}
+  {Replaces the elements of the \tcode{basic_simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{first[$i$]} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
 template<typename It, class... Flags>
-  constexpr void copy_from(It first, const simd_mask& mask, loadstore_flags<Flags...> = {});
+  constexpr void copy_from(It first, const basic_simd_mask& mask, loadstore_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
   \MaskLoadDescr
     {\validMaskedRange}
-    {Replaces the selected elements of the \tcode{simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{first[$i$]} \forallmaskedi.}
+    {Replaces the selected elements of the \tcode{basic_simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{first[$i$]} \forallmaskedi.}
 \end{itemdescr}
 
 \newcommand\MaskStoreDescr[2]{
@@ -1785,7 +1772,7 @@ template<typename It, class... Flags>
     \item #1
     \item \tcode{Out} models \tcode{contiguous_iterator}.
     \item \tcode{Out} models \tcode{output_iterator<value_type>}.
-    \flagsRequires{simd_mask}{value_type}
+    \flagsRequires{basic_simd_mask}{value_type}
   \end{itemize}
 
   \pnum\effects #2
@@ -1801,12 +1788,12 @@ template<typename Out, class... Flags>
 \begin{itemdescr}
   \MaskStoreDescr
     {\tcode{[first, first + size())} is a valid range.}
-    {Copies all \tcode{simd_mask} elements as if \tcode{first[$i$] = operator[]($i$)} \foralli.}
+    {Copies all \tcode{basic_simd_mask} elements as if \tcode{first[$i$] = operator[]($i$)} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
 template<typename Out, class... Flags>
-  constexpr void copy_to(Out first, const simd_mask& mask, loadstore_flags<Flags...> = {}) const;
+  constexpr void copy_to(Out first, const basic_simd_mask& mask, loadstore_flags<Flags...> = {}) const;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1815,7 +1802,7 @@ template<typename Out, class... Flags>
   {Copies the selected elements as if \tcode{first[$i$] = operator[]($i$)} \forallmaskedi.}
 \end{itemdescr}
 
-\rSec2[simd.mask.subscr]{\tcode{simd_mask} subscript operators}
+\rSec2[basic_simd.mask.subscr]{\tcode{basic_simd_mask} subscript operators}
 
 \begin{itemdecl}
 constexpr reference operator[](size_t i) &;
@@ -1826,7 +1813,7 @@ constexpr reference operator[](size_t i) &;
   \tcode{i < size()}.
 
   \pnum\returns
-  A \tcode{reference} (see \ref{simd.reference}) referring to the $i^\text{th}$ element.
+  A \tcode{reference} (see \ref{basic_simd.reference}) referring to the $i^\text{th}$ element.
 
   \pnum\throws Nothing.
 \end{itemdescr}
@@ -1845,10 +1832,10 @@ constexpr value_type operator[](size_t i) const&;
   \pnum\throws Nothing.
 \end{itemdescr}
 
-\rSec2[simd.mask.unary]{\tcode{simd_mask} unary operators}
+\rSec2[basic_simd.mask.unary]{\tcode{basic_simd_mask} unary operators}
 
 \begin{itemdecl}
-constexpr simd_mask operator!() const noexcept;
+constexpr basic_simd_mask operator!() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1870,11 +1857,11 @@ constexpr simd_type operator~() const noexcept;
   The result of applying the indicated operator to \tcode{static_cast<simd_type>(*this)}.
 \end{itemdescr}
 
-\rSec2[simd.mask.conv]{\tcode{simd_mask} conversion operators}
+\rSec2[basic_simd.mask.conv]{\tcode{basic_simd_mask} conversion operators}
 
 \begin{itemdecl}
 template <class U, class A>
-  constexpr explicit(sizeof(U) != sizeof(T)) operator simd<U, A>() const noexcept;
+  constexpr explicit(sizeof(U) != sizeof(T)) operator basic_simd<U, A>() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1885,29 +1872,29 @@ template <class U, class A>
   An object where the $i^\text{th}$ element is initialized to \tcode{static_cast<U>(operator[]($i$))}.
 \end{itemdescr}
 
-\rSec1[simd.mask.nonmembers]{Non-member operations}
+\rSec1[basic_simd.mask.nonmembers]{Non-member operations}
 
-\rSec2[simd.mask.binary]{\tcode{simd_mask} binary operators}
+\rSec2[basic_simd.mask.binary]{\tcode{basic_simd_mask} binary operators}
 
 \begin{itemdecl}
-friend constexpr simd_mask operator&&(const simd_mask& lhs, const simd_mask& rhs) noexcept;
-friend constexpr simd_mask operator||(const simd_mask& lhs, const simd_mask& rhs) noexcept;
-friend constexpr simd_mask operator& (const simd_mask& lhs, const simd_mask& rhs) noexcept;
-friend constexpr simd_mask operator| (const simd_mask& lhs, const simd_mask& rhs) noexcept;
-friend constexpr simd_mask operator^ (const simd_mask& lhs, const simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask operator&&(const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask operator||(const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask operator& (const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask operator| (const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask operator^ (const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
-  A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
+  A \tcode{basic_simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.mask.cassign]{\tcode{simd_mask} compound assignment}
+\rSec2[basic_simd.mask.cassign]{\tcode{basic_simd_mask} compound assignment}
 
 \begin{itemdecl}
-friend constexpr simd_mask& operator&=(simd_mask& lhs, const simd_mask& rhs) noexcept;
-friend constexpr simd_mask& operator|=(simd_mask& lhs, const simd_mask& rhs) noexcept;
-friend constexpr simd_mask& operator^=(simd_mask& lhs, const simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask& operator&=(basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask& operator|=(basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask& operator^=(basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1918,42 +1905,42 @@ friend constexpr simd_mask& operator^=(simd_mask& lhs, const simd_mask& rhs) noe
   \tcode{lhs}.
 \end{itemdescr}
 
-\rSec2[simd.mask.comparison]{\tcode{simd_mask} comparisons}
+\rSec2[basic_simd.mask.comparison]{\tcode{basic_simd_mask} comparisons}
 
 \begin{itemdecl}
-friend constexpr simd_mask operator==(const simd_mask&, const simd_mask&) noexcept;
-friend constexpr simd_mask operator!=(const simd_mask&, const simd_mask&) noexcept;
+friend constexpr basic_simd_mask operator==(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+friend constexpr basic_simd_mask operator!=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
-  A \tcode{simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
+  A \tcode{basic_simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.mask.cond]{\tcode{simd_mask} conditional operators}
+\rSec2[basic_simd.mask.cond]{\tcode{basic_simd_mask} conditional operators}
 
 \begin{itemdecl}
-friend constexpr simd operator?:(const simd_mask& mask, const simd_mask& a, const simd_mask& b) noexcept;
+friend constexpr basic_simd operator?:(const basic_simd_mask& mask, const basic_simd_mask& a, const basic_simd_mask& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
-  A \tcode{simd_mask} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a[$i$] : b[$i$]} \foralli.
+  A \tcode{basic_simd_mask} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a[$i$] : b[$i$]} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-friend constexpr simd_mask operator?:(const simd_mask& mask, bool a, bool b) noexcept;
+friend constexpr basic_simd_mask operator?:(const basic_simd_mask& mask, bool a, bool b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
-  A \tcode{simd_mask} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a : b} \foralli.
+  A \tcode{basic_simd_mask} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a : b} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
 template <class T0, class T1>
-  friend constexpr simd<@\seebelow@, Abi>
-    operator?:(const simd_mask& mask, const T0& a, const T1& b) noexcept;
+  friend constexpr basic_simd<@\seebelow@, Abi>
+    operator?:(const basic_simd_mask& mask, const T0& a, const T1& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1965,18 +1952,18 @@ template <class T0, class T1>
   \begin{itemize}
     \item \tcode{U} is a vectorizable type, and
     \item \tcode{sizeof(U) == sizeof(T)}, and
-    \item \tcode{T0} satisfies \tcode{convertible_to<simd<U, Abi>>}, and
-    \item \tcode{T1} satisfies \tcode{convertible_to<simd<U, Abi>>}.
+    \item \tcode{T0} satisfies \tcode{convertible_to<basic_simd<U, Abi>>}, and
+    \item \tcode{T1} satisfies \tcode{convertible_to<basic_simd<U, Abi>>}.
   \end{itemize}
 
   \pnum\returns
-  A \tcode{simd<U, Abi>} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a : b} \foralli.
+  A \tcode{basic_simd<U, Abi>} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a : b} \foralli.
 \end{itemdescr}
 
-\rSec2[simd.mask.reductions]{\tcode{simd_mask} reductions}
+\rSec2[basic_simd.mask.reductions]{\tcode{basic_simd_mask} reductions}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr bool all_of(const simd_mask<T, Abi>& k) noexcept;
+template<class T, class Abi> constexpr bool all_of(const basic_simd_mask<T, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1985,7 +1972,7 @@ template<class T, class Abi> constexpr bool all_of(const simd_mask<T, Abi>& k) n
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr bool any_of(const simd_mask<T, Abi>& k) noexcept;
+template<class T, class Abi> constexpr bool any_of(const basic_simd_mask<T, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1994,7 +1981,7 @@ template<class T, class Abi> constexpr bool any_of(const simd_mask<T, Abi>& k) n
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr bool none_of(const simd_mask<T, Abi>& k) noexcept;
+template<class T, class Abi> constexpr bool none_of(const basic_simd_mask<T, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -2003,7 +1990,7 @@ template<class T, class Abi> constexpr bool none_of(const simd_mask<T, Abi>& k) 
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr int reduce_count(const simd_mask<T, Abi>& k) noexcept;
+template<class T, class Abi> constexpr int reduce_count(const basic_simd_mask<T, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -2012,7 +1999,7 @@ template<class T, class Abi> constexpr int reduce_count(const simd_mask<T, Abi>&
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr int reduce_min_index(const simd_mask<T, Abi>& k);
+template<class T, class Abi> constexpr int reduce_min_index(const basic_simd_mask<T, Abi>& k);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -2026,7 +2013,7 @@ template<class T, class Abi> constexpr int reduce_min_index(const simd_mask<T, A
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr int reduce_max_index(const simd_mask<T, Abi>& k);
+template<class T, class Abi> constexpr int reduce_max_index(const basic_simd_mask<T, Abi>& k);
 \end{itemdecl}
 
 \begin{itemdescr}
