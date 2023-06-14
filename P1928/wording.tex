@@ -369,7 +369,7 @@ template<size_t N> requires (has_single_bit<N>)
 template <class... Flags> struct simd_flags {
   // \ref{simd.flags.oper}, \tcode{simd_flags} operators
   template <class... Other>
-    friend constexpr auto operator|(simd_flags, simd_flags<Other...>);
+    friend consteval auto operator|(simd_flags, simd_flags<Other...>);
 };
 \end{codeblock}
 
@@ -386,7 +386,7 @@ store flags.
 
 \begin{itemdecl}
 template <class... Other>
-  friend constexpr auto operator|(simd_flags a, simd_flags<Other...> b);
+  friend consteval auto operator|(simd_flags a, simd_flags<Other...> b);
 \end{itemdecl}
 
 \begin{itemdescr}
