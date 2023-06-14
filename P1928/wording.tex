@@ -224,68 +224,56 @@ translation unit boundaries (e.g. function calls or I/O).
 \end{note}
 
 \pnum
-TODO: \deducet<T, N> must produce a valid ABI tag at least for N in range [1, 32].
+An implementation defines ABI tag types as necessary for the following
+exposition-only aliases.
 
 \pnum
-\tcode{\deducet<T, N>} is an alias for an unspecified ABI tag.
-Use of the \tcode{\deducet<T, N>} tag type requires data-parallel types to
-store \tcode{N} elements (i.e. \tcode{basic_simd<T, \deducet<T, N>>::size} equals
-\tcode{N}).
-\tcode{basic_simd<T, \deducet<T, N>>} and \tcode{basic_simd_mask<T, \deducet<T,
-N>>} with \tcode{N > 0} and \tcode{N <= 32} shall be supported.
-%Additionally, for every supported \tcode{basic_simd<T, Abi>} (see
-%\ref{simd.overview}), where \tcode{Abi} is an ABI tag that is not a
-%specialization of \tcode{simd_abi::fixed_size}, \tcode{N == basic_simd<T,
-%Abi>::size()} shall be supported.
+The exposition-only alias \tcode{\deducet<T, N>} results in a substitution
+failure if
+\begin{itemize}
+  \item \tcode{T} is not a vectorizable type, or
+  \item \tcode{N} is larger than an implementation-defined maximum.
+\end{itemize}
+The implementation-defined maximum for \tcode{N} is no smaller than 64.
 
 \pnum
-\begin{note}It is unspecified whether \tcode{basic_simd<T, fixed_size<N>>} with \tcode{N > max_fixed_size<T>} is supported. The value of \tcode{max_fixed_size<T>} can depend on compiler flags and can change between different compiler versions.\end{note}
+Where present, the exposition-only alias \tcode{\deducet<T, N>} names an ABI
+tag type that satisfies
+\begin{itemize}
+  \item \tcode{basic_simd<T, \deducet<T, N>>::size == N}, and
+  \item \tcode{basic_simd<T, \deducet<T, N>>} is default constructible (see \ref{simd.overview}).
+\end{itemize}
+
+%\pnum TODO???
+%\begin{note}
+%The value of \tcode{max_fixed_size<T>} can depend on compiler flags and can
+%change between different compiler versions.
+%\end{note}
 
 \pnum
-  The type of \tcode{fixed_size<T, N>} in TU1 differs from the type of
-  \tcode{fixed_size<T, N>} in TU2 iff the type of \tcode{native<T>} in TU1 differs from
-  the type of \tcode{native<T>} in TU2.
-
-\pnum
-An implementation may define additional \defn{extended ABI tag} types in the \tcode{std::simd_abi} namespace, to support other forms of data-parallel computation.
-
-\pnum
-\tcode{native<T>} is an implementation-defined alias for an ABI tag. \begin{note}The intent is to use the ABI tag producing the most efficient data-parallel execution for the element type \tcode{T} that is supported on the currently targeted system. For target architectures with ISA extensions, compiler flags may change the type of the \tcode{native<T>} alias.\end{note}
+\tcode{\nativeabi<T>} is an implementation-defined alias for an ABI tag.
+\begin{note}
+The intent is to use the ABI tag producing the most efficient data-parallel
+execution for the element type \tcode{T} that is supported on the currently
+targeted system.
+For target architectures with ISA extensions, compiler flags may change the
+type of the \tcode{\nativeabi<T>} alias.
+\end{note}
 \begin{example}
-  Consider a target architecture supporting the extended ABI tags \tcode{__simd128} and \tcode{__simd256}, where hardware support for \tcode{__simd256} only exists for floating-point types. The implementation therefore defines \tcode{native<T>} as an alias for
+  Consider a target architecture supporting the ABI tags
+  \tcode{__simd128} and \tcode{__simd256}, where hardware support for
+  \tcode{__simd256} only exists for floating-point types.
+  The implementation therefore defines \tcode{\nativeabi<T>} as an alias for
   \begin{itemize}
     \item \tcode{__simd256} if \tcode{T} is a floating-point type, and
     \item \tcode{__simd128} otherwise.
   \end{itemize}
 \end{example}
 
-\begin{itemdecl}
-template<T, size_t N, class... Abis> struct deduce { using type = @\seebelow@; };
-\end{itemdecl}
-
-\begin{itemdescr}
 \pnum
-The member \tcode{type} shall be present if and only if
-\begin{itemize}
-  \item \tcode{T} is a vectorizable type, and
-  \item \tcode{simd_abi::fixed_size<N>} is supported (see \ref{simd.abi}), and
-  \item every type in the \tcode{Abis} pack is an ABI tag.
-\end{itemize}
-
-\pnum
-Where present, the member typedef \tcode{type} shall name an ABI tag type that satisfies
-\begin{itemize}
-  \item \tcode{basic_simd<T, type>::size == N}, and
-  \item \tcode{basic_simd<T, type>} is default constructible (see \ref{simd.overview}).
-\end{itemize}
-If \tcode{N} is \tcode{1}, the member typedef \tcode{type} is \tcode{simd_abi::scalar}.
-\begin{note}
-  Implementations can base the choice on \tcode{Abis}, but can also ignore the \tcode{Abis} arguments.
-\end{note}
-
-\pnum
-The behavior of a program that adds specializations for \tcode{deduce} is undefined.
-\end{itemdescr}
+The type of \tcode{\deducet<T, N>} in TU1 differs from the type of
+\tcode{\deducet<T, N>} in TU2 iff the type of \tcode{\nativeabi<T>} in TU1
+differs from the type of \tcode{\nativeabi<T>} in TU2.
 
 \rSec1[simd.traits]{\tcode{simd} type traits}
 
@@ -496,7 +484,11 @@ Every specialization of \tcode{basic_simd} is a complete type. The specializatio
   \item \tcode{Abi} is \tcode{simd_abi::fixed_size<N>}, with \tcode{N} constrained as defined in \ref{simd.abi}.
 \end{itemize}
 
-If \tcode{Abi} is an extended ABI tag, it is implementation-defined whether \tcode{basic_simd<T, Abi>} is supported. \begin{note}The intent is for implementations to decide on the basis of the currently targeted system.\end{note}
+It is implementation-defined whether \tcode{basic_simd<T, Abi>} is supported.
+\begin{note}
+The intent is for implementations to decide on the basis of the currently
+targeted system.
+\end{note}
 
 If \tcode{basic_simd<T, Abi>} is not supported, the specialization shall have a deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
 Otherwise, the following are true:
@@ -507,7 +499,7 @@ Otherwise, the following are true:
 \end{itemize}
 
 \begin{example}
-  Consider an implementation that defines the extended ABI tags \tcode{__simd_x} and \tcode{__gpu_y}. When the compiler is invoked to translate to a machine that has support for the \tcode{__simd_x} ABI tag for all arithmetic types other than \tcode{long double} and no support for the \tcode{__gpu_y} ABI tag, then:
+  Consider an implementation that defines the ABI tags \tcode{__simd_x} and \tcode{__gpu_y}. When the compiler is invoked to translate to a machine that has support for the \tcode{__simd_x} ABI tag for all arithmetic types other than \tcode{long double} and no support for the \tcode{__gpu_y} ABI tag, then:
   \begin{itemize}
     \item \tcode{basic_simd<T, simd_abi::__gpu_y>} is not supported for any \tcode{T} and has a deleted constructor.
     \item \tcode{basic_simd<long double, simd_abi::__simd_x>} is not supported and has a deleted constructor.
@@ -1504,7 +1496,8 @@ Every specialization of \tcode{basic_simd_mask} is a complete type. The speciali
   \item \tcode{Abi} is \tcode{simd_abi::fixed_size<N>}, with \tcode{N} constrained as defined in (\ref{simd.abi}).
 \end{itemize}
 
-If \tcode{Abi} is an extended ABI tag, it is implementation-defined whether \tcode{basic_simd_mask<T, Abi>} is supported. \begin{note}The intent is for implementations to decide on the basis of the currently targeted system.\end{note}
+It is implementation-defined whether \tcode{basic_simd_mask<T, Abi>} is supported.
+\begin{note}The intent is for implementations to decide on the basis of the currently targeted system.\end{note}
 
 If \tcode{basic_simd_mask<Bytes, Abi>} is not supported, the specialization shall have a deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
 Otherwise, the following are true:
