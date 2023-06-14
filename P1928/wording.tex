@@ -696,13 +696,7 @@ template<class U> constexpr basic_simd(U&&) noexcept;
       \tcode{From} to \tcode{value_type} is value-preserving, or
 
     \item \tcode{From} is not an arithmetic type and is implicitly convertible
-      to \tcode{value_type}, or
-
-    \item \tcode{From} is \tcode{int}, or
-
-    \item \tcode{From} is \tcode{unsigned int} and
-      \tcode{is_unsigned_v<value_type>} is \tcode{true}.
-      % unsigned integer types excludes character types
+      to \tcode{value_type}.
   \end{itemize}
 
   \pnum\effects
