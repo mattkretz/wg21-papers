@@ -157,13 +157,13 @@ namespace std {
                        bit_xor<> binary_op) noexcept;
 
   template<class T, class Abi>
-    constexpr T hmin(const basic_simd<T, Abi>&) noexcept;
+    constexpr T reduce_min(const basic_simd<T, Abi>&) noexcept;
   template<class T, class Abi>
-    constexpr T hmin(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
+    constexpr T reduce_min(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
   template<class T, class Abi>
-    constexpr T hmax(const basic_simd<T, Abi>&) noexcept;
+    constexpr T reduce_max(const basic_simd<T, Abi>&) noexcept;
   template<class T, class Abi>
-    constexpr T hmax(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
+    constexpr T reduce_max(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 
   // \ref{simd.alg}, Algorithms
   template<class T, class Abi>
@@ -1187,7 +1187,7 @@ template<class T, class Abi>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr T hmin(const basic_simd<T, Abi>& x) noexcept;
+template<class T, class Abi> constexpr T reduce_min(const basic_simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1203,7 +1203,7 @@ template<class T, class Abi> constexpr T hmin(const basic_simd<T, Abi>& x) noexc
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr T hmin(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
+  constexpr T reduce_min(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1219,7 +1219,7 @@ template<class T, class Abi>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr T hmax(const basic_simd<T, Abi>& x) noexcept;
+template<class T, class Abi> constexpr T reduce_max(const basic_simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1235,7 +1235,7 @@ template<class T, class Abi> constexpr T hmax(const basic_simd<T, Abi>& x) noexc
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr T hmax(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
+  constexpr T reduce_max(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
