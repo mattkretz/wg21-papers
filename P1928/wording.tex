@@ -62,13 +62,6 @@ The intent is to support acceleration through data-parallel execution resources,
 
 \rSec1[simd.syn]{Header \texorpdfstring{\tcode{<simd>}}{<simd>} synopsis}
 
-\newcommand\nativeabi{\UNSP{native-abi}}
-\newcommand\deducet{\UNSP{deduce-t}}
-\newcommand\simdsizetype{\UNSP{simd-size-type}}
-\newcommand\simdselect{\UNSP{simd-select-impl}}
-\newcommand\maskelementsize{\UNSP{mask-element-size}}
-\newcommand\integerfrom{\UNSP{integer-from}}
-
 %\indexhdr{simd}
 \begin{codeblock}
 namespace std {
@@ -1470,9 +1463,9 @@ public:
 
   // \ref{simd.mask.unary}, \tcode{basic_simd_mask} unary operators
   constexpr basic_simd_mask operator!() const noexcept;
-  constexpr simd_type operator+() const noexcept;
-  constexpr simd_type operator-() const noexcept;
-  constexpr simd_type operator~() const noexcept;
+  constexpr basic_simd<@\integerfrom@<Bytes>, Abi> operator+() const noexcept;
+  constexpr basic_simd<@\integerfrom@<Bytes>, Abi> operator-() const noexcept;
+  constexpr basic_simd<@\integerfrom@<Bytes>, Abi> operator~() const noexcept;
 
   // \ref{simd.mask.conv}, \tcode{basic_simd_mask} conversion operators
   template <class U, class A>
@@ -1728,9 +1721,9 @@ constexpr basic_simd_mask operator!() const noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr simd_type operator+() const noexcept;
-constexpr simd_type operator-() const noexcept;
-constexpr simd_type operator~() const noexcept;
+constexpr basic_simd<@\integerfrom@<Bytes>, Abi> operator+() const noexcept;
+constexpr basic_simd<@\integerfrom@<Bytes>, Abi> operator-() const noexcept;
+constexpr basic_simd<@\integerfrom@<Bytes>, Abi> operator~() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}

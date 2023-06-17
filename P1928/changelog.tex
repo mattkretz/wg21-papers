@@ -100,8 +100,9 @@
 \item Make \code{simd_size} exposition-only.
 \end{revision}
 
-%\begin{revision}
+\begin{revision}
+\item Fix return type of \mask unary operators.
 %  \todo Ensure constexpr_wrapper initialization works.
 %  \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.
 %  \todo Consider adding a note that recommends implementations to let simd primary operations behave like operations of arithmetic types to never be function calls. (cf. GCC PR108030)
-%\end{revision}
+\end{revision}
