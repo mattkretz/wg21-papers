@@ -347,7 +347,7 @@ template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelo
 \begin{itemdecl}
 inline constexpr simd_flags<@\seebelow@> simd_flag_convert{};
 inline constexpr simd_flags<@\seebelow@> simd_flag_aligned{};
-template<size_t N> requires (has_single_bit<N>)
+template<size_t N> requires (has_single_bit(N))
   inline constexpr simd_flags<@\seebelow@> simd_flag_overaligned{};
 \end{itemdecl}
 
