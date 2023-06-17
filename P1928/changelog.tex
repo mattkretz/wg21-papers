@@ -75,6 +75,33 @@
 
 \begin{revision}
 \item Added \code{simd_select} discussion (\sect{sec:simd_select}).
-  \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.
-  \todo Consider adding a note that recommends implementations to let simd primary operations behave like operations of arithmetic types to never be function calls. (cf. GCC PR108030)
 \end{revision}
+
+\begin{revision}
+\item Updated the wording for changes discussed in and requested by LEWG in Varna.
+\item Rename to \code{simd_cat} and \code{simd_split}.
+\item Drop \code{simd_cat(array)} overload.
+\item Replace \code{simd_split} by \code{simd_split} as proposed in P1928R4.
+\item Use \code{indirectly_writable} instead of \code{output_iterator}.
+\item Replace most \code{size_t} and \code{int} uses by \code{\textit{simd-size-type}} signed integer type.
+\item Remove everything in \code{simd_abi} and the namespace itself.
+\item Reword section on ABI tags using exposition-only ABI tag aliases.
+\item Guarantee generator ctor calls callable exactly once per index.
+\item Remove \code{int}/\code{unsigned int} exception from conversion rules of broadcast ctor.
+\item Rename \code{loadstore_flags} to \code{simd_flags}.
+\item Make \code{simd_flags::operator|} \code{consteval}.
+\item Remove \code{simd_flags::operator\&} and \code{simd_flags::operator\^}.
+\item Increase minimum SIMD width to 64.
+\item Rename \code{hmin}/\code{hmax} to \code{reduce_min} and \code{reduce_max}.
+\item Refactor \code{simd_mask<T, Abi>} to \code{basic_simd_mask<Bytes, Abi>} and replace all occurrences accordingly.
+\item Rename \code{simd<T, Abi>} to \code{basic_simd<Bytes, Abi>} and replace all occurrences accordingly.
+\item Remove \code{long double} from the set of vectorizable types.
+\item Remove \code{is_abi_tag}, \code{is_simd}, and \code{is_simd_mask} traits.
+\item Make \code{simd_size} exposition-only.
+\end{revision}
+
+%\begin{revision}
+%  \todo Ensure constexpr_wrapper initialization works.
+%  \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.
+%  \todo Consider adding a note that recommends implementations to let simd primary operations behave like operations of arithmetic types to never be function calls. (cf. GCC PR108030)
+%\end{revision}
