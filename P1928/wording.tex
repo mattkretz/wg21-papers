@@ -1520,6 +1520,14 @@ public:
     operator==(const basic_simd_mask&, const basic_simd_mask&) noexcept;
   friend constexpr basic_simd_mask
     operator!=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask
+    operator>=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask
+    operator<=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask
+    operator>(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask
+    operator<(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 
   // \ref{simd.mask.cond}, \tcode{basic_simd_mask} conditional operators
   friend constexpr basic_simd_mask @\simdselect@(
@@ -1833,6 +1841,14 @@ friend constexpr basic_simd_mask
   operator==(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 friend constexpr basic_simd_mask
   operator!=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+friend constexpr basic_simd_mask
+  operator>=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+friend constexpr basic_simd_mask
+  operator<=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+friend constexpr basic_simd_mask
+  operator>(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+friend constexpr basic_simd_mask
+  operator<(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
