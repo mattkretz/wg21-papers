@@ -714,7 +714,8 @@ template<class U> constexpr basic_simd(U&&) noexcept;
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U, class UAbi> constexpr explicit(@\seebelow@) basic_simd(const basic_simd<U, UAbi>& x) noexcept;
+template<class U, class UAbi> constexpr explicit(@\seebelow@)
+  basic_simd(const basic_simd<U, UAbi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1098,7 +1099,8 @@ friend constexpr mask_type operator<(const basic_simd& lhs, const basic_simd& rh
 \rSec2[simd.cond]{\tcode{basic_simd} conditional operators}
 
 \begin{itemdecl}
-friend constexpr basic_simd @\simdselect@(const mask_type& mask, const basic_simd& a, const basic_simd& b) noexcept;
+friend constexpr basic_simd
+@\simdselect@(const mask_type& mask, const basic_simd& a, const basic_simd& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1218,7 +1220,8 @@ template<class T, class Abi> constexpr T reduce_min(const basic_simd<T, Abi>& x)
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr T reduce_min(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
+  constexpr T reduce_min(
+    const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1250,7 +1253,8 @@ template<class T, class Abi> constexpr T reduce_max(const basic_simd<T, Abi>& x)
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr T reduce_max(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
+  constexpr T reduce_max(
+    const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1308,10 +1312,10 @@ template<class M, class Abi>
 
 \begin{itemdecl}
 template<class T, class... Abis>
-  constexpr basic_simd<T, @\seebelow@<T, (basic_simd<T, Abis>::size + ...)>>
+  constexpr simd<T, (basic_simd<T, Abis>::size + ...)>
     simd_cat(const basic_simd<T, Abis>&... xs) noexcept;
 template<size_t Bytes, class... Abis>
-  constexpr basic_simd_mask<Bytes, @\deducet@<@\integerfrom@<Bytes>, (basic_simd_mask<Bytes, Abis>::size() + ...)>>
+  constexpr simd_mask<@\deducet@<@\integerfrom@<Bytes>, (basic_simd_mask<Bytes, Abis>::size() + ...)>
     simd_cat(const basic_simd_mask<Bytes, Abis>&... xs) noexcept;
 
 \end{itemdecl}
@@ -1324,7 +1328,8 @@ template<size_t Bytes, class... Abis>
 \rSec2[simd.alg]{Algorithms}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr basic_simd<T, Abi> min(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
+template<class T, class Abi>
+  constexpr basic_simd<T, Abi> min(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1339,7 +1344,8 @@ template<class T, class Abi> constexpr basic_simd<T, Abi> min(const basic_simd<T
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> constexpr basic_simd<T, Abi> max(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
+template<class T, class Abi>
+  constexpr basic_simd<T, Abi> max(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1355,7 +1361,8 @@ template<class T, class Abi> constexpr basic_simd<T, Abi> max(const basic_simd<T
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr pair<basic_simd<T, Abi>, basic_simd<T, Abi>> minmax(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
+  constexpr pair<basic_simd<T, Abi>, basic_simd<T, Abi>>
+  minmax(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1374,8 +1381,9 @@ template<class T, class Abi>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi> basic_simd<T, Abi>
-  constexpr clamp(const basic_simd<T, Abi>& v, const basic_simd<T, Abi>& lo, const basic_simd<T, Abi>& hi);
+template<class T, class Abi>
+  constexpr basic_simd<T, Abi> clamp(
+    const basic_simd<T, Abi>& v, const basic_simd<T, Abi>& lo, const basic_simd<T, Abi>& hi);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1394,7 +1402,8 @@ template<class T, class Abi> basic_simd<T, Abi>
 
 \begin{itemdecl}
   template<class T, class U>
-    constexpr auto simd_select(bool c, const T& a, const U& b) -> remove_cvref_t<decltype(c ? a : b)>;
+    constexpr auto simd_select(bool c, const T& a, const U& b)
+    -> remove_cvref_t<decltype(c ? a : b)>;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1403,7 +1412,8 @@ template<class T, class Abi> basic_simd<T, Abi>
 
 \begin{itemdecl}
   template<size_t Bytes, class Abi, class T, class U>
-    constexpr auto simd_select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b);
+    constexpr auto simd_select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b)
+    -> decltype(@\simdselect@(c, a, b));
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1486,24 +1496,36 @@ public:
     constexpr explicit(sizeof(U) != Bytes) operator basic_simd<U, A>() const noexcept;
 
   // \ref{simd.mask.binary}, \tcode{basic_simd_mask} binary operators
-  friend constexpr basic_simd_mask operator&&(const basic_simd_mask&, const basic_simd_mask&) noexcept;
-  friend constexpr basic_simd_mask operator||(const basic_simd_mask&, const basic_simd_mask&) noexcept;
-  friend constexpr basic_simd_mask operator&(const basic_simd_mask&, const basic_simd_mask&) noexcept;
-  friend constexpr basic_simd_mask operator|(const basic_simd_mask&, const basic_simd_mask&) noexcept;
-  friend constexpr basic_simd_mask operator^(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask
+    operator&&(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask
+    operator||(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask
+    operator&(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask
+    operator|(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask
+    operator^(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 
   // \ref{simd.mask.cassign}, \tcode{basic_simd_mask} compound assignment
-  friend constexpr basic_simd_mask& operator&=(basic_simd_mask&, const basic_simd_mask&) noexcept;
-  friend constexpr basic_simd_mask& operator|=(basic_simd_mask&, const basic_simd_mask&) noexcept;
-  friend constexpr basic_simd_mask& operator^=(basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask&
+    operator&=(basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask&
+    operator|=(basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask&
+    operator^=(basic_simd_mask&, const basic_simd_mask&) noexcept;
 
   // \ref{simd.mask.comparison}, \tcode{basic_simd_mask} comparisons
-  friend constexpr basic_simd_mask operator==(const basic_simd_mask&, const basic_simd_mask&) noexcept;
-  friend constexpr basic_simd_mask operator!=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask
+    operator==(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask
+    operator!=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 
   // \ref{simd.mask.cond}, \tcode{basic_simd_mask} conditional operators
-  friend constexpr basic_simd_mask @\simdselect@(const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept;
-  friend constexpr basic_simd_mask @\simdselect@(const basic_simd_mask&, bool, bool) noexcept;
+  friend constexpr basic_simd_mask @\simdselect@(
+    const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept;
+  friend constexpr basic_simd_mask @\simdselect@(
+    const basic_simd_mask&, bool, bool) noexcept;
   template <class T0, class T1>
     friend constexpr basic_simd<@\seebelow@, Abi>
       @\simdselect@(const basic_simd_mask&, const T0&, const T1&) noexcept;
@@ -1768,11 +1790,16 @@ template <class U, class A>
 \rSec2[simd.mask.binary]{\tcode{basic_simd_mask} binary operators}
 
 \begin{itemdecl}
-friend constexpr basic_simd_mask operator&&(const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
-friend constexpr basic_simd_mask operator||(const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
-friend constexpr basic_simd_mask operator& (const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
-friend constexpr basic_simd_mask operator| (const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
-friend constexpr basic_simd_mask operator^ (const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask
+  operator&&(const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask
+  operator||(const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask
+  operator& (const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask
+  operator| (const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask
+  operator^ (const basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1783,9 +1810,12 @@ friend constexpr basic_simd_mask operator^ (const basic_simd_mask& lhs, const ba
 \rSec2[simd.mask.cassign]{\tcode{basic_simd_mask} compound assignment}
 
 \begin{itemdecl}
-friend constexpr basic_simd_mask& operator&=(basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
-friend constexpr basic_simd_mask& operator|=(basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
-friend constexpr basic_simd_mask& operator^=(basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask&
+  operator&=(basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask&
+  operator|=(basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
+friend constexpr basic_simd_mask&
+  operator^=(basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1799,8 +1829,10 @@ friend constexpr basic_simd_mask& operator^=(basic_simd_mask& lhs, const basic_s
 \rSec2[simd.mask.comparison]{\tcode{basic_simd_mask} comparisons}
 
 \begin{itemdecl}
-friend constexpr basic_simd_mask operator==(const basic_simd_mask&, const basic_simd_mask&) noexcept;
-friend constexpr basic_simd_mask operator!=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+friend constexpr basic_simd_mask
+  operator==(const basic_simd_mask&, const basic_simd_mask&) noexcept;
+friend constexpr basic_simd_mask
+  operator!=(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1811,7 +1843,8 @@ friend constexpr basic_simd_mask operator!=(const basic_simd_mask&, const basic_
 \rSec2[simd.mask.cond]{\tcode{basic_simd_mask} conditional operators}
 
 \begin{itemdecl}
-friend constexpr basic_simd @\simdselect@(const basic_simd_mask& mask, const basic_simd_mask& a, const basic_simd_mask& b) noexcept;
+friend constexpr basic_simd @\simdselect@(
+  const basic_simd_mask& mask, const basic_simd_mask& a, const basic_simd_mask& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1820,7 +1853,8 @@ friend constexpr basic_simd @\simdselect@(const basic_simd_mask& mask, const bas
 \end{itemdescr}
 
 \begin{itemdecl}
-friend constexpr basic_simd_mask @\simdselect@(const basic_simd_mask& mask, bool a, bool b) noexcept;
+friend constexpr basic_simd_mask
+@\simdselect@(const basic_simd_mask& mask, bool a, bool b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1854,7 +1888,8 @@ template <class T0, class T1>
 \rSec2[simd.mask.reductions]{\tcode{basic_simd_mask} reductions}
 
 \begin{itemdecl}
-template<size_t Bytes, class Abi> constexpr bool all_of(const basic_simd_mask<Bytes, Abi>& k) noexcept;
+template<size_t Bytes, class Abi>
+  constexpr bool all_of(const basic_simd_mask<Bytes, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1863,7 +1898,8 @@ template<size_t Bytes, class Abi> constexpr bool all_of(const basic_simd_mask<By
 \end{itemdescr}
 
 \begin{itemdecl}
-template<size_t Bytes, class Abi> constexpr bool any_of(const basic_simd_mask<Bytes, Abi>& k) noexcept;
+template<size_t Bytes, class Abi>
+  constexpr bool any_of(const basic_simd_mask<Bytes, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1872,7 +1908,8 @@ template<size_t Bytes, class Abi> constexpr bool any_of(const basic_simd_mask<By
 \end{itemdescr}
 
 \begin{itemdecl}
-template<size_t Bytes, class Abi> constexpr bool none_of(const basic_simd_mask<Bytes, Abi>& k) noexcept;
+template<size_t Bytes, class Abi>
+  constexpr bool none_of(const basic_simd_mask<Bytes, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1881,7 +1918,8 @@ template<size_t Bytes, class Abi> constexpr bool none_of(const basic_simd_mask<B
 \end{itemdescr}
 
 \begin{itemdecl}
-template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_count(const basic_simd_mask<Bytes, Abi>& k) noexcept;
+template<size_t Bytes, class Abi>
+  constexpr @\simdsizetype@ reduce_count(const basic_simd_mask<Bytes, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1890,7 +1928,8 @@ template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_count(const b
 \end{itemdescr}
 
 \begin{itemdecl}
-template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bytes, Abi>& k);
+template<size_t Bytes, class Abi>
+  constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bytes, Abi>& k);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1904,7 +1943,8 @@ template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_min_index(con
 \end{itemdescr}
 
 \begin{itemdecl}
-template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bytes, Abi>& k);
+template<size_t Bytes, class Abi>
+  constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bytes, Abi>& k);
 \end{itemdecl}
 
 \begin{itemdescr}
