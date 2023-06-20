@@ -66,7 +66,7 @@ The intent is to support acceleration through data-parallel execution resources,
 \begin{codeblock}
 namespace std {
   using @\simdsizetype@ = @\seebelow@; // \expos
-  template <typename T> constexpr size_t @\maskelementsize@ = @\seebelow@; // \expos
+  template <class T> constexpr size_t @\maskelementsize@ = @\seebelow@; // \expos
   template <size_t Bytes> using @\integerfrom@ = @\seebelow@; // \expos
 
   // \ref{simd.abi}, \tcode{simd} ABI tags
@@ -181,7 +181,7 @@ namespace std {
 
   template<class T, class U>
     constexpr auto simd_select(bool c, const T& a, const U& b) -> remove_cvref_t<decltype(c ? a : b)>;
-  template<size_t Bytes, class Abi, typename T, typename U>
+  template<size_t Bytes, class Abi, class T, class U>
     constexpr auto simd_select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b);
 }
 \end{codeblock}
@@ -406,19 +406,19 @@ public:
   template<class U, class UAbi>
     constexpr explicit(@\seebelow@) basic_simd(const basic_simd<U, UAbi>&) noexcept;
   template<class G> constexpr explicit basic_simd(G&& gen) noexcept;
-  template<typename It, class... Flags>
+  template<class It, class... Flags>
     constexpr basic_simd(It first, simd_flags<Flags...> = {});
-  template<typename It, class... Flags>
+  template<class It, class... Flags>
     constexpr basic_simd(It first, const mask_type& mask, simd_flags<Flags...> = {});
 
   // \ref{simd.copy}, \tcode{basic_simd} copy functions
-  template<typename It, class... Flags>
+  template<class It, class... Flags>
     constexpr void copy_from(It first, simd_flags<Flags...> f = {});
-  template<typename It, class... Flags>
+  template<class It, class... Flags>
     constexpr void copy_from(It first, const mask_type& mask, simd_flags<Flags...> f = {});
-  template<typename Out, class... Flags>
+  template<class Out, class... Flags>
     constexpr void copy_to(Out first, simd_flags<Flags...> f = {}) const;
-  template<typename Out, class... Flags>
+  template<class Out, class... Flags>
     constexpr void copy_to(Out first, const mask_type& mask, simd_flags<Flags...> f = {}) const;
 
   // \ref{simd.subscr}, \tcode{basic_simd} subscript operators
@@ -764,7 +764,7 @@ template<class G> constexpr basic_simd(G&& gen) noexcept;
 }
 
 \begin{itemdecl}
-template<typename It, class... Flags>
+template<class It, class... Flags>
   constexpr basic_simd(It first, simd_flags<Flags...> = {});
 \end{itemdecl}
 
@@ -775,7 +775,7 @@ template<typename It, class... Flags>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<typename It, class... Flags>
+template<class It, class... Flags>
   constexpr basic_simd(It first, const mask_type& mask, simd_flags<Flags...> = {});
 \end{itemdecl}
 
@@ -788,7 +788,7 @@ template<typename It, class... Flags>
 \rSec2[simd.copy]{\tcode{basic_simd} copy functions}
 
 \begin{itemdecl}
-template<typename It, class... Flags>
+template<class It, class... Flags>
   constexpr void copy_from(It first, simd_flags<Flags...> f = {});
 \end{itemdecl}
 
@@ -799,7 +799,7 @@ template<typename It, class... Flags>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<typename It, class... Flags>
+template<class It, class... Flags>
   constexpr void copy_from(It first, const mask_type& mask, simd_flags<Flags...> f = {});
 \end{itemdecl}
 
@@ -834,7 +834,7 @@ template<typename It, class... Flags>
 }
 
 \begin{itemdecl}
-template<typename Out, class... Flags>
+template<class Out, class... Flags>
   constexpr void copy_to(Out first, simd_flags<Flags...> f = {}) const;
 \end{itemdecl}
 
@@ -845,7 +845,7 @@ template<typename Out, class... Flags>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<typename Out, class... Flags>
+template<class Out, class... Flags>
   constexpr void copy_to(Out first, const mask_type& mask, simd_flags<Flags...> f = {}) const;
 \end{itemdecl}
 
@@ -1388,7 +1388,7 @@ template<class T, class Abi> basic_simd<T, Abi>
 \end{itemdescr}
 
 \begin{itemdecl}
-  template<size_t Bytes, class Abi, typename T, typename U>
+  template<size_t Bytes, class Abi, class T, class U>
     constexpr auto simd_select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b);
 \end{itemdecl}
 
@@ -1442,19 +1442,19 @@ public:
   template<size_t UBytes, class UAbi>
     constexpr explicit basic_simd_mask(const basic_simd_mask<UBytes, UAbi>&) noexcept;
   template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
-  template<typename It, class... Flags>
+  template<class It, class... Flags>
     constexpr basic_simd_mask(It first, Flags = {});
-  template<typename It, class... Flags>
+  template<class It, class... Flags>
     constexpr basic_simd_mask(It first, const basic_simd_mask& mask, simd_flags<Flags...> = {});
 
   // \ref{simd.mask.copy}, \tcode{basic_simd_mask} copy functions
-  template<typename It, class... Flags>
+  template<class It, class... Flags>
     constexpr void copy_from(It first, simd_flags<Flags...> = {});
-  template<typename It, class... Flags>
+  template<class It, class... Flags>
     constexpr void copy_from(It first, const basic_simd_mask& mask, simd_flags<Flags...> = {});
-  template<typename Out, class... Flags>
+  template<class Out, class... Flags>
     constexpr void copy_to(Out first, simd_flags<Flags...> = {}) const;
-  template<typename Out, class... Flags>
+  template<class Out, class... Flags>
     constexpr void copy_to(Out first, const basic_simd_mask& mask, simd_flags<Flags...> = {}) const;
 
   // \ref{simd.mask.subscr}, \tcode{basic_simd_mask} subscript operators
@@ -1591,7 +1591,7 @@ template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
 }
 
 \begin{itemdecl}
-template<typename It, class... Flags>
+template<class It, class... Flags>
   constexpr basic_simd_mask(It first, simd_flags<Flags...> = {});
 \end{itemdecl}
 
@@ -1602,7 +1602,7 @@ template<typename It, class... Flags>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<typename It, class... Flags>
+template<class It, class... Flags>
   constexpr basic_simd_mask(It first, const basic_simd_mask& mask, simd_flags<Flags...> = {});
 \end{itemdecl}
 
@@ -1615,7 +1615,7 @@ template<typename It, class... Flags>
 \rSec2[simd.mask.copy]{\tcode{basic_simd_mask} copy functions}
 
 \begin{itemdecl}
-template<typename It, class... Flags>
+template<class It, class... Flags>
   constexpr void copy_from(It first, simd_flags<Flags...> = {});
 \end{itemdecl}
 
@@ -1626,7 +1626,7 @@ template<typename It, class... Flags>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<typename It, class... Flags>
+template<class It, class... Flags>
   constexpr void copy_from(It first, const basic_simd_mask& mask, simd_flags<Flags...> = {});
 \end{itemdecl}
 
@@ -1658,7 +1658,7 @@ template<typename It, class... Flags>
 }
 
 \begin{itemdecl}
-template<typename Out, class... Flags>
+template<class Out, class... Flags>
   constexpr void copy_to(Out first, simd_flags<Flags...> = {}) const;
 \end{itemdecl}
 
@@ -1669,7 +1669,7 @@ template<typename Out, class... Flags>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<typename Out, class... Flags>
+template<class Out, class... Flags>
   constexpr void copy_to(Out first, const basic_simd_mask& mask, simd_flags<Flags...> = {}) const;
 \end{itemdecl}
 
