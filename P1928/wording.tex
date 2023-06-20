@@ -69,6 +69,13 @@ namespace std {
   template <class T> constexpr size_t @\maskelementsize@ = @\seebelow@; // \expos
   template <size_t Bytes> using @\integerfrom@ = @\seebelow@; // \expos
 
+  template <class T>
+    concept @\constexprwrapperlike@ =                     // \expos
+      convertible_to<T, decltype(T::value)> &&
+      equality_comparable_with<T, decltype(T::value)> &&
+      bool_constant<T() == T::value>::value &&
+      bool_constant<static_cast<decltype(T::value)>(T()) == T::value>::value;
+
   // \ref{simd.abi}, \tcode{simd} ABI tags
   template<class T> using @\nativeabi@ = @\seebelow@; // \expos
   template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@; // \expos
@@ -687,12 +694,19 @@ template<class U> constexpr basic_simd(U&&) noexcept;
   \pnum Let \tcode{From} denote the type \code{remove_cvref_t<U>}.
 
   \pnum\constraints
+  \tcode{From} satisfies \tcode{convertible_to<value_type>}, and either
   \begin{itemize}
-    \item \tcode{From} is a vectorizable type and the conversion from
-      \tcode{From} to \tcode{value_type} is value-preserving, or
+    \item \tcode{From} satisfies \tcode{\constexprwrapperlike} (\ref{simd.syn})
+      and the actual value of \tcode{From::value} after conversion to
+      \tcode{value_type} will fit into \tcode{value_type} and will produce the
+      original value when converted back to \tcode{decltype(From::value)}, or
 
-    \item \tcode{From} is not an arithmetic type and is implicitly convertible
-      to \tcode{value_type}.
+    \item \tcode{From} is a vectorizable type and the conversion from
+      \tcode{From} to \tcode{value_type} is value-preserving
+      (\ref{simd.general}), or
+
+    \item \tcode{From} is not an arithmetic type and does not satisfy
+      \tcode{\constexprwrapperlike}.
   \end{itemize}
 
   \pnum\effects
