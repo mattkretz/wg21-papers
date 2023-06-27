@@ -15,14 +15,13 @@
 
 \addbibresource{extra.bib}
 
-\newcommand\simd[1][]{\type{simd#1}\xspace}
-\newcommand\simdT{\type{simd<T>}\xspace}
+\newcommand\simd[1][]{\type{basic\_simd#1}\xspace}
+\newcommand\simdT{\type{basic\_simd<T>}\xspace}
 \newcommand\valuetype{\type{value\_type}\xspace}
 \newcommand\referencetype{\type{reference}\xspace}
-\newcommand\whereexpression{\type{where\_expression}\xspace}
 \newcommand\simdcast{\code{simd\_cast}\xspace}
-\newcommand\mask[1][]{\type{simd\_mask#1}\xspace}
-\newcommand\maskT{\type{simd\_mask<T>}\xspace}
+\newcommand\mask[1][]{\type{basic\_simd\_mask#1}\xspace}
+\newcommand\maskT{\type{basic\_simd\_mask<T>}\xspace}
 \newcommand\fixedsizeN{\type{simd\_abi::fixed\_size<N>}\xspace}
 \newcommand\fixedsizescoped{\type{simd\_abi::fixed\_size}\xspace}
 \newcommand\fixedsize{\type{fixed\_size}\xspace}
@@ -57,7 +56,8 @@
 \input{strawpolls}
 
 \section{Introduction}
-\cite{P0214R9} introduced \simdT and related types and functions into the Parallelism TS 2 Section 9.
+\cite{P0214R9} introduced \stdx\code{simd<T>} and related types and functions
+into the Parallelism TS 2 Section 9.
 The TS was published in 2018.
 An incomplete and non-conforming (because P0214 evolved) implementation existed for the whole time P0214 progressed through the committee.
 Shortly after the GCC 9 release, a complete implementation of Section 9 of the TS was made available.
@@ -117,11 +117,19 @@ Summary:
 \begin{itemize}
   \item Change the default SIMD ABI tag to \simdabi\code{native<T>} instead of \simdabi\code{compatible<T>}.
   \item Change \simdabi\code{fixed_size} to not recommend implementations make it ABI compatible.
+  \item At the Varna LEWG meeting it was decided to remove the \code{simd_abi}
+    namespace and all standard ABI tags altogether.
+    Rationale: The initial goal was to let \code{fixed_size} be equivalent to
+    \stdx\simdabi\code{deduce_t}.
+    This implies that \stdx\code{fixed_size_simd<T, N>} becomes the generic
+    interface for deducing an efficient ABI tag.
+    The next logical step is to give \code{fixed_size_simd} a shorter name and
+    hide ABI tags.
+    Consequently, \std\code{simd<T, N = \UNSP{native-size}>} is now and alias
+    for \std\code{basic_simd<T, Abi>}.
 \end{itemize}
 
-For a discussion, see \wglink{P1928R3} Section 4.1.
-
-Follow-up open questions are discussed in \sect{sec:simplifyfixedsize} and \sect{sec:basicsimdmask}.
+For a discussion, see \wglink{P1928R3} Section 4.1 and \wglink{P1928R4} Section 5.2.
 
 \subsection{Simplify/generalize casts}\label{sec:casts}
 
@@ -210,19 +218,18 @@ The \code{reduce}, \code{hmin}, and \code{hmax} overloads with
 
 The following operators were added to \mask:
 \begin{itemize}
-  \item \code{simd_mask::operator simd<U, A>() const noexcept}
-  \item \code{simd_mask::operator+() const noexcept}
-  \item \code{simd_mask::operator-() const noexcept}
-  \item \code{simd_mask::operator\~{}() const noexcept}
-  \item \code{simd_mask::operator?:() const noexcept}
-  \item \code{simd_mask operator?:(const simd_mask\&, const simd_mask\&, const simd_mask\&) noexcept}
-  \item \code{simd_mask operator?:(const simd_mask\&, bool, bool) noexcept}
-  \item \code{simd<nonpromoting_common_type_t<T0, T1> operator?:(const simd_mask\&, const T0\&, const T1\&) noexcept}
+  \item \code{basic_simd_mask::operator basic_simd<U, A>() const noexcept}
+  \item \code{\textit{simd-type} basic_simd_mask::operator+() const noexcept}
+  \item \code{\textit{simd-type} basic_simd_mask::operator-() const noexcept}
+  \item \code{\textit{simd-type} basic_simd_mask::operator\~{}() const noexcept}
+  \item \code{basic_simd_mask \simdselect(const basic_simd_mask\&, const basic_simd_mask\&, const basic_simd_mask\&) noexcept}
+  \item \code{basic_simd_mask \simdselect(const basic_simd_mask\&, bool, bool) noexcept}
+  \item \code{simd<nonpromoting_common_type_t<T0, T1> \simdselect(const basic_simd_mask\&, const T0\&, const T1\&) noexcept}
 \end{itemize}
 
 The following operator was added to \simd:
 \begin{itemize}
-  \item \code{operator?:(const mask_type\& mask, const simd\& a, const simd\& b) noexcept}
+  \item \code{operator?:(const mask_type\& mask, const basic_simd\& a, const basic_simd\& b) noexcept}
 \end{itemize}
 
 At this point, the use of \code{operator?:} obviously cannot work.
@@ -304,9 +311,9 @@ Different to the TS, this paper uses \code{size_t} for
 For a discussion, see \wglink{P1928R3} Section 4.9.
 
 \subsection{Clean up math function overloads}
-The wording that produces \code{simd} overloads misses a few cases and leaves room for ambiguity.
+The wording that produces \simd overloads misses a few cases and leaves room for ambiguity.
 There is also no explicit mention of integral overloads that are supported in \code{<cmath>} (e.g. \std\code{cos(1)} calling \std\code{cos(double)}).
-At the very least, \std\code{abs(simd<\textit{signed-integral}>)} should be specified.
+At the very least, \std\code{abs(\simd<\textit{signed-integral}>)} should be specified.
 
 Also, from implementation experience, ``undefined behavior'' for domain, pole,
 or range error is unnecessary.
@@ -358,7 +365,7 @@ This needs more work and is not reflected in the wording at this point.
 %\end{wgText}
 
 \subsection{Add lvalue-qualifier to non-const subscript}\label{sec:lvalue-subscript}
-The \code{operator[]} overloads of \code{simd} and \code{simd_mask} returned a
+The \code{operator[]} overloads of \simd and \mask returned a
 proxy reference object for non-\code{const} objects and the \code{value_type}
 for \code{const} objects.
 This made expressions such as \code{(x * 2)[0] = 1} well-formed.
@@ -383,7 +390,7 @@ For a discussion of this topic see \wglink{P1928R3} Section 5.2.
 Previously some operators (e.g., \code{operator<}) and functions which relied on
 some property of the element type (e.g., \tcode{min} relies on ordering)
 were unconstrained. Operations which were not permitted on individual elements
-were still available in the overload set for simd objects of those types.
+were still available in the overload set for \simd objects of those types.
 Constraints have been added where necessary to remove such operators and
 functions from the overload set where they aren't supported.
 
@@ -469,7 +476,7 @@ On my choices:
   \item[\simdflagpref{aligned}] This flags says that the memory pointed to by
     the iterator follows stricter alignment requirements.
     Specifically it follows \code{memory_alignment_v<T, U>} (\code{T} is the
-    \code{simd<T>} element type and \code{U} is the array element type).
+    \simdT element type and \code{U} is the array element type).
     We should consider renaming \code{memory_alignment(_v)} to
     \code{simd_alignment(_v)} or \code{simd_loadstore_alignment(_v)}.
 
