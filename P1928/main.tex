@@ -204,6 +204,7 @@ For a discussion, see \wglink{P1928R3} Section 4.7.
 The following load/store overloads have been added as a replacement for
 \stdx\code{where_expression::copy_from} and \stdx\code{const_where_expression::copy_to}:
 \begin{itemize}
+    \raggedright
   \item \code{simd::simd(contiguous_iterator, const mask_type\&, Flags = \{\})} (selected elements are copied from given range, otherwise use value-initialization)
   \item \code{simd::copy_from(contiguous_iterator, const mask_type\&, Flags = \{\})} (selected elements are copied from given range)
   \item \code{simd::copy_to(contiguous_iterator, const mask_type\&, Flags = \{\})} (selected elements are copied to given range)
@@ -218,89 +219,48 @@ The \code{reduce}, \code{hmin}, and \code{hmax} overloads with
 
 The following operators were added to \mask:
 \begin{itemize}
+    \raggedright
   \item \code{basic_simd_mask::operator basic_simd<U, A>() const noexcept}
   \item \code{\textit{simd-type} basic_simd_mask::operator+() const noexcept}
   \item \code{\textit{simd-type} basic_simd_mask::operator-() const noexcept}
   \item \code{\textit{simd-type} basic_simd_mask::operator\~{}() const noexcept}
+\end{itemize}
+
+The following hidden friends were added to \mask:
+\begin{itemize}
+    \raggedright
   \item \code{basic_simd_mask \simdselect(const basic_simd_mask\&, const basic_simd_mask\&, const basic_simd_mask\&) noexcept}
   \item \code{basic_simd_mask \simdselect(const basic_simd_mask\&, bool, bool) noexcept}
-  \item \code{simd<nonpromoting_common_type_t<T0, T1> \simdselect(const basic_simd_mask\&, const T0\&, const T1\&) noexcept}
+  \item \code{simd<\UNSP{non-promoting-common-type}<T0, T1> \simdselect(const basic_simd_mask\&,
+    const T0\&, const T1\&) noexcept}
 \end{itemize}
 
-The following operator was added to \simd:
+The following hidden friend was added to \simd:
 \begin{itemize}
-  \item \code{operator?:(const mask_type\& mask, const basic_simd\& a, const basic_simd\& b) noexcept}
+    \raggedright
+  \item \code{basic_simd \simdselect(const mask_type\& mask, const basic_simd\& a, const basic_simd\& b) noexcept}
 \end{itemize}
 
-At this point, the use of \code{operator?:} obviously cannot work.
-As long as we don't have the language feature for overloading \code{?:} the
-following needs to happen (also reproduced at the beginning of the wording
-section):
-\begin{enumerate}
-  \item Replace \code{operator?:} by \code{conditional_operator_impl}.
-  \item Add a \std\code{conditional_operator(cond, a, b)} CPO that tries the following:
-    \begin{itemize}
-      \item If \code{conditional_operator_impl(cond, a, b)} can be found via ADL calls \code{conditional_operator_impl(cond, a, b)} unqualified, otherwise
-      \item if \code{cond ? a : b} is well-formed, return its result, otherwise
-      \item if \std\code{common_type_t<decltype(a), decltype(b)>} exists, cast \code{a} and \code{b} to this common type and apply \code{?:}.
-    \end{itemize}
-\end{enumerate}
-Obviously, the use of a function (or CPO) instead of overloading
-\code{operator?:} has a significant impact on generic code that would prefer to
-keep the semantics of \code{?:}, which doesn't evaluate an expression unless
-its result is actually needed.
+Instead of \code{\simdselect} we would have preferred to overload
+\code{operator?:} but that requires a language change first.
+As long as we don't have the language feature for overloading \code{?:},
+generic code must use an inferior function instead.
+Knowing that other libraries would benefit from an overloadable
+\code{operator?:} \wglink{P1928R4} proposed a \code{std::conditional_operator}
+CPO that 3rd-party libraries could have extended.
+However, the use of a function (or CPO) instead of overloading
+\code{operator?:} cannot keep the semantics of \code{?:}, which doesn't
+evaluate an expression unless its result is actually needed.
 For a function, we cannot pass expressions but only their results.
 Relevant papers: \cite{P0927R2}, \cite{D0917}.
 
-A list of alternative names for \std\code{conditional_operator}:
+Therefore LEWG decided in Varna to define a \std\code{simd_select} function
+instead of a general CPO, with the following goals:
 \begin{itemize}
-  \item \std\code{ternary(cond, a, b)}
-  \item \std\code{inline_if(cond, a, b)}
-  \item \std\code{iif(cond, a, b)}
-  \item \std\code{blend(cond, a, b)}
-  \item \std\code{select(cond, a, b)}
-  \item \std\code{choose(cond, a, b)}
+  \item User's shouldn't extend this.
+  \item Make it “value based”, i.e. don't bother about references for non-simd
+    arguments.
 \end{itemize}
-
-For a discussion, see \wglink{P1928R3} Section 4.8 and 5.3.
-
-\subsubsection{\code{simd_select} instead of \code{conditional_operator}}\label{sec:simd_select}
-LEWG feedback on Tuesday in Varna:
-\begin{itemize}
-  \item Don't make it a CPO: user's shouldn't extend this.
-  \item Make it “value based”, i.e. don't bother about references for non-simd arguments.
-  \item Call it \code{simd_select}.
-  \item Come back ASAP.
-\end{itemize}
-
-Proposal:
-\begin{lstlisting}[escapechar=@]
-namespace std
-{
-template <typename T, typename U>
-  constexpr common_type_t<T, U>
-  simd_select(bool c, T x, U y)
-  { return c ? x : y; }
-
-template <size_t N, typename Abi>
-  constexpr auto
-  simd_select(const basic_simd_mask<N, Abi>& k, const auto& x, const auto& y)
-  -> decltype(@\UNSP{simd-select-impl}@(k, x, y))
-  { return @\UNSP{simd-select-impl}@(k, x, y); }
-}
-\end{lstlisting}
-
-Replace \code{operator?:} hidden friends with \UNSP{simd-select-impl} hidden
-friends in \code{basic_simd} and \code{basic_simd_mask}.
-
-\begin{description}
-  \item[Pro] Continues to use the same conversion mechanisms as all the other
-    (binary) operators (requires the use of hidden friends).
-
-  \item[Con] Harder to discover/understand/document.
-\end{description}
-
-Wording TBD.
 
 \subsection{Make use of \code{int} and \code{size_t} consistent}
 
@@ -1337,6 +1297,49 @@ Rationale: AVX-512 \code{simd<char>::size() == 64}.
 
 \wgPoll{Increase the minimum supported \code{simd} width to 64}
 {&&&&}
+
+\section{Changes after LEWG approval}
+
+\subsection{\code{simd_select} overload set}\label{sec:simdselectwording}
+
+\wglink{P1928R6} presented the following overload set of the exposition-only
+hidden friend \code{\simdselect}:
+\begin{codeblock}
+template<class T, class Abi> class basic_simd {
+  // [...]
+  friend constexpr basic_simd @\simdselect@(
+    const mask_type&, const basic_simd&, const basic_simd&) noexcept; // #1
+};
+// [...]
+template<size_t Bytes, class Abi> class basic_simd_mask {
+  // [...]
+  friend constexpr basic_simd_mask @\simdselect@(
+    const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept; // #2
+  friend constexpr basic_simd_mask @\simdselect@(
+    const basic_simd_mask&, bool, bool) noexcept; // #3
+  template <class T0, class T1>
+    friend constexpr basic_simd<@\seebelow@, Abi>
+      @\simdselect@(const basic_simd_mask&, const T0&, const T1&) noexcept; // #4
+};
+\end{codeblock}
+
+Given \code{std::simd_select(std::simd<double, 4>() == 0, 1, 2)}, the compiler
+would choose overload \code{\#3} because \code{int} is convertible to
+\code{bool} and \code{\#4} is constrained, requiring
+\code{sizeof(\UNSP{non-promoting-common-type}<T0, T1>) == sizeof(double)}.
+That does not match the design intent.
+The intent was for non-boolean and non-simd arguments to pick overload
+\code{\#4} or fail to compile.
+This can be achieved either by replacing \code{bool} with a type that is
+convertible from \code{bool} only, or via \code{same_as<bool> auto} instead of
+\code{bool}.
+The former leads to puzzling error messages, because overload \code{\#4} is not
+mentioned in the resulting diagnostics.
+The latter will lead to a listing of all candidates and the reason why they
+were not viable.
+
+Therefore, the wording for overload \code{\#3} was changed to say
+\code{same_as<bool> auto} instead of \code{bool}.
 
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 

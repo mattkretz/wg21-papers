@@ -1533,7 +1533,7 @@ public:
   friend constexpr basic_simd_mask @\simdselect@(
     const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept;
   friend constexpr basic_simd_mask @\simdselect@(
-    const basic_simd_mask&, bool, bool) noexcept;
+    const basic_simd_mask&, same_as<bool> auto, same_as<bool> auto) noexcept;
   template <class T0, class T1>
     friend constexpr basic_simd<@\seebelow@, Abi>
       @\simdselect@(const basic_simd_mask&, const T0&, const T1&) noexcept;
@@ -1870,7 +1870,7 @@ friend constexpr basic_simd @\simdselect@(
 
 \begin{itemdecl}
 friend constexpr basic_simd_mask
-@\simdselect@(const basic_simd_mask& mask, bool a, bool b) noexcept;
+@\simdselect@(const basic_simd_mask& mask, same_as<bool> auto a, same_as<bool> auto b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1892,7 +1892,7 @@ template <class T0, class T1>
   \pnum\constraints
   \begin{itemize}
     \item \tcode{U} is a vectorizable type, and
-    \item \tcode{sizeof(U) == sizeof(T)}, and
+    \item \tcode{sizeof(U) == Bytes}, and
     \item \tcode{T0} satisfies \tcode{convertible_to<basic_simd<U, Abi>>}, and
     \item \tcode{T1} satisfies \tcode{convertible_to<basic_simd<U, Abi>>}.
   \end{itemize}
