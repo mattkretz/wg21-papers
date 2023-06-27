@@ -262,13 +262,27 @@ instead of a general CPO, with the following goals:
     arguments.
 \end{itemize}
 
-\subsection{Make use of \code{int} and \code{size_t} consistent}
+\subsection{Make use of \code{int} and \code{size_t} consistent}\label{sec:simdsizetype}
 
-Different to the TS, this paper uses \code{size_t} for
-\stdx\simdabi\code{fixed_size}, \stdx\code{fixed_size_simd},
-\stdx\code{fixed_size_simd_mask}, \stdx\code{resize_simd}, and
-\stdx\simdabi\code{max_fixed_size}.
-For a discussion, see \wglink{P1928R3} Section 4.9.
+Different to the TS, this paper uses \code{\simdsizetype} for
+\begin{itemize}
+  \item the SIMD width (number of elements),
+  \item the subscript operator arguments, and
+  \item the \mask reductions that return an integral value.
+\end{itemize}
+
+Alignments and values identifying a \code{sizeof} still use \code{size_t}.
+
+The type \simdsizetype{} is an exposition-only alias for a signed integer type.
+I.e. the implementation is free to choose any signed integer type.
+
+The rationale given in the LEWG discussion was a desire to avoid type
+conversions when using the result of a \mask reduction as subscript argument.
+Since functions like \code{__builtin_popcount} in GCC typically return
+\code{int}, the natural choice is to stick with that type and make subscript
+arguments use the same type.
+Since the SIMD width is also sometimes used in expressions in the subscript
+argument, the SIMD width should also have the same type.
 
 \subsection{Clean up math function overloads}
 The wording that produces \simd overloads misses a few cases and leaves room for ambiguity.
