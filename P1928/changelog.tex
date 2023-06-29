@@ -40,7 +40,7 @@
 \item Add unary \code{\~{}} to \code{simd_mask}.
 \item Discuss and ask for confirmation of masked ``overloads'' names and argument order.
 \item Resolve inconsistencies wrt. \code{int} and \code{size_t}: Change \code{fixed_size} and \code{resize_simd} NTTPs from \code{int} to \code{size_t} (for consistency).
-\item Discuss conversions on loads and stores. (\sect{sec:convertingLoadsAndStores})
+\item Discuss conversions on loads and stores.
 \item Point to \cite{P2509R0} as related paper.
 \item Generalize load and store from pointer to \code{contiguous_iterator}. (\sect{sec:contiguousItLoadStore})
 \item Moved ``\code{element_reference} is overspecified'' to ``Open questions''.
@@ -55,7 +55,7 @@
 \item Add lvalue-ref qualifier to subscript operators (\sect{sec:lvalue-subscript}).
 \item Constrain \code{simd} operators: require operator to be well-formed on objects of \code{value_type} (\ref{sec:simd.unary}, \ref{sec:simd.binary}).
 \item Rename mask reductions as decided in Issaquah.
-\item Remove R3 ABI discussion and add follow-up question (\sect{sec:simplifyfixedsize}).
+\item Remove R3 ABI discussion and add follow-up question.
 \item Add open question on first template parameter of \code{simd_mask} (\sect{sec:basicsimdmask}).
 \item Overload loads and stores with mask argument (\ref{sec:simd.ctor}, \ref{sec:simd.copy}, \ref{sec:simd.mask.ctor}, \ref{sec:simd.mask.copy}).
 \item Respecify \simd reductions to use a \mask argument instead of \code{const_where_expression} (\ref{sec:simd.reductions}).
@@ -64,7 +64,7 @@
   (\ref{sec:simd.cond}, \ref{sec:simd.mask.cond}).
 \item Discuss \std\code{hash} for \simd (\sect{sec:hash}).
 \item Constrain some functions (e.g., min, max, clamp) to be \code{totally_ordered} (\ref{sec:simd.reductions}, \ref{sec:simd.alg}).
-\item Asking for reconsideration of conversion rules (\sect{sec:reconsider_conversions}).
+\item Asking for reconsideration of conversion rules.
 \item Rename load/store flags (\sect{sec:renameandextendflags}).
 \item Extend load/store flags with a new flag for conversions on load/store. (\sect{sec:renameandextendflags}).
 \item Update \code{hmin}/\code{hmax} discussion with more extensive naming discussion (\sect{sec:hminhmax}).
@@ -74,7 +74,7 @@
 \end{revision}
 
 \begin{revision}
-\item Added \code{simd_select} discussion (\sect{sec:simd_select}).
+\item Added \code{simd_select} discussion.
 \end{revision}
 
 \begin{revision}
@@ -109,6 +109,7 @@
   constexpr-wrapper-like arguments to the broadcast ctor (\ref{sec:simd.ctor}).
 \item Add relational operators to \mask as directed by LEWG (\ref{sec:simd.mask.comparison}).
 \item Update section on \code{size_t} vs. \code{int} usage (\sect{sec:simdsizetype}).
+\item Remove all open design questions, leaving LWG / wording questions.
 %  \todo Ensure constexpr_wrapper initialization works.
 %  \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.
 %  \todo Consider adding a note that recommends implementations to let simd primary operations behave like operations of arithmetic types to never be function calls. (cf. GCC PR108030)

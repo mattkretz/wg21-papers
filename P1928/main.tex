@@ -131,6 +131,24 @@ Summary:
 
 For a discussion, see \wglink{P1928R3} Section 4.1 and \wglink{P1928R4} Section 5.2.
 
+\subsection{\code{basic_simd_mask<sizeof, Abi>}}\label{sec:basicsimdmask}
+Following the polls by LEWG in Issaquah 2023, \wglink{P1928R4} made mask types
+interconvertible.
+The next simplification was to make interconvertible types the same type
+instead.
+This is achieved by renaming the \stdx\code{simd_mask} class template to
+\std\mask and changing the first template parameter from element type \code{T}
+to \code{sizeof(T)}.
+An alias \code{simd_mask<T, N> = basic_simd_mask<sizeof(T),
+\UNSP{native-size}>} provides the simpler to use API.
+
+The resulting mask types are explicitly convertible if the SIMD width is equal,
+otherwise they are not convertible at all.
+Note that for some target hardware the (explicitly) convertible masks are
+convertible without any cost.
+However, that's not the case for all targets, which is why the conversion is
+still marked explicit.
+
 \subsection{Simplify/generalize casts}\label{sec:casts}
 
 For a discussion, see \wglink{P1928R3} Section 4.2.
@@ -497,531 +515,37 @@ void f(std::simd<double> x) {
 \end{lstlisting}
 \end{tabular}
 
-\section{Open questions}
-
-\subsection{Basic mask type?}\label{sec:basicsimdmask}
-Now that \mask types have become interconvertible, the distinction between
-\mask[<T, Abi>] and \mask[<U, Abi>] with \code{sizeof(T) == sizeof(U)} is gone.
-Actually, the fact that the type is interconvertible makes it harder to use
-(because it is easier to construct ambiguities).
-
-Solution: \emph{Make \mask[<T, Abi>] an alias for \code{basic_simd_mask<sizeof(T), Abi>}.}
-
-\begin{description}
-  \item[Pros]
-    \begin{itemize}
-      \item reduces the number of template instantiations
-
-      \item equivalent masks can now trivially be used on mixed type simd
-
-      \item choosing the right template parameters for \mask is still simple
-        and consistent with \simd
-    \end{itemize}
-
-  \item[Cons]
-    \begin{itemize}
-      \item It may be surprising that \mask[<T, Abi>] and \mask[<U, Abi>] are
-        not different types.
-        E.g. if someone wants to distinguish an overload set (why, though?).
-        This is resolved by the alternative solution below.
-
-      \item The \code{simd_mask::simd_type} member type must be removed or
-        defined to an integer type of the corresponding \code{sizeof}.
-        I.e. the mapping from mask type to simd type changes or doesn't exist
-        anymore.
-
-      \item Unary minus and unary plus on \mask objects must return an integer
-        simd type.\\
-        (\code{-(x < 0)} with \code{x} of type \code{simd<float>} would be of
-        type \code{simd<int>} instead of \code{simd<float>})
-
-      \item \code{sizeof(T) > sizeof(long long)} needs a different rule to
-        determine the \code{simd_type} member and/or the unary operator return
-        types.
-        (E.g. \code{sizeof(long double) == 12} on Linux 32-bit,
-        \code{sizeof(long double)} == 16 on Linux 64-bit)
-        Proposed solution: Define \code{simd_mask<B, Abi>::simd_type} as
-        \code{simd<I, Abi>} with \code{I} the largest standard signed integer
-        type where \code{sizeof(I) <= B}.
-    \end{itemize}
-\end{description}
-
-Alternative: \emph{Define the class template \code{template <size_t Bytes,
-class Abi> class simd_mask;} and let users deal with the difference in template
-parameters.}
-
-Note that \code{simd<T, Abi>::mask_type} exists and is basically equivalent to
-an alias template parameterized on \code{T} and \code{Abi}.
-
-\subsubsection{Suggested Polls}
-
-\wgPoll{Respecify \code{simd_mask<T, Abi>} as alias for \code{basic_simd_mask<sizeof(T), Abi>}.}
-{&&&&}
-
-\wgPoll{Specify \mask as \code{simd_mask<Bytes, Abi>}.}
-{&&&&}
-
-\wgPoll{Define \code{simd_mask<B, Abi>::simd_type} as \code{simd<I, Abi>} with \code{I} the largest standard signed integer type where \code{sizeof(I) <= B}.}
-{&&&&}
-
-\wgPoll{Do not define a \code{simd_type} member type, but use the above rule for the return type of unary minus and unary plus.}
-{&&&&}
-
-\subsection{Reconsider conversion rules}\label{sec:reconsider_conversions}
-
-LEWG discussed conversion in Issaquah 2023.
-There was some consensus in favor of: ``SIMD types and operations should be
-value preserving, even if that means they're inconsistent with the builtin
-numeric types.''
-Comments on this poll were:
-\begin{itemize}
-  \item WF: I generally like the direction, in the sense of safety, but I'm
-    not sure of the consequences of such a design.
-
-  \item N: I would rather be consistently wrong than inconsistent.
-
-  \item WA: I don't want to be inconsistent with how things have been for the last 30 years.
-
-  \item WF: I'm not sure if we've evaluated the performance impact of this.
-
-  \item N: Just because we've made a mistake in the past doesn't mean we have to keep making it. I'm not convinced that the new approach is the right thing.
-\end{itemize}
-
-LEWG then noticed a specifically tricky case when mixing \code{int} and \code{float}.
-Which of these do we want?
-\begin{itemize}
-  \item \code{int * simd<float> = simd<float>}
-  \item \code{int * simd<float> = simd<double>}
-\end{itemize}
-
-There was no consensus on how to resolve this correctly.
-Note that \code{int} (and to some extent \code{unsigned int}) have a special
-exception in the \emph{value-preserving} conversion rules.
-Otherwise, a lot of code would be much more cumbersome to write (especially for
-types that have no matching literals, e.g. \code{short}).
-
-With the discussion on safety and correctness in \CC{} getting more traction,
-there is a plausible chance that we will see a set of types that exhibit
-``safer'' conversion behavior in the future.
-A possible approach could be via \cite{P2509R0}, defining a trait for
-value-preserving conversions.
-This trait could then be used to define a numeric type, wrapping the existing
-arithmetic types with conversions being conditionally \code{explicit} depending
-on that trait.
-
-When that happens, we will likely want to make these types \emph{vectorizable}
-and then inherit the conversion rules of those types.
-
-So why not let \code{simd<T>} inherit conversion behavior via
-\std\code{constructible_from} and \std\code{convertible_to}?
-Then such future numeric types conversion behavior will just fall in place.
-
-The problem is that builtin arithmetic types behave differently to class types.
-\begin{itemize}
-  \item They are all interconvertible.
-  \item When a binary operator is called with mixed types, there are rules
-    ([expr.arith.conv]) to determine a common type that go beyond anything a
-    class type can do.
-  \item Integral promotions.
-  \item And to top it off, there are no literals for \code{(un)signed char} and
-    \code{(un)signed short} (i.e. you cannot initialize without an implicit or
-    explicit conversion --- except value-init).
-\end{itemize}
-
-We could make all \code{simd} types interconvertible and implement binary
-operators similar to \code{simd<another_common_type_t<T, U>>(simd<T>,
-simd<U>)}\footnote{which is basically what my first paper on SIMD vector types
-proposed \cite{N4184}}.
-Though, we surely want to ignore integral promotions (otherwise
-\code{simd<char>() + simd<char>()} has surprisingly bad performance
-characteristics).
-This would be going back to the original Vc library that was the basis of the
-\code{simd} proposal (back in 2014).
-Meaning, it has been done and it can be done.
-But those binary operators are not really a pretty solution either.
-And error messages when something goes wrong even less.
-
-The type trait \code{another_common_type<T, U>} could implement
-\code{common_type} without integer promotion (and assorted other tweaks to
-reduce surprises\footnote{Who knew that
-\code{common_type_t<std::integral_constant<int, -1>, unsigned short>} is
-\code{unsigned short}?}).
-
-The comment ``I would rather be consistently wrong than inconsistent.'' above
-was missing this information.
-There is no reasonable possibility to be ``consistently wrong'' here.
-We have no other choice than being inconsistent.
-Our only choice is what that inconsistency looks like.
-
-In Issaquah, the idea of a ``value-preserving common type'' was voiced.
-This would presumably mean that \code{int + float} can turn into \code{double}.
-The trouble with such a trait is how to determine the correct answer if none of
-the argument types is a value-preserving common type.
-The situation is manageable as long as \code{simd} only supports arithmetic types.
-But there exists a plausible future where fixed-point numbers, rational numbers,
-\code{_BitInt}-like numbers, \ldots become \code{vectorizable}.
-While I believe a solution could be developed, I am not convinced that it would
-serve users well.
-The tricky cases are probably best flagged as compile-time errors and resolved
-via explicit cast.
-
-Choices:
-\begin{enumerate}
-  \item Try to be as “consistently wrong” (i.e. consistent with builtin types)
-    as possible, at the cost of interconvertible types (leads to ambiguity
-    errors), more complex binary operators, and many subtle ways to
-    unintentionally change types and potentially also pay in performance.
-
-  \item\label{enum:binaryoptemplates} Variant of the above: Don't make \simd
-    interconvertible, by defining the \simd conversion constructor as in the
-    wording below.
-    However, the broadcast constructor is a simple \code{simd(value_type x)},
-    without any further constraints.
-    Binary operators derive the return type (and common type for evaluating the
-    operations) from a non-promoting common type of the operands.
-
-  \item\label{enum:valuepreserving} Stick to the \emph{value-preserving} rules
-    with (or without) exceptions for \code{int} and \code{unsigned int} as
-    introduced in the TS.
-
-  \item\label{enum:commontype} Consider a new rule-set that derives conversion
-    rules (i.e. constraints on broadcast and conversion constructor) from a
-    non-promoting common type of the participating types.
-    Binary operators are still a simple hidden friend \code{simd
-    operator+(simd, simd)}, requiring that the operands determine one of the
-    operand types as their common type.
-\end{enumerate}
-
-Choice \ref{enum:commontype} would basically make conversions conditionally
-explicit via \code{explicit(not std::same_as<another_common_type_t<T, U>, T>)}.
-
-In such an implementation \code{int * simd<float>} is still of type
-\code{simd<float>} (as is \code{simd<int> * simd<float>} and \code{simd<long
-long> * simd<float>}).
-
-With choice \ref{enum:valuepreserving} the \code{simd<int> * simd<float>} and
-\code{simd<long long> * simd<float>} cases are ill-formed.
-
-However, choice \ref{enum:commontype} makes initialization of
-\code{simd<short>} (and similar) cumbersome, since no literal other than a
-\code{char} literal is convertible to the \simd.
-This is true for the plain value-preserving approach as well, which is why it
-has exceptions for \code{int} and \code{unsigned int} on broadcast constructor
-arguments.
-This same exception could be used for choice \ref{enum:valuepreserving}, of
-course.
-
-Or, instead, we could allow arbitrary types if the library can determine at
-compile-time that the \emph{value} of the argument can be converted without
-narrowing.
-This would be possible with \code{integral_constant} arguments, or rather
-anything with a \code{static constexpr value} data member.
-Then, \std\code{simd<short> x = std::cc<1>;} is well-formed while
-\std\code{simd<short> x = 1;} is not.%
-\footnote{Then we only need a language feature to turn constant expressions
-into \code{integral_constant}/\code{constexpr_t}/etc. via opt-in on the
-constructor/function argument and \std\code{cc} becomes transparent.}
-
-For a better understanding, Tables
-\ref{tab:binopresults1}--\ref{tab:binopresults2} present the result type of
-binary \code{operator+} for different conversion strategies.
-Note that \emph{the broadcast constructor has no influence on the results of
-choice \ref{enum:binaryoptemplates}}.
-This is why a simple broadcast constructor expecting a \code{value_type}
-argument should be the more consistent choice for this scenario.
-
-\begingroup
-  \def\err{\textbf{\color{constants}ERROR}}
-  \def\schar{\code{\color{types}schar}}
-  \def\uchar{\code{\color{types}uchar}}
-  \def\sshort{\code{\color{types}short}}
-  \def\ushort{\code{\color{types}ushort}}
-  \def\sint{\code{\color{types}int}}
-  \def\uint{\code{\color{types}uint}}
-  \def\slong{\code{\color{types}long}}
-  \def\ulong{\code{\color{types}ulong}}
-  \def\sllong{\code{\color{types}llong}}
-  \def\ullong{\code{\color{types}ullong}}
-  \def\float{\code{\color{types}float}}
-  \def\double{\code{\color{types}double}}
-  \def\bool{\code{\color{types}bool}}
-  \def\Vschar{\simd[<\schar>]}
-  \def\Vuchar{\simd[<\uchar>]}
-  \def\Vsshort{\simd[<\sshort>]}
-  \def\Vushort{\simd[<\ushort>]}
-  \def\Vsint{\simd[<\sint>]}
-  \def\Vuint{\simd[<\uint>]}
-  \def\Vslong{\simd[<\slong>]}
-  \def\Vulong{\simd[<\ulong>]}
-  \def\Vsllong{\simd[<\sllong>]}
-  \def\Vullong{\simd[<\ullong>]}
-  \def\Vfloat{\simd[<\float>]}
-  \def\Vdouble{\simd[<\double>]}
-  \def\mca#1{\multicolumn{2}{c|}{#1}}
-  \def\mcb#1{\multicolumn{3}{c|}{#1}}
-  \def\LHS{\simd[<operand1>]}
-  \def\LHSa{\mca{\LHS}}
-  \def\LHSb{\mcb{\LHS}}
-  \def\RHSa{\mca{\RHS}}
-  \def\RHSb{\mcb{\RHS}}
-  \def\erra{\mca{\err}}
-  \def\errb{\mcb{\err}}
-  \def\Rrr{\RHS (\err)}
-  \newenvironment{TypeTable}[2]{
-    \begin{table}[htbp]
-      \caption{Binary operator results with #1 for operand 2}
-      \label{#2}
-      \smaller
-      \begin{tabular}{>{\raggedright}p{0.47\textwidth}|c|c|c|}
-        operand 1
-        & \wgDocumentNumber{} (choice \ref{enum:valuepreserving})
-        & choice \ref{enum:commontype}
-        & choice \ref{enum:binaryoptemplates} \\\hline
-        \gdef\RHS{#1}
-  }{
-      \end{tabular}
-    \end{table}
-  }
-  \begin{TypeTable}{\Vsshort}{tab:binopresults1}
-    \schar, \uchar, \sshort, \Vschar, \Vuchar, \Vsshort
-    & \RHSb \\\hline
-
-    \ushort, \uint, \slong, \ulong, \sllong, \ullong, \float, \double
-    & \erra & \LHS \\\hline
-
-    \sint
-    & \Rrr & \err & \LHS \\\hline
-
-    \bool
-    & \err & \RHSa \\\hline
-
-    \simd[<\ushort>], \simd[<\uint>], \simd[<\ulong>], \simd[<\ullong>]
-    & \err & \LHSa \\\hline
-
-    \simd[<\sint>], \simd[<\slong>], \simd[<\sllong>], \simd[<\float>],
-    \simd[<\double>]
-    & \LHSb
-  \end{TypeTable}
-
-  \begin{TypeTable}{\Vushort}{}
-    \uchar, \ushort,
-    \simd[<\uchar>], \simd[<\ushort>]
-    & \RHSb \\\hline
-
-    \slong, \ulong, \sllong, \ullong, \float, \double
-    & \erra & \LHS \\\hline
-
-    \sint, \uint
-    & \Rrr & \err & \LHS \\\hline
-
-    \schar, \sshort, \bool
-    & \err & \RHSa \\\hline
-
-    \simd[<\schar>], \simd[<\sshort>]
-    & \err & \RHSa \\\hline
-
-    \simd[<\sint>], \simd[<\uint>], \simd[<\slong>], \simd[<\ulong>],
-    \simd[<\sllong>], \simd[<\ullong>], \simd[<\float>], \simd[<\double>]
-    & \LHSb
-  \end{TypeTable}
-
-  \begin{TypeTable}{\Vuint}{}
-    \uchar, \ushort, \uint,
-    \simd[<\uchar>], \simd[<\ushort>], \simd[<\uint>]
-    & \RHSb \\\hline
-
-    \sint & \Rrr & \RHSa \\\hline
-
-    \simd[<\slong>], \simd[<\ulong>], \simd[<\sllong>], \simd[<\ullong>],
-    \simd[<\double>]
-    & \LHSb \\\hline
-
-    \slong, \ulong, \sllong, \ullong, \float, \double
-    & \erra & \LHS \\\hline
-
-    \schar, \sshort, \bool,
-    \simd[<\schar>], \simd[<\sshort>], \simd[<\sint>],
-    & \err & \RHSa \\\hline
-
-    \simd[<\float>] & \err & \LHSa
-  \end{TypeTable}
-
-  \begin{TypeTable}{\Vulong}{}
-    \uchar, \ushort, \uint, \ulong, \Vuchar, \Vushort, \Vuint, \Vulong
-    & \RHSb \\\hline
-
-    \sint & \Rrr & \RHSa \\\hline
-
-    \schar, \sshort, \slong, \bool, \Vschar, \Vsshort, \Vsint, \Vslong
-    & \err & \RHSa \\\hline
-
-    \sllong, \Vsllong & \erra & \Vullong \\\hline
-
-    \ullong & \RHS & \err & \Vullong \\\hline
-
-    \Vullong & \mcb{\Vullong} \\\hline
-
-    \float, \double & \erra & \LHS \\\hline
-
-    \Vfloat, \Vdouble & \err & \LHSa
-  \end{TypeTable}
-
-  \begin{TypeTable}{\Vfloat}{}
-    \schar, \uchar, \sshort, \ushort, \float, \Vschar, \Vuchar, \Vsshort, \Vushort,
-    \Vfloat
-    & \RHSb \\\hline
-
-    \uint, \slong, \ulong, \sllong, \ullong, \bool, \Vsint, \Vuint, \Vslong,
-    \Vulong, \Vsllong, \Vullong
-    & \err & \RHSa \\\hline
-
-    \sint & \Rrr & \RHSa \\\hline
-
-    \double & \erra & \Vdouble \\\hline
-
-    \Vdouble & \mcb{\Vdouble}
-  \end{TypeTable}
-
-  \begin{TypeTable}{\Vdouble}{tab:binopresults2}
-    \schar, \uchar, \sshort, \ushort, \sint, \uint, \float, \double, \Vschar,
-    \Vuchar, \Vsshort, \Vushort, \Vsint, \Vuint, \Vfloat, \Vdouble
-    & \RHSb \\\hline
-
-    \slong, \ulong, \sllong, \ullong, \bool, \Vslong, \Vulong, \Vsllong,
-    \Vullong
-    & \err & \RHSa
-  \end{TypeTable}
-\endgroup
-
-\subsubsection{Suggested Polls}
-
-\wgPoll{Base \simd conversion rules on the non-promoting common-type method
-instead of value-preserving conversions (choice \ref{enum:commontype} in
-\wgDocumentNumber).}
-{&&&&}
-
-\wgPoll{Base \simd binary operator result types on the non-promoting
-common-type method while simplifying the broadcast constructor (choice
-\ref{enum:binaryoptemplates} in \wgDocumentNumber).}
-{&&&&}
-
-\wgPoll{Remove broadcast ctor exceptions for \code{int} and \code{unsigned
-int}, instead ensure \code{integral_constant}-like arguments work correctly.}
-{&&&&}
-
-\subsection{Keep or remove split and concat or parts of it}\label{sec:splitandconcat}
-The TS includes the following functions for splitting \simd and \mask objects:
-\begin{enumerate}
-  \item\label{enum:split1} \stdx\code{split<N0, N1, N2, ...>(x)} returns a
-    \std\code{tuple} of \simd/\mask (\code{x.size()} must be \code{N0 + N1 + N2
-    ...})
-
-  \item\label{enum:split2} \stdx\code{split<T>(x)} returns a \std\code{array<T,
-    ...>} (\code{T} is a \simd/\mask and \code{x.size()} must be a multiple of
-    \code{V::size()})
-
-  \item\label{enum:split3} \stdx\code{split_by<N>(x)} returns a
-    \std\code{array} of \simd/\mask (\code{x.size()} must be a multiple of
-    \code{N})
-\end{enumerate}
-
-For concatenation the TS includes:
-\begin{itemize}
-  \item \stdx\code{concat(x, y, z)} returns a single \simd/\mask object
-    containing the elements of \code{x}, \code{y}, and \code{z} (requires
-    arguments to have the same element type)
-
-  \item \stdx\code{concat(array_of_simd_or_mask)} returns a single \simd/\mask
-    object containing the elements of the \simd/\mask objects in the
-    \std\code{array}.
-\end{itemize}
-
-An obvious candidate for removal is the \code{concat(array)} overload, since
-the same can be expressed using \std\code{apply}.
-If it is not removed then why are there no additional overloads for all the
-other tuple-like types?
-
-The concatenation facility for \simd/\mask is useful and necessary for some of
-the permutation examples presented in \cite{P2664R2}.
-At this point there exists no good motivation for removal of \code{concat}
-since we would expect a later paper to re-add this facility otherwise.
-
-For \code{split} and \code{split_by} we should reconsider the usefulness of
-each of the three overloads in light of the intent to add an ``extract''
-function, which is supposed to return a slice of the input \simd/\mask as a
-smaller \simd/\mask.
-Such a function would be a replacement for the \ref{enum:split1}.~\code{split}
-function.
-The \ref{enum:split2}. and \ref{enum:split3}. function are equivalent:
-\code{split_by<\MayBreak{}N>(\MayBreak{}T)} is the same as
-\code{split<\MayBreak{}resize_simd_t<\MayBreak{}V::\MayBreak{}size() / N,
-T>>(T)}; \code{split<U>(T)} is the same as
-\code{split_by<\MayBreak{}T::\MayBreak{}size() /\MayBreak{}
-U::\MayBreak{}size()\MayBreak{}>(T)}.
-We could therefore consider reducing \code{split} to a single interface.
-
-The use case I came across when wanting to use \code{split} is the splitting of
-an “oversized” \simd into register-sized parts.
-Example: \code{fixed_size_simd<float, 20>} could be made up of one AVX-512 and
-one SSE register on an x86 target.
-So I'd be interested in a simple interface of splitting
-\code{fixed_size_simd<float, 20>} into \code{simd<float>} and
-\code{simd<\MayBreak{}float, impl-defined-abi-tag>}%
-\footnote{same as \code{fixed_size_simd<float, 4>} depending on
-\sect{sec:simplifyfixedsize}}.
-\stdx\code{split<16, 4>(x)} would achieve that.
-But in generic code the derivation of these numbers is not trivial.
-
-An extended \code{split<T>(x)} interface could instead do the following:
-\code{split<simd<float>>(x)} returns a \code{tuple} of as many
-\code{simd<float>} as \code{x.size()} allows plus an “epilogue” of
-\code{simd<float, impl-defined-abi-tag} objects as are necessary to return all
+\subsection{Reduce overloads and rename split and concat}\label{sec:splitandconcat}
+
+The \stdx\code{concat(array)} overload was removed in favor of using
+\std\code{apply}.
+The remaining \stdx\code{concat} function was renamed to \std\code{simd_cat}
+following the \std\code{tuple_cat} naming precedent.
+
+The two \stdx\code{split} and one \stdx\code{split_by} functions from the TS
+were consolidated into a single \std\code{simd_split} function.
+The design intent for the \code{simd_split} function is to support the use case
+of splitting an “oversized” \simd into register-sized parts.
+Example: \code{simd<float, 20>} could be made up of one AVX-512 and one SSE
+register on an x86 target.
+\code{simd_split} is a simple interface for splitting \code{simd<float, 20>}
+into \code{simd<float>} and \code{basic_simd<\MayBreak{}float,
+\UNSP{impl-defined-abi-tag}>}\footnote{same as \code{simd<float, 4>}.}.
+
+\std\code{simd_split<T>(x)} does the following:
+\code{simd_split<simd<float>>(x)} returns a \code{tuple} of as many
+\code{simd<float>} as \code{x.size()} allows plus an “epilogue” of one
+\code{simd<float, impl-defined-abi-tag} object as necessary to return all
 elements of \code{x}.
-Then \code{split<simd<float>>(fixed_size_simd<float, 20>)} returns
+If no “epilogue” is necessary, the return type is an \code{array} instead of a
+\code{tuple}.
+Then \code{simd_split<simd<float>>(simd<float, 20>)} returns
 \begin{itemize}
-  \item \code{tuple<simd<float>, resize_simd_t<4, simd<float>>>} with AVX-512,
-  \item \code{tuple<simd<float>, simd<float>, resize_simd_t<4, simd<float>>>} with AVX, and
-  \item \code{tuple<simd<float>, simd<float>, simd<float>, simd<float>, simd<float>>} with SSE.
+  \item \code{tuple<simd<float>, simd<float, 4>>} with AVX-512,
+  \item \code{tuple<simd<float>, simd<float>, simd<float, 4>>} with AVX, and
+  \item \code{array<simd<float>, 5>} with SSE.
 \end{itemize}
-If no “epilogue” is necessary, the return type could be an \code{array} instead
-of a \code{tuple}, in which case the SSE case above would instead return
-\begin{itemize}
-  \item \code{array<simd<float>, 5>}.
-\end{itemize}
-
-More precise, the only remaining \code{split} function could be:
-\begin{wgText}
-\begin{itemdecl}
-template<class V, class Abi>
-  constexpr auto split(const simd<typename V::value_type, Abi>& x) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  % probably not necessary/helpful:
-  %\pnum\mandates \tcode{V::size() <= simd_size_v<V::value_type, Abi>}.
-
-  \pnum Let $N$ be \tcode{x.size() / V::size()}.
-
-  \pnum\returns
-  \begin{itemize}
-    \item If \tcode{x.size() \% V::size() == 0}, an \tcode{array<V, $N$>} with
-      the $i^\text{th}$ \simd element of the $j^\text{th}$ \tcode{array}
-      element initialized to the value of the element in \tcode{x} with index
-      \tcode{$i$ + $j$ * V::size()}.
-
-    \item Otherwise, a \tcode{tuple} of $N$ objects of type \tcode{V} and one
-      or more objects of types \tcode{resize_simd_t<Sizes, V>...} such that
-      \tcode{(Sizes + ...)} is equal to \tcode{x.size() \% V::size()}.
-      The $i^\text{th}$ \tcode{simd} element of the $j^\text{th}$ \tcode{tuple}
-      element of type \tcode{V} is initialized to the value of the element in
-      \tcode{x} with index \tcode{$i$ + $j$ * V::size()}.
-      The $i^\text{th}$ \tcode{simd} element of the $j^\text{th}$ \tcode{tuple}
-      with $j \ge N$ is initialized to the value of the element in \tcode{x}
-      with index \tcode{$i$ + $N$ * V::size() +} sum of the first $j - N$
-      values in the \tcode{Sizes} pack.
-  \end{itemize}
-\end{itemdescr}
-\end{wgText}
+The \code{simd_split} function is overloaded for \simd and \mask.
 
 \subsubsection{Renaming split and concat}
 
@@ -1053,6 +577,89 @@ For strings the interface should likely look more like
 {&&&&}
 
 
+\subsection{Remove \code{int} exception from broadcast conversion rules}\label{sec:broadcastexception}
+
+LEWG discussed conversions in Issaquah 2023 and Varna 2023.
+\wglink{P1928R4} Section 5.4 presented alternatives and their implications.
+LEWG decided in Varna to stick with value-preserving conversions as used in the
+TS.
+However, the exception for \code{int} and \code{unsigned int} conversions to
+\code{simd} were removed.
+Instead, \code{integral_constant}-like arguments, which will hopefully be
+available as literals in \CC{}26, will be supported and their values (instead
+of types) determine whether the conversion is allowed.
+
+\subsection{Remove \code{long double} from vectorizable types}
+
+Rationale: TS experience. It's a headache.
+It's not worth the specification and implementation effort.
+
+\subsection{Increase minimum supported width to 64}
+
+The TS required a minimum of 32, with \CC{}26 the minimum will be 64.
+
+Rationale: AVX-514 \code{simd<char>::size() == 64}.
+And also \code{long double} is not a vectorizable type anymore.
+
+\subsection{No std::hash<simd>}\label{sec:hash}
+
+No support for \std\code{hash<simd<T>>} was added.
+
+Rationale:
+Is there a use case for \std\code{hash<simd<T>>}?
+In other words, is there a use case for using \simdT as a map key?
+Recall that we do not consider \simdT to be a product type \cite{P0851R0}.
+If there's no use case for hashing a \simdT object as one, is there a use case
+for multiple look-ups into a map, parallelizing the lookup as much as possible?
+
+Consider a hash map with \code{int} keys and the task of looking up multiple
+keys in arbitrary order (unordered).
+In this case, one might want to pass a \code{simd<int>}, compute the hashes of
+\code{simd<int>::\MayBreak{}size()} keys in parallel (using SIMD instructions), and
+potentially determine the addresses (or offsets in contiguous memory) of the
+corresponding values in parallel.
+The value lookup could then use a SIMD gather instruction.
+
+If we consider this use case important (or at least interesting), is
+\std\code{hash<simd<T>>} the right interface to compute hashes element-wise?
+After all, \code{simd} operations act element-wise unless strong hints in the
+API suggest otherwise.
+
+At this point we prefer to wait for concrete use cases of hashing \simd objects
+before providing any standard interface.
+Specifically, at this point \emph{we do not want \std\code{hash} support for
+\simd}.
+
+\subsection{No freestanding SIMD}\label{sec:freestanding}
+
+\code{simd} will not be enabled for freestanding.
+
+Kernel code typically wants to have a small state for more efficient
+context switching.
+Therefore floating-point and SIMD registers are not used.
+However, we could limit \simd to integers and the scalar ABI for freestanding.
+The utility of such a crippled \simd is highly questionable.
+Note that freestanding is just the baseline requirement and embedded targets
+are still free to add \code{simd} support.
+
+\section{Open questions / Outlook}
+\subsection{Correct place for \code{simd} in the IS?}
+
+While \code{simd} is certainly very important for numerics and therefore fits into the “Numerics library” clause, it is also more than that.
+E.g. \code{simd} can be used for vectorization of text processing.
+In principle \code{simd} should be understood similar to fundamental types.
+Is the “General utilities library” clause a better place?
+Or rename “Concurrency support library” to “Parallelism and concurrency support library” and put it there?
+Alternatively, add a new library clause?
+
+I am seeking feedback before making a recommendation.
+
+\subsection{\code{element_reference} is overspecified}
+\code{element_reference} is spelled out in a lot of detail.
+It may be better to define its requirements in a list of requirements or a table instead.
+
+This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
+
 \subsection{Integration with ranges}\label{sec:ranges}
 \code{simd} itself is not a container \cite{P0851R0}.
 The value of a data-parallel object is not an array of elements but rather needs to be understood as a single opaque value that happens to have means for reading and writing element values.
@@ -1081,80 +688,6 @@ If \code{simd} \emph{is a} range, as suggested above and to be proposed in a
 follow-up paper, then \code{simd} will automatically be formatted as a range.
 This seems to be a good solution unless there is a demand to format \code{simd}
 objects differently from \code{random_access_range}.
-
-\subsection{std::hash}\label{sec:hash}
-
-Is there a use case for \std\code{hash<simd<T>>}?
-In other words, is there a use case for using \code{simd<T>} as a map key?
-Recall that we do not consider \code{simd} to be a product type \cite{P0851R0}.
-If there's no use case for hashing a \simd object as one, is there a use case
-for multiple look-ups into a map, parallelizing the lookup as much as possible?
-
-Consider a hash map with \code{int} keys and the task of looking up multiple
-keys in arbitrary order (unordered).
-In this case, one might want to pass a \code{simd<int>}, compute the hashes of
-\code{simd<int>::\MayBreak{}size()} keys in parallel (using SIMD instructions), and
-potentially determine the addresses (or offsets in contiguous memory) of the
-corresponding values in parallel.
-The value lookup could then use a SIMD gather instruction.
-
-If we consider this use case important (or at least interesting), is
-\std\code{hash<simd<T>>} the right interface to compute hashes element-wise?
-After all, \code{simd} operations act element-wise unless strong hints in the
-API suggest otherwise.
-
-At this point I would prefer to wait for concrete use cases of hashing \simd
-objects before providing any standard interface.
-Specifically, at this point \emph{we do not want \std\code{hash} support for
-\simd}.
-
-\subsection{Freestanding SIMD}\label{sec:freestanding}
-Should \code{simd} be enabled for freestanding?
-
-It seems we maybe don't want to enable \simd for freestanding.
-Kernel code typically wants to have a small state for more efficient
-context switching.
-Therefore floating-point and SIMD registers are not used.
-However, we could limit \simd to integers and the scalar ABI for freestanding.
-The utility of such a crippled \simd is highly questionable.
-
-So the question we need answered is whether there are uses cases for
-freestanding \simd, or whether \emph{all} freestanding code would outlaw \simd
-anyway.
-In other words, do we have or will we have users asking for \simd in
-freestanding?
-
-\subsection{Correct place for \code{simd} in the IS?}
-
-While \code{simd} is certainly very important for numerics and therefore fits into the “Numerics library” clause, it is also more than that.
-E.g. \code{simd} can be used for vectorization of text processing.
-In principle \code{simd} should be understood similar to fundamental types.
-Is the “General utilities library” clause a better place?
-Or rename “Concurrency support library” to “Parallelism and concurrency support library” and put it there?
-Alternatively, add a new library clause?
-
-I am seeking feedback before making a recommendation.
-
-\subsection{\code{element_reference} is overspecified}
-\code{element_reference} is spelled out in a lot of detail.
-It may be better to define its requirements in a list of requirements or a table instead.
-
-This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
-
-\subsection{Remove \code{long double} from vectorizable types}
-
-Rationale: TS experience. It's a headache.
-It's not worth the specification and implementation effort.
-
-\wgPoll{Remove \code{long double} from vectorizable types}
-{&&&&}
-
-\subsection{Increase minimum supported width to 64}
-
-Rationale: AVX-512 \code{simd<char>::size() == 64}.
-
-\wgPoll{Increase the minimum supported \code{simd} width to 64}
-{&&&&}
 
 \section{Changes after LEWG approval}
 
