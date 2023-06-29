@@ -1199,6 +1199,30 @@ were not viable.
 Therefore, the wording for overload \code{\#3} was changed to say
 \code{same_as<bool> auto} instead of \code{bool}.
 
+
+\subsection{Tighten \code{simd_split} specification}\label{sec:bettersimdsplitwording}
+
+The reviewed wording (Varna 2023) for \code{simd_split} left the “epilogue”
+\simd object(s) unspecified.
+A user of \code{simd_split} therefore would have to cope with implementations
+returning one or more \simd objects for the otherwise same input parameters.
+Consider the case
+\code{simd_split\MayBreak{}<\MayBreak{}simd\MayBreak{}<\MayBreak{}int, 8>>(x)}
+with \code{simd\MayBreak{}<\MayBreak{}int, 15>}.
+One implementation might return
+\\\code{tuple<simd<int, 8>, simd<int, 7>>}\\
+while another implementation returns
+\\\code{tuple<simd<int, 8>, simd<int, 4>, simd<int, 2>, simd<int, 1>>}\\
+and yet another could choose to return
+\\\code{tuple<simd<int, 8>, simd<int, 4>, simd<int, 3>>}.
+There are good reasons for either one of these.
+However, letting the implementation choose which one is best doesn't really
+help the user of the interface.
+Therefore, the wording was modified to return a single “epilogue” \simd object.
+In the example above, the user is thus returned a \code{simd<int, 7>} on every
+implementation and can choose to apply another \code{simd_split} to arrive at
+\code{tuple<simd<int, 4>, simd<int, 3>>} and so on.
+
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 
 The following section presents the wording to be applied against the \CC{}

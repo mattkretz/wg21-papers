@@ -102,11 +102,12 @@
 
 \begin{revision}
 \item Fix return type of \mask unary operators.
+\item Fix \code{bool} overload of \simdselect (\sect{sec:simdselectwording}).
+\item Remove unnecessary implementation freedom in \code{simd_split} (\sect{sec:bettersimdsplitwording}).
 \item Use \code{class} instead of \code{typename} in template heads.
 \item Implement LEWG decision to SFINAE on \emph{values} of
   constexpr-wrapper-like arguments to the broadcast ctor (\ref{sec:simd.ctor}).
 \item Add relational operators to \mask as directed by LEWG (\ref{sec:simd.mask.comparison}).
-\item Fix \code{bool} overload of \simdselect (\sect{sec:simdselectwording}).
 \item Update section on \code{size_t} vs. \code{int} usage (\sect{sec:simdsizetype}).
 %  \todo Ensure constexpr_wrapper initialization works.
 %  \todo Add \code{numeric_limits} / numeric traits specializations since behavior of e.g. \code{simd<float>} and \code{float} may differ for reasonable implementations.

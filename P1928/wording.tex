@@ -1272,10 +1272,10 @@ template<class T, class Abi>
 \rSec2[simd.creation]{\tcode{basic_simd} and \tcode{basic_simd_mask} creation}
 
 \begin{itemdecl}
-template<class V, class Abi>
+template<class T, class Abi>
   constexpr auto simd_split(const basic_simd<typename V::value_type, Abi>& x) noexcept;
-template<class M, class Abi>
-  constexpr auto simd_split(const basic_simd_mask<@\maskelementsize@<M>, Abi>& x) noexcept;
+template<class T, class Abi>
+  constexpr auto simd_split(const basic_simd_mask<@\maskelementsize@<T>, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1284,29 +1284,27 @@ template<class M, class Abi>
 
   \pnum\constraints
   \begin{itemize}
-    \item \tcode{V} is a specialization of \tcode{basic_simd}.
-    \item \tcode{M} is a specialization of \tcode{basic_simd_mask}.
+    \item For the first overload \tcode{T} is a specialization of \tcode{basic_simd}.
+    \item For the second overload \tcode{T} is a specialization of \tcode{basic_simd_mask}.
   \end{itemize}
 
   \pnum Let $N$ be \tcode{x.size() / V::size()}.
 
     \pnum\returns
     \begin{itemize}
-      \item If \tcode{x.size() \% V::size() == 0}, an \tcode{array<V, $N$>} with
-        the $i^\text{th}$ \simd element of the $j^\text{th}$ \tcode{array}
+      \item If \tcode{x.size() \% V::size() == 0}, an \tcode{array<T, $N$>} with
+        the $i^\text{th}$ \simd or \mask element of the $j^\text{th}$ \tcode{array}
         element initialized to the value of the element in \tcode{x} with index
         \tcode{$i$ + $j$ * V::size()}.
 
-      \item Otherwise, a \tcode{tuple} of $N$ objects of type \tcode{V} and one
-        or more objects of types \tcode{resize_simd_t<Sizes, V>...} such that
-        \tcode{(Sizes + ...)} is equal to \tcode{x.size() \% V::size()}.
-        The $i^\text{th}$ \tcode{simd} element of the $j^\text{th}$ \tcode{tuple}
-        element of type \tcode{V} is initialized to the value of the element in
-        \tcode{x} with index \tcode{$i$ + $j$ * V::size()}.
-        The $i^\text{th}$ \tcode{simd} element of the $j^\text{th}$ \tcode{tuple}
-        with $j \ge N$ is initialized to the value of the element in \tcode{x}
-        with index \tcode{$i$ + $N$ * V::size() +} sum of the first $j - N$
-        values in the \tcode{Sizes} pack.
+      \item Otherwise, a \tcode{tuple} of $N$ objects of type \tcode{T} and one
+        object of type \tcode{resize_simd_t<x.size() \% V::size(), T>}.
+        The $i^\text{th}$ \simd or \mask element of the $j^\text{th}$
+        \tcode{tuple} element of type \tcode{T} is initialized to the value of
+        the element in \tcode{x} with index \tcode{$i$ + $j$ * V::size()}.
+        The $i^\text{th}$ \simd or \mask element of the \code{N}$^\text{th}$
+        \tcode{tuple} element is initialized to the value of the element in
+        \tcode{x} with index \tcode{$i$ + $N$ * V::size()}.
     \end{itemize}
   \end{itemdescr}
 
