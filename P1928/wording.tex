@@ -1533,7 +1533,7 @@ public:
   friend constexpr basic_simd_mask @\simdselect@(
     const basic_simd_mask&, same_as<bool> auto, same_as<bool> auto) noexcept;
   template <class T0, class T1>
-    friend constexpr basic_simd<@\seebelow@, Abi>
+    friend constexpr simd<@\seebelow@, size()>
       @\simdselect@(const basic_simd_mask&, const T0&, const T1&) noexcept;
 };
 \end{codeblock}
@@ -1878,7 +1878,7 @@ friend constexpr basic_simd_mask
 
 \begin{itemdecl}
 template <class T0, class T1>
-  friend constexpr basic_simd<@\seebelow@, Abi>
+  friend constexpr simd<@\seebelow@, size()>
     @\simdselect@(const basic_simd_mask& mask, const T0& a, const T1& b) noexcept;
 \end{itemdecl}
 
@@ -1891,8 +1891,8 @@ template <class T0, class T1>
   \begin{itemize}
     \item \tcode{U} is a vectorizable type, and
     \item \tcode{sizeof(U) == Bytes}, and
-    \item \tcode{T0} satisfies \tcode{convertible_to<basic_simd<U, Abi>>}, and
-    \item \tcode{T1} satisfies \tcode{convertible_to<basic_simd<U, Abi>>}.
+    \item \tcode{T0} satisfies \tcode{convertible_to<simd<U, size()>>}, and
+    \item \tcode{T1} satisfies \tcode{convertible_to<simd<U, size()>>}.
   \end{itemize}
 
   \pnum\returns
