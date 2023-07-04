@@ -124,19 +124,25 @@ namespace std {
       simd_cat(const basic_simd_mask<Bytes, Abis>&...) noexcept;
 
   // \ref{simd.mask.reductions}, \tcode{basic_simd_mask} reductions
-  template<size_t Bytes, class Abi> constexpr bool all_of(const basic_simd_mask<Bytes, Abi>&) noexcept;
-  template<size_t Bytes, class Abi> constexpr bool any_of(const basic_simd_mask<Bytes, Abi>&) noexcept;
-  template<size_t Bytes, class Abi> constexpr bool none_of(const basic_simd_mask<Bytes, Abi>&) noexcept;
-  template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_count(const basic_simd_mask<Bytes, Abi>&) noexcept;
-  template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bytes, Abi>&);
-  template<size_t Bytes, class Abi> constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bytes, Abi>&);
+  template<size_t Bs, class Abi>
+    constexpr bool all_of(const basic_simd_mask<Bs, Abi>&) noexcept;
+  template<size_t Bs, class Abi>
+    constexpr bool any_of(const basic_simd_mask<Bs, Abi>&) noexcept;
+  template<size_t Bs, class Abi>
+    constexpr bool none_of(const basic_simd_mask<Bs, Abi>&) noexcept;
+  template<size_t Bs, class Abi>
+    constexpr @\simdsizetype@ reduce_count(const basic_simd_mask<Bs, Abi>&) noexcept;
+  template<size_t Bs, class Abi>
+    constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bs, Abi>&) noexcept;
+  template<size_t Bs, class Abi>
+    constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bs, Abi>&) noexcept;
 
-  constexpr bool all_of(@\UNSP{T}@) noexcept;
-  constexpr bool any_of(@\UNSP{T}@) noexcept;
-  constexpr bool none_of(@\UNSP{T}@) noexcept;
-  constexpr @\simdsizetype@ reduce_count(@\UNSP{T}@) noexcept;
-  constexpr @\simdsizetype@ reduce_min_index(@\UNSP{T}@);
-  constexpr @\simdsizetype@ reduce_max_index(@\UNSP{T}@);
+  constexpr bool all_of(same_as<bool> auto) noexcept;
+  constexpr bool any_of(same_as<bool> auto) noexcept;
+  constexpr bool none_of(same_as<bool> auto) noexcept;
+  constexpr @\simdsizetype@ reduce_count(same_as<bool> auto) noexcept;
+  constexpr @\simdsizetype@ reduce_min_index(same_as<bool> auto) noexcept;
+  constexpr @\simdsizetype@ reduce_max_index(same_as<bool> auto) noexcept;
 
   // \ref{simd.reductions}, \tcode{basic_simd} reductions
   template<class T, class Abi, class BinaryOperation = plus<>>
@@ -1943,65 +1949,42 @@ template<size_t Bytes, class Abi>
 
 \begin{itemdecl}
 template<size_t Bytes, class Abi>
-  constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bytes, Abi>& k);
+  constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bytes, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\expects
-  \tcode{any_of(k)} returns \tcode{true}.
-
   \pnum\returns
-  The lowest element index $i$ where \tcode{k[$i$]} is \tcode{true}.
-
-  \pnum\throws Nothing.
+  If \tcode{none_of(k)} is \tcode{true}, \tcode{size()}, otherwise the lowest
+  element index $i$ where \tcode{k[$i$]} is \tcode{true}.
 \end{itemdescr}
 
 \begin{itemdecl}
 template<size_t Bytes, class Abi>
-  constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bytes, Abi>& k);
+  constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bytes, Abi>& k) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\expects
-  \tcode{any_of(k)} returns \tcode{true}.
-
   \pnum\returns
-  The greatest element index $i$ where \tcode{k[$i$]} is \tcode{true}.
-
-  \pnum\throws Nothing.
+  If \tcode{none_of(k)} is \tcode{true}, \tcode{-1}, otherwise the greatest
+  element index $i$ where \tcode{k[$i$]} is \tcode{true}.
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr bool all_of(@\UNSP{T}@) noexcept;
-constexpr bool any_of(@\UNSP{T}@) noexcept;
-constexpr bool none_of(@\UNSP{T}@) noexcept;
-constexpr @\simdsizetype@ reduce_count(@\UNSP{T}@) noexcept;
+constexpr bool all_of(same_as<bool> auto) noexcept;
+constexpr bool any_of(same_as<bool> auto) noexcept;
+constexpr bool none_of(same_as<bool> auto) noexcept;
+constexpr @\simdsizetype@ reduce_count(same_as<bool> auto x) noexcept;
+constexpr @\simdsizetype@ reduce_min_index(same_as<bool> auto y) noexcept;
+constexpr @\simdsizetype@ reduce_max_index(same_as<bool> auto z) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
-  \tcode{all_of} and \tcode{any_of} return their arguments; \tcode{none_of} returns the negation of its argument; \tcode{reduce_count} returns the integral representation of its argument.
-
-  \pnum\remarks
-  The parameter type \tcode{T} is an unspecified type that is only constructible via implicit conversion from \tcode{bool}.
-\end{itemdescr}
-
-\begin{itemdecl}
-constexpr @\simdsizetype@ reduce_min_index(@\UNSP{T}@);
-constexpr @\simdsizetype@ reduce_max_index(@\UNSP{T}@);
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\expects
-  The value of the argument is \tcode{true}.
-
-  \pnum\returns
-  \tcode{0}.
-
-  \pnum\throws Nothing.
-
-  \pnum\remarks
-  The parameter type \tcode{T} is an unspecified type that is only constructible via implicit conversion from \tcode{bool}.
+  \tcode{all_of} and \tcode{any_of} return their arguments; \tcode{none_of}
+  returns the negation of its argument; \tcode{reduce_count} returns the
+  integral representation of \tcode{x}; \tcode{reduce_min_index} returns the
+  integral representation of \tcode{!y}; \tcode{reduce_max_index} returns
+  \tcode{-!z}.
 \end{itemdescr}
 
 % vim: tw=0

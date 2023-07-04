@@ -756,6 +756,55 @@ In the example above, the user is thus returned a \code{simd<int, 7>} on every
 implementation and can choose to apply another \code{simd_split} to arrive at
 \code{tuple<simd<int, 4>, simd<int, 3>>} and so on.
 
+\subsection{Remove precondition on mask reductions}\label{sec:removemaskreductionprecondition}
+
+As directed by LEWG, the precondition on \code{reduce_min_index} and
+\code{reduce_max_index} was removed from the latest wording.
+This required a specification of the return value for the missing case.
+The following results were chosen:
+\begin{enumerate}
+  \item \code{reduce_min_index(simd_mask<int, 4>(false))} returns \code{4} (the SIMD width)
+
+  \item \code{reduce_max_index(simd_mask<int, 4>(false))} returns \code{-1}
+
+  \item \code{reduce_min_index(false)} returns \code{1}
+
+  \item \code{reduce_max_index(false)} returns \code{-1}
+\end{enumerate}
+
+\subsubsection{New information}
+It was always stated in LEWG discussions that removal of the precondition has
+no performance cost on modern processors.
+This is true for some cases but not in general.
+Consider \code{reduce_min_index(simd_mask<int, 4>(...))}: A reasonable x86
+implementation will either already use a bit-mask (AVX512) or turn the
+vector-mask into a bit-mask (e.g. \code{movmskps}).
+\std\code{countr_zero} can be used to determine the position of the first
+non-zero bit in the bit-mask.
+If, however, the given mask was empty, then \code{countr_zero} will return the
+width of the given integer type, typically \code{32}.
+The correct answer for \code{reduce_min_index} needs to be \code{4}, though.
+So a fix-up is required.
+This could either be a branch on \code{32} or the implementation can
+unconditionally set the bit at index 4 before calling \code{countr_zero}.
+In any case, code size increases.
+In the branch-free implementation, the latency of the \code{reduce_min_index}
+call unconditionally increases by one clock cycle.
+
+While avoiding UB is nice, the usefulness of returning \mask\code{::size()} or
+\code{-1} is questionable.
+How can these numbers be used other than for branching?
+Isn't it better to branch on \code{none_of(mask)} before calling
+\code{reduce_min_index}?
+
+\subsubsection{Alternative}
+Instead of UB, the reduction functions could also return an unspecified value.
+And maybe debug builds can be encouraged to diagnose calls with an empty
+mask\footnote{I guess Contracts would only trigger for a real precondition,
+a.k.a. UB?}.
+In order to follow the “don't pay for whay you don't use” guideline, the
+precondition should be restored.
+
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 
 The following section presents the wording to be applied against the \CC{}
