@@ -660,6 +660,13 @@ It may be better to define its requirements in a list of requirements or a table
 
 This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
 
+\subsection{Implementation hints}\label{sec:implnote}
+We should consider the addition of a note recommending implementations let
+\simd and \mask operations behave like operations of built-in types.
+Specifically, built-in operators are never function calls\footnote{The
+exception may be soft-float?}.
+(cf. \href{https://gcc.gnu.org/PR108030}{GCC PR108030})
+
 \subsection{Integration with ranges}\label{sec:ranges}
 \code{simd} itself is not a container \cite{P0851R0}.
 The value of a data-parallel object is not an array of elements but rather needs to be understood as a single opaque value that happens to have means for reading and writing element values.
