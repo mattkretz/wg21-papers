@@ -119,9 +119,10 @@ namespace std {
   template<class T, class... Abis>
     constexpr basic_simd<T, @\deducet@<T, (basic_simd<T, Abis>::size + ...)>>
       simd_cat(const basic_simd<T, Abis>&...) noexcept;
-  template<size_t Bytes, class... Abis>
-    constexpr constexpr basic_simd_mask<Bytes, @\deducet@<@\integerfrom@<Bytes>, (basic_simd_mask<Bytes, Abis>::size() + ...)>>
-      simd_cat(const basic_simd_mask<Bytes, Abis>&...) noexcept;
+  template<size_t Bs, class... Abis>
+    constexpr constexpr basic_simd_mask<Bs, @\deducet@<@\integerfrom@<Bs>,
+                                              (basic_simd_mask<Bs, Abis>::size() + ...)>>
+      simd_cat(const basic_simd_mask<Bs, Abis>&...) noexcept;
 
   // \ref{simd.mask.reductions}, \tcode{basic_simd_mask} reductions
   template<size_t Bs, class Abi>
@@ -147,34 +148,36 @@ namespace std {
   // \ref{simd.reductions}, \tcode{basic_simd} reductions
   template<class T, class Abi, class BinaryOperation = plus<>>
     constexpr T reduce(const basic_simd<T, Abi>&, BinaryOperation = {});
-
   template<class T, class Abi, class BinaryOperation>
-    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                       T identity_element, BinaryOperation binary_op);
+    constexpr T reduce(const basic_simd<T, Abi>& x,
+      const typename basic_simd<T, Abi>::mask_type& mask, T identity_element,
+      BinaryOperation binary_op);
   template<class T, class Abi>
-    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                       plus<> binary_op = {}) noexcept;
+    constexpr T reduce(const basic_simd<T, Abi>& x,
+      const typename basic_simd<T, Abi>::mask_type& mask, plus<> binary_op = {}) noexcept;
   template<class T, class Abi>
-    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                       multiplies<> binary_op) noexcept;
+    constexpr T reduce(const basic_simd<T, Abi>& x,
+      const typename basic_simd<T, Abi>::mask_type& mask, multiplies<> binary_op) noexcept;
   template<class T, class Abi>
-    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                       bit_and<> binary_op) noexcept;
+    constexpr T reduce(const basic_simd<T, Abi>& x,
+      const typename basic_simd<T, Abi>::mask_type& mask, bit_and<> binary_op) noexcept;
   template<class T, class Abi>
-    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                       bit_or<> binary_op) noexcept;
+    constexpr T reduce(const basic_simd<T, Abi>& x,
+      const typename basic_simd<T, Abi>::mask_type& mask, bit_or<> binary_op) noexcept;
   template<class T, class Abi>
-    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                       bit_xor<> binary_op) noexcept;
+    constexpr T reduce(const basic_simd<T, Abi>& x,
+      const typename basic_simd<T, Abi>::mask_type& mask, bit_xor<> binary_op) noexcept;
 
   template<class T, class Abi>
     constexpr T reduce_min(const basic_simd<T, Abi>&) noexcept;
   template<class T, class Abi>
-    constexpr T reduce_min(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
+    constexpr T reduce_min(const basic_simd<T, Abi>&,
+                           const typename basic_simd<T, Abi>::mask_type&) noexcept;
   template<class T, class Abi>
     constexpr T reduce_max(const basic_simd<T, Abi>&) noexcept;
   template<class T, class Abi>
-    constexpr T reduce_max(const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
+    constexpr T reduce_max(const basic_simd<T, Abi>&,
+                           const typename basic_simd<T, Abi>::mask_type&) noexcept;
 
   // \ref{simd.alg}, Algorithms
   template<class T, class Abi>
@@ -188,14 +191,15 @@ namespace std {
       minmax(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
   template<class T, class Abi>
     constexpr basic_simd<T, Abi>
-      clamp(const basic_simd<T, Abi>& v,
-            const basic_simd<T, Abi>& lo,
+      clamp(const basic_simd<T, Abi>& v, const basic_simd<T, Abi>& lo,
             const basic_simd<T, Abi>& hi);
 
   template<class T, class U>
-    constexpr auto simd_select(bool c, const T& a, const U& b) -> remove_cvref_t<decltype(c ? a : b)>;
+    constexpr auto simd_select(bool c, const T& a, const U& b)
+    -> remove_cvref_t<decltype(c ? a : b)>;
   template<size_t Bytes, class Abi, class T, class U>
-    constexpr auto simd_select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b);
+    constexpr auto simd_select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b)
+    noexcept -> decltype(@\simdselect@(c, a, b));
 }
 \end{codeblock}
 
@@ -485,7 +489,8 @@ public:
   friend constexpr mask_type operator<(const basic_simd&, const basic_simd&) noexcept;
 
   // \ref{simd.cond}, \tcode{basic_simd} conditional operators
-  friend constexpr basic_simd @\simdselect@(const mask_type&, const basic_simd&, const basic_simd&) noexcept;
+  friend constexpr basic_simd @\simdselect@(
+    const mask_type&, const basic_simd&, const basic_simd&) noexcept;
 };
 \end{codeblock}
 
@@ -1417,7 +1422,7 @@ template<class T, class Abi>
 \begin{itemdecl}
   template<size_t Bytes, class Abi, class T, class U>
     constexpr auto simd_select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b)
-    -> decltype(@\simdselect@(c, a, b));
+    noexcept -> decltype(@\simdselect@(c, a, b));
 \end{itemdecl}
 
 \begin{itemdescr}
