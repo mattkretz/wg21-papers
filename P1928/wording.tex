@@ -758,10 +758,12 @@ template<class G> constexpr basic_simd(G&& gen) noexcept;
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{basic_simd(gen(integral_constant<size_t, i>()))} is well-formed \foralli.
+  \tcode{basic_simd(gen(integral_constant<\simdsizetype, i>()))} is well-formed
+  \foralli.
 
   \pnum\effects
-  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{gen(integral_constant<size_t, i>())}.
+  Constructs an object where the $i^\text{th}$ element is initialized to
+  \tcode{gen(integral_constant<\simdsizetype, i>())}.
 
   \pnum
     The calls to \tcode{gen} are unsequenced with respect to each other. Vectorization-unsafe standard library functions may not be invoked by \tcode{gen} (\iref{algorithms.parallel.exec}). \tcode{gen} is invoked exactly once for each $i$.
@@ -1131,7 +1133,9 @@ template<class T, class Abi, class BinaryOperation = plus<>>
 
 \begin{itemdescr}
   \pnum\mandates
-  \tcode{binary_op} can be invoked with two arguments of type \tcode{basic_simd<T, A1>} returning \tcode{basic_simd<T, A1>} for every \tcode{A1} that is an ABI tag type.
+  \tcode{binary_op} can be invoked with two arguments of type
+  \tcode{basic_simd<T, A1>} returning \tcode{basic_simd<T, A1>} for every
+  \tcode{A1} that is an ABI tag type.
 
   \pnum\returns
   \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x.data[$i$], ...)} \foralli (\iref{numerics.defns}).
@@ -1614,10 +1618,12 @@ template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{static_cast<bool>(gen(integral_constant<size_t, i>()))} is well-formed \foralli.
+  \tcode{static_cast<bool>(gen(integral_constant<\simdsizetype, i>()))} is
+  well-formed \foralli.
 
   \pnum\effects
-  Constructs an object where the $i^\text{th}$ element is initialized to \tcode{gen(integral_constant<size_t, i>())}.
+  Constructs an object where the $i^\text{th}$ element is initialized to
+  \tcode{gen(integral_constant<\simdsizetype, i>())}.
 
   \pnum
   The calls to \tcode{gen} are unsequenced with respect to each other.
