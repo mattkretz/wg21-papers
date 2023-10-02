@@ -1132,6 +1132,9 @@ template<class T, class Abi, class BinaryOperation = plus<>>
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{BinaryOperation} satisfies \tcode{invocable<simd<T, 1>, simd<T, 1>>}.
+
   \pnum\mandates
   \tcode{binary_op} can be invoked with two arguments of type
   \tcode{basic_simd<T, A1>} returning \tcode{basic_simd<T, A1>} for every
@@ -1151,6 +1154,9 @@ template<class T, class Abi, class BinaryOperation>
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{BinaryOperation} satisfies \tcode{invocable<simd<T, 1>, simd<T, 1>>}.
+
   \pnum\mandates
   \tcode{binary_op} can be invoked with two arguments of type \tcode{basic_simd<T, A1>} returning \tcode{basic_simd<T, A1>} for every \tcode{A1} that is an ABI tag type.
 
