@@ -4,7 +4,7 @@ references where the syntax doesn't clearly state such an intent. Storing a
 reference without syntactic clues leads to non-obvious memory safety issues
 (dangling references) and should therefore be avoided. However, with current
 C++ a reference type that is not an lvalue reference does not "decay" to pass
-by value, that facility is simply missing in the language.
+by value. Such a facility is simply missing in the language.
 
 Consider:
 
@@ -12,9 +12,12 @@ decay_t<int &> -> int
 decay_t<vector<int>::reference> -> int
 decay_t<vector<bool>::reference> -> vector<bool>::reference (should be bool!)
 
-It isn't bool because there's C++ doesn't allow it. This proposal wants to make
-it possible (though changing vector<bool> would be a breaking change, so that's
-not proposed).
+The last expression isn't bool because there's no way to express that intent in
+C++. Otherwise, I'm sure vector<bool>::reference would decay to bool. This
+proposal wants to make it possible (though changing existing reference classes
+like vector<bool>::reference would be a breaking change, so that's not
+proposed; this is also a reason to fix this issue ASAP --- we don't want to
+exacerbate the problem).
 
 -------------------------------------------------------------
 
