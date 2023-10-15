@@ -303,60 +303,6 @@ arguments use the same type.
 Since the SIMD width is also sometimes used in expressions in the subscript
 argument, the SIMD width should also have the same type.
 
-\subsection{Clean up math function overloads}
-The wording that produces \simd overloads misses a few cases and leaves room for ambiguity.
-There is also no explicit mention of integral overloads that are supported in \code{<cmath>} (e.g. \std\code{cos(1)} calling \std\code{cos(double)}).
-At the very least, \std\code{abs(\simd<\textit{signed-integral}>)} should be specified.
-
-Also, from implementation experience, ``undefined behavior'' for domain, pole,
-or range error is unnecessary.
-It could either be an unspecified result or even match the expected result of
-the function according to Annex F in the C standard.
-The latter could possibly be a recommendation, i.e. QoI.
-The intent is to avoid \code{errno} altogether, while still supporting
-floating-point exceptions (possibly depending on compiler flags).
-
-This needs more work and is not reflected in the wording at this point.
-
-%Wording idea:
-%\begin{wgText}
-%  \setcounter{Paras}{2}
-%  \pnum
-%  For each function with at least one parameter of type
-%  \term{floating-point-type} other than \tcode{abs}, the implementation also
-%  provides additional overloads sufficient to ensure that:
-%  \begin{enumerate}
-%    \item If at least one argument has a type that is a specialization of \tcode{simd}, then,
-%      \begin{itemize}
-%        \item if any two arguments are specializations of \tcode{simd} with
-%          different width, then overload resolution does not result in a usable
-%          candidate ([over.match.general]) from the overloads provided by the
-%          implementation; otherwise
-%        % now all simd arguments have equal width, or arguments are non-simd
-%        \item every argument that is a specialization of \tcode{simd}
-%      \end{itemize}
-%      if every argument corresponding to a \term{floating-point-type} parameter
-%      has arithmetic type or is a specialization of \tcode{simd}, then every
-%      such
-%      argument is effectively cast to the floating-point type with the greatest
-%      floating-point conversion rank and greatest floating-point conversion
-%      subrank among the types of all such arguments, where arguments of integer
-%      type are considered to have the same floating-point conversion rank as
-%      \tcode{double}.
-%
-%    \item Otherwise, if every argument corresponding to a
-%      \term{floating-point-type} parameter has arithmetic type, then every such
-%      argument is effectively cast to the floating-point type with the greatest
-%      floating-point conversion rank and greatest floating-point conversion
-%      subrank among the types of all such arguments, where arguments of integer
-%      type are considered to have the same floating-point conversion rank as
-%      \tcode{double}.
-%      If no such floating-point type with the greatest rank and subrank exists,
-%      then overload resolution does not result in a usable candidate
-%      ([over.match.general]) from the overloads provided by the implementation.
-%  \end{enumerate}
-%\end{wgText}
-
 \subsection{Add lvalue-qualifier to non-const subscript}\label{sec:lvalue-subscript}
 The \code{operator[]} overloads of \simd and \mask returned a
 proxy reference object for non-\code{const} objects and the \code{value_type}
@@ -667,6 +613,60 @@ We should consider the addition of a note recommending implementations let
 Specifically, built-in operators are never function calls\footnote{The
 exception may be soft-float?}.
 (cf. \href{https://gcc.gnu.org/PR108030}{GCC PR108030})
+
+\subsection{Clean up math function overloads}
+The wording that produces \simd overloads misses a few cases and leaves room for ambiguity.
+There is also no explicit mention of integral overloads that are supported in \code{<cmath>} (e.g. \std\code{cos(1)} calling \std\code{cos(double)}).
+At the very least, \std\code{abs(\simd<\textit{signed-integral}>)} should be specified.
+
+Also, from implementation experience, ``undefined behavior'' for domain, pole,
+or range error is unnecessary.
+It could either be an unspecified result or even match the expected result of
+the function according to Annex F in the C standard.
+The latter could possibly be a recommendation, i.e. QoI.
+The intent is to avoid \code{errno} altogether, while still supporting
+floating-point exceptions (possibly depending on compiler flags).
+
+This needs more work and is not reflected in the wording at this point.
+
+%Wording idea:
+%\begin{wgText}
+%  \setcounter{Paras}{2}
+%  \pnum
+%  For each function with at least one parameter of type
+%  \term{floating-point-type} other than \tcode{abs}, the implementation also
+%  provides additional overloads sufficient to ensure that:
+%  \begin{enumerate}
+%    \item If at least one argument has a type that is a specialization of \tcode{simd}, then,
+%      \begin{itemize}
+%        \item if any two arguments are specializations of \tcode{simd} with
+%          different width, then overload resolution does not result in a usable
+%          candidate ([over.match.general]) from the overloads provided by the
+%          implementation; otherwise
+%        % now all simd arguments have equal width, or arguments are non-simd
+%        \item every argument that is a specialization of \tcode{simd}
+%      \end{itemize}
+%      if every argument corresponding to a \term{floating-point-type} parameter
+%      has arithmetic type or is a specialization of \tcode{simd}, then every
+%      such
+%      argument is effectively cast to the floating-point type with the greatest
+%      floating-point conversion rank and greatest floating-point conversion
+%      subrank among the types of all such arguments, where arguments of integer
+%      type are considered to have the same floating-point conversion rank as
+%      \tcode{double}.
+%
+%    \item Otherwise, if every argument corresponding to a
+%      \term{floating-point-type} parameter has arithmetic type, then every such
+%      argument is effectively cast to the floating-point type with the greatest
+%      floating-point conversion rank and greatest floating-point conversion
+%      subrank among the types of all such arguments, where arguments of integer
+%      type are considered to have the same floating-point conversion rank as
+%      \tcode{double}.
+%      If no such floating-point type with the greatest rank and subrank exists,
+%      then overload resolution does not result in a usable candidate
+%      ([over.match.general]) from the overloads provided by the implementation.
+%  \end{enumerate}
+%\end{wgText}
 
 \subsection{Integration with ranges}\label{sec:ranges}
 \code{simd} itself is not a container \cite{P0851R0}.
