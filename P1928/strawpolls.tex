@@ -79,3 +79,118 @@ v.copy_from_where(ptr, u > 0)  &6}\bigskip
 {2&7&3&2&3}
 
 \subsection{LEWG at Varna 2023}
+
+\wgVote{The conditional operator CPO should be called: (vote for as many options as you like)}
+{r|r} {Option&Votes\\ \hline
+ conditional_operator & 10\\
+ ternary & 12 \\
+ inline_if & 0 \\
+ iif & 1 \\
+ blend & 2 \\
+ select & 14 \\
+ choose & 4}\bigskip
+
+\wgVote{The conditional operator CPO should be called: (vote once for your favorite)}
+{r|r} {Option&Votes\\ \hline
+conditional_operator & 2 \\
+ternary & 8 \\
+select & 10}\bigskip
+
+\wgPoll{The conditional operator CPO should be called \code{ternary}}
+{ 1  & 7 &  0 & 10 &   2}
+
+\wgPoll{The conditional operator CPO should be called \code{select}}
+{  2 & 9 & 2 & 5 & 2 }
+
+\wgPoll{The conditional operator CPO should be called \code{conditional_operator}}
+{  0 & 11 & 4 & 3 & 2}
+
+\wgPoll{The conditional operator facility should not be user customizable, should work both scalar and SIMD types and should be marketed as part of the SIMD library.}
+{3 & 8 & 9 & 2 & 0}
+
+\wgVote{The conditional operator facility should be called (vote once for your favorite):}
+{r|r} {Option&Votes\\ \hline
+simd_ternary & 4 \\
+simd_bland &  6 \\
+simd_select & 12 \\
+simd_choose & 0}\bigskip
+
+\noindent
+\textbf{Tuesday afternoon polls missing in minutes and/or GitHub issue.}
+\bigskip
+
+\wgPoll{Don’t publicly expose \code{simd_abi} (\code{deduce_t}, \code{fixed_size}, \code{scalar}, \code{native}).
+Preserve ABI tagging semantics.
+Rename \code{simd} to \code{basic_simd}.
+Add a \code{simd} alias:
+\code{simd<T, size_t N = basic_simd<T>::size()> = basic_simd<T, __deduce_t<T, N>>}}
+{5&6&2&0&0}
+
+\wgPoll{Spell the flags template \code{std::simd_flags} and spell the individual flags \code{std::simd_flag_x}.}
+{2&8&3&0&0}
+
+\wgPoll{Make \code{simd_mask<T, N>} an alias for \code{basic_simd_mask<sizeof(TT), __deduce_t<T, N>>}.}
+{3&11&0&1&0}
+
+\wgPoll{Remove \code{simd_mask<T, N>::simd_type} and make \code{simd_mask<T,
+  N>} unary plus and unary minus return \code{simd<I, N>} where \code{I} is the
+largest standard signed integer type where \code{sizeof(I) <= sizeof(T)}.}
+{2&6&2&0&0}
+
+\wgPoll{Remove \code{concat(array<simd>)} overload.}
+{4&9&1&0&0}
+
+\wgPoll{Replace all \code{split}/\code{split_by} functions by the proposed \code{split} function in P1928R4.}
+{2&8&3&0&0}
+
+\wgPoll{Rename \code{split} to \code{simd_split} and \code{concat} to \code{simd_cat}.}
+{5&11&1&0&0}
+
+\wgPoll{SIMD types and operations should be value preserving, even if that means they’re inconsistent with the builtin numeric types (status quo, option 3 in P1928R4).}
+{ 9 & 9&2 &0 &0 }
+
+\wgPoll{Remove broadcast constructor exceptions for \code{int} and
+\code{unsigned int}, and instead ensure \code{constexpr_v} arguments work
+correctly (ext: \code{2 * simd<float>} will no longer compile).}
+{ 4& 6& 4& 1& 0}
+
+\wgPoll{The broadcast constructor should take \code{T} directly and rely on
+language implicit conversion rules and optionally enabled compiler warnings to
+catch errors (ex: \code{2 * simd<float>} will return \code{simd<float>}, \code{3.14 * simd<float>}
+will return \code{simd<float>} and may warn)}
+{ 2& 7& 3&1 &3 }
+
+\wgPoll{Remove \code{is_simd}, \code{is_simd_v}, \code{is_simd_mask}, and \code{is_simd_mask_v}.}
+{1&9&3&2&0}
+
+\wgPoll{Make \code{simd_size} exposition only and cause \code{simd} to have the size static data member if and only if \code{T} is a vectorizable type and \code{Abi} is an ABI tag.}
+{1&7&4&1&0}
+
+\wgPoll{Replacement name for \code{memory_alignment} and \code{memory_alignment_v} should feature a \code{simd_} prefix}
+{12&3&1&0&0}
+
+\wgPoll{There should be a marker in the name of \code{memory_alignment} and \code{memory_alignment_v} indicating that it applies only to loads and stores.}
+{1&3&9&2&0}
+
+\wgVote{The name of \code{memory_alignment} should be (with \code{memory_alignment_v} having the same name followed by \code{_v})}
+{r|r} {Option&Votes\\ \hline
+simd_memory_alignment&2\\
+simd_alignment&13\\
+simd_loadstore_alignment&2}\bigskip
+
+\wgPoll{We’re interested in exploring \code{rebind_simd} and \code{resize_simd} as members of \code{simd} and \code{simd_mask}}
+{1&0&8&5&1}
+
+\wgPoll{Introduce an exposition only simd-size-t signed integer type and use this type consistently throughout P1928 (rather than \code{size_t} and \code{int} being used inconsistently).}
+{8&7&1&0&0}
+
+\noindent
+\textbf{Several Thursday morning polls missing in minutes and/or GitHub issue.}
+\bigskip
+
+\wgPoll{Simd \code{reduce} should not have a binary operator}
+{0&0&4&4&3}
+
+\wgPoll{Modify P1928D6 (“simd”) as described above, and then send the revised paper to library for \CC{}26, to be confirmed with a library evolution electronic poll.}
+{16  & 3  & 1  &  0 &0   }
+
