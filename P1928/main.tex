@@ -422,35 +422,6 @@ Then \code{simd_split<simd<float>>(simd<float, 20>)} returns
 \end{itemize}
 The \code{simd_split} function is overloaded for \simd and \mask.
 
-\subsubsection{Renaming split and concat}
-
-The names \code{split} and \code{concat} are very general.
-We have naming precedent with \code{tuple_cat}.
-If we follow the \code{tuple_cat} precedent the functions should be called
-\code{simd_split} and \code{simd_cat}.
-
-There is an alternative, where we envision making \std\code{concat} the name
-for concatenation of all kinds of things in the standard library: simds,
-strings, arrays, vectors, \ldots\footnote{all kinds of ranges?}.
-The \code{split} interface, taking a template type to determine the split
-granularity, is not as obvious to generalize.
-\code{split<array<int, 4>>(array<int, 7>)}?
-For strings the interface should likely look more like
-\code{vector<string_view> split(string_view, string_view)}.
-
-\subsubsection{Suggested Polls}
-
-\wgPoll{Remove \code{concat(array<simd>)} overload.}
-{&&&&}
-
-\wgPoll{Replace all \code{split}/\code{split_by} functions by proposed
-\code{split} function.}
-{&&&&}
-
-\wgPoll{Rename \code{split} to \code{simd_split} and \code{concat} to
-\code{simd_cat}.}
-{&&&&}
-
 
 \subsection{Remove \code{int} exception from broadcast conversion rules}\label{sec:broadcastexception}
 
