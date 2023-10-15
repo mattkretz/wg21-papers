@@ -344,102 +344,30 @@ functions from the overload set where they aren't supported.
 For some discussion, see \wglink{P1928R3} Section 5.4.
 
 In addition to the TS, the load/store flag mechanism is extended to enable combination of flags.
-The new flag enables conversions that are not \emph{value-preserving} on loads and stores.
-Without the flag only \emph{value-preserving} conversions are allowed.
+A new flag enables conversions that are not \emph{value-preserving} on loads
+and stores.
+(Without this new flag, only \emph{value-preserving} conversions are allowed.)
+The new flags facility also keeps the design space open for adding new flags
+after \CC{}26.
+The changes relative to the TS are shown in \tabref{tab:loadstorenames}.
 
-\subsubsection{Historical context}
-The existing flags
-\begin{itemize}
-  \item \stdx\code{element_aligned},
-  \item \stdx\code{vector_aligned}, and
-  \item \stdx\code{overaligned<N>}
-\end{itemize}
-had no need for combining since they are exclusive.
-Therefore, the TS included no such mechanism.
-We should include a flag combining mechanism in any case, in order to allow
-extensions without breaking implementations.
-For reference, the original proposal \cite{N4184, §6.2} included a
-\code{streaming} flag and a flag to assist in emitting prefetch instructions.
-I implemented these flags in the Vc library more than 10 years ago.
-For sake of proving the viability without too much complexity, SG1 asked to
-reduce load store flags to what we finally shipped in the TS.
-
-\subsubsection{Renaming alignment flags}
-Now that the alignment flags move from \stdx{} to \std{}, we need to reconsider their names.
-See \tabref{tab:alignmentnames} for a list of names that were considered.
-\newcommand\simdflag[1]{
-  \std\code{simd_#1},\newline
-  \std\code{simd_flag_#1},\newline
-  \std\code{simd_copy_#1},\newline
-  \std\code{loadstore_#1},\newline
-  \std\code{simd_flags\MayBreak{}::\MayBreak{}#1}
-}
-\newcommand\simdflagpref[1]{
-  \std\code{loadstore_#1}
-}
 \begin{table}[hbtp]
-  \caption{Name alternatives for alignment flags}
-  \label{tab:alignmentnames}
-  \smaller
-\begin{tabular}{p{0.25\textwidth}p{0.35\textwidth}p{0.3\textwidth}}
-  TS name & Ideas & Preference \\\hline
-
-  \stdx\code{element_aligned}
-  & \std\code{default_simd_flags},\newline
-    \simdflag{element_aligned},\newline
-    \simdflag{unaligned},\newline
-    \simdflag{default}
-  & \simdflagpref{default} \\\hline
-
-  \stdx\code{vector_aligned}
-  & \simdflag{aligned}
-  & \simdflagpref{aligned} \\\hline
-
-  \stdx\code{overaligned<N>}
-  & \std\code{overaligned<N>},\newline
-    \simdflag{overaligned<N>}
-  & \simdflagpref{overaligned<N>} \\\hline
-
-  ---
-  & \simdflag{convert},\newline
-    \simdflag{cvt_any},\newline
-    \simdflag{any_cvt}
-  & \simdflagpref{convert}
-\end{tabular}
+  \caption{Load/store flag changes}
+  \label{tab:loadstorenames}
+  \begin{tabular}{ll}
+    TS & \wgDocumentNumber \\
+    \stdx\code{element_aligned} & \std\code{simd_flag_default} \\
+    \stdx\code{vector_aligned} & \std\code{simd_flag_aligned} \\
+    \stdx\code{overaligned<N>} & \std\code{simd_flag_overaligned<N>} \\
+    \emph{implicit} & \std\code{simd_flag_convert}
+  \end{tabular}
 \end{table}
-On my choices:
-\begin{description}
-  \item[\simdflagpref{default}] This is the default.
-    There is no need to say anything about alignment.
-    Alignment follows the assumptions of the rest of \CC{}; there's nothing
-    special.
-    It is useful to have a name for the default.
-    Some generic programming patterns need to decide on default vs. aligned
-    depending on template parameters.
-
-  \item[\simdflagpref{aligned}] This flags says that the memory pointed to by
-    the iterator follows stricter alignment requirements.
-    Specifically it follows \code{memory_alignment_v<T, U>} (\code{T} is the
-    \simdT element type and \code{U} is the array element type).
-    We should consider renaming \code{memory_alignment(_v)} to
-    \code{simd_alignment(_v)} or \code{simd_loadstore_alignment(_v)}.
-
-  \item[\simdflagpref{overaligned<N>}] This flags says that the memory pointed
-    to by the iterator is aligned by \code{N} bytes.
-
-  \item[\simdflagpref{convert}] This flag allows all conversions on load/store,
-    in contrast to only \emph{value-preserving} conversions.
-    It doesn't enable \emph{all} conversions, because value-preserving
-    conversions are always enabled.
-    But I cannot think of a more descriptive name that isn't at the same time
-    also more confusing (``convert more'', ``convert anything'').
-\end{description}
 
 Note that the wording also allows additional implementation-defined load and
 store flags.
 
-The trait \code{is_simd_flag_type} has been removed because the flag parameter
-is now constrained via the \code{loadstore_flag} class template.
+The trait \stdx\code{is_simd_flag_type} has been removed because the flag
+parameter is now constrained via the \code{simd_flags} class template.
 
 As a result, executing a not-value-preserving store on 16-Byte aligned memory now reads as:
 \begin{tabular}{p{.48\textwidth}|p{.48\textwidth}}
@@ -456,8 +384,8 @@ void f(stdx::native_simd<double> x) {
 \begin{lstlisting}
 float *addr = ...;
 void f(std::simd<double> x) {
-  x.copy_to(addr, std::loadstore_convert |
-                  std::loadstore_overaligned<16>);
+  x.copy_to(addr, std::simd_flag_convert |
+                  std::simd_flag_overaligned<16>);
 }
 \end{lstlisting}
 \end{tabular}
