@@ -697,7 +697,7 @@ follow-up paper, then \code{simd} will automatically be formatted as a range.
 This seems to be a good solution unless there is a demand to format \code{simd}
 objects differently from \code{random_access_range}.
 
-\section{Changes after LEWG approval}
+\section{Changes after LEWG approval (for LEWG)}
 
 \subsection{\code{simd_select} overload set}\label{sec:simdselectwording}
 
@@ -804,14 +804,59 @@ While avoiding UB is nice, the usefulness of returning \mask\code{::size()} or
 How can these numbers be used other than for branching?
 Isn't it better to branch on \code{none_of(mask)} before calling
 \code{reduce_min_index}?
+If the goal is to avoid UB, then we need to consider whether the current state
+actually helps. Consider:
+\medskip\begin{lstlisting}
+auto f(std::simd<float> x) {
+  return x[std::reduce_min_index(x < 0.f)];
+}
+\end{lstlisting}
+Here we see a precondition violation on subscripting \code{x}, unless at least one value in \code{x} is negative.
+Currently there are two possible solutions:
+\medskip\begin{lstlisting}[style=Vc]
+auto f(std::simd<float> x) {
+  if (any_of(x < 0.f)
+    return x[std::reduce_min_index(x < 0.f)];
+  return 0.f;
+}
+\end{lstlisting}
+or
+\medskip\begin{lstlisting}[style=Vc]
+auto f(std::simd<float> x) {
+  int i = std::reduce_min_index(x < 0.f);
+  if (i < x.size)
+    return x[i];
+  return 0.f;
+}
+\end{lstlisting}
+The first solution is more efficient and, in my opinion, more readable.
+If unchecked use of \code{reduce_min_index}/\code{reduce_max_index} doesn't
+lead to UB, then it likely leads to logical errors.
+
+In order to follow the “don't pay for whay you don't use” guideline, the
+precondition should be restored.
 
 \subsubsection{Alternative}
 Instead of UB, the reduction functions could also return an unspecified value.
-And maybe debug builds can be encouraged to diagnose calls with an empty
+Better even, an unspecified value outside of the range of valid subscript
+indices could be returned (e.g. 32 instead of 4).
+Maybe debug builds can be encouraged to diagnose calls with an empty
 mask\footnote{I guess Contracts would only trigger for a real precondition,
 a.k.a. UB?}.
-In order to follow the “don't pay for whay you don't use” guideline, the
-precondition should be restored.
+
+\subsubsection{Suggested Polls}
+\wgPoll{Restore the precondition on \code{reduce_min_index(empty_mask)} and
+\code{reduce_max_index(empty_mask)} (TS status quo).}
+{&&&&}
+
+\wgPoll{Return an unspecified value on \code{reduce_min_index(empty_mask)} and
+\code{reduce_max_index(empty_mask)}.}
+{&&&&}
+
+\wgPoll{Return an unspecified value outside of the range of valid subscript
+indices on \code{reduce_min_index(empty_mask)} and
+\code{reduce_max_index(empty_mask)}.}
+{&&&&}
 
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 
