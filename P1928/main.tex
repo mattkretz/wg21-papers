@@ -1,9 +1,9 @@
 \newcommand\wgTitle{std::simd --- merge data-parallel types from the Parallelism TS 2}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
 \newcommand\wgDocumentNumber{D1928R7}
-\newcommand\wgGroup{LWG}
+\newcommand\wgGroup{LWG, LEWG}
 \newcommand\wgTarget{\CC{}26}
-\newcommand\wgAcknowledgements{Thanks to Daniel Towner, Ruslan Arutyunyan, Jonathan Müller, Jeff Garland, and Nicolas Morales for discussions and/or pull requests on this paper.}
+\newcommand\wgAcknowledgements{Thanks to Daniel Towner, Ruslan Arutyunyan, Jonathan Müller, Jeff Garland, and Nicolas Morales for discussions and/or pull requests on this/previous paper(s).}
 
 \usepackage{mymacros}
 \usepackage{wg21}
@@ -125,8 +125,8 @@ Summary:
     interface for deducing an efficient ABI tag.
     The next logical step is to give \code{fixed_size_simd} a shorter name and
     hide ABI tags.
-    Consequently, \std\code{simd<T, N = \UNSP{native-size}>} is now and alias
-    for \std\code{basic_simd<T, Abi>}.
+    Consequently, \std\code{simd<T, N = \UNSP{native-size}>} is an alias for
+    \std\code{basic_simd<T, Abi>} now.
 \end{itemize}
 
 For a discussion, see \wglink{P1928R3} Section 4.1 and \wglink{P1928R4} Section 5.2.
@@ -147,7 +147,7 @@ otherwise they are not convertible at all.
 Note that for some target hardware the (explicitly) convertible masks are
 convertible without any cost.
 However, that's not the case for all targets, which is why the conversion is
-still marked explicit.
+still marked \code{explicit}.
 
 \subsection{Simplify/generalize casts}\label{sec:casts}
 
@@ -275,14 +275,15 @@ Relevant papers: \cite{P0927R2}, \cite{D0917}.
 Therefore LEWG decided in Varna to define a \std\code{simd_select} function
 instead of a general CPO, with the following goals:
 \begin{itemize}
-  \item User's shouldn't extend this.
+  \item Analogue semantics to \code{?:}, but without lazy evaluation.
+  \item User's should not be able to extend the facility.
   \item Make it “value based”, i.e. don't bother about references for non-simd
     arguments.
 \end{itemize}
 
 \subsection{Make use of \code{int} and \code{size_t} consistent}\label{sec:simdsizetype}
 
-Different to the TS, this paper uses \code{\simdsizetype} for
+Different to the TS, this paper uses \code{\simdsizetype} instead of \code{size_t} for
 \begin{itemize}
   \item the SIMD width (number of elements),
   \item the generator constructor call argument,
@@ -297,9 +298,9 @@ I.e. the implementation is free to choose any signed integer type.
 
 The rationale given in the LEWG discussion was a desire to avoid type
 conversions when using the result of a \mask reduction as subscript argument.
-Since functions like \code{__builtin_popcount} in GCC typically return
-\code{int}, the natural choice is to stick with that type and make subscript
-arguments use the same type.
+Since \code{<bit>} functions like \code{std::popcount}, \code{std::bit_width},
+\code{std::countl_zero}, \ldots return \code{int}, the natural choice is to
+stick with that type and make subscript arguments use the same type.
 Since the SIMD width is also sometimes used in expressions in the subscript
 argument, the SIMD width should also have the same type.
 
@@ -309,9 +310,9 @@ proxy reference object for non-\code{const} objects and the \code{value_type}
 for \code{const} objects.
 This made expressions such as \code{(x * 2)[0] = 1} well-formed.
 However, assignment to temporaries can only be an error in the code (or code obfuscation).
-Both \code{operator[]} overloads should be lvalue-ref qualified to make
-\code{(x * 2)[0]} pick the const overload, which returns a prvalue that is not
-assignable.
+Therefore, both \code{operator[]} overloads are now lvalue-ref qualified to
+make \code{(x * 2)[0]} pick the const overload, which returns a prvalue that is
+not assignable.
 
 \subsection{Rename \code{simd_mask} reductions}
 Summary:
@@ -663,7 +664,7 @@ In the example above, the user is thus returned a \code{simd<int, 7>} on every
 implementation and can choose to apply another \code{simd_split} to arrive at
 \code{tuple<simd<int, 4>, simd<int, 3>>} and so on.
 
-\subsection{Remove precondition on mask reductions}\label{sec:removemaskreductionprecondition}
+\subsection{Reconsider precondition on mask reductions}\label{sec:removemaskreductionprecondition}
 
 As directed by LEWG, the precondition on \code{reduce_min_index} and
 \code{reduce_max_index} was removed from the latest wording.
