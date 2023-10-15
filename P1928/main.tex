@@ -763,18 +763,6 @@ indices on \code{reduce_min_index(empty_mask)} and
 The following section presents the wording to be applied against the \CC{}
 working draft.
 
-This wording overloads \code{operator?:} even though that's not possible (yet).
-As long as we don't have the language feature for overloading \code{?:} the following needs to happen:
-\begin{enumerate}
-  \item Replace \code{operator?:} by \code{conditional_operator_impl}.
-  \item Add a \std\code{conditional_operator(cond, a, b)} CPO that tries the following:
-    \begin{itemize}
-      \item If \code{conditional_operator_impl(cond, a, b)} can be found via ADL calls \code{conditional_operator_impl(cond, a, b)} unqualified, otherwise
-      \item if \code{cond ? a : b} is well-formed, return its result, otherwise
-      \item if \std\code{common_type_t<decltype(a), decltype(b)>} exists, cast \code{a} and \code{b} to this common type and apply \code{?:}.
-    \end{itemize}
-\end{enumerate}
-
 \begin{wgText}[In {[version.syn]}, add]
   \begin{codeblock}
     #define __cpp_lib_simd YYYYMML // also in <simd>
@@ -782,7 +770,7 @@ As long as we don't have the language feature for overloading \code{?:} the foll
 \end{wgText}
 Adjust the placeholder value as needed so as to denote this proposal's date of adoption.
 
-\begin{wgText}[Add a new subclause after §28.8 {[numerics.numbers]}]
+\begin{wgText}[Add a new subclause after §28.8 {[numbers]}]
   \setcounter{WGClause}{28}
   \setcounter{WGSubSection}{8}
   \lstset{%
