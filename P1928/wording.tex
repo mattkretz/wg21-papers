@@ -207,7 +207,7 @@ namespace std {
 The header \tcode{<simd>} defines class templates, tag types, trait types, and function templates for element-wise operations on data-parallel objects.
 
 \pnum
-\simdsizetype is an exposition-only alias for a signed integer type.
+\simdsizetype{} is an exposition-only alias for a signed integer type.
 
 \pnum
 \tcode{\maskelementsize<basic_simd_mask<Bytes, Abi>>} has the value \tcode{Bytes}.
@@ -219,7 +219,7 @@ The header \tcode{<simd>} defines class templates, tag types, trait types, and f
 
 \begin{codeblock}
 template<class T> using @\nativeabi@ = @\seebelow@; // \expos
-template<class T, \simdsizetype N> using @\deducet@ = @\seebelow@; // \expos
+template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@; // \expos
 \end{codeblock}
 
 \pnum
@@ -247,8 +247,7 @@ An implementation defines ABI tag types as necessary for the following
 exposition-only aliases.
 
 \pnum
-The exposition-only alias \tcode{\deducet<T, N>} results in a substitution
-failure if
+\tcode{\deducet<T, N>} results in a substitution failure if
 \begin{itemize}
   \item \tcode{T} is not a vectorizable type, or
   \item \tcode{N} is larger than an implementation-defined maximum.
@@ -256,8 +255,7 @@ failure if
 The implementation-defined maximum for \tcode{N} is no smaller than 64.
 
 \pnum
-Where present, the exposition-only alias \tcode{\deducet<T, N>} names an ABI
-tag type that satisfies
+Where present, \tcode{\deducet<T, N>} names an ABI tag type that satisfies
 \begin{itemize}
   \item \tcode{basic_simd<T, \deducet<T, N>>::size == N}, and
   \item \tcode{basic_simd<T, \deducet<T, N>>} is default constructible (see \ref{simd.overview}).
@@ -290,9 +288,10 @@ type of the \tcode{\nativeabi<T>} alias.
 \end{example}
 
 \pnum
-The type of \tcode{\deducet<T, N>} in TU1 differs from the type of
-\tcode{\deducet<T, N>} in TU2 iff the type of \tcode{\nativeabi<T>} in TU1
-differs from the type of \tcode{\nativeabi<T>} in TU2.
+The type of \tcode{\deducet<T, N>} in translation unit 1 differs from the type
+of \tcode{\deducet<T, N>} in translation unit 2 iff the type of
+\tcode{\nativeabi<T>} in translation unit 1 differs from the type of
+\tcode{\nativeabi<T>} in translation unit 2.
 
 \rSec1[simd.traits]{\tcode{simd} type traits}
 
