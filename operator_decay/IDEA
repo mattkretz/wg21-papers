@@ -148,3 +148,93 @@ Foo bar;
 bar + f(); // lookup of operator+ (as always + associated type A),
            // overload resolution lets Reference decay to A (unless exact match with Reference and
            // its value category)
+
+-------------------------------------------------------------
+
+Generalization?
+=================
+
+Maybe a more general mechanism to look into is when an rvalue is assigned to an
+lvalue? IOW, what if a type had the ability to modify what happens on
+rvalue to lvalue assignment? Given an object `v` of type `vector<bool>`, the
+statement
+
+  const auto& ref = v[0];
+
+deduces `vector<bool>::reference`. What if it deduced `bool` instead? Then the
+`vector<bool>::reference` temporary converts to a `bool` temporary, which gets
+lifetime extended by the const reference. However, the following would fail for
+`vector<bool> v` and would not fail for `vector<int> v`:
+
+  v[0] = false;
+  const auto& ref = v[0];
+  v[0] = true;
+  assert(ref == v[0]);
+
+The alternative here could be to make rvalue-to-lvalue ill-formed. This should
+imply decay to an implicit conversion operator on deduction. Then, given
+`vector<bool> v`:
+
+  v[0] = false; // OK
+  auto x = v[0]; // OK: deduces bool
+  vector<bool>::reference ref1 = v[0]; // ill-formed
+  decltype(auto) ref2 = v[0]; // ill-formed
+  const auto& ref3 = v[0]; // ill-formed
+  auto&& ref4 = v[0]; // OK: deduces bool rvalue?
+
+This doesn't seem like an improvement.
+
+
+Back to the drawing board
+===========================
+
+What I want from a simd::operator[]:
+
+v[i] is either a prvalue of the element type or used as LHS for assigning a new
+value. Thus, unless the subscript operator expression is the LHS of a (compound)
+assignment operator, use the const (prvalue-returning) subscript operator. This
+effect could be achieved if non-const simd::operator[] were constrained on
+being followed by a (compound) assignment operator. Mock:
+
+template <typename T>
+  class simd
+  {
+  public:
+    T operator[](int i) const { ... }
+    reference<T> operator[](int i) requires "returned object is LHS of (compound) assignment" { ... }
+  };
+
+
+This seems too ambitious of a feature...
+
+However, the same effect could be achieved if simd<T>::reference immediately
+decays into a prvalue of type T, unless it is used as LHS of a (compound)
+assignment expression. Mock type:
+
+class reference
+{
+  simd<float>& v;
+  int i;
+
+public:
+  operator=(float x) && { v.__assign(i, x); }
+  operator+=(float x) && { v.__compound_assign_plus(i, x); }
+  operator-=(float x) && { v.__compound_assign_minus(i, x); }
+  // ... for all compound assignment operators ...
+
+  float operator before_you_do_anything_else() { return v.__get(i); }
+};
+
+Then:
+
+simd<float> v;
+auto x = v[0]; // decltype(x) is float
+reference ref1 = v[0]; // ill-formed
+decltype(auto) ref2 = v[0]; // ill-formed
+const auto& ref3 = v[0]; // v[0] is prvalue of type float => deduces float / const float&
+auto&& ref4 = v[0]; // v[0] is prvalue of type float => deduces float / float&&
+auto& ref5 = v[0]; // v[0] is prvalue of type float => ill-formed
+
+What is decltype(v[0]), though? simd<float>::reference or float? I believe it
+must be the former, because assignment does something different than if it were
+a float.
