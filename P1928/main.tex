@@ -742,15 +742,160 @@ If unchecked use of \code{reduce_min_index}/\code{reduce_max_index} doesn't
 lead to UB, then it likely leads to logical errors.
 
 In order to follow the “don't pay for whay you don't use” guideline, the
-precondition should be restored.
+precondition should be restored. Or:
 
-\subsubsection{Alternative}
+\subsubsection{Alternative 1}
 Instead of UB, the reduction functions could also return an unspecified value.
 Better even, an unspecified value outside of the range of valid subscript
 indices could be returned (e.g. 32 instead of 4).
 Maybe debug builds can be encouraged to diagnose calls with an empty
 mask\footnote{I guess Contracts would only trigger for a real precondition,
 a.k.a. UB?}.
+
+\subsubsection{Alternative 2}
+The functions could also return \code{std::optional<\simdsizetype>}.
+Exploration results using GCC 13 below.
+The current state of how GCC optimizes the \code{std::optional} case is
+really good, but still more expensive on average than the solution returning an
+unspecified value.
+Note the \code{unspecified_value_nocheck} solution which optimizes even further
+by dropping the compare instruction, reducing execution latency even more.
+(This is valid because \code{vmovmskps} extracts the sign bits into the
+\code{eax} register.)
+
+Personally, I'm also bothered by the “out of place” need to call
+\code{.value()} or add a \code{*}.
+This introduces an inconsistency in how a very similar set of functions needs
+to be used.
+
+Considering the typical use (that the code branches before calling
+\code{reduce_min_index}) and our ability to avoid UB I recommend to return any
+unspecified value if \code{none_of(mask)}.
+
+\paragraph{unspecified value}
+\medskip\begin{lstlisting}
+int unspecified_value(std::simd<int> x)
+{
+  if (any_of(x < 0))
+    return reduce_min_index(x < 0);
+  return -1;
+}
+\end{lstlisting}
+
+\medskip\begin{lstlisting}[language=asm]
+unspecified_value(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
+	vmovdqa	ymm1, ymm0
+	vpxor	xmm0, xmm0, xmm0
+	vpcmpgtd	ymm0, ymm0, ymm1
+	vptest	ymm0, ymm0
+	je	.L10
+	vmovmskps	eax, ymm0
+	tzcnt	eax, eax
+	ret
+.L10:
+	mov	eax, -1
+	ret
+\end{lstlisting}
+
+\medskip\begin{lstlisting}
+int unspecified_value_nocheck(std::simd<int> x)
+{
+  x[1] = -1;
+  return reduce_min_index(x < 0);
+}
+\end{lstlisting}
+
+\medskip\begin{lstlisting}[language=asm]
+unspecified_value_nocheck(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
+	mov	eax, -1
+	vpinsrd	xmm1, xmm0, eax, 1
+	vinserti128	ymm0, ymm0, xmm1, 0x0
+	vmovmskps	eax, ymm0
+	tzcnt	eax, eax
+	ret
+\end{lstlisting}
+
+\paragraph{optional}
+
+\medskip\begin{lstlisting}
+int opt1(std::simd<int> x)
+{
+  if (any_of(x < 0))
+    return reduce_min_index_opt(x < 0).value();
+  return -1;
+}
+\end{lstlisting}
+
+\medskip\begin{lstlisting}[language=asm]
+opt1(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
+	vmovdqa	ymm1, ymm0
+	vpxor	xmm0, xmm0, xmm0
+	vpcmpgtd	ymm0, ymm0, ymm1
+	vptest	ymm0, ymm0
+	je	.L13
+	vmovmskps	eax, ymm0
+	tzcnt	eax, eax
+	ret
+---------------------------------------------
+.L13:
+	mov	eax, -1
+	ret
+\end{lstlisting}
+
+\medskip\begin{lstlisting}
+int opt2(std::simd<int> x)
+{
+  auto opt = reduce_min_index_opt(x < 0);
+  return opt.value_or(-1);
+}
+\end{lstlisting}
+
+\medskip\begin{lstlisting}[language=asm]
+opt2(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
+	vmovdqa	ymm1, ymm0
+	vpxor	xmm0, xmm0, xmm0
+	xor	edx, edx
+	vpcmpgtd	ymm0, ymm0, ymm1
+	vptest	ymm0, ymm0
+	vmovmskps	eax, ymm0
+	sete	dl
+	tzcnt	eax, eax
+	test	edx, edx
+	mov	edx, -1
+	cmovne	eax, edx
+	ret
+\end{lstlisting}
+
+\medskip\begin{lstlisting}
+int opt_nocheck(std::simd<int> x)
+{
+  x[1] = -1;
+  return reduce_min_index_opt(x < 0).value();
+}
+\end{lstlisting}
+
+\medskip\begin{lstlisting}[language=asm]
+opt_nocheck(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
+	mov	eax, -1
+	vpinsrd	xmm1, xmm0, eax, 1
+	vinserti128	ymm0, ymm0, xmm1, 0x0
+	vpxor	xmm1, xmm1, xmm1
+	vpcmpgtd	ymm0, ymm1, ymm0
+	vptest	ymm0, ymm0
+	je	.L19
+	vmovmskps	eax, ymm0
+	tzcnt	eax, eax
+	ret
+---------------------------------------------
+opt_nocheck(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >) [clone .cold]:
+---------------------------------------------
+.L19:
+	push	rbp
+	mov	rbp, rsp
+	and	rsp, -32
+	vzeroupper
+	call	std::__throw_bad_optional_access()
+\end{lstlisting}
 
 \subsubsection{Suggested Polls}
 \wgPoll{Restore the precondition on \code{reduce_min_index(empty_mask)} and
@@ -761,9 +906,8 @@ a.k.a. UB?}.
 \code{reduce_max_index(empty_mask)}.}
 {&&&&}
 
-\wgPoll{Return an unspecified value outside of the range of valid subscript
-indices on \code{reduce_min_index(empty_mask)} and
-\code{reduce_max_index(empty_mask)}.}
+\wgPoll{Return \code{std::optional<\simdsizetype>} from
+\code{reduce_min_index(empty_mask)} and \code{reduce_max_index(empty_mask)}.}
 {&&&&}
 
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
