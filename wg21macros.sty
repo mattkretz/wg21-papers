@@ -240,7 +240,7 @@
     \def\theWGSubSection{\theWGClause{}}%
     \def\theWGSubSubSection{\theWGClause{}}%
     \def\theWGSubSubSubSection{\theWGClause{}}%
-    \protected@edef\@currentlabel{\theWGClause{}}%
+    \protected@edef\@currentlabel{[#3]}%
     \addcontentsline{toc}{#1}{%
       \theWGClause{} #2 [#3] (\thesubsection{})%
     }%
@@ -258,7 +258,7 @@
     \def\theWGSubSection{\theWGClause{}.\arabic{WGSubSection}}%
     \def\theWGSubSubSection{\theWGSubSection{}}%
     \def\theWGSubSubSubSection{\theWGSubSubSection}%
-    \protected@edef\@currentlabel{\theWGSubSection}%
+    \protected@edef\@currentlabel{[#3]}%
     \addcontentsline{toc}{#1}{%
       \theWGSubSection{} #2 [#3] (\thesubsubsection{})%
     }%
@@ -275,7 +275,7 @@
     \def\theWgStableName{#3}%
     \def\theWGSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}}%
     \def\theWGSubSubSubSection{\theWGSubSubSection}%
-    \protected@edef\@currentlabel{\theWGSubSubSection}%
+    \protected@edef\@currentlabel{[#3]}%
     \addcontentsline{toc}{#1}{%
       \theWGSubSubSection{} #2 [#3] (\theparagraph{})%
     }%
@@ -291,7 +291,7 @@
     \setcounter{Paras}{0}%
     \def\theWgStableName{#3}%
     \def\theWGSubSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}.\arabic{WGSubSubSubSection}}%
-    \protected@edef\@currentlabel{\theWGSubSubSubSection}%
+    \protected@edef\@currentlabel{[#3]}%
     \addcontentsline{toc}{#1}{%
       \theWGSubSubSubSection{} #2 [#3] (\thesubparagraph{})%
     }%
