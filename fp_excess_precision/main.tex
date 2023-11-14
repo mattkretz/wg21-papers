@@ -1,0 +1,79 @@
+\newcommand\wgTitle{Floating-Point Excess Precision}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{DFPEPR0}
+\newcommand\wgGroup{SG6, EWG, CWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+%\setcounter{tocdepth}{2} % show sections and subsections in TOC
+%\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+%\usepackage{comment}
+
+\addbibresource{extra.bib}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  CWG2752 asks about the design intent for handling excess-precision
+  floating-point computations in \CC{}.
+  The main question we need answered is whether literals must be rounded or can
+  be stored with excess precision.
+  But as soon as we start to touch the existing wording, we need to make sure
+  it still matches the design intent.
+  This paper is trying to establish a consensus on design intent by listing
+  potential optimizations a compiler could do and deciding whether they are
+  conforming or not.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+%\input{changelog}
+%\input{strawpolls}
+
+\section{Introduction}
+
+\section{Possible Implications of Excess Precision}
+
+\begin{itemize}
+  \item x87 FPU usage
+    \begin{itemize}
+      \item At what points is intermediate rounding required?
+      \item Do parenthesis have any meaning?
+    \end{itemize}
+
+  \item fp contraction into FMAs: \code{a * b + c} translated to \code{fma(a, b, c)}
+    \begin{itemize}
+      \item Should \code{(a * b) + c} ever make a difference?
+        I.e. ensure rounding after multiplication?
+    \end{itemize}
+
+  \item Given two floating-point values \code{a} and \code{b} where \code{std::isfinite(b)} is statically known to be \code{true}:
+    \begin{itemize}
+      \item Is the optimizer allowed to replace \code{a + b - b} with \code{a}?
+      \item Is the optimizer allowed to replace \code{b - b} with \code{0}?
+      \item Is the optimizer allowed to replace \code{a + a + a} with \code{3 * a}?
+      \item Do parenthesis have additional meaning, inhibiting any of the above replacements?
+        (Is \code{a + b - b} different from \code{(a + b) - b}?)
+      \item Consider the case where \code{std::isfinite(a)} and \code{std::isinf(a + b)}.
+      \item Consider negative zero.
+    \end{itemize}
+
+  \item excess precision literals
+\end{itemize}
+
+\section{Interaction with library wording}
+
+\begin{itemize}
+  \item \code{FLT_EVAL_METHOD}?
+\end{itemize}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0

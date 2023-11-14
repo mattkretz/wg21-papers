@@ -19,6 +19,7 @@ This repository holds the LuaLaTeX sources for my papers to the C++ committee.
 | [P2600](https://wg21.link/p2600) | [D2600](https://web-docs.gsi.de/~mkretz/D2600.pdf) | A minimal ADL restriction to avoid ill-formed template instantiation | EWG, needs revision         |
 | [P2614](https://wg21.link/p2614) |                                                    | Deprecate numeric_limits::has_denorm      | accepted for C++23    |
 | [P2772](https://wg21.link/p2772) |                                                    | `std::integral_constant` literals do not suffice — `constexpr_t`? | superseded by P2781 |
+| TODO                             | [DFPEP](https://web-docs.gsi.de/~mkretz/DFPEP.pdf) | Floating-Point Excess Precision           | drafting                   |
 
 
 To build the papers you need make, LuaLaTeX (only tested with a recent TeXLive distribution), and Biber.
