@@ -49,6 +49,9 @@
       \item Do parenthesis have any meaning?
     \end{itemize}
 
+  \item Can an implementation use single-precision (or higher) floating-point
+    instructions for \code{std::float16_t} operations?
+
   \item fp contraction into FMAs: \code{a * b + c} translated to \code{fma(a, b, c)}
     \begin{itemize}
       \item Should \code{(a * b) + c} ever make a difference?
