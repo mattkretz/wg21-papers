@@ -164,7 +164,7 @@ namespace std {
     constexpr T reduce(const basic_simd<T, Abi>&, BinaryOperation = {});
   template<class T, class Abi, class BinaryOperation>
     constexpr T reduce(const basic_simd<T, Abi>& x,
-      const typename basic_simd<T, Abi>::mask_type& mask, T identity_element,
+      const typename basic_simd<T, Abi>::mask_type& mask, type_identity_t<T> identity_element,
       BinaryOperation binary_op);
   template<class T, class Abi>
     constexpr T reduce(const basic_simd<T, Abi>& x,
@@ -296,9 +296,9 @@ type of the \tcode{\nativeabi<T>} alias.
   \end{itemize}
 \end{example}
 
-\pnum
+\pnum\label{wording.deducet}
 The type of \tcode{\deducet<T, N>} in translation unit 1 differs from the type
-of \tcode{\deducet<T, N>} in translation unit 2 iff the type of
+of \tcode{\deducet<T, N>} in translation unit 2 if and only if the type of
 \tcode{\nativeabi<T>} in translation unit 1 differs from the type of
 \tcode{\nativeabi<T>} in translation unit 2.
 
@@ -1164,7 +1164,7 @@ template<class T, class Abi, class BinaryOperation = plus<>>
 \begin{itemdecl}
 template<class T, class Abi, class BinaryOperation>
   constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                     T identity_element, BinaryOperation binary_op);
+                     type_identity_t<T> identity_element, BinaryOperation binary_op);
 \end{itemdecl}
 
 \begin{itemdescr}
