@@ -53,23 +53,21 @@ The sequence of elements contained in a data-parallel-type
 \pnum
 The term \defn{data-parallel type} refers to all supported (\ref{simd.overview}) specializations of the \tcode{basic_simd} and \tcode{basic_simd_mask} class templates. A \defn{data-parallel object} is an object of \term{data-parallel type}.
 
-\pnum
+\pnum\label{wording.vectorizable.types}%
 The set of \defn{vectorizable types} comprises all standard integer types,
 character types, and the types \tcode{float} and \tcode{double}
 ([basic.fundamental]).
-In addition,
-if \tcode{__STDCPP_FLOAT16_T__} is defined, \tcode{std::float16_t} is a vectorizable type;
-if \tcode{__STDCPP_FLOAT32_T__} is defined, \tcode{std::float32_t} is a vectorizable type;
-if \tcode{__STDCPP_FLOAT64_T__} is defined, \tcode{std::float64_t} is a vectorizable type
-([basic.extended.fp]).
+In addition, \tcode{std::float16_t}, \tcode{std::float32_t}, and
+\tcode{std::float64_t} are vectorizable types if defined ([basic.extended.fp]).
 
 \pnum
 An \defn{element-wise operation} applies a specified operation to the elements of one or more data-parallel objects. Each such application is unsequenced with respect to the others. A \defn{unary element-wise operation} is an element-wise operation that applies a unary operation to each element of a data-parallel object. A \defn{binary element-wise operation} is an element-wise operation that applies a binary operation to corresponding elements of two data-parallel objects.
 
-\pnum
-Given a \tcode{basic_simd_mask<Bytes, Abi>} object \tcode{mask},
-the \defn{selected indices} signify the integers $i \in \{j \in \mathbb{N}_0 | j < \tcode{mask.size()} \wedge \tcode{mask[}j\tcode{]}\}$.
-Given an additional object \tcode{data} of type \tcode{basic_simd<T, Abi>} or \tcode{basic_simd_mask<Bytes, Abi>},
+\pnum\label{wording.selected.indices}%
+Given a \tcode{basic_simd_mask<Bytes, Abi>} object \tcode{mask}, the
+\defn{selected indices} signify the integers $i$ in the range \tcode{[0,
+mask.size())} for which \tcode{mask[$i$]} is \tcode{true}.
+Given an object \tcode{data} of type \tcode{basic_simd<T, Abi>} or \tcode{basic_simd_mask<Bytes, Abi>},
 the \defn{selected elements} signify the elements \tcode{data[$i$]} for all selected indices $i$.
 
 \pnum
@@ -220,9 +218,6 @@ namespace std {
 \end{codeblock}
 
 \pnum
-The header \tcode{<simd>} defines class templates, tag types, trait types, and function templates for element-wise operations on data-parallel objects.
-
-\pnum
 \simdsizetype{} is an exposition-only alias for a signed integer type.
 
 \pnum
@@ -238,16 +233,14 @@ template<class T> using @\nativeabi@ = @\seebelow@; // \expos
 template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@; // \expos
 \end{codeblock}
 
-\pnum
+\pnum\label{wording.ABI.tag}
 An \defn{ABI tag} is a type that indicates a choice of size and binary
 representation for objects of data-parallel type.
 \begin{note}
   The intent is for the size and binary representation to depend on the target
-  architecture.
+  architecture and compiler flags.
 \end{note}
-The ABI tag, together with a given element type implies a number of elements.
-ABI tag types are used as the second template argument to \tcode{basic_simd}
-and \tcode{basic_simd_mask}.
+The ABI tag, together with a given element type implies the width.
 
 \pnum
 \begin{note}
