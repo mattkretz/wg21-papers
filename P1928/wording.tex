@@ -97,7 +97,7 @@ namespace std {
   // \ref{simd.traits}, \tcode{simd} type traits
   template<class T, class U = typename T::value_type> struct simd_alignment;
   template<class T, class U = typename T::value_type>
-    inline constexpr size_t simd_alignment_v = simd_alignment<T,U>::value;
+    inline constexpr size_t simd_alignment_v = simd_alignment<T, U>::value;
 
   template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   template<class T, class V> using rebind_simd_t = typename rebind_simd<T, V>::type;
@@ -131,11 +131,11 @@ namespace std {
       simd_split(const basic_simd_mask<@\maskelementsize@<M>, Abi>& x) noexcept;
 
   template<class T, class... Abis>
-    constexpr basic_simd<T, @\deducet@<T, (basic_simd<T, Abis>::size + ...)>>
+    constexpr basic_simd<T, @\deducet@<T, (basic_simd<T, Abis>::size() + ...)>>
       simd_cat(const basic_simd<T, Abis>&...) noexcept;
   template<size_t Bs, class... Abis>
-    constexpr constexpr basic_simd_mask<Bs, @\deducet@<@\integerfrom@<Bs>,
-                                              (basic_simd_mask<Bs, Abis>::size() + ...)>>
+    constexpr basic_simd_mask<Bs, @\deducet@<@\integerfrom@<Bs>,
+                              (basic_simd_mask<Bs, Abis>::size() + ...)>>
       simd_cat(const basic_simd_mask<Bs, Abis>&...) noexcept;
 
   // \ref{simd.mask.reductions}, \tcode{basic_simd_mask} reductions
@@ -266,7 +266,7 @@ The implementation-defined maximum for \tcode{N} is no smaller than 64.
 \pnum
 Where present, \tcode{\deducet<T, N>} names an ABI tag type that satisfies
 \begin{itemize}
-  \item \tcode{basic_simd<T, \deducet<T, N>>::size == N}, and
+  \item \tcode{basic_simd<T, \deducet<T, N>>::size() == N}, and
   \item \tcode{basic_simd<T, \deducet<T, N>>} is default constructible (see \ref{simd.overview}).
 \end{itemize}
 
@@ -745,7 +745,7 @@ template<class U, class UAbi> constexpr explicit(@\seebelow@)
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{basic_simd<U, UAbi>::size == size()}.
+  \tcode{basic_simd<U, UAbi>::size() == size()}.
 
   \pnum\effects
   Constructs an object where the $i^\text{th}$ element equals \tcode{static_cast<T>(x[$i$])} \foralli.
@@ -1345,7 +1345,7 @@ template<class T, class Abi>
 
 \begin{itemdecl}
 template<class T, class... Abis>
-  constexpr simd<T, (basic_simd<T, Abis>::size + ...)>
+  constexpr simd<T, (basic_simd<T, Abis>::size() + ...)>
     simd_cat(const basic_simd<T, Abis>&... xs) noexcept;
 template<size_t Bytes, class... Abis>
   constexpr simd_mask<@\deducet@<@\integerfrom@<Bytes>, (basic_simd_mask<Bytes, Abis>::size() + ...)>
