@@ -118,8 +118,8 @@ namespace std {
     using simd = basic_simd<T, @\deducet@<T, N>>;
 
   // \ref{simd.mask.class}, Class template \tcode{basic_simd_mask}
-  template<size_t Bytes, class Abi = @\nativeabi@<T>> class basic_simd_mask;
-  template<class T, @\simdsizetype@ N = basic_simd_mask<sizeof(T)>::size()>
+  template<size_t Bytes, class Abi = @\nativeabi@<@\integerfrom@<Bytes>>> class basic_simd_mask;
+  template<class T, @\simdsizetype@ N = basic_simd<T>::size()>
     using simd_mask = basic_simd_mask<sizeof(T), @\deducet@<T, N>>;
 
   // \ref{simd.creation}, \tcode{basic_simd} and \tcode{basic_simd_mask} creation
