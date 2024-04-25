@@ -189,7 +189,7 @@ Summary of changes wrt. TS:
 \subsection{Add \code{simd_mask} generator constructor}
 
 This constructor was added:
-\begin{wgText}
+\begin{wgText}\vskip-2ex
 \begin{itemdecl}
 template<class G> simd_mask(G&& gen) noexcept;
 \end{itemdecl}
@@ -915,16 +915,45 @@ opt_nocheck(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_V
 The following section presents the wording to be applied against the \CC{}
 working draft.
 
-\begin{wgText}[In {[version.syn]}, add]
-  \begin{codeblock}
-    #define __cpp_lib_simd YYYYMML // also in <simd>
-  \end{codeblock}
-\end{wgText}
-Adjust the placeholder value as needed so as to denote this proposal's date of adoption.
+\bigskip
+In {[headers]}, add the header {\wgTextFonts\wgAdd{\code{<simd>}}} to
+{[tab:headers.cpp]}.
 
-\begin{wgText}[Add a new subclause after §28.8 {[numbers]}]
+\bigskip
+In {[numerics.general]}, add a new row to {[tab:numerics.summary]}:\\
+\begingroup
+  \rmfamily\smaller[1]
+  \begin{tabular}{|lll|}
+    \hline
+    \wgAdd{[simd]} & \wgAdd{Data-parallel types} & \wgAdd{\code{<simd>}} \\
+    \hline
+  \end{tabular}
+\endgroup
+\par\vskip.5\baselineskip plus 2\baselineskip
+
+\bigskip
+In {[diff.23.library]}, modify:
+\begin{wgText}[{[diff.23.library]}]
+  \pnum
+  \textbf{Affected subclause:} [headers]
+  \diffdef{Change} New headers.
+  \diffdef{Rationale} New functionality.
+  \diffdef{Effect on original feature} The following \CC{} headers are new: \tcode{<debugging>},
+  \tcode{<hazard_pointer>}, \tcode{<linalg>}, \tcode{<rcu>},\wgAdd{ \tcode{<simd>,}} and \tcode{<text_encoding>}.
+    Valid \CC{} 2023 code that \tcode{\#include}{s} headers with these names may be invalid in this revision of \CC{}.
+\end{wgText}
+\bigskip
+
+In {[version.syn]}, add the following and adjust the placeholder value as
+needed so as to denote this proposal's date of adoption:
+\begin{wgText}[{[version.syn]}]
+  \wgAdd{\tcode{\#define __cpp_lib_simd YYYYMML // also in <simd>}}
+\end{wgText}
+
+Add a new subclause after §28.9 {[linalg]}:
+\begin{wgText}
   \setcounter{WGClause}{28}
-  \setcounter{WGSubSection}{8}
+  \setcounter{WGSubSection}{9}
   \lstset{%
     columns=fullflexible,
     deletedelim=**[is]{|-}{-|},

@@ -77,8 +77,10 @@
 \newcommand\wgItemRem{\color{WgRem}\item[\st{\mbox{ \textbullet }}]\hspace*{-\labelsep}\st{\mbox{\hspace*{\labelsep}}}}
 \newenvironment{wgBAdd}{\color{WgAdd}}{\color{black}}
 \newenvironment{wgBRem}{\color{WgRem}}{\color{black}}
+\newcommand\wgTextFonts{\def\ttdefault{wgCodeFont}\rmfamily\smaller[1]}
 \def\wgLabelPrefix{}%
 \newenvironment{wgText}[1][]{%
+  \vskip.2\baselineskip plus 1\baselineskip
   \begingroup%
   \let\wgRealRef=\ref%
   \renewcommand\ref[1]{\wgRealRef{sec:\wgLabelPrefix##1}}%
@@ -102,20 +104,20 @@
     moredelim=**[is][\itshape]{|/}{/|}
   }%
   \let\type=\code%
-  \def\ttdefault{wgCodeFont}%
-  \par\rmfamily\smaller[1]\noindent\hrulefill%
+  \wgTextFonts%
+  \par\noindent\hrulefill%
   \begingroup%
     \def\arg{#1}%
     \def\empty{}%
     \ifx\arg\empty\else%
       \hspace{1ex} #1%
     \fi%
-  \endgroup\par
+  \endgroup\par\nopagebreak[4]\vskip.2\baselineskip%
 }
 {%
-  \par\noindent\hrulefill%
+  \par\nopagebreak[4]\vskip-.3\baselineskip\nopagebreak[4]\noindent\hrulefill%
   \endgroup\par%
-  \vskip.5\baselineskip plus 2\baselineskip%
+  \vskip.9\baselineskip plus 4\baselineskip\pagebreak[1]%
 }
 
 %%--------------------------------------------------
@@ -412,3 +414,7 @@
 
 \newcommand{\UNSP}[1]{\textit{\texttt{#1}}}
 \newcommand{\seebelow}{\UNSP{see below}}
+
+%% Change descriptions
+\newcommand{\diffhead}[1]{\textbf{#1:}\space}
+\newcommand{\diffdef}[1]{\ifvmode\else\hfill\break\fi\diffhead{#1}}
