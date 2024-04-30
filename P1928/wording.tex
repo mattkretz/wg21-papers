@@ -80,6 +80,8 @@ all possible values of \tcode{U} can be represented with type \tcode{T}.
 \begin{codeblock}
 namespace std {
   using @\simdsizetype@ = @\seebelow@; // \expos
+  template <class T, class Abi> constexpr @\simdsizetype\ \simdsizev@ = @\seebelow@; // \expos
+
   template <class T> constexpr size_t @\maskelementsize@ = @\seebelow@; // \expos
   template <size_t Bytes> using @\integerfrom@ = @\seebelow@; // \expos
 
@@ -221,6 +223,12 @@ namespace std {
 \simdsizetype{} is an exposition-only alias for a signed integer type.
 
 \pnum
+\tcode{\simdsizev<T, Abi>} denotes the width of \tcode{basic_simd<T, Abi>}.
+\begin{note}
+  \tcode{\simdsizev<T, Abi>} does not require instantiation of \tcode{basic_simd<T, Abi>}.
+\end{note}
+
+\pnum
 \tcode{\maskelementsize<basic_simd_mask<Bytes, Abi>>} has the value \tcode{Bytes}.
 
 \pnum
@@ -266,7 +274,7 @@ The implementation-defined maximum for \tcode{N} is no smaller than 64.
 \pnum
 Where present, \tcode{\deducet<T, N>} names an ABI tag type that satisfies
 \begin{itemize}
-  \item \tcode{basic_simd<T, \deducet<T, N>>::size() == N}, and
+  \item \tcode{\simdsizev<T, \deducet<T, N>> == N}, and
   \item \tcode{basic_simd<T, \deducet<T, N>>} is default constructible (see \ref{simd.overview}).
 \end{itemize}
 
@@ -1626,7 +1634,7 @@ template<size_t UBytes, class UAbi>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{simd_size_v<U, UAbi> == size()}.
+  \tcode{\simdsizev<U, UAbi> == size()}.
 
   \pnum\effects
   Constructs an object of type \tcode{basic_simd_mask} where the $i^\text{th}$ element equals \tcode{x[$i$]} \foralli.
@@ -1822,7 +1830,7 @@ template <class U, class A>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{simd_size_v<U, A> == simd_size_v<T, Abi>}.
+  \tcode{\simdsizev<U, A> == \simdsizev<T, Abi>}.
 
   \pnum\returns
   An object where the $i^\text{th}$ element is initialized to \tcode{static_cast<U>(operator[]($i$))}.

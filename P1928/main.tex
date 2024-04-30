@@ -30,6 +30,7 @@
 
 \newcommand\nativeabi{\UNSP{native-abi}}
 \newcommand\deducet{\UNSP{deduce-t}}
+\newcommand\simdsizev{\UNSP{simd-size-v}}
 \newcommand\simdsizetype{\UNSP{simd-size-type}}
 \newcommand\simdselect{\UNSP{simd-select-impl}}
 \newcommand\maskelementsize{\UNSP{mask-element-size}}
@@ -950,7 +951,7 @@ needed so as to denote this proposal's date of adoption:
   \wgAdd{\tcode{\#define __cpp_lib_simd YYYYMML // also in <simd>}}
 \end{wgText}
 
-Add a new subclause after §28.9 {[linalg]}:
+At the end of [numerics] (after §28.9 {[linalg]}), add the following new subclause:
 \begin{wgText}
   \setcounter{WGClause}{28}
   \setcounter{WGSubSection}{9}
