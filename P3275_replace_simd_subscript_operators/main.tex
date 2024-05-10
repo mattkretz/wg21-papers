@@ -1,0 +1,369 @@
+\newcommand\wgTitle{Replace simd operator[] with getter and setter functions --- or not}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{D3275R0}
+\newcommand\wgGroup{LEWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{Thanks to Daniel Towner, Ruslan Arutyunyan, Jonathan Müller, Jeff Garland, and Nicolas Morales for discussions and/or pull requests on this/previous paper(s).}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{basic\_simd#1}\xspace}
+\newcommand\simdT{\type{basic\_simd<T>}\xspace}
+\newcommand\valuetype{\type{value\_type}\xspace}
+\newcommand\referencetype{\type{reference}\xspace}
+\newcommand\mask[1][]{\type{basic\_simd\_mask#1}\xspace}
+\newcommand\maskT{\type{basic\_simd\_mask<T>}\xspace}
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\newcommand\nativeabi{\UNSP{native-abi}}
+\newcommand\deducet{\UNSP{deduce-t}}
+\newcommand\simdsizev{\UNSP{simd-size-v}}
+\newcommand\simdsizetype{\UNSP{simd-size-type}}
+\newcommand\simdselect{\UNSP{simd-select-impl}}
+\newcommand\maskelementsize{\UNSP{mask-element-size}}
+\newcommand\integerfrom{\UNSP{integer-from}}
+\newcommand\constexprwrapperlike{\UNSP{constexpr-wrapper-like}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  There was discussion in LEWG in Kona '23 whether \code{operator[]} is the
+  right interface for reading and writing individual elements of a \simd or
+  \mask.
+  This paper discusses the underlying issue and explores alternatives.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\section{Motivation}
+\subsection{proxy references in \CC{} make me :'(}
+\begin{wgText}[{[simd.general]}]
+  A data-parallel type consists of one or more elements of an underlying
+  vectorizable type, called the element type.
+  [\ldots]
+  The elements in a data-parallel type are indexed from 0 to $\mathrm{width} - 1$.
+\end{wgText}
+
+Since that's a given, we sure want to be able to access individual elements.
+\simd and \mask implement \code{operator[]} for element access:
+
+\medskip\begin{lstlisting}[style=Vc]
+std::simd<int> x = 0;
+x[0] = 1;      // OK
+int y = x[0];  // OK
+x[0] = y;      // OK
+auto z = x[0]; // OK, but:   #1
+z = 2;         // ill-formed #2
+\end{lstlisting}
+
+The \simd and \mask types hold values of their \valuetype, but they typically
+don't hold \emph{objects} of \valuetype.
+Consequently, both \code{operator[]} overloads cannot return an
+lvalue-reference.
+The \code{const} overload therefore returns a prvalue and the non-\code{const}
+overload returns a proxy reference.
+The proxy reference implements assignment and compound-assignment operators for
+assigning through to the selected element of the \simd/\mask.
+Thus, line \code{\#1} above deduces the type of \code{z} to be that proxy
+reference type.
+The declaration of \code{z} does not look like a reference at all.
+Therefore, assignment in line \code{\#2} is ill-formed, in order to avoid
+the surprising behavior of modifying \code{x}.
+
+In any case, the fact that a proxy reference is used instead of an
+lvalue-reference, makes subscripting into a \code{simd} error-prone.
+Whenever the subscript expression is used in a function argument with deduced
+type, bad things are likely to happen.\footnote{Just recall
+\code{vector<bool>::reference}.}
+If we had a language feature to decay the proxy reference type to \valuetype on
+deduction, then a lot of problems could be avoided.
+But we don't have that feature and there's no reasonable chance to get it for
+\CC{}26.
+
+\subsection{Why, though? lvalue ref is fine, no?}
+
+With GCC today you can write
+\medskip\begin{lstlisting}[style=Vc]
+using simd [[gnu::vector_size(16)]] = int;
+
+simd x = {};
+int& ref = x[0];
+x += 1;
+ref = 2;
+\end{lstlisting}
+If that's possible, then \code{std::simd<int>}'s subscript operator can simply
+return an lvalue reference, no?
+While that's true for this example, it's not true in general.
+For one, Clang is fairly strict about not handing out lvalue references.
+I.e. the above code does not compile.
+But more importantly, for some targets or implementations an intrinsic type
+might need to be used, which doesn't allow forming lvalue references to its
+elements either.
+Also \simd does not prohibit an implementation to use a different element type
+internally for its SIMD registers.
+E.g. an efficient implementation of 8-bit and 16-bit integers on the (outdated)
+Intel Knights architecture required the use of 32-bit integer SIMD registers
+and instructions.
+It is also conceivable that implementations will implement
+\code{simd<std::float16_t>} using 32-bit \code{float} SIMD registers for
+targets without hardware support.
+
+The situation for \mask is much clearer.
+There are three typical storage formats for masks in current hardware:
+\begin{enumerate}
+  \item Full SIMD registers where either all bits are 0 or all bits are 1 for
+    the complete number of value bits.
+  \item Bitmasks use one bit per mask element.
+    This is analogue to \code{vector<bool>} and \code{bitset} not being able to
+    return lvalue references to \code{bool}.
+  \item Mask registers that use one bit per value type byte.
+    This is similar to the above, where we would need to return a reference to
+    a single bit (just at a different position).
+\end{enumerate}
+Therefore, even if Clang would implement GCC's behavior with regard to forming
+lvalue references to vector elements, that doesn't help for \mask.
+
+\subsection{simd<UDT>}\label{sec:simd<array>}
+If we want to extend \simd's vectorizable types to user-defined types, we need
+to consider a consistency issue:
+\code{simd<T>} applies every operator and operation element-wise (unless the
+name clearly hints at a horizontal operation).
+
+While I don't think \code{simd<array<char, 4>, 4>} is a useful thing, it's also
+not completely crazy.
+However, its only interesting semantics in a \simd is data-parallel
+subscripting (apply \code{operator[]} element-wise):
+\medskip\begin{lstlisting}[style=Vc]
+using xyzw = std::array<char, 4>;
+std::simd<xyzw, 4> a = {};
+std::simd<char, 4> x = a[0];
+x[0] = x + std::integral_constant<char, 1>();
+\end{lstlisting}
+
+(This is neither going to be great for performance, nor is it clear whether we
+should implement such a “data-parallel subscript”, which requires a proxy
+reference again.)
+
+This example is not meant to motivate an element-wise \code{operator[]} for \code{simd}.
+It's meant to show that the current \code{simd::operator[]} is inconsistent
+with the “apply operators element-wise” rule.
+Applying \code{operator[]} element-wise on a \code{simd<int>} is obviously
+ill-formed since \code{int} doesn't have a subscript operator.
+Consequently, maybe the current P1928 \simd and \mask shouldn't overload
+\code{operator[]}?
+
+
+
+\section{Replacement exploration}
+
+If we only want to get rid of the proxy reference but are not concerned about
+the consistency argument in \sect{sec:simd<array>}, then we could consider a
+read-only subscript operator.
+We still have two choices:\\
+\begingroup
+  \smaller[1]
+\begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
+  read-only forever & keep design space open \\
+  \hline
+  \begin{lstlisting}
+class simd {
+  value_type operator[](@\simdsizetype@ i) const;
+
+};
+  \end{lstlisting}
+
+  \medskip
+  \begin{lstlisting}
+std::simd<int> v;
+int x = v[0];
+  \end{lstlisting}
+  &
+  \begin{lstlisting}
+class simd {
+  value_type operator[](@\simdsizetype@ i) const;
+  void operator[](@\simdsizetype@) = delete;
+};
+  \end{lstlisting}
+
+  \medskip
+  \begin{lstlisting}
+std::simd<int> v;
+int x = std::as_const(v)[0];
+  \end{lstlisting}
+\end{tabular}
+\endgroup
+
+\subsection{Making the case for: a read-only subscript is sufficient}
+
+A common use case for the subscript operator arises through the generator
+constructors of \simd and \mask.
+With P1928 you would write a permutation like this:
+\medskip\begin{lstlisting}[style=Vc]
+simd<int> v;
+simd<int> reversed([&](int i) { return v[v.size - i - 1]; };
+\end{lstlisting}
+The generator constructor often reads from another \simd and since it needs to
+compute a scalar, it typically only reads one element at a time.
+And it never updates a value via subscripting; the update happens by
+constructing a whole new \simd (with a good chance of the compiler producing
+vector instructions).
+Making such code any harder to write is not necessarily helping users.
+The above example is intuitively understandable (well, the subscripting part,
+the generator constructor maybe less so).
+
+Therefore, it seems like the simplest and still fairly usable “fix” is to
+remove the non-const subscript overload.
+
+There is some curious existing practice in GCC supporting this approach:
+\medskip\begin{lstlisting}[style=Vc]
+using simd [[gnu::vector_size(16)]] = int;
+
+constexpr simd f(simd x) {
+  x[0] = 1;
+  return x;
+}
+
+constexpr simd test0 = f(simd{}); // ill-formed: x[0] = 1 is not a constant expression
+
+constexpr simd g(simd x) {
+  x = simd{1, x[1], x[2], x[3]};
+  return x;
+}
+
+constexpr simd test1 = f(simd{}); // OK
+\end{lstlisting}
+I.e. assignment through vector subscripts cannot be used in constant expressions.
+Instead a complete new vector must be constructed.
+If the non-const subscript operator is removed from \simd and \mask, then GCC's
+restriction for constant expressions becomes \std\simd's behavior.
+
+\subsection{Allowing for writable subscript after \CC{}26}
+
+If we want to keep the design space open, then subscripting would become even
+more awkward to use.
+Consequently, \simd and \mask should rather have no subscript operator at all
+for \CC{}26.
+In the following exploratory examples, I will use the function names \code{get}
+and \code{set} as placeholder names.
+I also added a line to every example, considering the same syntax for the
+degenerate case of an \code{int} instead of a \code{simd<int>}.
+
+\begin{enumerate}
+  \item P1928 status quo:\label{explP1928}
+\medskip\begin{lstlisting}[style=Vc]
+std::simd<int> v;
+v[0] += 1;
+
+int x;
+x[0] += 1; // nope
+\end{lstlisting}
+
+\item \code{set(index, value)} member function:\label{memberset}
+\medskip\begin{lstlisting}[style=Vc]
+std::simd<int> v;
+v.set(0, 1 + v.get(0));
+
+int x;
+x.set(0, 1 + x.get(0)); // nope
+\end{lstlisting}
+
+\item \code{set(object, index, value)} non-member function:\label{nonmemberset}
+\medskip\begin{lstlisting}[style=Vc]
+std::simd<int> v;
+set(v, 0, 1 + get(v, 0));
+
+int x;
+set(x, 0, 1 + get(x, 0)); // not impossible
+\end{lstlisting}
+
+\item explicit proxy reference without assignment and conversion operators:\label{proxyset}
+\medskip\begin{lstlisting}[style=Vc]
+std::simd<int> v;
+element_reference(v, 0).set(1 + element_reference(v, 0).get());
+
+int x;
+element_reference(x, 0).set(1 + element_reference(x, 0).get()); // not impossible
+\end{lstlisting}
+
+\item explicit proxy reference with operators:\label{proxyoperators}
+\medskip\begin{lstlisting}[style=Vc]
+std::simd<int> v;
+element_reference(v, 0) += 1;
+
+int x;
+element_reference(x, 0) += 1; // not impossible
+\end{lstlisting}
+
+\end{enumerate}
+
+\subsection{Discussion}
+In the example above I chose the problem of updating the value of a single
+element of a \simd, to showcase how much compound assignment can aid in
+readability.
+In my opinion, the missing compound read-modify-write syntax in examples
+\ref{memberset}, \ref{nonmemberset}, and \ref{proxyset} is a huge downside.
+
+Further observations on the above examples:
+\begin{itemize}
+  \item \code{set(x, y, z)} is not intuitive whereas \code{x[y] = z} cleary
+    states the intended operation.
+
+  \item \code{x.set(y, z)} is better than \code{set(x, y, z)} in terms of “what
+    is set where?”, but ideally a “set” function would only take a single
+    argument: the new value.
+
+  \item This is achieved by example \ref{proxyset}, which creates an object
+    that identifies a single element, thus allowing \code{set} to only take the
+    new value as function argument.
+
+  \item We can pass lvalue-references around, (e.g. \code{int\& x = data[0];}).
+    Examples \ref{memberset} and \ref{nonmemberset} don't allow an equivalent
+    for \simd elements.
+    \ref{proxyset} and \ref{proxyoperators} however would act as a drop-in for
+    lvalue references and thus would allow modifying a single \simd element
+    “from a distance”.\footnote{Typically not a good idea, though.}
+\end{itemize}
+
+The ability to write simd-generic element access is not super important, but
+certainly aids against code duplication in some situations.
+
+
+\subsection{Recommendation}
+I still believe the use of the subscript operator for \simd and \mask is fairly
+intuitive and natural.
+From experience I would guess that read-only subscript is 90\% if not 99\% of
+the typical current use of subscripting.
+I may be biased from writing many unit tests, and nobody actually uses
+assignment through subscripts (or if they do, a generator constructor would
+have been the better solution anyway).
+Therefore, I recommend to simply remove the non-const subscript operator from
+\simd and \mask.
+
+If that's not an acceptable outcome, my next recommendation would be the
+addition of an \code{element_reference} type that implements all (compound)
+assignment operators (but without restricting them to rvalue, like the current
+implicit proxy reference type does).
+Basically make example \ref{proxyoperators} work.
+
+\section{Wording}\label{sec:wording}
+
+TBD after deciding on the preferred solution.
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
