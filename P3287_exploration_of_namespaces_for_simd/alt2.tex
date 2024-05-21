@@ -1,0 +1,118 @@
+\subsection{Alternative 2: every function is a non-member without \code{simd} prefix}
+
+\medskip\begin{lstlisting}[style=Vc]
+template<class V, class G>
+  V
+  generate(G&& gen);
+
+template<class V = void, class It, class... Flags>
+  conditional_t<is_same_v<V, void>, simd<iter_value_t<It>>, V>
+  copy_from(It first, simd_flags<Flags...> f = {});
+
+template<class Rg, std::integral Idx, class AbiIdx, class... Flags>
+  simd<ranges::range_value_t<Rg>, basic_simd<Idx, AbiIdx>::size()>
+  gather_from(const Rg&& in, const basic_simd<Idx, AbiIdx>& indexes,
+                   simd_flags<Flags...> f = {});
+
+template<size_t SizeSelector = 0, class T, class Abi, class PermuteGenerator>
+  simd<T, output-size>
+  permute(const basic_simd<T, Abi>& v, PermuteGenerator&& fn);
+
+template<size_t Bytes, class Abi, class T, class U>
+  auto
+  select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b)
+    -> decltype(simd-select-impl(c, a, b));
+
+template<class T, class Abi>
+  basic_simd<T, Abi>
+  exp(const basic_simd<T, Abi>& x);
+
+template<class T, class Abi>
+  basic_simd<T, Abi>
+  min(const basic_simd<T, Abi>& x, const basic_simd<T, Abi>& y);
+
+template<size_t Bs, class Abi>
+  bool
+  all_of(const basic_simd_mask<Bs, Abi>&);
+
+// no way around a prefix:
+template<class T>
+  concept simd_integral = /*...*/;
+
+template<class T>
+  concept simd_generic_integral = integral<T> or simd_integral<T>;
+\end{lstlisting}
+
+Usage example:
+\medskip\begin{lstlisting}[style=Vc]
+void f(std::simd<float> vf, const std::vector<int>& data) {
+  auto iota = std::generate<std::simd<int>>([](int i) { return i; });
+  auto chunk = std::copy_from(data.begin());
+  auto chunk_swapped = std::gather_from(data, iota ^ 1);
+  auto chunk_swapped2 = std::permute(chunk, [](int i) { return i ^ 1; });
+  assert(std::all_of(chunk_swapped == chunk_swapped2));
+
+  vf = std::select(vf > 1.f, 1.f, vf);
+  vf = std::exp(vf);
+  auto lo = std::min(iota, chunk);
+}
+\end{lstlisting}
+
+There is little variation possible for the above code.
+The most important variation is using unqualified calls, relying on ADL:
+\medskip\begin{lstlisting}[style=Vc]
+void f(std::simd<float> vf, const std::vector<int>& data) {
+  auto iota = std::generate<std::simd<int>>([](int i) { return i; });
+  auto chunk = std::copy_from(data.begin());
+  auto chunk_swapped = gather_from(data, iota ^ 1);
+  auto chunk_swapped2 = permute(chunk, [](int i) { return i ^ 1; });
+  assert(all_of(chunk_swapped == chunk_swapped2));
+
+  vf = select(vf > 1.f, 1.f, vf);
+  vf = exp(vf);
+  auto lo = min(iota, chunk);
+}
+\end{lstlisting}
+
+For \simdgeneric programming the example now looks like this:
+\medskip\begin{lstlisting}[style=Vc]
+template<std::integral T>
+T scalar_only(T a, T b) {
+  return 2 * std::min(a, b);
+}
+
+template<std::simd_integral T>
+T simd_only(T a, T b) {
+  return 2 * std::min(a, b);
+}
+
+template<std::simd_generic_integral T>
+T generic(T a, T b) {
+  return 2 * std::min(a, b);
+}
+\end{lstlisting}
+
+\begin{description}
+  \item[pros]
+    \begin{itemize}
+      \item Consistent.
+      \item[$\Rightarrow$] Simple to remember.
+      \item \simdgeneric interfaces can easily be provided.
+    \end{itemize}
+
+  \item[cons]
+    \begin{itemize}
+      \item Nothing in e.g. \code{auto x = std::copy_from(data.begin())} hints
+        at the creation of a \simd object.
+      \item Non-\code{simd} overloads for the same names become questionable
+        as soon as the functionality isn't equivalent. (huge “name grab”)
+
+      \item If we ever need to disambiguate an inconsistently overloaded term,
+        then it will need a \code{simd_} prefix.
+        \Eg the \code{simd_integral} concept would be such a term.
+        This could be considered less consistent than what we'd like to aim
+        for.
+    \end{itemize}
+\end{description}
+
+\myrating{unacceptable “name grab” and potentially confusing overloads}

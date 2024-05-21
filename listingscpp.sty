@@ -88,8 +88,10 @@ keywords=[5]{array,deque,vector,map,unordered_map,common_type,common_type_t,
   reference_wrapper,Incomplete,Holder,Iterator,IteratorImpl,Data,Ptr,Testable,Unused,Wrap,
   type,
   simd,simd_mask,native_simd,fixed_size_simd,native_simd_mask,fixed_size_simd_mask,
+  basic_simd,basic_simd_mask,
   duration,time_point,integer,fractional,fixed_point,is_bounded_integer,rational,
-  A,B,C,D,E,F,G,I,R,T,U,X,Y,Z,
+  A,B,C,D,E,F,G,I,R,T,U,V,X,Y,Z,
+  It,Flags,
   A0,B0,C0,XRef,
   Point,Abi,
   memory_alignment,element_aligned_tag,vector_aligned_tag,overaligned_tag,deduce,deduce_t,
@@ -127,6 +129,11 @@ keywords=[11]{const_cast,static_cast,dynamic_cast,reinterpret_cast,static_pointe
 moredelim=**[s][\color{directives}\bfseries]{[[}{]]},
 moredelim=**[s][\color{directives}\bfseries]{__attribute__((}{))},
 moredelim=**[s][\color{namespacequal}]{std:}{:},
+moredelim=**[s][\color{namespacequal}]{xstd:}{:},
+moredelim=**[s][\color{namespacequal}]{stdx:}{:},
+moredelim=**[s][\color{namespacequal}]{smd:}{:},
+moredelim=**[s][\color{namespacequal}]{simd:}{:},
+moredelim=**[s][\color{namespacequal}]{simd_generic:}{:},
 moredelim=**[s][\color{namespacequal}]{bounded:}{:},
 moredelim=**[s][\color{namespacequal}]{experimental:}{:},
 moredelim=*[directive]\#,
@@ -136,7 +143,7 @@ include,pragma,undef,warning}
 
 \iflstcpp@mono@
 \definecolor{identifier}{cmyk}{0, 0, 0, 1}
-\definecolor{namespacequal}{cmyk}{0, 0, 0, .5}
+\definecolor{namespacequal}{cmyk}{0, 0, 0, .7}
 \definecolor{constants}{cmyk}{0, 0, 0, 1}
 \definecolor{types}{gray}{0.2}
 \definecolor{storageclass}{gray}{0.2}
@@ -147,7 +154,7 @@ include,pragma,undef,warning}
 \definecolor{lstoverlay}{gray}{0.4}
 \else
 \definecolor{identifier}{cmyk}{0, 0, 0, 1}
-\definecolor{namespacequal}{cmyk}{0, 0, 0, .5}
+\definecolor{namespacequal}{cmyk}{0, 0, 0, .7}
 \definecolor{constants}{rgb}{0.3, 0, 0}
 \definecolor{types}{cmyk}{0.9, 0.2, 0.0, 0.4}
 \definecolor{storageclass}{cmyk}{0.8, 0, 1.0, 0.4}

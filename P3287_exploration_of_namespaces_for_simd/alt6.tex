@@ -1,0 +1,155 @@
+\subsection{Alternative 6: Place everything but obvious overloads into a
+single namespace}
+
+The preceding alternative probably went too far with moving \code{<cmath>}
+overloads and algorithms like \code{min}, \code{clamp}, etc. into the
+\std\code{simd} namespace.
+So let's keep all functions that are a clear overload (\code{f(simd<T>)}) from
+an existing function (\code{f(T)}) directly in the \code{std} namespace.
+This is the “namespace equivalent” to the status-quo approach of whether a
+\code{simd_} prefix is needed or not.
+
+\medskip\begin{lstlisting}[style=Vc]
+namespace std::simd {
+
+template<class T, class Abi = /*...*/>
+  class basic_simd;
+
+template<class T, @\simdsizetype@ N = /*...*/>
+  using simd = basic_simd<T, @\deducet@<T, N>>;
+
+template<class V, class G>
+  V
+  generate(G&& gen);
+
+template<class V = void, class It, class... Flags>
+  conditional_t<is_same_v<V, void>, simd<iter_value_t<It>>, V>
+  copy_from(It first, simd_flags<Flags...> f = {});
+
+template<class Rg, std::integral Idx, class AbiIdx, class... Flags>
+  simd<ranges::range_value_t<Rg>, basic_simd<Idx, AbiIdx>::size()>
+  gather_from(const Rg&& in, const basic_simd<Idx, AbiIdx>& indexes,
+                   simd_flags<Flags...> f = {});
+
+template<size_t SizeSelector = 0, class T, class Abi, class PermuteGenerator>
+  simd<T, output-size>
+  permute(const basic_simd<T, Abi>& v, PermuteGenerator&& fn);
+
+template<size_t Bytes, class Abi, class T, class U>
+  auto
+  select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b)
+    -> decltype(simd-select-impl(c, a, b));
+
+template<size_t Bs, class Abi>
+  bool
+  all_of(const basic_simd_mask<Bs, Abi>&);
+
+template<class T>
+  concept integral = /*...*/;
+
+template<class T>
+  concept generic_integral = std::integral<T> or std::simd::integral<T>;
+
+}
+
+namespace std {
+
+template<class T, class Abi>
+  simd::basic_simd<T, Abi>
+  exp(const simd::basic_simd<T, Abi>& x);
+
+template<class T, class Abi>
+  simd::basic_simd<T, Abi>
+  min(const simd::basic_simd<T, Abi>& x, const simd::basic_simd<T, Abi>& y);
+
+}
+\end{lstlisting}
+
+Usage example:
+\medskip\begin{lstlisting}[style=Vc]
+void f(std::simd::simd<float> vf, const std::vector<int>& data) {
+  auto iota = std::simd::generate<std::simd::simd<int>>([](int i) { return i; });
+  auto chunk = std::simd::copy_from(data.begin());
+  auto chunk_swapped = std::simd::gather_from(data, iota ^ 1);
+  auto chunk_swapped2 = std::simd::permute(chunk, [](int i) { return i ^ 1; });
+  assert(std::simd::all_of(chunk_swapped == chunk_swapped2));
+
+  vf = std::simd::select(vf > 1.f, 1.f, vf);
+  vf = std::exp(vf);
+  auto lo = std::min(iota, chunk);
+}
+\end{lstlisting}
+
+When relying on ADL, nothing changes compared to the example in the preceding
+section.
+However, if we now create a namespace alias and call everything fully
+qualified, the necessary qualifications could be considered slightly
+incoherent:
+
+\medskip\begin{lstlisting}[style=Vc]
+namespace smd = std::simd;
+
+void f(smd::simd<float> vf, const std::vector<int>& data) {
+  auto iota = smd::generate<smd::simd<int>>([](int i) { return i; });
+  auto chunk = smd::copy_from(data.begin());
+  auto chunk_swapped = smd::gather_from(data, iota ^ 1);
+  auto chunk_swapped2 = smd::permute(chunk, [](int i) { return i ^ 1; });
+  assert(smd::all_of(chunk_swapped == chunk_swapped2));
+
+  vf = smd::select(vf > 1.f, 1.f, vf);
+  vf = std::exp(vf);
+  auto lo = std::min(iota, chunk);
+}
+\end{lstlisting}
+
+At this point all functions already work for \simdgeneric code (or can be made
+to work with suitable overloads in the \std\code{simd} namespace).
+If LEWG were to adopt this naming style, then we need to decide on a per
+function basis, whether the function is “SIMD-only” or whether an overload for
+the value-type is useful on its own.
+For the latter, the function goes into \code{std} otherwise it needs to go
+into \std\code{simd}.
+
+The \simdgeneric programming example from previous sections now looks like
+this:
+\medskip\begin{lstlisting}[style=Vc]
+template<std::integral T>
+T scalar_only(T a, T b) {
+  return 2 * std::min(a, b);
+}
+
+template<std::simd::integral T>
+T simd_only(T a, T b) {
+  return 2 * std::min(a, b);
+}
+
+template<std::simd::generic_integral T>
+T generic(T a, T b) {
+  return 2 * std::min(a, b);
+}
+\end{lstlisting}
+
+\begin{description}
+  \item[pros]
+    \begin{itemize}
+      \item We are free to grab names out of the new namespace.
+      \item ADL works.
+      \item Fairly consistent.
+      \item[$\Rightarrow$] Users need to learn: “If it's in the \std\code{simd}
+        namespace then it works for \code{simd}s.
+        When searching for a function for \code{simd}, if the same function
+        exists / could exist for scalars look for it in \code{std}, otherwise
+        look in the \std\code{simd} namespace.”
+      \item \simdgeneric programming is straightforward to provide and use.
+    \end{itemize}
+
+  \item[cons]
+    \begin{itemize}
+      \item The class template name \std\code{simd::simd} is a bit awkward.
+
+      \item We have a mix of non-member functions in \code{std} and
+        \std\code{simd}.
+    \end{itemize}
+\end{description}
+
+\myrating{acceptable; but not much different from the status quo --- not convinced this is actually \emph{better}}

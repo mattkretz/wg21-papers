@@ -1,0 +1,131 @@
+\subsection{Alternative 1: every function is a non-member with \code{simd} prefix}
+
+\medskip\begin{lstlisting}[style=Vc]
+template<class V, class G>
+  V
+  simd_generate(G&& gen);
+
+template<class V = void, class It, class... Flags>
+  conditional_t<is_same_v<V, void>, simd<iter_value_t<It>>, V>
+  simd_copy_from(It first, simd_flags<Flags...> f = {});
+
+template<class Rg, std::integral Idx, class AbiIdx, class... Flags>
+  simd<ranges::range_value_t<Rg>, basic_simd<Idx, AbiIdx>::size()>
+  simd_gather_from(const Rg&& in, const basic_simd<Idx, AbiIdx>& indexes,
+                   simd_flags<Flags...> f = {});
+
+template<size_t SizeSelector = 0, class T, class Abi, class PermuteGenerator>
+  simd<T, output-size>
+  simd_permute(const basic_simd<T, Abi>& v, PermuteGenerator&& fn);
+
+template<size_t Bytes, class Abi, class T, class U>
+  auto
+  simd_select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b)
+    -> decltype(simd-select-impl(c, a, b));
+
+template<class T, class Abi>
+  basic_simd<T, Abi>
+  simd_exp(const basic_simd<T, Abi>& x);
+
+template<class T, class Abi>
+  basic_simd<T, Abi>
+  simd_min(const basic_simd<T, Abi>& x, const basic_simd<T, Abi>& y);
+
+template<size_t Bs, class Abi>
+  bool
+  simd_all_of(const basic_simd_mask<Bs, Abi>&);
+
+template<class T>
+  concept simd_integral = /*...*/;
+
+template<class T>
+  concept simd_generic_integral = integral<T> or simd_integral<T>;
+\end{lstlisting}
+
+Usage example:
+\medskip\begin{lstlisting}[style=Vc]
+void f(std::simd<float> vf, const std::vector<int>& data) {
+  auto iota = std::simd_generate<std::simd<int>>([](int i) { return i; });
+  auto chunk = std::simd_copy_from(data.begin());
+  auto chunk_swapped = std::simd_gather_from(data, iota ^ 1);
+  auto chunk_swapped2 = std::simd_permute(chunk, [](int i) { return i ^ 1; });
+  assert(std::simd_all_of(chunk_swapped == chunk_swapped2));
+
+  vf = std::simd_select(vf > 1.f, 1.f, vf);
+  vf = std::simd_exp(vf);
+  auto lo = std::simd_min(iota, chunk);
+}
+\end{lstlisting}
+
+There is little variation possible for the above code.
+The most important variation is using unqualified calls, relying on ADL:
+\medskip\begin{lstlisting}[style=Vc]
+void f(std::simd<float> vf, const std::vector<int>& data) {
+  auto iota = std::simd_generate<std::simd<int>>([](int i) { return i; });
+  auto chunk = std::simd_copy_from(data.begin());
+  auto chunk_swapped = simd_gather_from(data, iota ^ 1);
+  auto chunk_swapped2 = simd_permute(chunk, [](int i) { return i ^ 1; });
+  assert(simd_all_of(chunk_swapped == chunk_swapped2));
+
+  vf = simd_select(vf > 1.f, 1.f, vf);
+  vf = simd_exp(vf);
+  auto lo = simd_min(iota, chunk);
+}
+\end{lstlisting}
+
+For \simdgeneric programming a trivial example looks like this:
+\medskip\begin{lstlisting}[style=Vc]
+template<std::integral T>
+T scalar_only(T a, T b) {
+  return 2 * std::min(a, b);
+}
+
+template<std::simd_integral T>
+T simd_only(T a, T b) {
+  return 2 * std::simd_min(a, b);
+}
+
+template<std::simd_generic_integral T>
+T generic(T a, T b) {
+  if constexpr (std::simd_integral<T>)
+    return 2 * std::simd_min(a, b);
+  else
+    return 2 * std::min(a, b);
+}
+\end{lstlisting}
+
+The ability to constrain a function like this actually resolves a missing
+feature in the TS that I hit when working on using \stdx\code{simd} in the
+core of the GNU Radio framework.
+Obviously, the TS couldn't have proposed any concepts.
+The ability to constrain a function with any of the three choices above had to
+be solved with an ad-hoc solution in GNU Radio.
+
+However, looking at the implementation of the \code{generic} function above,
+this can't be what we want.
+
+\begin{description}
+  \item[pros]
+    \begin{itemize}
+      \item Consistent.
+      \item[$\Rightarrow$] Users don't need to remember which functions don't
+        need a \code{simd} prefix.
+
+      \item Consistent naming scheme for SIMD and \simdgeneric concepts.
+    \end{itemize}
+
+  \item[cons]
+    \begin{itemize}
+      \item Verbose.
+      \item[$\Rightarrow$] There's a lot of “simd” spelled out in the code.
+        It is not adding information (IOW: it's noise) -- at least in this
+        code.
+
+      \item \simdgeneric programming is barely possible (because it requires
+        too many constexpr-if branches).
+    \end{itemize}
+\end{description}
+
+\myrating{unacceptable for lack of \simdgeneric programming;
+too verbose without opt-out of the verbosity;
+there must be a better alternative}

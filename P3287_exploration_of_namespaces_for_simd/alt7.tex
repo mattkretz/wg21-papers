@@ -1,0 +1,183 @@
+\subsection{Alternative 7: Place \code{simd} into a single namespace with a different namespace for \simdgeneric interfaces}
+
+\medskip\begin{lstlisting}[style=Vc]
+namespace std::simd {
+
+template<class T, class Abi = /*...*/>
+  class basic_simd;
+
+template<class T, @\simdsizetype@ N = /*...*/>
+  using simd = basic_simd<T, @\deducet@<T, N>>;
+
+template<class V, class G>
+  V
+  generate(G&& gen);
+
+template<class V = void, class It, class... Flags>
+  conditional_t<is_same_v<V, void>, simd<iter_value_t<It>>, V>
+  copy_from(It first, simd_flags<Flags...> f = {});
+
+template<class Rg, std::integral Idx, class AbiIdx, class... Flags>
+  simd<ranges::range_value_t<Rg>, basic_simd<Idx, AbiIdx>::size()>
+  gather_from(const Rg&& in, const basic_simd<Idx, AbiIdx>& indexes,
+                   simd_flags<Flags...> f = {});
+
+template<size_t SizeSelector = 0, class T, class Abi, class PermuteGenerator>
+  simd<T, output-size>
+  permute(const basic_simd<T, Abi>& v, PermuteGenerator&& fn);
+
+template<size_t Bytes, class Abi, class T, class U>
+  auto
+  select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b)
+    -> decltype(simd-select-impl(c, a, b));
+
+template<class T, class Abi>
+  basic_simd<T, Abi>
+  exp(const basic_simd<T, Abi>& x);
+
+template<class T, class Abi>
+  basic_simd<T, Abi>
+  min(const basic_simd<T, Abi>& x, const basic_simd<T, Abi>& y);
+
+template<size_t Bs, class Abi>
+  bool
+  all_of(const basic_simd_mask<Bs, Abi>&);
+
+template<class T>
+  concept integral = /*...*/;
+
+} // std::simd
+
+namespace std::simd_generic {
+
+namespace scalar {
+
+template<@\vectorizable@ T, class G>
+  T
+  generate(G&& gen);
+
+template<@\vectorizable@ T, class It, class... Flags>
+  T
+  copy_from(It first, simd_flags<Flags...> f = {});
+
+template<class Rg, std::integral Idx, class... Flags>
+  ranges::range_value_t<Rg>
+  gather_from(const Rg&& in, Idx index, simd_flags<Flags...> f = {});
+
+template<class T, class U>
+  auto
+  select(bool c, const T& a, const U& b)
+    -> decltype(simd-select-impl(c, a, b));
+
+using std::exp;
+
+using std::min;
+
+bool
+all_of(same_as<bool>);
+
+} // (std::simd_generic::)scalar
+
+using namespace std::simd;
+
+using namespace std::simd_generic::scalar;
+
+template<class T>
+  concept integral = std::integral<T> or std::simd::integral<T>;
+
+} // std::simd_generic
+\end{lstlisting}
+
+The usage example looks exactly like in \sect{sec:singlenamespace}.
+There is also no difference with regard to ADL and using a namespace alias.
+
+However, the situation for \simdgeneric programming is rather different.
+At this point a user can be very clear about “scalar-only” (\code{std}),
+“simd-only” (\std\code{simd}), and \simdgeneric (\std\code{simd_generic})
+code.
+Thus, our recurring example becomes:
+\medskip\begin{lstlisting}[style=Vc]
+template<std::simd::integral T>
+template<std::integral T>
+T scalar_only(T a, T b) {
+  return 2 * std::min(a, b);
+}
+
+T simd_only(T a, T b) {
+  return 2 * std::simd::min(a, b);
+}
+
+template<std::simd_generic::integral T>
+T fun(T a, T b) {
+  return 2 * std::simd_generic::min(a, b);
+}
+\end{lstlisting}
+
+Now the namespace of the \code{integral} concept matches the namespace of the
+functions that we need to use.
+There's a clear mechanism from opting into \simdgeneric overloads --- or avoiding them when they are not required.
+All the prevision definitions of SIMD-integral and \simdgeneric-integral
+concepts didn't have this clear association with a set of function overloads.
+
+The ability to choose between \code{std::simd} and \code{std::simd_generic}
+also provides another level of clarity in stating intent: Do you expect your
+code to be called only with \simdT or also with \code{T}?
+
+Note that, as declared above, also \code{<cmath>} overloads are in different
+namespaces.
+Thus, instead of writing \code{using std::exp}, I can now write \code{using
+std::simd_generic::exp} and all unqualified \code{exp} calls are overloaded
+for scalars and \code{simd}s.
+
+I expect that many users might be interested in shortening \std\code{simd} and
+even more \std\code{simd_generic}.
+If that's the case, we're going to see many namespace aliases for the two
+namespaces.
+
+\begin{description}
+  \item[pros]
+    \begin{itemize}
+      \item We are free to grab names out of the new namespace.
+      \item ADL still works.
+      \item Consistent.
+      \item[$\Rightarrow$] Users only need to learn: “If it's in the
+        \std\code{simd} namespace then it works for \code{simd}s.
+        When searching for a function for \code{simd}, look in the
+        \std\code{simd} namespace.
+        When it needs to work generically for \code{simd} and scalars, just
+        switch to \std\code{simd_generic}.”
+      \item Opt-in \simdgeneric programming that is fairly “safe” with regard
+        to accidentally calling the wrong overload.
+    \end{itemize}
+
+  \item[cons]
+    \begin{itemize}
+      \item The class template name \std\code{simd::simd} still is a bit
+        awkward.
+        \\(standard SIMD vector / \std\code{simd::vec}?)
+      \item \std\code{simd_generic} is too long and will be abbreviated with
+        different namespace aliases in different code bases\footnote{this is
+        normal in other languages, \eg Python}.
+    \end{itemize}
+\end{description}
+
+\myrating{
+  sold; feels good after implementing it; happy about the clear separation of
+  scalar / SIMD / \simdgeneric; happy about concise code through namespace
+  aliases
+}
+
+\subsubsection{On renaming \code{std::simd::simd} to \code{std::simd::vec}}
+Personally, I don't think \std\code{simd::simd} is a problem.
+Especially, considering that users might introduce a namespace alias or even
+--- heaven forbid --- import the whole \std\code{simd} (or
+\std\code{simd_generic}) namespace into their local scope.
+If \code{vec} needs to stand on its own without the \code{simd::} part of the
+name, I fear we might lose clarity compared to \code{simd}.
+
+I believe the situation is different for \std\code{simd::simd_mask}, which,
+in my opinion, can live without the \code{simd_} part in its name.
+Thus, even after a \code{using namespace std::simd;} the alias template name
+\code{mask} is expressive enough.
+(Because \code{mask} only appears in proximity to \code{simd} --- if it
+appears in code at all.)

@@ -1,0 +1,129 @@
+\subsection{Alternative 3: place everything but types into a namespace}
+
+\medskip\begin{lstlisting}[style=Vc]
+namespace std {
+template<class T, class Abi>
+  class basic_simd;
+}
+
+namespace std::Simd { // I don't even have one acceptable idea for a name
+
+template<class V, class G>
+  V
+  generate(G&& gen);
+
+template<class V = void, class It, class... Flags>
+  conditional_t<is_same_v<V, void>, simd<iter_value_t<It>>, V>
+  copy_from(It first, simd_flags<Flags...> f = {});
+
+template<class Rg, std::integral Idx, class AbiIdx, class... Flags>
+  simd<ranges::range_value_t<Rg>, basic_simd<Idx, AbiIdx>::size()>
+  gather_from(const Rg&& in, const basic_simd<Idx, AbiIdx>& indexes,
+                   simd_flags<Flags...> f = {});
+
+template<size_t SizeSelector = 0, class T, class Abi, class PermuteGenerator>
+  simd<T, output-size>
+  permute(const basic_simd<T, Abi>& v, PermuteGenerator&& fn);
+
+template<size_t Bytes, class Abi, class T, class U>
+  auto
+  select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b)
+    -> decltype(simd-select-impl(c, a, b));
+
+template<class T, class Abi>
+  basic_simd<T, Abi>
+  exp(const basic_simd<T, Abi>& x);
+
+template<class T, class Abi>
+  basic_simd<T, Abi>
+  min(const basic_simd<T, Abi>& x, const basic_simd<T, Abi>& y);
+
+template<size_t Bs, class Abi>
+  bool
+  all_of(const basic_simd_mask<Bs, Abi>&);
+
+template<class T>
+  concept integral = /*...*/;
+
+template<class T>
+  concept generic_integral = std::integral<T> or Simd::integral<T>;
+
+}
+\end{lstlisting}
+
+Usage example:
+\medskip\begin{lstlisting}[style=Vc]
+void f(std::simd<float> vf, const std::vector<int>& data) {
+  auto iota = std::Simd::generate<std::simd<int>>([](int i) { return i; });
+  auto chunk = std::Simd::copy_from(data.begin());
+  auto chunk_swapped = std::Simd::gather_from(data, iota ^ 1);
+  auto chunk_swapped2 = std::Simd::permute(chunk, [](int i) { return i ^ 1; });
+  assert(std::Simd::all_of(chunk_swapped == chunk_swapped2));
+
+  vf = std::Simd::select(vf > 1.f, 1.f, vf);
+  vf = std::Simd::exp(vf);
+  auto lo = std::Simd::min(iota, chunk);
+}
+\end{lstlisting}
+
+There is little variation possible for the above code.
+ADL doesn't work, but a namespace alias becomes interesting:
+\medskip\begin{lstlisting}[style=Vc]
+namespace smd = std::Simd;
+
+void f(std::simd<float> vf, const std::vector<int>& data) {
+  auto iota = smd::generate<std::simd<int>>([](int i) { return i; });
+  auto chunk = smd::copy_from(data.begin());
+  auto chunk_swapped = smd::gather_from(data, iota ^ 1);
+  auto chunk_swapped2 = smd::permute(chunk, [](int i) { return i ^ 1; });
+  assert(smd::all_of(chunk_swapped == chunk_swapped2));
+
+  vf = smd::select(vf > 1.f, 1.f, vf);
+  vf = smd::exp(vf);
+  auto lo = smd::min(iota, chunk);
+}
+\end{lstlisting}
+
+For \simdgeneric programming the example now looks like this:
+\medskip\begin{lstlisting}[style=Vc]
+template<std::integral T>
+T scalar_only(T a, T b) {
+  return 2 * std::min(a, b);
+}
+
+template<std::simd::integral T>
+T simd_only(T a, T b) {
+  return 2 * std::simd::min(a, b);
+}
+
+template<std::simd::generic_integral T>
+T generic(T a, T b) {
+  if constexpr (std::simd::integral<T>)
+    return 2 * std::simd::min(a, b);
+  else
+    return 2 * std::min(a, b);
+}
+\end{lstlisting}
+
+\begin{description}
+  \item[pros]
+    \begin{itemize}
+      \item We are free to grab names out of the new namespace.
+      \item any?
+    \end{itemize}
+
+  \item[cons]
+    \begin{itemize}
+      \item The type and functions being in different namespaces is awkward.
+      \item The required mismatch between the facility (“std::simd”) and the
+        namespace is frustrating.
+      \item[$\Rightarrow$] No possible good name for the namespace.
+
+      \item \simdgeneric programming is barely possible (because it requires
+        too many constexpr-if branches).
+    \end{itemize}
+\end{description}
+
+\myrating{unacceptable for lack of \simdgeneric programming;
+  ADL not working is not helping anything;
+there must be a better alternative}

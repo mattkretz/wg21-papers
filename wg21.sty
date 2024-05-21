@@ -235,28 +235,34 @@
 %\def\@myheadingrule{\nopagebreak\titleline{\color{HeadingRule}\titlerule}}
 \def\@myheadingrule{\vspace{0.2\baselineskip}\nopagebreak{\textcolor{HeadingRule}{\hrule height .4pt}}\nopagebreak}
 
-\ifdefined\sectionlinesformat % On Travis VMs TeX Live is too old. KOMA Script doesn't have \sectionlinesformat yet.
-  \renewcommand{\sectionlinesformat}[4]{%
-    \@hangfrom{\hskip #2#3}{\hfill \Ifstr{#1}{section}{\MakeUppercase{#4}}{\MakeLowercase{#4}}}\nopagebreak%
-    \Ifstr{#1}{section}{\@myheadingrule}{}%
-    \Ifstr{#1}{subsection}{\@myheadingrule}{}%
-  }
+\newsavebox\@wgtmpbox
 
-  \renewcommand*{\sectionformat}{{\sectionNumberFont\thesection\autodot}\enskip}
-  \setkomafont{section}{\large\color{Headings}\scshape\addfontfeature{LetterSpace=4}}
+\renewcommand{\sectionlinesformat}[4]{%
+  %\@hangfrom{\hskip #2#3}{\hfill \Ifstr{#1}{section}{\MakeUppercase{#4}}{\MakeLowercase{#4}}}\nopagebreak%
+  \sbox\@wgtmpbox{\hskip #2#3}%
+  \makebox[\textwidth][s]{%
+    \parbox[b]{\wd\@wgtmpbox}{\usebox\@wgtmpbox}\hfill%
+    \parbox[b]{\textwidth-\wd\@wgtmpbox}{\raggedleft%
+    \Ifstr{#1}{section}{\MakeUppercase{#4}}{\MakeLowercase{#4}}}\nopagebreak%
+  }%
+  \Ifstr{#1}{section}{\@myheadingrule}{}%
+  \Ifstr{#1}{subsection}{\@myheadingrule}{}%
+}
 
-  \renewcommand*{\subsectionformat}{\spacedlowsmallcaps{\thesubsection\autodot}\enskip}
-  \setkomafont{subsection}{\color{Headings}\scshape\addfontfeature{LetterSpace=7}}
+\renewcommand*{\sectionformat}{{\sectionNumberFont\thesection\autodot}\enskip}
+\setkomafont{section}{\large\color{Headings}\scshape\addfontfeature{LetterSpace=4}}
 
-  \renewcommand*{\subsubsectionformat}{\spacedlowsmallcaps{\thesubsubsection\autodot}\enskip}
-  \setkomafont{subsubsection}{\color{Headings}\scshape\addfontfeature{LetterSpace=7}}
+\renewcommand*{\subsectionformat}{\spacedlowsmallcaps{\thesubsection\autodot}\enskip}
+\setkomafont{subsection}{\color{Headings}\scshape\addfontfeature{LetterSpace=7}}
 
-  \renewcommand*{\paragraphformat}{\theparagraph\autodot\enskip}
-  \setkomafont{paragraph}{\scshape\addfontfeature{LetterSpace=7}}
+\renewcommand*{\subsubsectionformat}{\spacedlowsmallcaps{\thesubsubsection\autodot}\enskip}
+\setkomafont{subsubsection}{\color{Headings}\scshape\addfontfeature{LetterSpace=7}}
 
-  \renewcommand*{\subparagraphformat}{\thesubparagraph\autodot\enskip}
-  \setkomafont{subparagraph}{\scshape\addfontfeature{LetterSpace=7}}
-\fi
+\renewcommand*{\paragraphformat}{\theparagraph\autodot\enskip}
+\setkomafont{paragraph}{\scshape\addfontfeature{LetterSpace=7}}
+
+\renewcommand*{\subparagraphformat}{\thesubparagraph\autodot\enskip}
+\setkomafont{subparagraph}{\scshape\addfontfeature{LetterSpace=7}}
 
 % descriptionlabels
 \renewcommand{\descriptionlabel}[1]{\hspace*{\labelsep}\spacedsmallcaps{#1}}

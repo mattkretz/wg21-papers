@@ -1,0 +1,260 @@
+\newcommand\wgTitle{Exploration of namespaces for std::simd}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{D3287R0}
+\newcommand\wgGroup{LEWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{Thanks to Daniel Towner, Ruslan Arutyunyan, Jonathan Müller, Jeff Garland, and Nicolas Morales for discussions and/or pull requests on this/previous paper(s).}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{ba\-sic\_simd#1}\xspace}
+\newcommand\simdT{\type{ba\-sic\_simd\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\valuetype{\type{val\-ue\_type}\xspace}
+\newcommand\referencetype{\type{ref\-er\-ence}\xspace}
+\newcommand\mask[1][]{\type{ba\-sic\_simd\_mask#1}\xspace}
+\newcommand\maskT{\type{ba\-sic\_simd\_mask\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+\newcommand\simdgeneric{SIMD-gener\-ic\xspace}
+
+\newcommand\nativeabi{\UNSP{native-abi}}
+\newcommand\deducet{\UNSP{deduce-t}}
+\newcommand\simdsizev{\UNSP{simd-size-v}}
+\newcommand\simdsizetype{\UNSP{simd-size-type}}
+\newcommand\simdselect{\UNSP{simd-select-impl}}
+\newcommand\maskelementsize{\UNSP{mask-element-size}}
+\newcommand\integerfrom{\UNSP{integer-from}}
+\newcommand\constexprwrapperlike{\UNSP{constexpr-wrapper-like}}
+\newcommand\vectorizable{\UNSP{vectorizable}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\newcommand\myrating[1]{\par\noindent{\color{Headings}\scshape{}my rating:} #1}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  In recent discussions about \code{simd} in LEWG, notably on 2023-06-16 while
+  discussing \code{permute}, \code{expand}, and \code{compress}, there was a
+  request for a paper exploring placing all \code{simd} non-member functions
+  into a sub-namespace.
+  \ldots or potentially any other means of using namespaces to improve the
+  \code{simd} API.
+
+  This paper explores a few ideas.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\section{Introduction \& Motivation}
+
+Using the example of \std\code{permute(\simd, idx_perm)}, one of the unavoidable
+LEWG discussions/decisions is about whether \code{simd} can grab the name
+“permute”, potentially blocking its use for other facilities in the standard
+library.\footnote{Just to clarify, I agree with the concern and I feel uneasy
+with the need for \code{simd} to grab as many names as it would need to.}
+With P3067R0 (“Provide named permutation functions for \std\code{simd}”), the
+list of non-member functions to add to \std\ becomes:
+\code{permute}, \code{expand}, \code{compress}, \code{grow}, \code{stride},
+\code{chunk}, \code{reverse}, \code{re\-peat_all}, \code{re\-peat_each},
+\code{transpose}, \code{zip}, \code{unzip}, \code{cat}, \code{ex\-tract},
+\code{rotate}, \code{shift_left}, \code{shift_right}, and \code{align}.
+All of these names would likely need a \code{simd} prefix if they want to go
+into \std.
+
+And then we're adding \simd overloads for all of \code{<cmath>} and
+\code{<bit>}, \ldots.
+
+So we need to understand whether there are viable alternatives to \code{simd}
+naming.
+This paper tries to explore the field as far as I believe is still sensible.
+The goal is to come up with a consistent naming strategy for everything related
+to \code{simd}.
+
+\subsection{\simdgeneric programming}
+
+In this paper I want to use the term \emph{\simdgeneric} programming.
+Note that in the space of types, \simdT is a generalization of \code{T} or ---
+vice-versa --- \code{T} is the degenerate case of \simdT.
+(The same is true for \mask and \code{bool}.)
+We've touched upon this when we talked about regularity and how \simdT is
+designed to retain regularity of each individual element inside the \simd,
+leading to something I called “data-parallel regularity” of \simdT, for lack of
+an existing term.
+
+The \code{simd} design aims to allow users to replace \code{T} with \simdT in
+their code without requiring any further code changes.
+If this works (and because of branching on individual values of \code{T} it
+cannot work for all code) I call such code \simdgeneric.
+
+The following text uses this term because the use of namespaces opens an
+interesting facility to opt in and out of some aspects of \simdgeneric
+programming.
+
+\section{Exploration}
+
+When exploring naming and namespacing, I use the following functions to showcase the effect.
+I then try to come up with all ways to use and abuse the facilities.
+In addition I mention the effect of the choice on \simdgeneric programming.
+To complete the picture, I added a concept that seems like something we might
+want to add in the future, but for which there is currently no proposal coming
+forward.
+
+Note: we have to discuss the range vs. iterator argument to load/gather seperately.
+This paper does not explore the issue.
+I also removed \code{constexpr} and \code{noexcept} since they are irrelevant
+to the exploration at hand.
+
+\begin{enumerate}
+  \item \label{fun:generator} \simd generator
+
+    Status quo (P1928R9):
+    \medskip\begin{lstlisting}[style=Vc]
+std::simd<int> iota([](int i) { return i; });
+    \end{lstlisting}
+
+  \item \label{fun:load} \simd load from contiguous range
+
+    Status quo (P1928R9):
+    \medskip\begin{lstlisting}[style=Vc]
+std::vector<int> data = {...};
+std::simd<int> chunk(data.begin());
+    \end{lstlisting}
+
+  \item \label{fun:gather} \simd gather from contiguous range
+
+    Status quo (P2664R6):
+    \medskip\begin{lstlisting}[style=Vc]
+std::vector<int> data = {/*...*/};
+std::simd<int> idxs = /*...*/;
+std::simd<int> std::gather_from(data, idxs);
+    \end{lstlisting}
+
+  \item \label{fun:permute} \simd permutations
+
+    Status quo (P2664R6):
+    \medskip\begin{lstlisting}[style=Vc]
+std::simd<int> v = /*...*/;
+std::simd<int> v2 = std::permute(v, [](int i) { return i ^ 1; });
+    \end{lstlisting}
+
+  \item \label{fun:select} \simd ternary operator replacement
+
+    Status quo (P1928R9):
+    \medskip\begin{lstlisting}[style=Vc]
+std::simd<int> v = /*...*/;
+std::simd<int> abs = std::simd_select(v >= 0, v, -v);
+    \end{lstlisting}
+
+  \item \label{fun:math} Math functions and algorithms
+
+    Status quo (P1928R9):
+    \medskip\begin{lstlisting}[style=Vc]
+std::simd<float> x = /*...*/;
+std::simd<float> y = std::exp(x);
+std::simd<float> z = std::min(x, y);
+    \end{lstlisting}
+
+  \item \label{fun:maskred} Mask reductions
+
+    Status quo (P1928R9):
+    \medskip\begin{lstlisting}[style=Vc]
+std::simd<float> x = /*...*/;
+if (std::all_of(x > 0)) /*...*/
+    \end{lstlisting}
+
+  \item \label{concept} Simd concepts
+    \begin{itemize}
+      \item Constrain whether a type is a \simdT with \std\code{integral<T>}.
+      \item Constrain whether a type is either \std\code{integral} or a \simdT
+        with \std\code{integral<T>}.
+    \end{itemize}
+
+\end{enumerate}
+
+\subsection{Status quo (latest revision of \code{simd} papers)}
+\begin{description}
+  \item[pros]
+    \begin{itemize}
+      \item \std\code{simd} is as concise as it could possibly be.
+
+      \item Fairly good support for \simdgeneric programming.
+    \end{itemize}
+
+  \item[cons]
+    \begin{itemize}
+      \item We have a mix of non-member functions with and without
+        \code{simd_} prefix.
+
+      \item Most non-member functions would be nicer to read in code without
+        the \code{simd} prefix.
+        We introduce the prefix only because we are wary of the “name grab”
+        in \code{std}.
+        \Ie the motivation for the current naming scheme isn't the design of
+        the \code{simd} API, but the freedom to evolve the standard library
+        in the future.
+
+      \item Load and gather (which are very similar in loading a SIMD
+        “register” from a contiguous range of values) are inconsistent: One
+        uses a constructor and member function, the other only a non-member
+        function.
+
+      \item Loads, stores, and the \code{simd} generator constructor cannot
+        be used in \simdgeneric code.
+    \end{itemize}
+\end{description}
+
+\pagebreak\input{alt1}
+\pagebreak\input{alt2}
+\pagebreak\input{alt3}
+\pagebreak\input{alt4}
+\pagebreak\input{alt5}
+\pagebreak\input{alt6}
+\pagebreak\input{alt7}
+
+\pagebreak \section{Proposed polls}
+
+Any vote would be against the status quo, which so far can be summarized as:
+\begin{itemize}
+  \item types and functions go directly into \code{std}
+
+  \item when naming a function for \code{simd},
+    \begin{itemize}
+      \item if the same function exists / could exist for scalars or a range:
+        no \code{simd_} prefix,
+      \item otherwise the function name needs a \code{simd_} prefix
+    \end{itemize}
+
+  \item traits and types need a \code{simd} in their name
+\end{itemize}
+
+\wgPoll{Adopt Alternative 7 from \wgDocumentNumber\ while renaming
+  (\code{basic_})\code{simd_mask} to (\code{basic_})\code{mask} (without
+making a decision on non-member load, store, and generate)}
+{&&&&}
+
+\wgPoll{Adopt Alternative 7 from \wgDocumentNumber\ while renaming
+  (\code{basic_})\code{simd_mask} to (\code{basic_})\code{mask} and
+  (\code{basic_})\code{simd} to (\code{basic_})\code{vec} (without making a
+decision on non-member load, store, and generate)}
+{&&&&}
+
+\section{Wording}\label{sec:wording}
+
+TBD
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
