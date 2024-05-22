@@ -15,12 +15,12 @@
 
 \addbibresource{extra.bib}
 
-\newcommand\simd[1][]{\type{basic\_simd#1}\xspace}
-\newcommand\simdT{\type{basic\_simd<T>}\xspace}
-\newcommand\valuetype{\type{value\_type}\xspace}
-\newcommand\referencetype{\type{reference}\xspace}
-\newcommand\mask[1][]{\type{basic\_simd\_mask#1}\xspace}
-\newcommand\maskT{\type{basic\_simd\_mask<T>}\xspace}
+\newcommand\simd[1][]{\type{ba\-sic\_simd#1}\xspace}
+\newcommand\simdT{\type{ba\-sic\_simd\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\valuetype{\type{val\-ue\_type}\xspace}
+\newcommand\referencetype{\type{ref\-er\-ence}\xspace}
+\newcommand\mask[1][]{\type{ba\-sic\_simd\_mask#1}\xspace}
+\newcommand\maskT{\type{ba\-sic\_simd\_mask\MayBreak<\MayBreak{}T>}\xspace}
 \newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
 
 \newcommand\nativeabi{\UNSP{native-abi}}
@@ -145,15 +145,15 @@ to consider a consistency issue:
 \code{simd<T>} applies every operator and operation element-wise (unless the
 name clearly hints at a horizontal operation).
 
-While I don't think \code{simd<array<char, 4>, 4>} is a useful thing, it's also
-not completely crazy.
+While I don't think e.g. \code{simd<array<short, 4>, 2>} is a useful thing,
+it's also not completely crazy.
 However, its only interesting semantics in a \simd is data-parallel
 subscripting (apply \code{operator[]} element-wise):
 \medskip\begin{lstlisting}[style=Vc]
-using xyzw = std::array<char, 4>;
-std::simd<xyzw, 4> a = {};
-std::simd<char, 4> x = a[0];
-x[0] = x + std::integral_constant<char, 1>();
+using xyzw = std::array<short, 4>;
+std::simd<xyzw, 2> a = {};
+std::simd<short, 2> w = a[3]; // yes, simd not array: element-wise subscript!
+a[3] = w + std::integral_constant<short, 1>();
 \end{lstlisting}
 
 (This is neither going to be great for performance, nor is it clear whether we
@@ -253,10 +253,32 @@ Instead a complete new vector must be constructed.
 If the non-const subscript operator is removed from \simd and \mask, then GCC's
 restriction for constant expressions becomes \std\simd's behavior.
 
+
+\subsection{Is simd as a read-only range a sufficient replacement?}
+
+If \simd and \mask have a \code{begin()} and \code{end()} iterator, making
+them read-only random-access ranges, then accessing an element is
+equivalent to accessing a scalar from an \code{ini\-til\-iz\-er_list}:
+\medskip\begin{lstlisting}[style=Vc]
+std::simd<int, 4> v;
+auto v0 = v.begin()[0];
+auto v3 = v.begin()[3];
+\end{lstlisting}
+
+In a very similar approach, making \simd convertible to \code{array} allows
+subscripting through the array:
+\medskip\begin{lstlisting}[style=Vc]
+std::simd<int, 4> v;
+std::array a = v;
+a[1] += 1;
+v = a;
+\end{lstlisting}
+
 \subsection{Allowing for writable subscript after \CC{}26}
 
-If we want to keep the design space open, then subscripting would become even
-more awkward to use.
+If we want to keep the design space open while still overloading
+\simd\code{::operator[]}, then subscripting would become even more awkward to
+use.
 Consequently, \simd and \mask should rather have no subscript operator at all
 for \CC{}26.
 In the following exploratory examples, I will use the function names \code{get}
@@ -310,6 +332,20 @@ int x;
 element_reference(x, 0) += 1; // not impossible
 \end{lstlisting}
 
+\item make degenerate size 1 \simdT convertible to/from \code{T} (and \mask to/from \code{bool})
+  \medskip\begin{lstlisting}[style=Vc]
+std::simd<int> v;
+int v0 = permute<1>(v, [](int) { return 0; });
+v0 += 1;
+v = permute<v.size>(simd_cat(v, v0), [](int i) { return i == 0 ? v.size : i; });
+
+// not impossible:
+int x;
+int x0 = permute<1>(x, [](int) { return 0; });
+x0 += 1;
+x = permute<1>(simd_cat(x, x0), [](int i) { return i == 0 ? 1 : i; });
+  \end{lstlisting}
+
 \end{enumerate}
 
 \subsection{Discussion}
@@ -360,6 +396,30 @@ addition of an \code{element_reference} type that implements all (compound)
 assignment operators (but without restricting them to rvalue, like the current
 implicit proxy reference type does).
 Basically make example \ref{proxyoperators} work.
+
+
+\section{Proposed polls}
+
+All of these polls are phrased against the status-quo (P1928).
+Thus no concensus on all polls implies we keep the \simd and \mask subscript
+operators with proxy-reference on non-const subscripts.
+
+\wgPoll{Remove non-const \code{operator[]} from \simd and \mask. ($\Rightarrow$
+Subscripting will stay read-only forever.)}{&&&&}
+
+\wgPoll{Remove all subscript operators if we make \simd and \mask random-access
+ranges (TBD). ($\Rightarrow$ status-quo until paper making \simd and \mask a
+range lands.)}{&&&&}
+
+\wgPoll{Replace subscript operators by member \code{get} and \code{set}
+functions (names TBD).}{&&&&}
+
+\wgPoll{Replace subscript operators by non-member \code{get} and \code{set}
+functions (names TBD).}{&&&&}
+
+\wgPoll{Replace subscript operators by \code{element_reference} and \code{set}
+functions (names TBD).}{&&&&}
+
 
 \section{Wording}\label{sec:wording}
 
