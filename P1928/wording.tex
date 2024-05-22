@@ -44,14 +44,14 @@ driven by a common instruction decoder.
 \end{note}
 
 \pnum
+The term \defn{data-parallel type} refers to all supported (\ref{simd.overview}) specializations of the \tcode{basic_simd} and \tcode{basic_simd_mask} class templates. A \defn{data-parallel object} is an object of \term{data-parallel type}.
+
+\pnum
 A data-parallel type consists of one or more elements of an underlying vectorizable type,
 called the \defn{element type}.
 The number of elements is a constant for each data-parallel type and called the
 \defn{width} of that type.
-The sequence of elements contained in a data-parallel-type 
-
-\pnum
-The term \defn{data-parallel type} refers to all supported (\ref{simd.overview}) specializations of the \tcode{basic_simd} and \tcode{basic_simd_mask} class templates. A \defn{data-parallel object} is an object of \term{data-parallel type}.
+The elements in a data-parallel type are indexed from 0 to $\textrm{width} - 1$.
 
 \pnum\label{wording.vectorizable.types}%
 The set of \defn{vectorizable types} comprises all standard integer types,
@@ -150,16 +150,16 @@ namespace std {
   template<size_t Bs, class Abi>
     constexpr @\simdsizetype@ reduce_count(const basic_simd_mask<Bs, Abi>&) noexcept;
   template<size_t Bs, class Abi>
-    constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bs, Abi>&) noexcept;
+    constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bs, Abi>&);
   template<size_t Bs, class Abi>
-    constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bs, Abi>&) noexcept;
+    constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bs, Abi>&);
 
   constexpr bool all_of(same_as<bool> auto) noexcept;
   constexpr bool any_of(same_as<bool> auto) noexcept;
   constexpr bool none_of(same_as<bool> auto) noexcept;
   constexpr @\simdsizetype@ reduce_count(same_as<bool> auto) noexcept;
-  constexpr @\simdsizetype@ reduce_min_index(same_as<bool> auto) noexcept;
-  constexpr @\simdsizetype@ reduce_max_index(same_as<bool> auto) noexcept;
+  constexpr @\simdsizetype@ reduce_min_index(same_as<bool> auto);
+  constexpr @\simdsizetype@ reduce_max_index(same_as<bool> auto);
 
   // \ref{simd.reductions}, \tcode{basic_simd} reductions
   template<class T, class Abi, class BinaryOperation = plus<>>
@@ -263,26 +263,39 @@ translation unit boundaries (e.g. function calls or I/O).
 An implementation defines ABI tag types as necessary for the following
 exposition-only aliases.
 
-\pnum
-\tcode{\deducet<T, N>} results in a substitution failure if
+\pnum\label{wording.deducet}
+\tcode{\deducet<T, N>} is defined if
 \begin{itemize}
-  \item \tcode{T} is not a vectorizable type, or
-  \item \tcode{N} is larger than an implementation-defined maximum.
+  \item \tcode{T} is a vectorizable type, and
+  \item \tcode{N} greater than zero but no larger than an implementation-defined maximum.
 \end{itemize}
-The implementation-defined maximum for \tcode{N} is no smaller than 64.
+The implementation-defined maximum for \tcode{N} is no smaller than 64
+and can differ depending on \tcode{T}.
 
 \pnum
 Where present, \tcode{\deducet<T, N>} names an ABI tag type that satisfies
 \begin{itemize}
   \item \tcode{\simdsizev<T, \deducet<T, N>> == N}, and
-  \item \tcode{basic_simd<T, \deducet<T, N>>} is default constructible (see \ref{simd.overview}).
+  \item \tcode{basic_simd<T, \deducet<T, N>>} is supported (see \ref{simd.overview}).
+  \item \tcode{basic_simd<T, \deducet<T, N>>} is supported (see \ref{simd.overview}).
 \end{itemize}
 
-%\pnum TODO???
+% TODO: If we really want the Abis... pack back this needs a paper to LEWG.
+%       The pack allows e.g. to stay with ymm registers even when zmm is available,
+%         or to implement an MMX ABI that doesn't get used unless explicitly called for.
+%       Also one can imagine a target with multiple different SIMD execution facilities
+%         where moving between them has a high cost and shouldn't happen without a request.
 %\begin{note}
-%The value of \tcode{max_fixed_size<T>} can depend on compiler flags and can
-%change between different compiler versions.
+  %If multiple ABI tags can satisfy the above conditions, differences in \tcode{Abis...} can lead to different results.
 %\end{note}
+
+\INFO{I removed the paragraph saying “The type of \tcode{\deducet<T, N>} in
+  translation unit 1 differs from the type of \tcode{\deducet<T, N>} in
+  translation unit 2 if and only if the type of \tcode{\nativeabi<T>} in
+  translation unit 1 differs from the type of \tcode{\nativeabi<T>} in
+  translation unit 2.” after consulting Jens.
+  He said I can't reasonably say anything about working around ODR problems in an implementation.
+Implementations thus have to figure this out on their own.}
 
 \pnum
 \tcode{\nativeabi<T>} is an implementation-defined alias for an ABI tag.
@@ -303,12 +316,6 @@ type of the \tcode{\nativeabi<T>} alias.
     \item \tcode{__simd128} otherwise.
   \end{itemize}
 \end{example}
-
-\pnum\label{wording.deducet}
-The type of \tcode{\deducet<T, N>} in translation unit 1 differs from the type
-of \tcode{\deducet<T, N>} in translation unit 2 if and only if the type of
-\tcode{\nativeabi<T>} in translation unit 1 differs from the type of
-\tcode{\nativeabi<T>} in translation unit 2.
 
 \rSec1[simd.traits]{\tcode{simd} type traits}
 
@@ -341,11 +348,11 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   \begin{itemize}
     \item \tcode{V} is either \tcode{basic_simd<U, Abi0>} or \tcode{basic_simd_mask<UBytes, Abi0>}, where \tcode{U}, \tcode{UBytes}, and \tcode{Abi0} are deduced from \tcode{V}, and
     \item \tcode{T} is a vectorizable type, and
-    \item \tcode{simd_abi::deduce<T, basic_simd<U, Abi0>::size, Abi0>} has a member type \tcode{type}.
+    \item \tcode{\deducet<T, V::size()>} has a member type \tcode{type}.
   \end{itemize}
 
   \pnum
-  Let \tcode{Abi1} denote the type \tcode{deduce_t<T, basic_simd<U, Abi0>::size, Abi0>}.
+  Let \tcode{Abi1} denote the type \tcode{\deducet<T, V::size()>}.
   Where present, the member typedef \tcode{type} names
   \tcode{basic_simd<T, Abi1>} if \tcode V is \tcode{basic_simd<U, Abi0>} or
   \tcode{basic_simd_mask<sizeof(T), Abi1>} if \tcode V is \tcode{basic_simd_mask<UBytes, Abi0>}.
@@ -430,7 +437,7 @@ public:
   using mask_type = basic_simd_mask<sizeof(T), Abi>;
   using abi_type = Abi;
 
-  static constexpr integral_constant<@\simdsizetype@, @\seebelow@> size;
+  static constexpr integral_constant<@\simdsizetype@, @\simdsizev@<T, Abi>> size {};
 
   constexpr basic_simd() noexcept = default;
 
@@ -511,52 +518,39 @@ public:
 \end{codeblock}
 
 \pnum
-The class template \tcode{basic_simd} is a data-parallel type. The width of a given \tcode{basic_simd} specialization is a constant expression, determined by the template parameters.
-
-\TODO{
-  \todoitem \code{basic_simd} is not a data-parallel type. Only its supported
-  specializations are.
-}
+The specializations of class template \tcode{basic_simd} are data-parallel types.
 
 \pnum
 Every specialization of \tcode{basic_simd} is a complete type.
-The specialization \tcode{basic_simd<T, Abi>} is \defn{supported} if \tcode{T} is a vectorizable type and
-\begin{itemize}
-  \item \tcode{Abi} is \tcode{simd_abi::scalar}, or
-  \item \tcode{Abi} is \tcode{simd_abi::fixed_size<N>}, with \tcode{N} constrained as defined in \ref{simd.abi}.
-\end{itemize}
+The types \tcode{basic_simd<T, \deducet<T, N>>} for all vectorizable
+\tcode{T} and with \tcode{N} in the range of \tcode{[1, 64]} are \defn{supported}.
+It is \impdef\ whether any other \tcode{basic_simd<T, Abi>} specializations
+with vectorizable \tcode{T} are supported.
 
-It is implementation-defined whether \tcode{basic_simd<T, Abi>} is supported.
 \begin{note}
-The intent is for implementations to decide on the basis of the currently
-targeted system.
+  The intent is for implementations to determine on the basis of the currently
+  targeted system, whether \tcode{basic_simd<T, Abi>} is supported.
 \end{note}
+\FIXME{drop the note?}
 
-If \tcode{basic_simd<T, Abi>} is not supported, the specialization shall have a deleted default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
-Otherwise, the following are true:
-\begin{itemize}
-  \item \tcode{is_nothrow_move_constructible_v<basic_simd<T, Abi>>}, and
-  \item \tcode{is_nothrow_move_assignable_v<basic_simd<T, Abi>>}, and
-  \item \tcode{is_nothrow_default_constructible_v<basic_simd<T, Abi>>}.
-\end{itemize}
+If \tcode{basic_simd<T, Abi>} is not supported, the specialization has a
+deleted default constructor, deleted destructor, deleted copy constructor, and
+deleted copy assignment.
+In addition only the \tcode{value_type}, \tcode{abi_type}, and
+\tcode{mask_type} members are present.
 
-\begin{example}
-  Consider an implementation that defines the ABI tags \tcode{__simd_x} and \tcode{__gpu_y}. When the compiler is invoked to translate to a machine that has support for the \tcode{__simd_x} ABI tag for all arithmetic types other than \tcode{long double} and no support for the \tcode{__gpu_y} ABI tag, then:
-  \begin{itemize}
-    \item \tcode{basic_simd<T, simd_abi::__gpu_y>} is not supported for any \tcode{T} and has a deleted constructor.
-    \item \tcode{basic_simd<long double, simd_abi::__simd_x>} is not supported and has a deleted constructor.
-    \item \tcode{basic_simd<double, simd_abi::__simd_x>} is supported.
-    \item \tcode{basic_simd<long double, simd_abi::scalar>} is supported.
-  \end{itemize}
-\end{example}
+If \tcode{basic_simd<T, Abi>} is supported, \tcode{is_trivial_v<basic_simd<T, Abi>>} is true.
 
 \pnum
 Default initialization performs no initialization of the elements;
 value-initialization initializes each element with \tcode{T()}.
 \begin{note}Thus, default initialization leaves the elements in an indeterminate state.\end{note}
+\FIXME{This follows from \tcode{is_trivial}, so just drop it?}
 
 \pnum
-Implementations should enable explicit conversion from and to implementation-defined types. This adds one or more of the following declarations to class \tcode{basic_simd}:
+Implementations are encouraged to enable explicit conversion from and to
+implementation-defined types. This adds one or more of the following
+declarations to class \tcode{basic_simd}:
 
 \begin{codeblock}
 constexpr explicit operator @\impdef@() const;
@@ -573,17 +567,6 @@ constexpr explicit basic_simd(const @\impdef@& init);
     }
   \end{codeblock}
 \end{example}
-
-\rSec2[simd.width]{\tcode{basic_simd} width}
-
-\begin{itemdecl}
-static constexpr integral_constant<@\simdsizetype@, @\seebelow@> size;
-\end{itemdecl}
-
-\begin{itemdescr}
-    \pnum \tcode{size} is an \tcode{integral_constant<@\simdsizetype@, N>} with \tcode{N} equal to the number of elements in a \tcode{basic_simd} object.
-    \pnum \begin{note}This member is present even if the particular \tcode{basic_simd} specialization is not supported.\end{note}
-\end{itemdescr}
 
 \rSec2[simd.reference]{Element references}
 
@@ -753,7 +736,7 @@ template<class U, class UAbi> constexpr explicit(@\seebelow@)
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{basic_simd<U, UAbi>::size() == size()}.
+  \tcode{\simdsizev<U, UAbi> == size()}.
 
   \pnum\effects
   Constructs an object where the $i^\text{th}$ element equals \tcode{static_cast<T>(x[$i$])} \foralli.
@@ -1316,14 +1299,14 @@ template<class T, class Abi>
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr auto simd_split(const basic_simd<typename V::value_type, Abi>& x) noexcept;
+  constexpr auto simd_split(const basic_simd<typename T::value_type, Abi>& x) noexcept;
 template<class T, class Abi>
   constexpr auto simd_split(const basic_simd_mask<@\maskelementsize@<T>, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   % probably not necessary/helpful:
-  %\pnum\mandates \tcode{V::size() <= basic_simd<V::value_type, Abi>::size}.
+  %\pnum\mandates \tcode{T::size() <= \simdsizev<V::value_type, Abi>}.
 
   \pnum\constraints
   \begin{itemize}
@@ -1331,23 +1314,23 @@ template<class T, class Abi>
     \item For the second overload \tcode{T} is a specialization of \tcode{basic_simd_mask}.
   \end{itemize}
 
-  \pnum Let $N$ be \tcode{x.size() / V::size()}.
+  \pnum Let $N$ be \tcode{x.size() / T::size()}.
 
     \pnum\returns
     \begin{itemize}
-      \item If \tcode{x.size() \% V::size() == 0}, an \tcode{array<T, $N$>} with
+      \item If \tcode{x.size() \% T::size() == 0}, an \tcode{array<T, $N$>} with
         the $i^\text{th}$ \simd or \mask element of the $j^\text{th}$ \tcode{array}
         element initialized to the value of the element in \tcode{x} with index
-        \tcode{$i$ + $j$ * V::size()}.
+        \tcode{$i$ + $j$ * T::size()}.
 
       \item Otherwise, a \tcode{tuple} of $N$ objects of type \tcode{T} and one
-        object of type \tcode{resize_simd_t<x.size() \% V::size(), T>}.
+        object of type \tcode{resize_simd_t<x.size() \% T::size(), T>}.
         The $i^\text{th}$ \simd or \mask element of the $j^\text{th}$
         \tcode{tuple} element of type \tcode{T} is initialized to the value of
-        the element in \tcode{x} with index \tcode{$i$ + $j$ * V::size()}.
+        the element in \tcode{x} with index \tcode{$i$ + $j$ * T::size()}.
         The $i^\text{th}$ \simd or \mask element of the \code{N}$^\text{th}$
         \tcode{tuple} element is initialized to the value of the element in
-        \tcode{x} with index \tcode{$i$ + $N$ * V::size()}.
+        \tcode{x} with index \tcode{$i$ + $N$ * T::size()}.
     \end{itemize}
   \end{itemdescr}
 
@@ -1468,9 +1451,9 @@ For each set of overloaded functions within \tcode{<cmath>}, there shall be addi
 \begin{itemize}
   \item All arguments corresponding to \tcode{double} parameters shall be convertible to \tcode{basic_simd<T, Abi>}.
   \item All arguments corresponding to \tcode{double*} parameters shall be of type \tcode{basic_simd<T, Abi>*}.
-  \item All arguments corresponding to parameters of integral type \tcode{U} shall be convertible to \tcode{simd<U, basic_simd<T, Abi>::size>}.
-  \item All arguments corresponding to \tcode{U*}, where \tcode{U} is integral, shall be of type \tcode{simd<U, basic_simd<T, Abi>::size>*}.
-  \item If the corresponding return type is \tcode{double}, the return type of the additional overloads is \tcode{basic_simd<T, Abi>}. Otherwise, if the corresponding return type is \tcode{bool}, the return type of the additional overload is \tcode{basic_simd_mask<T, Abi>}. Otherwise, the return type is \tcode{simd<R, basic_simd<T, Abi>::size>}, with \tcode{R} denoting the corresponding return type.
+  \item All arguments corresponding to parameters of integral type \tcode{U} shall be convertible to \tcode{rebind_simd_t<U, basic_simd<T, Abi>>}.
+  \item All arguments corresponding to \tcode{U*}, where \tcode{U} is integral, shall be of type \tcode{rebind_simd_t<U, basic_simd<T, Abi>>*}.
+  \item If the corresponding return type is \tcode{double}, the return type of the additional overloads is \tcode{basic_simd<T, Abi>}. Otherwise, if the corresponding return type is \tcode{bool}, the return type of the additional overload is \tcode{basic_simd<T, Abi>::mask_type}. Otherwise, the return type is \tcode{rebind_simd_t<R, basic_simd<T, Abi>>}, with \tcode{R} denoting the corresponding return type.
 \end{itemize}
 It is unspecified whether a call to these overloads with arguments that are all convertible to \tcode{basic_simd<T, Abi>} but are not of type \tcode{basic_simd<T, Abi>} is well-formed.
 
@@ -1482,7 +1465,7 @@ The result is unspecified if a domain, pole, or range error occurs when the inpu
 \begin{note}Implementations are encouraged to follow the C specification (especially Annex F).\end{note}
 
 \pnum
-TODO: Allow \tcode{abs(basic_simd<\textrm{signed-integral}>)}.
+\FIXME{Allow \tcode{abs(basic_simd<\textrm{signed-integral}>)}.}
 
 \pnum
 If \tcode{abs} is called with an argument of type \tcode{basic_simd<X, Abi>} for which \tcode{is_unsigned_v<X>} is \tcode{true}, the program is ill-formed.
@@ -1498,7 +1481,7 @@ public:
   using reference = @\seebelow@;
   using abi_type = Abi;
 
-  static constexpr auto size = basic_simd<@\integerfrom@<Bytes>, Abi>::size;
+  static constexpr integral_constant<@\simdsizetype@, @\simdsizev@<@\integerfrom@<Bytes>, Abi>> size {};
 
   constexpr basic_simd_mask() noexcept = default;
 
@@ -1582,14 +1565,11 @@ public:
 \end{codeblock}
 
 \pnum
-The class template \tcode{basic_simd_mask} is a data-parallel type with the element type \tcode{bool}. The width of a given \tcode{basic_simd_mask} specialization is a constant expression, determined by the template parameters. Specifically, \tcode{basic_simd_mask<T, Abi>::size() == basic_simd<T, Abi>::size()}.
+The specializations of class template \tcode{basic_simd_mask} are data-parallel types with element type \tcode{bool}.
 
 \pnum
-Every specialization of \tcode{basic_simd_mask} is a complete type. The specialization \tcode{basic_simd_mask<T, Abi>} is supported if \tcode{T} is a vectorizable type and
-\begin{itemize}
-  \item \tcode{Abi} is \tcode{simd_abi::scalar}, or
-  \item \tcode{Abi} is \tcode{simd_abi::fixed_size<N>}, with \tcode{N} constrained as defined in (\ref{simd.abi}).
-\end{itemize}
+Every specialization of \tcode{basic_simd_mask} is a complete type.
+The specialization \tcode{basic_simd_mask<Bytes, Abi>} is not supported if the type \tcode{@\integerfrom@<Bytes>} does not exist or if it is not a vectorizable type.
 
 It is implementation-defined whether \tcode{basic_simd_mask<T, Abi>} is supported.
 \begin{note}The intent is for implementations to decide on the basis of the currently targeted system.\end{note}
@@ -1988,24 +1968,28 @@ template<size_t Bytes, class Abi>
 
 \begin{itemdecl}
 template<size_t Bytes, class Abi>
-  constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bytes, Abi>& k) noexcept;
+  constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bytes, Abi>& k);
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\expects
+  \tcode{any_of(k)} is \tcode{true}.
+
   \pnum\returns
-  If \tcode{none_of(k)} is \tcode{true}, \tcode{size()}, otherwise the lowest
-  element index $i$ where \tcode{k[$i$]} is \tcode{true}.
+  The lowest element index $i$ where \tcode{k[$i$]} is \tcode{true}.
 \end{itemdescr}
 
 \begin{itemdecl}
 template<size_t Bytes, class Abi>
-  constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bytes, Abi>& k) noexcept;
+  constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bytes, Abi>& k);
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\expects
+  \tcode{any_of(k)} is \tcode{true}.
+
   \pnum\returns
-  If \tcode{none_of(k)} is \tcode{true}, \tcode{-1}, otherwise the greatest
-  element index $i$ where \tcode{k[$i$]} is \tcode{true}.
+  The greatest element index $i$ where \tcode{k[$i$]} is \tcode{true}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -2013,17 +1997,25 @@ constexpr bool all_of(same_as<bool> auto) noexcept;
 constexpr bool any_of(same_as<bool> auto) noexcept;
 constexpr bool none_of(same_as<bool> auto) noexcept;
 constexpr @\simdsizetype@ reduce_count(same_as<bool> auto x) noexcept;
-constexpr @\simdsizetype@ reduce_min_index(same_as<bool> auto y) noexcept;
-constexpr @\simdsizetype@ reduce_max_index(same_as<bool> auto z) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\returns
   \tcode{all_of} and \tcode{any_of} return their arguments; \tcode{none_of}
   returns the negation of its argument; \tcode{reduce_count} returns the
-  integral representation of \tcode{x}; \tcode{reduce_min_index} returns the
-  integral representation of \tcode{!y}; \tcode{reduce_max_index} returns
-  \tcode{-!z}.
+  integral representation of \tcode{x}.
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr @\simdsizetype@ reduce_min_index(same_as<bool> auto y);
+constexpr @\simdsizetype@ reduce_max_index(same_as<bool> auto z);
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\expects
+  The value of the argument is \tcode{true}.
+
+  \pnum\returns \code{0}.
 \end{itemdescr}
 
 % vim: tw=0

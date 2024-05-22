@@ -194,3 +194,21 @@ simd_loadstore_alignment&2}\bigskip
 \wgPoll{Modify P1928D6 (“simd”) as described above, and then send the revised paper to library for \CC{}26, to be confirmed with a library evolution electronic poll.}
 {16  & 3  & 1  &  0 &0   }
 
+\subsection{LEWG Telecon 2024-01-16}
+\wgPoll{Restore the precondition on \code{reduce_min_index(empty_mask)} and
+\code{reduce_max_index(empty_mask)} (TS status quo, UB).}
+{7 &6 &1 &0 &0}
+
+\wgPoll{Return an unspecified value on \code{reduce_min_index(empty_mask)} and
+\code{reduce_max_index(empty_mask)}.}
+{0 &7 &3 &1 &2}
+
+\wgPoll{Return \code{std::optional} from \code{reduce_min_index} and \code{reduce_max_index}.}
+{0 &1 &2 &7 &4}
+
+\wgPoll{Modify P1928R8 (Merge data-parallel types from the Parallelism TS 2) by
+  restoring the TS specification for
+  \code{reduce_min_index}/\code{reduce_max_index} and adding the change to
+  16.4.2.3 to list the header, and then send the revised paper to LWG for C++26
+to be confirmed with a Library Evolution electronic poll.}
+{9 &2 &0 &1 &1}

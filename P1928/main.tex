@@ -1,6 +1,6 @@
 \newcommand\wgTitle{std::simd --- merge data-parallel types from the Parallelism TS 2}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D1928R9}
+\newcommand\wgDocumentNumber{P1928R9}
 \newcommand\wgGroup{LWG, LEWG}
 \newcommand\wgTarget{\CC{}26}
 \newcommand\wgAcknowledgements{Thanks to Daniel Towner, Ruslan Arutyunyan, Jonathan Müller, Jeff Garland, and Nicolas Morales for discussions and/or pull requests on this/previous paper(s).}
@@ -490,38 +490,17 @@ The utility of such a crippled \simd is highly questionable.
 Note that freestanding is just the baseline requirement and embedded targets
 are still free to add \code{simd} support.
 
-\section{Open questions / Outlook}
-\subsection{Correct place for \code{simd} in the IS?}
-
-While \code{simd} is certainly very important for numerics and therefore fits into the “Numerics library” clause, it is also more than that.
-E.g. \code{simd} can be used for vectorization of text processing.
-In principle \code{simd} should be understood similar to fundamental types.
-Is the “General utilities library” clause a better place?
-Or rename “Concurrency support library” to “Parallelism and concurrency support library” and put it there?
-Alternatively, add a new library clause?
-
-I am seeking feedback before making a recommendation.
-
-\TODO{
-  \todoitem LWG prefers to append “Data-parallel types” to the “Numerics library”.
-}
-
+\section{Outlook}
 \subsection{\code{element_reference} is overspecified}
 \code{element_reference} is spelled out in a lot of detail.
 It may be better to define its requirements in a list of requirements or a table instead.
 
 This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
 
-\subsection{Implementation hints}\label{sec:implnote}
-We should consider the addition of a note recommending implementations let
-\simd and \mask operations behave like operations of built-in types.
-Specifically, built-in operators are never function calls\footnote{The
-exception may be soft-float?}.
-(cf. \href{https://gcc.gnu.org/PR108030}{GCC PR108030})
-
-\TODO{
-  \todoitem Left completely to QoI. No new note.
-}
+As an alternative \cite{P3275R0} discusses removal of non-const subscripts
+altogether.
+This would imply removal of \code{element_reference}, simplifying the wording
+by a good chunk.
 
 \subsection{Clean up math function overloads}
 The wording that produces \simd overloads misses a few cases and leaves room for ambiguity.
@@ -606,311 +585,311 @@ follow-up paper, then \code{simd} will automatically be formatted as a range.
 This seems to be a good solution unless there is a demand to format \code{simd}
 objects differently from \code{random_access_range}.
 
-\section{Changes after LEWG approval (for LEWG)}
-
-\subsection{\code{simd_select} overload set}\label{sec:simdselectwording}
-
-\wglink{P1928R6} presented the following overload set of the exposition-only
-hidden friend \code{\simdselect}:
-\begin{codeblock}
-template<class T, class Abi> class basic_simd {
-  // [...]
-  friend constexpr basic_simd @\simdselect@(
-    const mask_type&, const basic_simd&, const basic_simd&) noexcept; // #1
-};
-// [...]
-template<size_t Bytes, class Abi> class basic_simd_mask {
-  // [...]
-  friend constexpr basic_simd_mask @\simdselect@(
-    const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept; // #2
-  friend constexpr basic_simd_mask @\simdselect@(
-    const basic_simd_mask&, bool, bool) noexcept; // #3
-  template <class T0, class T1>
-    friend constexpr basic_simd<@\seebelow@, Abi>
-      @\simdselect@(const basic_simd_mask&, const T0&, const T1&) noexcept; // #4
-};
-\end{codeblock}
-
-Given \code{std::simd_select(std::simd<double, 4>() == 0, 1, 2)}, the compiler
-would choose overload \code{\#3} because \code{int} is convertible to
-\code{bool} and \code{\#4} is constrained, requiring
-\code{sizeof(\UNSP{non-promoting-common-type}<T0, T1>) == sizeof(double)}.
-That does not match the design intent.
-The intent was for non-boolean and non-simd arguments to pick overload
-\code{\#4} or fail to compile.
-This can be achieved either by replacing \code{bool} with a type that is
-convertible from \code{bool} only, or via \code{same_as<bool> auto} instead of
-\code{bool}.
-The former leads to puzzling error messages, because overload \code{\#4} is not
-mentioned in the resulting diagnostics.
-The latter will lead to a listing of all candidates and the reason why they
-were not viable.
-
-Therefore, the wording for overload \code{\#3} was changed to say
-\code{same_as<bool> auto} instead of \code{bool}.
-
-
-\subsection{Tighten \code{simd_split} specification}\label{sec:bettersimdsplitwording}
-
-The reviewed wording (Varna 2023) for \code{simd_split} left the “epilogue”
-\simd object(s) unspecified.
-A user of \code{simd_split} therefore would have to cope with implementations
-returning one or more \simd objects for the otherwise same input parameters.
-Consider the case
-\code{simd_split\MayBreak{}<\MayBreak{}simd\MayBreak{}<\MayBreak{}int, 8>>(x)}
-with \code{simd\MayBreak{}<\MayBreak{}int, 15>}.
-One implementation might return
-\\\code{tuple<simd<int, 8>, simd<int, 7>>}\\
-while another implementation returns
-\\\code{tuple<simd<int, 8>, simd<int, 4>, simd<int, 2>, simd<int, 1>>}\\
-and yet another could choose to return
-\\\code{tuple<simd<int, 8>, simd<int, 4>, simd<int, 3>>}.
-There are good reasons for either one of these.
-However, letting the implementation choose which one is best doesn't really
-help the user of the interface.
-Therefore, the wording was modified to return a single “epilogue” \simd object.
-In the example above, the user is thus returned a \code{simd<int, 7>} on every
-implementation and can choose to apply another \code{simd_split} to arrive at
-\code{tuple<simd<int, 4>, simd<int, 3>>} and so on.
-
-\subsection{Reconsider precondition on mask reductions}\label{sec:removemaskreductionprecondition}
-
-As directed by LEWG, the precondition on \code{reduce_min_index} and
-\code{reduce_max_index} was removed from the latest wording.
-This required a specification of the return value for the missing case.
-The following results were chosen:
-\begin{enumerate}
-  \item \code{reduce_min_index(simd_mask<int, 4>(false))} returns \code{4} (the SIMD width)
-
-  \item \code{reduce_max_index(simd_mask<int, 4>(false))} returns \code{-1}
-
-  \item \code{reduce_min_index(false)} returns \code{1}
-
-  \item \code{reduce_max_index(false)} returns \code{-1}
-\end{enumerate}
-
-\subsubsection{New information}
-It was always stated in LEWG discussions that removal of the precondition has
-no performance cost on modern processors.
-This is true for some cases but not in general.
-Consider \code{reduce_min_index(simd_mask<int, 4>(...))}: A reasonable x86
-implementation will either already use a bit-mask (AVX512) or turn the
-vector-mask into a bit-mask (e.g. \code{movmskps}).
-\std\code{countr_zero} can be used to determine the position of the first
-non-zero bit in the bit-mask.
-If, however, the given mask was empty, then \code{countr_zero} will return the
-width of the given integer type, typically \code{32}.
-The correct answer for \code{reduce_min_index} needs to be \code{4}, though.
-So a fix-up is required.
-This could either be a branch on \code{32} or the implementation can
-unconditionally set the bit at index 4 before calling \code{countr_zero}.
-In any case, code size increases.
-In the branch-free implementation, the latency of the \code{reduce_min_index}
-call unconditionally increases by one clock cycle.
-
-While avoiding UB is nice, the usefulness of returning \mask\code{::size()} or
-\code{-1} is questionable.
-How can these numbers be used other than for branching?
-Isn't it better to branch on \code{none_of(mask)} before calling
-\code{reduce_min_index}?
-If the goal is to avoid UB, then we need to consider whether the current state
-actually helps. Consider:
-\medskip\begin{lstlisting}
-auto f(std::simd<float> x) {
-  return x[std::reduce_min_index(x < 0.f)];
-}
-\end{lstlisting}
-Here we see a precondition violation on subscripting \code{x}, unless at least one value in \code{x} is negative.
-Currently there are two possible solutions:
-\medskip\begin{lstlisting}[style=Vc]
-auto f(std::simd<float> x) {
-  if (any_of(x < 0.f)
-    return x[std::reduce_min_index(x < 0.f)];
-  return 0.f;
-}
-\end{lstlisting}
-or
-\medskip\begin{lstlisting}[style=Vc]
-auto f(std::simd<float> x) {
-  int i = std::reduce_min_index(x < 0.f);
-  if (i < x.size)
-    return x[i];
-  return 0.f;
-}
-\end{lstlisting}
-The first solution is more efficient and, in my opinion, more readable.
-If unchecked use of \code{reduce_min_index}/\code{reduce_max_index} doesn't
-lead to UB, then it likely leads to logical errors.
-
-In order to follow the “don't pay for whay you don't use” guideline, the
-precondition should be restored. Or:
-
-\subsubsection{Alternative 1}
-Instead of UB, the reduction functions could also return an unspecified value.
-Better even, an unspecified value outside of the range of valid subscript
-indices could be returned (e.g. 32 instead of 4).
-Maybe debug builds can be encouraged to diagnose calls with an empty
-mask\footnote{I guess Contracts would only trigger for a real precondition,
-a.k.a. UB?}.
-
-\subsubsection{Alternative 2}
-The functions could also return \code{std::optional<\simdsizetype>}.
-Exploration results using GCC 13 below.
-The current state of how GCC optimizes the \code{std::optional} case is
-really good, but still more expensive on average than the solution returning an
-unspecified value.
-Note the \code{unspecified_value_nocheck} solution which optimizes even further
-by dropping the compare instruction, reducing execution latency even more.
-(This is valid because \code{vmovmskps} extracts the sign bits into the
-\code{eax} register.)
-
-Personally, I'm also bothered by the “out of place” need to call
-\code{.value()} or add a \code{*}.
-This introduces an inconsistency in how a very similar set of functions needs
-to be used.
-
-Considering the typical use (that the code branches before calling
-\code{reduce_min_index}) and our ability to avoid UB I recommend to return any
-unspecified value if \code{none_of(mask)}.
-
-\paragraph{unspecified value}
-\medskip\begin{lstlisting}
-int unspecified_value(std::simd<int> x)
-{
-  if (any_of(x < 0))
-    return reduce_min_index(x < 0);
-  return -1;
-}
-\end{lstlisting}
-
-\medskip\begin{lstlisting}[language=asm]
-unspecified_value(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
-	vmovdqa	ymm1, ymm0
-	vpxor	xmm0, xmm0, xmm0
-	vpcmpgtd	ymm0, ymm0, ymm1
-	vptest	ymm0, ymm0
-	je	.L10
-	vmovmskps	eax, ymm0
-	tzcnt	eax, eax
-	ret
-.L10:
-	mov	eax, -1
-	ret
-\end{lstlisting}
-
-\medskip\begin{lstlisting}
-int unspecified_value_nocheck(std::simd<int> x)
-{
-  x[1] = -1;
-  return reduce_min_index(x < 0);
-}
-\end{lstlisting}
-
-\medskip\begin{lstlisting}[language=asm]
-unspecified_value_nocheck(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
-	mov	eax, -1
-	vpinsrd	xmm1, xmm0, eax, 1
-	vinserti128	ymm0, ymm0, xmm1, 0x0
-	vmovmskps	eax, ymm0
-	tzcnt	eax, eax
-	ret
-\end{lstlisting}
-
-\paragraph{optional}
-
-\medskip\begin{lstlisting}
-int opt1(std::simd<int> x)
-{
-  if (any_of(x < 0))
-    return reduce_min_index_opt(x < 0).value();
-  return -1;
-}
-\end{lstlisting}
-
-\medskip\begin{lstlisting}[language=asm]
-opt1(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
-	vmovdqa	ymm1, ymm0
-	vpxor	xmm0, xmm0, xmm0
-	vpcmpgtd	ymm0, ymm0, ymm1
-	vptest	ymm0, ymm0
-	je	.L13
-	vmovmskps	eax, ymm0
-	tzcnt	eax, eax
-	ret
----------------------------------------------
-.L13:
-	mov	eax, -1
-	ret
-\end{lstlisting}
-
-\medskip\begin{lstlisting}
-int opt2(std::simd<int> x)
-{
-  auto opt = reduce_min_index_opt(x < 0);
-  return opt.value_or(-1);
-}
-\end{lstlisting}
-
-\medskip\begin{lstlisting}[language=asm]
-opt2(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
-	vmovdqa	ymm1, ymm0
-	vpxor	xmm0, xmm0, xmm0
-	xor	edx, edx
-	vpcmpgtd	ymm0, ymm0, ymm1
-	vptest	ymm0, ymm0
-	vmovmskps	eax, ymm0
-	sete	dl
-	tzcnt	eax, eax
-	test	edx, edx
-	mov	edx, -1
-	cmovne	eax, edx
-	ret
-\end{lstlisting}
-
-\medskip\begin{lstlisting}
-int opt_nocheck(std::simd<int> x)
-{
-  x[1] = -1;
-  return reduce_min_index_opt(x < 0).value();
-}
-\end{lstlisting}
-
-\medskip\begin{lstlisting}[language=asm]
-opt_nocheck(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
-	mov	eax, -1
-	vpinsrd	xmm1, xmm0, eax, 1
-	vinserti128	ymm0, ymm0, xmm1, 0x0
-	vpxor	xmm1, xmm1, xmm1
-	vpcmpgtd	ymm0, ymm1, ymm0
-	vptest	ymm0, ymm0
-	je	.L19
-	vmovmskps	eax, ymm0
-	tzcnt	eax, eax
-	ret
----------------------------------------------
-opt_nocheck(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >) [clone .cold]:
----------------------------------------------
-.L19:
-	push	rbp
-	mov	rbp, rsp
-	and	rsp, -32
-	vzeroupper
-	call	std::__throw_bad_optional_access()
-\end{lstlisting}
-
-\subsubsection{Suggested Polls}
-\wgPoll{Restore the precondition on \code{reduce_min_index(empty_mask)} and
-\code{reduce_max_index(empty_mask)} (TS status quo).}
-{&&&&}
-
-\wgPoll{Return an unspecified value on \code{reduce_min_index(empty_mask)} and
-\code{reduce_max_index(empty_mask)}.}
-{&&&&}
-
-\wgPoll{Return \code{std::optional<\simdsizetype>} from
-\code{reduce_min_index} and \code{reduce_max_index}.}
-{&&&&}
-
+%\section{Changes after LEWG approval (for LEWG)}
+%
+%\subsection{\code{simd_select} overload set}\label{sec:simdselectwording}
+%
+%\wglink{P1928R6} presented the following overload set of the exposition-only
+%hidden friend \code{\simdselect}:
+%\begin{codeblock}
+%template<class T, class Abi> class basic_simd {
+%  // [...]
+%  friend constexpr basic_simd @\simdselect@(
+%    const mask_type&, const basic_simd&, const basic_simd&) noexcept; // #1
+%};
+%// [...]
+%template<size_t Bytes, class Abi> class basic_simd_mask {
+%  // [...]
+%  friend constexpr basic_simd_mask @\simdselect@(
+%    const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept; // #2
+%  friend constexpr basic_simd_mask @\simdselect@(
+%    const basic_simd_mask&, bool, bool) noexcept; // #3
+%  template <class T0, class T1>
+%    friend constexpr basic_simd<@\seebelow@, Abi>
+%      @\simdselect@(const basic_simd_mask&, const T0&, const T1&) noexcept; // #4
+%};
+%\end{codeblock}
+%
+%Given \code{std::simd_select(std::simd<double, 4>() == 0, 1, 2)}, the compiler
+%would choose overload \code{\#3} because \code{int} is convertible to
+%\code{bool} and \code{\#4} is constrained, requiring
+%\code{sizeof(\UNSP{non-promoting-common-type}<T0, T1>) == sizeof(double)}.
+%That does not match the design intent.
+%The intent was for non-boolean and non-simd arguments to pick overload
+%\code{\#4} or fail to compile.
+%This can be achieved either by replacing \code{bool} with a type that is
+%convertible from \code{bool} only, or via \code{same_as<bool> auto} instead of
+%\code{bool}.
+%The former leads to puzzling error messages, because overload \code{\#4} is not
+%mentioned in the resulting diagnostics.
+%The latter will lead to a listing of all candidates and the reason why they
+%were not viable.
+%
+%Therefore, the wording for overload \code{\#3} was changed to say
+%\code{same_as<bool> auto} instead of \code{bool}.
+%
+%
+%\subsection{Tighten \code{simd_split} specification}\label{sec:bettersimdsplitwording}
+%
+%The reviewed wording (Varna 2023) for \code{simd_split} left the “epilogue”
+%\simd object(s) unspecified.
+%A user of \code{simd_split} therefore would have to cope with implementations
+%returning one or more \simd objects for the otherwise same input parameters.
+%Consider the case
+%\code{simd_split\MayBreak{}<\MayBreak{}simd\MayBreak{}<\MayBreak{}int, 8>>(x)}
+%with \code{simd\MayBreak{}<\MayBreak{}int, 15>}.
+%One implementation might return
+%\\\code{tuple<simd<int, 8>, simd<int, 7>>}\\
+%while another implementation returns
+%\\\code{tuple<simd<int, 8>, simd<int, 4>, simd<int, 2>, simd<int, 1>>}\\
+%and yet another could choose to return
+%\\\code{tuple<simd<int, 8>, simd<int, 4>, simd<int, 3>>}.
+%There are good reasons for either one of these.
+%However, letting the implementation choose which one is best doesn't really
+%help the user of the interface.
+%Therefore, the wording was modified to return a single “epilogue” \simd object.
+%In the example above, the user is thus returned a \code{simd<int, 7>} on every
+%implementation and can choose to apply another \code{simd_split} to arrive at
+%\code{tuple<simd<int, 4>, simd<int, 3>>} and so on.
+%
+%\subsection{Reconsider precondition on mask reductions}\label{sec:removemaskreductionprecondition}
+%
+%As directed by LEWG, the precondition on \code{reduce_min_index} and
+%\code{reduce_max_index} was removed from the latest wording.
+%This required a specification of the return value for the missing case.
+%The following results were chosen:
+%\begin{enumerate}
+%  \item \code{reduce_min_index(simd_mask<int, 4>(false))} returns \code{4} (the SIMD width)
+%
+%  \item \code{reduce_max_index(simd_mask<int, 4>(false))} returns \code{-1}
+%
+%  \item \code{reduce_min_index(false)} returns \code{1}
+%
+%  \item \code{reduce_max_index(false)} returns \code{-1}
+%\end{enumerate}
+%
+%\subsubsection{New information}
+%It was always stated in LEWG discussions that removal of the precondition has
+%no performance cost on modern processors.
+%This is true for some cases but not in general.
+%Consider \code{reduce_min_index(simd_mask<int, 4>(...))}: A reasonable x86
+%implementation will either already use a bit-mask (AVX512) or turn the
+%vector-mask into a bit-mask (e.g. \code{movmskps}).
+%\std\code{countr_zero} can be used to determine the position of the first
+%non-zero bit in the bit-mask.
+%If, however, the given mask was empty, then \code{countr_zero} will return the
+%width of the given integer type, typically \code{32}.
+%The correct answer for \code{reduce_min_index} needs to be \code{4}, though.
+%So a fix-up is required.
+%This could either be a branch on \code{32} or the implementation can
+%unconditionally set the bit at index 4 before calling \code{countr_zero}.
+%In any case, code size increases.
+%In the branch-free implementation, the latency of the \code{reduce_min_index}
+%call unconditionally increases by one clock cycle.
+%
+%While avoiding UB is nice, the usefulness of returning \mask\code{::size()} or
+%\code{-1} is questionable.
+%How can these numbers be used other than for branching?
+%Isn't it better to branch on \code{none_of(mask)} before calling
+%\code{reduce_min_index}?
+%If the goal is to avoid UB, then we need to consider whether the current state
+%actually helps. Consider:
+%\medskip\begin{lstlisting}
+%auto f(std::simd<float> x) {
+%  return x[std::reduce_min_index(x < 0.f)];
+%}
+%\end{lstlisting}
+%Here we see a precondition violation on subscripting \code{x}, unless at least one value in \code{x} is negative.
+%Currently there are two possible solutions:
+%\medskip\begin{lstlisting}[style=Vc]
+%auto f(std::simd<float> x) {
+%  if (any_of(x < 0.f)
+%    return x[std::reduce_min_index(x < 0.f)];
+%  return 0.f;
+%}
+%\end{lstlisting}
+%or
+%\medskip\begin{lstlisting}[style=Vc]
+%auto f(std::simd<float> x) {
+%  int i = std::reduce_min_index(x < 0.f);
+%  if (i < x.size)
+%    return x[i];
+%  return 0.f;
+%}
+%\end{lstlisting}
+%The first solution is more efficient and, in my opinion, more readable.
+%If unchecked use of \code{reduce_min_index}/\code{reduce_max_index} doesn't
+%lead to UB, then it likely leads to logical errors.
+%
+%In order to follow the “don't pay for whay you don't use” guideline, the
+%precondition should be restored. Or:
+%
+%\subsubsection{Alternative 1}
+%Instead of UB, the reduction functions could also return an unspecified value.
+%Better even, an unspecified value outside of the range of valid subscript
+%indices could be returned (e.g. 32 instead of 4).
+%Maybe debug builds can be encouraged to diagnose calls with an empty
+%mask\footnote{I guess Contracts would only trigger for a real precondition,
+%a.k.a. UB?}.
+%
+%\subsubsection{Alternative 2}
+%The functions could also return \code{std::optional<\simdsizetype>}.
+%Exploration results using GCC 13 below.
+%The current state of how GCC optimizes the \code{std::optional} case is
+%really good, but still more expensive on average than the solution returning an
+%unspecified value.
+%Note the \code{unspecified_value_nocheck} solution which optimizes even further
+%by dropping the compare instruction, reducing execution latency even more.
+%(This is valid because \code{vmovmskps} extracts the sign bits into the
+%\code{eax} register.)
+%
+%Personally, I'm also bothered by the “out of place” need to call
+%\code{.value()} or add a \code{*}.
+%This introduces an inconsistency in how a very similar set of functions needs
+%to be used.
+%
+%Considering the typical use (that the code branches before calling
+%\code{reduce_min_index}) and our ability to avoid UB I recommend to return any
+%unspecified value if \code{none_of(mask)}.
+%
+%\paragraph{unspecified value}
+%\medskip\begin{lstlisting}
+%int unspecified_value(std::simd<int> x)
+%{
+%  if (any_of(x < 0))
+%    return reduce_min_index(x < 0);
+%  return -1;
+%}
+%\end{lstlisting}
+%
+%\medskip\begin{lstlisting}[language=asm]
+%unspecified_value(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
+%	vmovdqa	ymm1, ymm0
+%	vpxor	xmm0, xmm0, xmm0
+%	vpcmpgtd	ymm0, ymm0, ymm1
+%	vptest	ymm0, ymm0
+%	je	.L10
+%	vmovmskps	eax, ymm0
+%	tzcnt	eax, eax
+%	ret
+%.L10:
+%	mov	eax, -1
+%	ret
+%\end{lstlisting}
+%
+%\medskip\begin{lstlisting}
+%int unspecified_value_nocheck(std::simd<int> x)
+%{
+%  x[1] = -1;
+%  return reduce_min_index(x < 0);
+%}
+%\end{lstlisting}
+%
+%\medskip\begin{lstlisting}[language=asm]
+%unspecified_value_nocheck(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
+%	mov	eax, -1
+%	vpinsrd	xmm1, xmm0, eax, 1
+%	vinserti128	ymm0, ymm0, xmm1, 0x0
+%	vmovmskps	eax, ymm0
+%	tzcnt	eax, eax
+%	ret
+%\end{lstlisting}
+%
+%\paragraph{optional}
+%
+%\medskip\begin{lstlisting}
+%int opt1(std::simd<int> x)
+%{
+%  if (any_of(x < 0))
+%    return reduce_min_index_opt(x < 0).value();
+%  return -1;
+%}
+%\end{lstlisting}
+%
+%\medskip\begin{lstlisting}[language=asm]
+%opt1(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
+%	vmovdqa	ymm1, ymm0
+%	vpxor	xmm0, xmm0, xmm0
+%	vpcmpgtd	ymm0, ymm0, ymm1
+%	vptest	ymm0, ymm0
+%	je	.L13
+%	vmovmskps	eax, ymm0
+%	tzcnt	eax, eax
+%	ret
+%---------------------------------------------
+%.L13:
+%	mov	eax, -1
+%	ret
+%\end{lstlisting}
+%
+%\medskip\begin{lstlisting}
+%int opt2(std::simd<int> x)
+%{
+%  auto opt = reduce_min_index_opt(x < 0);
+%  return opt.value_or(-1);
+%}
+%\end{lstlisting}
+%
+%\medskip\begin{lstlisting}[language=asm]
+%opt2(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
+%	vmovdqa	ymm1, ymm0
+%	vpxor	xmm0, xmm0, xmm0
+%	xor	edx, edx
+%	vpcmpgtd	ymm0, ymm0, ymm1
+%	vptest	ymm0, ymm0
+%	vmovmskps	eax, ymm0
+%	sete	dl
+%	tzcnt	eax, eax
+%	test	edx, edx
+%	mov	edx, -1
+%	cmovne	eax, edx
+%	ret
+%\end{lstlisting}
+%
+%\medskip\begin{lstlisting}
+%int opt_nocheck(std::simd<int> x)
+%{
+%  x[1] = -1;
+%  return reduce_min_index_opt(x < 0).value();
+%}
+%\end{lstlisting}
+%
+%\medskip\begin{lstlisting}[language=asm]
+%opt_nocheck(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >):
+%	mov	eax, -1
+%	vpinsrd	xmm1, xmm0, eax, 1
+%	vinserti128	ymm0, ymm0, xmm1, 0x0
+%	vpxor	xmm1, xmm1, xmm1
+%	vpcmpgtd	ymm0, ymm1, ymm0
+%	vptest	ymm0, ymm0
+%	je	.L19
+%	vmovmskps	eax, ymm0
+%	tzcnt	eax, eax
+%	ret
+%---------------------------------------------
+%opt_nocheck(std::basic_simd<int, std::experimental::parallelism_v2::simd_abi::_VecBuiltin<32> >) [clone .cold]:
+%---------------------------------------------
+%.L19:
+%	push	rbp
+%	mov	rbp, rsp
+%	and	rsp, -32
+%	vzeroupper
+%	call	std::__throw_bad_optional_access()
+%\end{lstlisting}
+%
+%\subsubsection{Suggested Polls}
+%\wgPoll{Restore the precondition on \code{reduce_min_index(empty_mask)} and
+%\code{reduce_max_index(empty_mask)} (TS status quo).}
+%{&&&&}
+%
+%\wgPoll{Return an unspecified value on \code{reduce_min_index(empty_mask)} and
+%\code{reduce_max_index(empty_mask)}.}
+%{&&&&}
+%
+%\wgPoll{Return \code{std::optional<\simdsizetype>} from
+%\code{reduce_min_index} and \code{reduce_max_index}.}
+%{&&&&}
+%
 \section{Wording: Add Section 9 of N4808 with modifications}\label{sec:wording}
 
 The following section presents the wording to be applied against the \CC{}

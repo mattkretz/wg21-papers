@@ -140,4 +140,8 @@
 \item Add instructions to add a new subclause to the table in [numerics.general].
 \item Add instructions to add \code{<simd>} [diff.23.library].
 \item Add \simdsizev to the wording and replace \code{simd_size_v} to actually implement “Make \code{simd_size} exposition-only.”
+\item Restored precondition (and removed \code{noexcept}) on
+  \code{reduce_min_index} and \code{reduce_max_index} as directed by LEWG.
 \end{revision}
+
+  %\todo Reorder \code{simd} and \code{simd_mask} specification in the wording (mask first).
