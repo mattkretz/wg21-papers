@@ -1,9 +1,10 @@
 \newcommand\wgTitle{Replace simd operator[] with getter and setter functions --- or not}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D3275R0}
+\newcommand\wgDocumentNumber{P3275R0}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
-%\newcommand\wgAcknowledgements{Thanks to Daniel Towner, Ruslan Arutyunyan, Jonathan Müller, Jeff Garland, and Nicolas Morales for discussions and/or pull requests on this/previous paper(s).}
+\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed
+to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
 
 \usepackage{mymacros}
 \usepackage{wg21}
@@ -332,7 +333,7 @@ int x;
 element_reference(x, 0) += 1; // not impossible
 \end{lstlisting}
 
-\item make degenerate size 1 \simdT convertible to/from \code{T} (and \mask to/from \code{bool})
+\item make degenerate size 1 \simdT convertible to/from \code{T} (and \mask to/from \code{bool})\footnote{\code{permute<1>} returns a \code{simd<int, 1>}, which could be implicitly convertible to \code{int}.}
   \medskip\begin{lstlisting}[style=Vc]
 std::simd<int> v;
 int v0 = permute<1>(v, [](int) { return 0; });
@@ -357,6 +358,9 @@ In my opinion, the missing compound read-modify-write syntax in examples
 
 Further observations on the above examples:
 \begin{itemize}
+  \item Making \code{simd<T, 1>} convertible to \code{T} seems interesting, but
+    not like a solution to this problem.
+
   \item \code{set(x, y, z)} is not intuitive whereas \code{x[y] = z} cleary
     states the intended operation.
 
