@@ -43,6 +43,13 @@ driven by a common instruction decoder.
 %transparent fallback to sequential execution.
 \end{note}
 
+\pnum\label{wording.vectorizable.types}%
+The set of \defn{vectorizable types} comprises all standard integer types,
+character types, and the types \tcode{float} and \tcode{double}
+([basic.fundamental]).
+In addition, \tcode{std::float16_t}, \tcode{std::float32_t}, and
+\tcode{std::float64_t} are vectorizable types if defined ([basic.extended.fp]).
+
 \pnum
 The term \defn{data-parallel type} refers to all supported (\ref{simd.overview}) specializations of the \tcode{basic_simd} and \tcode{basic_simd_mask} class templates. A \defn{data-parallel object} is an object of \term{data-parallel type}.
 
@@ -52,13 +59,6 @@ called the \defn{element type}.
 The number of elements is a constant for each data-parallel type and called the
 \defn{width} of that type.
 The elements in a data-parallel type are indexed from 0 to $\textrm{width} - 1$.
-
-\pnum\label{wording.vectorizable.types}%
-The set of \defn{vectorizable types} comprises all standard integer types,
-character types, and the types \tcode{float} and \tcode{double}
-([basic.fundamental]).
-In addition, \tcode{std::float16_t}, \tcode{std::float32_t}, and
-\tcode{std::float64_t} are vectorizable types if defined ([basic.extended.fp]).
 
 \pnum
 An \defn{element-wise operation} applies a specified operation to the elements of one or more data-parallel objects. Each such application is unsequenced with respect to the others. A \defn{unary element-wise operation} is an element-wise operation that applies a unary operation to each element of a data-parallel object. A \defn{binary element-wise operation} is an element-wise operation that applies a binary operation to corresponding elements of two data-parallel objects.
