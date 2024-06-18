@@ -248,7 +248,7 @@ representation for objects of data-parallel type.
   The intent is for the size and binary representation to depend on the target
   architecture and compiler flags.
 \end{note}
-The ABI tag, together with a given element type implies the width.
+The ABI tag, together with a given element type, implies the width.
 
 \pnum
 \begin{note}
@@ -276,7 +276,6 @@ Where present, \tcode{\deducet<T, N>} names an ABI tag type that satisfies
 \begin{itemize}
   \item \tcode{\simdsizev<T, \deducet<T, N>> == N}, and
   \item \tcode{basic_simd<T, \deducet<T, N>>} is supported (see \ref{simd.overview}).
-  \item \tcode{basic_simd<T, \deducet<T, N>>} is supported (see \ref{simd.overview}).
 \end{itemize}
 
 % TODO: If we really want the Abis... pack back this needs a paper to LEWG.
@@ -302,13 +301,13 @@ Implementations thus have to figure this out on their own.}
 The intent is to use the ABI tag producing the most efficient data-parallel
 execution for the element type \tcode{T} that is supported on the currently
 targeted system.
-For target architectures with ISA extensions, compiler flags may change the
+For target architectures with ISA extensions, compiler flags can change the
 type of the \tcode{\nativeabi<T>} alias.
 \end{note}
 \begin{example}
   Consider a target architecture supporting the ABI tags
   \tcode{__simd128} and \tcode{__simd256}, where hardware support for
-  \tcode{__simd256} only exists for floating-point types.
+  \tcode{__simd256} exists only for floating-point types.
   The implementation therefore defines \tcode{\nativeabi<T>} as an alias for
   \begin{itemize}
     \item \tcode{__simd256} if \tcode{T} is a floating-point type, and
