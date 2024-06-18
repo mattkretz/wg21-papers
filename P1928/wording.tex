@@ -1568,7 +1568,7 @@ The specializations of class template \tcode{basic_simd_mask} are data-parallel 
 
 \pnum
 Every specialization of \tcode{basic_simd_mask} is a complete type.
-The specialization \tcode{basic_simd_mask<Bytes, Abi>} is not supported if the type \tcode{@\integerfrom@<Bytes>} does not exist or if it is not a vectorizable type.
+The specialization \tcode{basic_simd_mask<Bytes, Abi>} is not supported if the type \tcode{\integerfrom<Bytes>} does not exist or if it is not a vectorizable type.
 
 It is implementation-defined whether \tcode{basic_simd_mask<T, Abi>} is supported.
 \begin{note}The intent is for implementations to decide on the basis of the currently targeted system.\end{note}
