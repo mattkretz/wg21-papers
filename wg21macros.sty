@@ -342,7 +342,7 @@
 
 \newcounter{TonyTable}
 
-\newenvironment{tonytableX}[2][before&with \wgDocumentNumber{}]{%
+\newenvironment{tonytable}[2][before]{%
 \renewcommand\tablename{Tony Table}%
 \let\prevthetable\thetable%
 \addtocounter{table}{-1}%
@@ -352,19 +352,13 @@
 \caption{#2}
 \smaller%
 \begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
-#1\\
+#1&with \wgDocumentNumber\\
 \hline
 }{%
 \end{tabular}%
 \end{table}%
 \let\thetable\prevthetable%
 \renewcommand\tablename{Table}%
-}
-
-\newenvironment{tonytable}[2][before]{%
-\begin{tonytableX}[#1&with \wgDocumentNumber{}]%
-}{%
-\end{tonytableX}%
 }
 
 \newcommand\UnaryTypeTrait{\texttt{UnaryTypeTrait}\xspace}
