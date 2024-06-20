@@ -12,7 +12,7 @@ This repository holds the LuaLaTeX sources for my papers to the C++ committee.
 | [P0917](https://wg21.link/p0917) | [D0917](https://web-docs.gsi.de/~mkretz/D0917.pdf) | Making operator?: overloadable            | EWG, needs revision        |
 | [P0964](https://wg21.link/p0964) | [D0964](https://web-docs.gsi.de/~mkretz/D0964.pdf) | Finding the right set of traits for `simd<T>` | finished               |
 | [P1915](https://wg21.link/p1915) | [D1915](https://web-docs.gsi.de/~mkretz/D1915.pdf) | Expected feedback on simd in TS           | finished                   |
-| [P1928](https://wg21.link/p1928) | [D1928](https://web-docs.gsi.de/~mkretz/D1928.pdf) | std::simd                                 | LEWG                       |
+| [P1928](https://wg21.link/p1928) | [D1928](https://web-docs.gsi.de/~mkretz/D1928.pdf) | std::simd                                 | LWG                        |
 | [P2551](https://wg21.link/p2551) | [D2551](https://web-docs.gsi.de/~mkretz/D2551.pdf) | Clarify intent of P1841 numeric traits    | finished, needs P1841 revision |
 | TODO                             | [DNMSO](https://web-docs.gsi.de/~mkretz/DNMSO.pdf) | Non-member subscript operator             | drafting                   |
 | TODO                             | [DDSHR](https://web-docs.gsi.de/~mkretz/DDSHR.pdf) | `= delete` should have a reason           | drafting                   |
@@ -20,6 +20,9 @@ This repository holds the LuaLaTeX sources for my papers to the C++ committee.
 | [P2614](https://wg21.link/p2614) |                                                    | Deprecate numeric_limits::has_denorm      | accepted for C++23    |
 | [P2772](https://wg21.link/p2772) |                                                    | `std::integral_constant` literals do not suffice — `constexpr_t`? | superseded by P2781 |
 | TODO                             | [DFPEP](https://web-docs.gsi.de/~mkretz/DFPEP.pdf) | Floating-Point Excess Precision           | drafting                   |
+| [P3275](https://wg21.link/p3275) | [D3275](https://web-docs.gsi.de/~mkretz/D3275.pdf) | Replace simd operator[] with getter and setter functions --- or not | LEWG |
+| [P3287](https://wg21.link/p3287) | [D3287](https://web-docs.gsi.de/~mkretz/D3287.pdf) | Exploration of namespaces for std::simd   | LEWG                       |
+| [P3319](https://wg21.link/p3319) | [D3319](https://web-docs.gsi.de/~mkretz/D3319.pdf) | Add an iota object for simd (and more)    | LEWG                       |
 
 
 To build the papers you need make, LuaLaTeX (only tested with a recent TeXLive distribution), and Biber.
