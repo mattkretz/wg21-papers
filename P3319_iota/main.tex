@@ -1,0 +1,143 @@
+\newcommand\wgTitle{Add an iota object for simd (and more)}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{P3319R0}
+\newcommand\wgGroup{LEWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{ba\-sic\_simd#1}\xspace}
+\newcommand\simdT{\type{ba\-sic\_simd\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\valuetype{\type{val\-ue\_type}\xspace}
+\newcommand\referencetype{\type{ref\-er\-ence}\xspace}
+\newcommand\mask[1][]{\type{ba\-sic\_simd\_mask#1}\xspace}
+\newcommand\maskT{\type{ba\-sic\_simd\_mask\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\newcommand\nativeabi{\UNSP{native-abi}}
+\newcommand\deducet{\UNSP{deduce-t}}
+\newcommand\simdsizev{\UNSP{simd-size-v}}
+\newcommand\simdsizetype{\UNSP{simd-size-type}}
+\newcommand\simdselect{\UNSP{simd-select-impl}}
+\newcommand\maskelementsize{\UNSP{mask-element-size}}
+\newcommand\integerfrom{\UNSP{integer-from}}
+\newcommand\constexprwrapperlike{\UNSP{constexpr-wrapper-like}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  There is one important constant in SIMD programming: \code{{0, 1, 2, 3,
+  ...}}. In the standard library we have an algorithm called \code{iota} that
+  can initialize a range with such values. For \code{simd} we want to have
+  simple to spell constants that scale with the SIMD width. This paper proposes
+  a simple facility that can be generalized.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\section{Motivation}
+The 90\% use case for simd generator constructors is a simd with values 0, 1,
+2, 3, \ldots{} potentially with scaling and offset applied.
+However, often it would be more easier and more readable to use an “iota”
+\code{simd} object instead.
+
+\begingroup
+  \smaller[1]
+\begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
+  generator ctor & iota \\
+  \hline
+  \begin{lstlisting}
+std::simd<int> a([](int i) { return i; };
+
+std::simd<int> b([](int i) { return 2 + 3 * i; };
+  \end{lstlisting}
+  &
+  \begin{lstlisting}
+auto a = std::iota_v<std::simd<int>>;
+
+auto b = 2 + 3 * std::iota_v<std::simd<int>>;
+  \end{lstlisting}
+\end{tabular}
+\endgroup
+
+The minimal definition I propose for \simd can look like this:
+\medskip\begin{lstlisting}[style=Vc]
+  template <class T>
+    inline constexpr T
+    iota_v;
+
+  template <class T>
+    requires(std::is_arithmetic_v<T>)
+    inline constexpr T
+    iota_v<T> = T();
+
+  template <detail::simd_type T>
+    inline constexpr T
+    iota_v<T> = T([](auto i) { return static_cast<typename T::value_type>(i); });
+\end{lstlisting}
+
+
+\section{Generalization}
+If we define a (\code{constexpr}) variable template \std\code{iota_v<T>} where
+\code{T} must be a \simd type, we're simply filling a sequence of values.
+We can create such an object for any type with static extent.
+This is especially interesting for the degenerate case in SIMD-generic
+programming, where \code{T} could \eg be an \code{int}.
+A \std\code{iota_v<int>} is nothing other than an object \code{int} with value
+\code{0}.
+We can easily generalize to \code{iota_v<std::array<T, N>>} and
+\code{iota_v<T[N]>}.
+And the next step then is to allow any type that
+\begin{itemize}
+  \item has a static extent,
+  \item has a \code{value_type} member type,
+  \item can be list-initialized with \code{N} numbers of type
+    \code{value_type}, where \code{N} equals the static extent of the type, and
+  \item where \code{value_type() + 1} is an constant expression and convertible to \code{value_type}.
+\end{itemize}
+
+Consequently you could write
+\medskip\begin{lstlisting}[style=Vc]
+auto x = std::iota_v<float[5]>;
+auto y = std::iota_v<std::array<my_fixed_point, 8>>;
+// ...
+\end{lstlisting}
+
+\section{Relation to list-initialization of \code{simd}}
+If we add a constructor to \simd that enables list-initialization, then many
+users might use that in place of a generator constructor.
+This leads to code that doesn't scale with the vector width anymore.
+Therefore we should provide a simple facility that works better and is more
+portable.
+
+\section{Proposed polls}
+
+\wgPoll{We want an iota facility for \simd}{&&&&}
+
+\wgPoll{The iota facility should be generalized to scalars}{&&&&}
+
+\wgPoll{The iota facility should be generalized to any sequence of static extent}{&&&&}
+
+\section{Wording}\label{sec:wording}
+
+TBD after deciding on the preferred solution.
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0
