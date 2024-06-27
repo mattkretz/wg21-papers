@@ -750,7 +750,7 @@ template<class U, class UAbi>
   \tcode{\simdsizev<U, UAbi> == size()} is \tcode{true}.
 
   \pnum\effects
-  Constructs an object where the $i^\text{th}$ element equals \tcode{static_cast<T>(x[$i$])} \foralli.
+  Initializes the $i^\text{th}$ element with \tcode{static_cast<T>(x[$i$])} \foralli.
 
   \pnum\remarks
   %The constructor is \tcode{explicit} if
@@ -779,8 +779,8 @@ template<class G> constexpr basic_simd(G&& gen) noexcept;
   \foralli.
 
   \pnum\effects
-  Constructs an object where the $i^\text{th}$ element is initialized to
-  \tcode{gen(integral_constant<\simdsizetype, i>())}.
+  Initializes the $i^\text{th}$ element with
+  \tcode{gen(integral_constant<\simdsizetype, i>())} \foralli.
 
   \pnum
     The calls to \tcode{gen} are unsequenced with respect to each other.
@@ -819,7 +819,7 @@ template<class It, class... Flags>
 \begin{itemdescr}
   \SimdLoadDescr
     {\tcode{[first, first + size())} is a valid range.}
-    {Constructs an object where the $i^\text{th}$ element is initialized to \tcode{static_cast<T>(first[$i$])} \foralli.}
+    {Initializes the $i^\text{th}$ element with \tcode{static_cast<T>(first[$i$])} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -830,7 +830,7 @@ template<class It, class... Flags>
 \begin{itemdescr}
   \SimdLoadDescr
     {\validMaskedRange}
-    {Constructs an object where the $i^\text{th}$ element is initialized to \tcode{mask[$i$] ? static_cast<T>(first[$i$]) : T()} \foralli.}
+    {Initializes the $i^\text{th}$ element with \tcode{mask[$i$] ? static_cast<T>(first[$i$]) : T()} \foralli.}
 \end{itemdescr}
 
 \rSec2[simd.copy]{\tcode{basic_simd} copy functions}
@@ -1623,7 +1623,7 @@ constexpr explicit basic_simd_mask(value_type x) noexcept;
 
 \begin{itemdescr}
   \pnum\effects
-  Constructs an object with each element initialized to \tcode{x}.
+  Initializes each element with \tcode{x}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1636,7 +1636,7 @@ template<size_t UBytes, class UAbi>
   \tcode{\simdsizev<U, UAbi> == size()}.
 
   \pnum\effects
-  Constructs an object of type \tcode{basic_simd_mask} where the $i^\text{th}$ element equals \tcode{x[$i$]} \foralli.
+  Initializes the $i^\text{th}$ element with \tcode{x[$i$]} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1649,8 +1649,8 @@ template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
   well-formed \foralli.
 
   \pnum\effects
-  Constructs an object where the $i^\text{th}$ element is initialized to
-  \tcode{gen(integral_constant<\simdsizetype, i>())}.
+  Initializes the $i^\text{th}$ element with
+  \tcode{gen(integral_constant<\simdsizetype, i>())} \foralli.
 
   \pnum
   The calls to \tcode{gen} are unsequenced with respect to each other.
@@ -1684,7 +1684,7 @@ template<class It, class... Flags>
 \begin{itemdescr}
   \MaskLoadDescr
     {\tcode{[first, first + size())} is a valid range.}
-    {Constructs an object where the $i^\text{th}$ element is initialized to \tcode{first[$i$]} \foralli.}
+    {Initializes the $i^\text{th}$ element with \tcode{first[$i$]} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1695,7 +1695,7 @@ template<class It, class... Flags>
 \begin{itemdescr}
   \MaskLoadDescr
     {\validMaskedRange}
-    {Constructs an object where the $i^\text{th}$ element is initialized to \tcode{mask[$i$] ? first[$i$] : false} \foralli.}
+    {Initializes the $i^\text{th}$ element with \tcode{mask[$i$] ? first[$i$] : false} \foralli.}
 \end{itemdescr}
 
 \rSec2[simd.mask.copy]{\tcode{basic_simd_mask} copy functions}
