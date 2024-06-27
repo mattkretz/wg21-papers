@@ -776,8 +776,9 @@ template<class G> constexpr basic_simd(G&& gen) noexcept;
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{basic_simd(gen(integral_constant<\simdsizetype, i>()))} is well-formed
-  \foralli.
+  \tcode{basic_simd(gen(integral_constant<\simdsizetype, $i$>()))} is well-formed
+  and the return type of \tcode{gen(integral_constant<\simdsizetype, $i$>())}
+  satisfies \tcode{convertible_to<value_type>} \foralli.
 
   \pnum\effects
   Initializes the $i^\text{th}$ element with
