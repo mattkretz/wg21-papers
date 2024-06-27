@@ -793,7 +793,7 @@ template<class G> constexpr basic_simd(G&& gen) noexcept;
   \pnum\constraints
   \begin{itemize}
     \item \tcode{iter_value_t<It>} is a vectorizable type, and
-    \item \tcode{It} satisfies \tcode{contiguous_iterator}.
+    \item \tcode{It} models \tcode{contiguous_iterator}.
   \end{itemize}
 
   \pnum\mandates
@@ -802,7 +802,6 @@ template<class G> constexpr basic_simd(G&& gen) noexcept;
   \pnum\expects
   \begin{itemize}
     \item #1
-    \item \tcode{It} models \tcode{contiguous_iterator}.
     \flagsRequires{basic_simd, iter_value_t<It>}{iter_value_t<It>}
   \end{itemize}
 
@@ -861,8 +860,8 @@ template<class It, class... Flags>
   \pnum\constraints
   \begin{itemize}
     \item \tcode{iter_value_t<Out>} is a vectorizable type, and
-    \item \tcode{Out} satisfies \tcode{contiguous_iterator}, and
-    \item \tcode{Out} satisfies \tcode{indirectly_writable<value_type>}.
+    \item \tcode{Out} models \tcode{contiguous_iterator}, and
+    \item \tcode{Out} models \tcode{indirectly_writable<value_type>}.
   \end{itemize}
 
   \pnum\mandates
@@ -871,8 +870,6 @@ template<class It, class... Flags>
   \pnum\expects
   \begin{itemize}
     \item #1
-    \item \tcode{Out} models \tcode{contiguous_iterator}.
-    \item \tcode{Out} models \tcode{indirectly_writable<value_type>}.
     \flagsRequires{basic_simd, iter_value_t<Out>}{iter_value_t<Out>}
   \end{itemize}
 
@@ -1252,9 +1249,6 @@ template<class T, class Abi> constexpr T reduce_min(const basic_simd<T, Abi>& x)
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{T} satisfies \tcode{totally_ordered}.
-
-  \pnum\expects
   \tcode{T} models \tcode{totally_ordered}.
 
   \pnum\returns
@@ -1269,9 +1263,6 @@ template<class T, class Abi>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{T} satisfies \tcode{totally_ordered}.
-
-  \pnum\expects
   \tcode{T} models \tcode{totally_ordered}.
 
   \pnum\returns
@@ -1285,9 +1276,6 @@ template<class T, class Abi> constexpr T reduce_max(const basic_simd<T, Abi>& x)
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{T} satisfies \tcode{totally_ordered}.
-
-  \pnum\expects
   \tcode{T} models \tcode{totally_ordered}.
 
   \pnum\returns
@@ -1302,9 +1290,6 @@ template<class T, class Abi>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{T} satisfies \tcode{totally_ordered}.
-
-  \pnum\expects
   \tcode{T} models \tcode{totally_ordered}.
 
   \pnum\returns
@@ -1375,9 +1360,6 @@ template<class T, class Abi>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{T} satisfies \tcode{totally_ordered}.
-
-  \pnum\expects
   \tcode{T} models \tcode{totally_ordered}.
 
   \pnum\returns
@@ -1391,9 +1373,6 @@ template<class T, class Abi>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{T} satisfies \tcode{totally_ordered}.
-
-  \pnum\expects
   \tcode{T} models \tcode{totally_ordered}.
 
   \pnum\returns
@@ -1408,9 +1387,6 @@ template<class T, class Abi>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{T} satisfies \tcode{totally_ordered}.
-
-  \pnum\expects
   \tcode{T} models \tcode{totally_ordered}.
 
   \pnum\returns
@@ -1429,9 +1405,6 @@ template<class T, class Abi>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{T} satisfies \tcode{totally_ordered}.
-
-  \pnum\expects
   \tcode{T} models \tcode{totally_ordered}.
 
   \pnum\expects
@@ -1661,13 +1634,12 @@ template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
   \pnum\constraints
   \begin{itemize}
     \item \tcode{iter_value_t<It>} is of type \tcode{bool}, and
-    \item \tcode{It} satisfies \tcode{contiguous_iterator}.
+    \item \tcode{It} models \tcode{contiguous_iterator}.
   \end{itemize}
 
   \pnum\expects
   \begin{itemize}
     \item #1
-    \item \tcode{It} models \tcode{contiguous_iterator}.
     \flagsRequires{basic_simd_mask}{value_type}
   \end{itemize}
 
@@ -1726,15 +1698,13 @@ template<class It, class... Flags>
   \pnum\constraints
   \begin{itemize}
     \item \tcode{iter_value_t<Out>} is of type \tcode{bool}, and
-    \item \tcode{Out} satisfies \tcode{contiguous_iterator}, and
-    \item \tcode{Out} satisfies \tcode{indirectly_writable<value_type>}.
+    \item \tcode{Out} models \tcode{contiguous_iterator}, and
+    \item \tcode{Out} models \tcode{indirectly_writable<value_type>}.
   \end{itemize}
 
   \pnum\expects
   \begin{itemize}
     \item #1
-    \item \tcode{Out} models \tcode{contiguous_iterator}.
-    \item \tcode{Out} models \tcode{indirectly_writable<value_type>}.
     \flagsRequires{basic_simd_mask}{value_type}
   \end{itemize}
 
