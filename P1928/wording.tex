@@ -5,7 +5,7 @@
   \or\error
 \fi}
 
-\renewcommand\foralli[1][]{for all $i$ in the range of \tcode{[0, #1size())}}
+\renewcommand\foralli[1][]{for all $i$ in the range of [\tcode{0, #1size()})}
 %\renewcommand\forallmaskedi{for all selected indices $i$}
 
 \newcommand\validMaskedRange[1][first]{For all selected indices $i$,
@@ -265,10 +265,11 @@ An implementation defines ABI tag types as necessary for the following aliases.
 \pnum\label{wording.deducet}
 \tcode{\deducet<T, N>} is defined if
 \begin{itemize}
-  \item \tcode{T} is a vectorizable type, and
-  \item \tcode{N} greater than zero but no larger than an implementation-defined maximum.
+  \item \tcode{T} is a vectorizable type,
+  \item \tcode{N} is greater than zero, and
+  \item \tcode{N} is not larger than an implementation-defined maximum.
 \end{itemize}
-The implementation-defined maximum for \tcode{N} is no smaller than 64
+The implementation-defined maximum for \tcode{N} is not smaller than 64
 and can differ depending on \tcode{T}.
 
 \pnum
@@ -303,7 +304,7 @@ execution for the element type \tcode{T} that is supported on the currently
 targeted system.
 For target architectures with ISA extensions, compiler flags can change the
 type of the \tcode{\nativeabi<T>} alias.
-\end{note}
+\end{note}\\
 \begin{example}
   Consider a target architecture supporting the ABI tags
   \tcode{__simd128} and \tcode{__simd256}, where hardware support for
@@ -323,7 +324,7 @@ template<class T, class U = typename T::value_type> struct simd_alignment { @\se
 
 \begin{itemdescr}
 \pnum
-\tcode{simd_alignment<T, U>} shall have a member \tcode{value} if and only if
+\tcode{simd_alignment<T, U>} has a member \tcode{value} if and only if
 \begin{itemize}
   \item \tcode{T} is a specialization of \tcode{basic_simd_mask} and \tcode{U} is \tcode{bool}, or
   \item \tcode{T} is a specialization of \tcode{basic_simd} and \tcode{U} is a vectorizable type.
@@ -344,16 +345,19 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   \pnum
   The member \tcode{type} is present if and only if
   \begin{itemize}
-    \item \tcode{V} is either \tcode{basic_simd<U, Abi0>} or \tcode{basic_simd_mask<UBytes, Abi0>}, where \tcode{U}, \tcode{UBytes}, and \tcode{Abi0} are deduced from \tcode{V}, and
+    \item \tcode{V} is either a specialization of \tcode{basic_simd} or
+      \tcode{basic_simd_mask},
     \item \tcode{T} is a vectorizable type, and
     \item \tcode{\deducet<T, V::size()>} has a member type \tcode{type}.
   \end{itemize}
 
   \pnum
-  Let \tcode{Abi1} denote the type \tcode{\deducet<T, V::size()>}.
-  Where present, the member typedef \tcode{type} names
-  \tcode{basic_simd<T, Abi1>} if \tcode V is \tcode{basic_simd<U, Abi0>} or
-  \tcode{basic_simd_mask<sizeof(T), Abi1>} if \tcode V is \tcode{basic_simd_mask<UBytes, Abi0>}.
+  Let \tcode{Abi1} denote an ABI tag such that \tcode{basic_simd<T,
+  Abi1>::size() == V::size()}.
+  Where present, the member typedef \tcode{type} names \tcode{basic_simd<T,
+  Abi1>} if \tcode V is a specialization of \tcode{basic_simd} or
+  \tcode{basic_simd_mask<sizeof(T), Abi1>} if \tcode V is a specialization of
+  \tcode{basic_simd_mask}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -361,16 +365,29 @@ template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelo
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum
-  The member \tcode{type} is present if and only if
+  \pnum Let \tcode{T} denote
   \begin{itemize}
-    \item \tcode{V} is either \tcode{basic_simd<T, Abi0>} or \tcode{basic_simd_mask<Bytes, Abi0>}, where \tcode T, \tcode{Bytes}, and \tcode{Abi0} are deduced from \tcode V, and
-    \item \tcode{simd_abi::deduce<T, N, Abi0>} has a member type \tcode{type}.
+    \item \tcode{V::value_type} if \tcode{V} is a specialization of
+      \tcode{basic_simd} or
+    \item \tcode{\integerfrom<\maskelementsize<T>>} if \tcode{V} is a
+      specialization of \tcode{basic_simd_mask}.
   \end{itemize}
 
   \pnum
-  Let \tcode{Abi1} denote the type \tcode{deduce_t<T, N, Abi0>}.
-  Where present, the member typedef \tcode{type} names \tcode{basic_simd<T, Abi1>} if \tcode V is \tcode{basic_simd<T, Abi0>} or \tcode{basic_simd_mask<Bytes, Abi1>} if \tcode V is \tcode{basic_simd_mask<Bytes, Abi0>}.
+  The member \tcode{type} is present if and only if
+  \begin{itemize}
+    \item \tcode{V} is either a specialization of \tcode{basic_simd} or
+      \tcode{basic_simd_mask}, and
+    \item \tcode{\deducet<T, N>} has a member type \tcode{type}.
+  \end{itemize}
+
+  \pnum
+  Let \tcode{Abi1} denote an ABI tag such that \tcode{basic_simd<T,
+  Abi1>::size() == V::size()}.
+  Where present, the member typedef \tcode{type} names \tcode{basic_simd<T,
+  Abi1>} if \tcode V is a specialization of \tcode{basic_simd} or
+  \tcode{basic_simd_mask<sizeof(T), Abi1>} if \tcode V is a specialization of
+  \tcode{basic_simd_mask}.
 \end{itemdescr}
 
 \rSec1[simd.flags]{Load and store flags}
@@ -386,9 +403,6 @@ template<size_t N> requires (has_single_bit(N))
   \pnum
   The template arguments to \tcode{simd_flags} are unspecified types used
   by the implementation to identify the different load and store flags.
-
-  \pnum
-  There may be additional implementation-defined load and store flags.
 \end{itemdescr}
 
 \rSec2[simd.flags.overview]{Class template \tcode{simd_flags} overview}
@@ -402,13 +416,14 @@ template <class... Flags> struct simd_flags {
 \end{codeblock}
 
 \pnum
+\begin{note}
 The class template \tcode{simd_flags} acts like a integer bit-flag for types.
+\end{note}
 
 \pnum\constraints
 Every type in \code{Flags} is a valid template argument to one of
-\code{simd_flag_convert}, \tcode{simd_flag_aligned},
-\tcode{simd_flag_overaligned}, or to one of the implementation-defined load and
-store flags.
+\code{simd_flag_convert}, \tcode{simd_flag_aligned}, or
+\tcode{simd_flag_overaligned}.
 
 \rSec2[simd.flags.oper]{\tcode{simd_flags} operators}
 
@@ -538,12 +553,6 @@ In addition only the \tcode{value_type}, \tcode{abi_type}, and
 \tcode{mask_type} members are present.
 
 If \tcode{basic_simd<T, Abi>} is supported, \tcode{is_trivial_v<basic_simd<T, Abi>>} is true.
-
-\pnum
-Default initialization performs no initialization of the elements;
-value-initialization initializes each element with \tcode{T()}.
-\begin{note}Thus, default initialization leaves the elements in an indeterminate state.\end{note}
-\FIXME{This follows from \tcode{is_trivial}, so just drop it?}
 
 \pnum
 Implementations are encouraged to enable explicit conversion from and to
@@ -728,32 +737,33 @@ template<class U> constexpr basic_simd(U&&) noexcept;
   \end{itemize}
 
   \pnum\effects
-  Constructs an object with each element initialized to the value of the argument after conversion to \tcode{value_type}.
+  Initializes each element to the value of the argument after conversion to \tcode{value_type}.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class U, class UAbi> constexpr explicit(@\seebelow@)
-  basic_simd(const basic_simd<U, UAbi>& x) noexcept;
+template<class U, class UAbi>
+  constexpr explicit(@\seebelow@) basic_simd(const basic_simd<U, UAbi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{\simdsizev<U, UAbi> == size()}.
+  \tcode{\simdsizev<U, UAbi> == size()} is \tcode{true}.
 
   \pnum\effects
   Constructs an object where the $i^\text{th}$ element equals \tcode{static_cast<T>(x[$i$])} \foralli.
 
   \pnum\remarks
-  The constructor is \tcode{explicit}
+  %The constructor is \tcode{explicit} if
+  The expression inside \code{explicit} evaluates to \code{true} if either
   \begin{itemize}
-    \item if the conversion from \tcode{U} to \tcode{value_type} is not
+    \item the conversion from \tcode{U} to \tcode{value_type} is not
       value-preserving, or
 
-    \item if both \tcode{U} and \tcode{value_type} are integral types and the
+    \item both \tcode{U} and \tcode{value_type} are integral types and the
       integer conversion rank (\iref{conv.rank}) of \tcode{U} is greater than
       the integer conversion rank of \tcode{value_type}, or
 
-    \item if both \tcode{U} and \tcode{value_type} are floating-point types and
+    \item both \tcode{U} and \tcode{value_type} are floating-point types and
       the floating-point conversion rank (\iref{conv.rank}) of \tcode{U} is
       greater than the floating-point conversion rank of \tcode{value_type}.
   \end{itemize}
@@ -773,7 +783,10 @@ template<class G> constexpr basic_simd(G&& gen) noexcept;
   \tcode{gen(integral_constant<\simdsizetype, i>())}.
 
   \pnum
-    The calls to \tcode{gen} are unsequenced with respect to each other. Vectorization-unsafe standard library functions may not be invoked by \tcode{gen} (\iref{algorithms.parallel.exec}). \tcode{gen} is invoked exactly once for each $i$.
+    The calls to \tcode{gen} are unsequenced with respect to each other.
+    Vectorization-unsafe (\iref{algorithms.parallel.defns}) standard library
+    functions may not be invoked by \tcode{gen}.
+    \tcode{gen} is invoked exactly once for each $i$.
 \end{itemdescr}
 
 \newcommand\SimdLoadDescr[2]{
