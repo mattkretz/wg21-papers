@@ -14,17 +14,17 @@
 [\tcode{#1, #1 + $i$ + 1}) is a valid range.}
 
 \newcommand\flagsRequires[2]{
-\item If the template parameter pack \tcode{Flags} contains the type
-  identifying \tcode{simd_flag_aligned}, \tcode{addressof(*first)} shall
-  point to storage aligned by \tcode{simd_alignment_v<#1>}.
-\item If the template parameter pack \tcode{Flags} contains the type
-  identifying \tcode{simd_flag_overaligned<N>}, \tcode{addressof(*first)}
+\item If the template parameter pack \tcode{Flags} contains
+  \tcode{\alignedflag}, \tcode{addressof(*first)} shall point to storage
+  aligned by \tcode{simd_alignment_v<#1>}.
+\item If the template parameter pack \tcode{Flags} contains
+  \tcode{\overalignedflag<N>}, \tcode{addressof(*first)}
   points to storage aligned by \tcode{N}.
 }
 
 \newcommand\conversionFlagsMandate[2]{
-  If the template parameter pack \tcode{Flags} does not contain the type
-  identifying \tcode{simd_flag_convert}, then the conversion from \tcode{#1} to
+  If the template parameter pack \tcode{Flags} does not contain
+  \tcode{\convertflag}, then the conversion from \tcode{#1} to
   \tcode{#2} is value-preserving.
 }
 
@@ -115,12 +115,16 @@ namespace std {
   template<@\simdsizetype@ N, class V> using resize_simd_t = typename resize_simd<N, V>::type;
 
   // \ref{simd.flags}, Load and store flags
+  struct @\convertflag@; // \expos
+  struct @\alignedflag@; // \expos
+  template<size_t N> struct @\overalignedflag@; // \expos
+
   template <class... Flags> struct simd_flags;
   inline constexpr simd_flags<> simd_flag_default{};
-  inline constexpr simd_flags<@\seebelow@> simd_flag_convert{};
-  inline constexpr simd_flags<@\seebelow@> simd_flag_aligned{};
+  inline constexpr simd_flags<@\convertflag@> simd_flag_convert{};
+  inline constexpr simd_flags<@\alignedflag@> simd_flag_aligned{};
   template<size_t N> requires (has_single_bit(N))
-    inline constexpr simd_flags<@\seebelow@> simd_flag_overaligned{};
+    inline constexpr simd_flags<@\overalignedflag<N>@> simd_flag_overaligned{};
 
   // \ref{simd.class}, Class template \tcode{basic_simd}
   template<class T, class Abi = @\nativeabi@<T>> class basic_simd;
@@ -400,19 +404,6 @@ template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelo
 
 \rSec1[simd.flags]{Load and store flags}
 
-\begin{itemdecl}
-inline constexpr simd_flags<@\seebelow@> simd_flag_convert{};
-inline constexpr simd_flags<@\seebelow@> simd_flag_aligned{};
-template<size_t N> requires (has_single_bit(N))
-  inline constexpr simd_flags<@\seebelow@> simd_flag_overaligned{};
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum
-  The template arguments to \tcode{simd_flags} are unspecified types used
-  by the implementation to identify the different load and store flags.
-\end{itemdescr}
-
 \rSec2[simd.flags.overview]{Class template \tcode{simd_flags} overview}
 
 \begin{codeblock}
@@ -429,9 +420,10 @@ The class template \tcode{simd_flags} acts like a integer bit-flag for types.
 \end{note}
 
 \pnum\constraints
-Every type in \code{Flags} is a valid template argument to one of
-\code{simd_flag_convert}, \tcode{simd_flag_aligned}, or
-\tcode{simd_flag_overaligned}.
+Every type in \tcode{Flags} is one of \tcode{\convertflag},
+\tcode{\alignedflag}, or \tcode{\overalignedflag<N>}.
+
+\FIXME{“\ldots for any \tcode{N}”?}
 
 \rSec2[simd.flags.oper]{\tcode{simd_flags} operators}
 
@@ -442,8 +434,14 @@ template <class... Other>
 
 \begin{itemdescr}
   \pnum\returns
-  A specialization of \tcode{simd_flags} identifying all load and
-  store flags identified either by \tcode{a} or \tcode{b}.
+  A default-initialized object of type \tcode{simd_flags<Flags2...>} where
+  every type in pack \tcode{Flags2} is present either in pack \tcode{Flags} or
+  pack \tcode{Other} and every type in packs \tcode{Flags} and \tcode{Other} is
+  present in \tcode{Flags2}.
+  Additionally, if the packs \tcode{Flags} and \tcode{Other} contain two
+  different specializations \tcode{\overalignedflag<N1>} and
+  \tcode{\overalignedflag<N2>}, \tcode{Flags2} does not have to contain the
+  specialization \tcode{\overalignedflag<std\colcol{}min(N1, N2)>}.
 \end{itemdescr}
 
 \rSec1[simd.class]{Class template \tcode{basic_simd}}
