@@ -1018,7 +1018,7 @@ constexpr basic_simd operator~() const noexcept;
   \pnum\ConstraintUnaryOperatorWellFormed{\~{}a}
 
   \pnum\returns
-  A \tcode{basic_simd} object where each bit is the inverse of the corresponding bit in \tcode{*this}.
+  A \tcode{basic_simd} object with the $i^\text{th}$ element set to \tcode{\~{}operator[]($i$)} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1066,7 +1066,7 @@ friend constexpr basic_simd operator>>(const basic_simd& lhs, const basic_simd& 
   \pnum\ConstraintOperatorTWellFormed
 
   \pnum\returns
-  A \tcode{basic_simd} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
+  A \tcode{basic_simd} object initialized with the results of applying \op{} to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1077,10 +1077,11 @@ friend constexpr basic_simd operator>>(const basic_simd& v, @\simdsizetype@ n) n
 \begin{itemdescr}
   \pnum Let \textit{op} be the operator.
 
-  \pnum\ConstraintOperatorTWellFormed
+  \pnum\constraints
+  \tcode{requires (value_type a, \simdsizetype{} b) \{ a \op{} b; \}} is \tcode{true}.
 
   \pnum\returns
-  A \tcode{basic_simd} object where the $i^\text{th}$ element is initialized to the result of applying the indicated operator to \tcode{v[$i$]} and \tcode{n} \foralli.
+  A \tcode{basic_simd} object where the $i^\text{th}$ element is initialized to the result of applying \op{} to \tcode{v[$i$]} and \tcode{n} \foralli.
 \end{itemdescr}
 
 \rSec2[simd.cassign]{\tcode{basic_simd} compound assignment}
@@ -1118,7 +1119,8 @@ friend constexpr basic_simd& operator>>=(basic_simd& lhs, @\simdsizetype@ n) noe
 \begin{itemdescr}
   \pnum Let \textit{op} be the operator.
 
-  \pnum\ConstraintOperatorTWellFormed
+  \pnum\constraints
+  \tcode{requires (value_type a, \simdsizetype{} b) \{ a \op{} b; \}} is \tcode{true}.
 
   \pnum\effects
   Equivalent to: \tcode{return operator \textit{op} (lhs, basic_simd(n));}
@@ -1141,7 +1143,7 @@ friend constexpr mask_type operator<(const basic_simd& lhs, const basic_simd& rh
   \pnum\ConstraintOperatorTWellFormed
 
   \pnum\returns
-  A \tcode{basic_simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
+  A \tcode{basic_simd_mask} object initialized with the results of applying \op{} to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
 \rSec2[simd.cond]{\tcode{basic_simd} conditional operators}
