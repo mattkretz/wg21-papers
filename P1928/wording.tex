@@ -561,8 +561,8 @@ In addition only the \tcode{value_type}, \tcode{abi_type}, and
 If \tcode{basic_simd<T, Abi>} is supported, \tcode{basic_simd<T, Abi>} is
 trivially copyable.
 
-\pnum
-Implementations are encouraged to enable explicit conversion from and to
+\pnum\recommended:
+Implementations should enable explicit conversion from and to
 implementation-defined types. This adds one or more of the following
 declarations to class \tcode{basic_simd}:
 
