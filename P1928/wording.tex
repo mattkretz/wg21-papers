@@ -454,7 +454,6 @@ template <class... Other>
 template<class T, class Abi> class basic_simd {
 public:
   using value_type = T;
-  @\wgRem{using reference = \mbox{\seebelow};}@
   using mask_type = basic_simd_mask<sizeof(T), Abi>;
   using abi_type = Abi;
 
@@ -483,8 +482,7 @@ public:
     constexpr void copy_to(Out first, const mask_type& mask, simd_flags<Flags...> f = {}) const;
 
   // \ref{simd.subscr}, \tcode{basic_simd} subscript operators
-  @\wgRem{constexpr reference operator[](\mbox{\simdsizetype}) \&;}@
-  constexpr value_type operator[](@\simdsizetype@) const@\wgRem{\&}@;
+  constexpr value_type operator[](@\simdsizetype@) const;
 
   // \ref{simd.unary}, \tcode{basic_simd} unary operators
   constexpr basic_simd& operator++() noexcept;
@@ -584,141 +582,6 @@ constexpr explicit basic_simd(const @\impdef@& init);
   \end{codeblock}
 \end{example}
 
-\begin{wgBRem}
-\rSec2[simd.reference]{\texorpdfstring{\wgRem{Element references}}{Element references}}
-
-\pnum
-\wgRem{A \tcode{reference} is an object that refers to an element in a
-  \tcode{basic_simd} or \tcode{basic_simd_mask} object.
-  \tcode{reference::value_type} is the same type as \tcode{simd::value_type} or
-\tcode{simd_mask::value_type}, respectively.}
-
-\pnum
-\wgRem{Class \tcode{reference} is for exposition only. An implementation is permitted to provide equivalent functionality without providing a class with this name.}
-
-\begingroup\noindent\ttfamily
-\st{class reference // \mbox{\expos}\\
-\{\\
-public:\\
-\ \ reference() = delete;\\
-\ \ reference(const reference\&) = delete;\\
-\\
-\ \ constexpr operator value_type() const noexcept;\\
-\\
-\ \ template<class U> constexpr reference operator=(U\&\& x) \&\& noexcept;\\
-\\
-\ \ template<class U> constexpr reference operator+=(U\&\& x) \&\& noexcept;\\
-\ \ template<class U> constexpr reference operator-=(U\&\& x) \&\& noexcept;\\
-\ \ template<class U> constexpr reference operator*=(U\&\& x) \&\& noexcept;\\
-\ \ template<class U> constexpr reference operator/=(U\&\& x) \&\& noexcept;\\
-\ \ template<class U> constexpr reference operator\%=(U\&\& x) \&\& noexcept;\\
-\ \ template<class U> constexpr reference operator|=(U\&\& x) \&\& noexcept;\\
-\ \ template<class U> constexpr reference operator\&=(U\&\& x) \&\& noexcept;\\
-\ \ template<class U> constexpr reference operator\^=(U\&\& x) \&\& noexcept;\\
-\ \ template<class U> constexpr reference operator<<=(U\&\& x) \&\& noexcept;\\
-\ \ template<class U> constexpr reference operator>>=(U\&\& x) \&\& noexcept;\\
-\\
-\ \ constexpr reference operator++() \&\& noexcept;\\
-\ \ constexpr value_type operator++(int) \&\& noexcept;\\
-\ \ constexpr reference operator--() \&\& noexcept;\\
-\ \ constexpr value_type operator--(int) \&\& noexcept;\\
-\\
-\ \ friend constexpr void swap(reference\&\& a, reference\&\& b) noexcept;\\
-\ \ friend constexpr void swap(value_type\& a, reference\&\& b) noexcept;\\
-\ \ friend constexpr void swap(reference\&\& a, value_type\& b) noexcept;\\
-\};}
-\endgroup
-
-\begin{itemdecl}
-@\wgRem{constexpr operator value_type() const noexcept;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\wgRem{\returns
-  The value of the element referred to by \tcode{*this}.}
-\end{itemdescr}
-
-\begin{itemdecl}
-@\wgRem{template<class U> constexpr reference operator=(U\&\& x) \&\& noexcept;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\wgRem{\constraints
-  \tcode{declval<value_type\&>() = std::forward<U>(x)} is well-formed.}
-
-  \pnum\wgRem{\effects
-  Replaces the referred to element in \tcode{basic_simd} or \tcode{basic_simd_mask} with \tcode{static_cast<value_type>(std\colcol{}forward<U>(x))}.}
-
-  \pnum\wgRem{\returns A copy of \tcode{*this}.}
-\end{itemdescr}
-
-\begin{itemdecl}
-@\wgRem{template<class U> constexpr reference operator+=(U\&\& x) \&\& noexcept;}@
-@\wgRem{template<class U> constexpr reference operator-=(U\&\& x) \&\& noexcept;}@
-@\wgRem{template<class U> constexpr reference operator*=(U\&\& x) \&\& noexcept;}@
-@\wgRem{template<class U> constexpr reference operator/=(U\&\& x) \&\& noexcept;}@
-@\wgRem{template<class U> constexpr reference operator\%=(U\&\& x) \&\& noexcept;}@
-@\wgRem{template<class U> constexpr reference operator|=(U\&\& x) \&\& noexcept;}@
-@\wgRem{template<class U> constexpr reference operator\&=(U\&\& x) \&\& noexcept;}@
-@\wgRem{template<class U> constexpr reference operator\^=(U\&\& x) \&\& noexcept;}@
-@\wgRem{template<class U> constexpr reference operator<<=(U\&\& x) \&\& noexcept;}@
-@\wgRem{template<class U> constexpr reference operator>>=(U\&\& x) \&\& noexcept;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\wgRem{\constraints
-  \tcode{declval<value_type\&>() @= std\colcol{}forward<U>(x)} (where \tcode{@=} denotes the indicated compound assignment operator) is well-formed.}
-
-  \pnum\wgRem{\effects
-  Applies the indicated compound operator to the referred to element in \tcode{basic_simd} or \tcode{basic_simd_mask} and \tcode{std\colcol{}forward<U>(x)}.}
-
-  \pnum\wgRem{\returns
-  A copy of \tcode{*this}.}
-\end{itemdescr}
-
-\begin{itemdecl}
-@\wgRem{constexpr reference operator++() \&\& noexcept;}@
-@\wgRem{constexpr reference operator--() \&\& noexcept;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\wgRem{\constraints
-  The indicated operator can be applied to objects of type \tcode{value_type}.}
-
-  \pnum\wgRem{\effects
-  Applies the indicated operator to the referred to element in \tcode{basic_simd} or \tcode{basic_simd_mask}.}
-
-  \pnum\wgRem{\returns
-  A copy of \tcode{*this}.}
-\end{itemdescr}
-
-\begin{itemdecl}
-@\wgRem{constexpr value_type operator++(int) \&\& noexcept;}@
-@\wgRem{constexpr value_type operator--(int) \&\& noexcept;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\wgRem{\remarks
-  The indicated operator can be applied to objects of type \tcode{value_type}.}
-
-  \pnum\wgRem{\effects
-  Applies the indicated operator to the referred to element in \tcode{basic_simd} or \tcode{basic_simd_mask}.}
-
-  \pnum\wgRem{\returns
-  A copy of the referred to element before applying the indicated operator.}
-\end{itemdescr}
-
-\begin{itemdecl}
-@\wgRem{friend constexpr void swap(reference\&\& a, reference\&\& b) noexcept;}@
-@\wgRem{friend constexpr void swap(value_type\& a, reference\&\& b) noexcept;}@
-@\wgRem{friend constexpr void swap(reference\&\& a, value_type\& b) noexcept;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\wgRem{\effects
-  Exchanges the values \tcode{a} and \tcode{b} refer to.}
-\end{itemdescr}
-\end{wgBRem}
 
 \rSec2[simd.ctor]{\tcode{basic_simd} constructors}
 
@@ -906,26 +769,10 @@ template<class Out, class... Flags>
     {Copies the selected elements as if \tcode{first[$i$] = static_cast<iter_value_t<Out>>(operator[]($i$))} \forallmaskedi.}
 \end{itemdescr}
 
-\rSec2[simd.subscr]{\tcode{basic_simd} subscript operator\texorpdfstring{\wgRem{s}}{s}}
-
-\begin{wgBRem}
-\begin{itemdecl}
-@\wgRem{constexpr reference operator[](\mbox{\simdsizetype} i) \&;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\wgRem{\expects
-  \tcode{i < size()}.}
-
-  \pnum\wgRem{\returns
-  A \tcode{reference} (see \mbox{\ref{simd.reference}}) referring to the $i^\text{th}$ element.}
-
-  \pnum\wgRem{\throws Nothing.}
-\end{itemdescr}
-\end{wgBRem}
+\rSec2[simd.subscr]{\tcode{basic_simd} subscript operator}
 
 \begin{itemdecl}
-constexpr value_type operator[](@\simdsizetype@ i) const@\wgRem{\&}@;
+constexpr value_type operator[](@\simdsizetype@ i) const;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1502,7 +1349,6 @@ If \tcode{abs} is called with an argument of type \tcode{basic_simd<X, Abi>} for
 template<size_t Bytes, class Abi> class basic_simd_mask {
 public:
   using value_type = bool;
-  @\wgRem{using reference = \mbox{\seebelow};}@
   using abi_type = Abi;
 
   static constexpr integral_constant<@\simdsizetype@, @\simdsizev@<@\integerfrom@<Bytes>, Abi>> size {};
@@ -1530,8 +1376,7 @@ public:
     constexpr void copy_to(Out first, const basic_simd_mask& mask, simd_flags<Flags...> = {}) const;
 
   // \ref{simd.mask.subscr}, \tcode{basic_simd_mask} subscript operators
-  @\wgRem{constexpr reference operator[](\mbox{\simdsizetype}) \&;}@
-  constexpr value_type operator[](@\simdsizetype@) const@\wgRem{\&}@;
+  constexpr value_type operator[](@\simdsizetype@) const;
 
   // \ref{simd.mask.unary}, \tcode{basic_simd_mask} unary operators
   constexpr basic_simd_mask operator!() const noexcept;
@@ -1616,11 +1461,6 @@ Implementations should enable explicit conversion from and to implementation-def
 constexpr explicit operator @\impdef@() const;
 constexpr explicit basic_simd_mask(const @\impdef@& init);
 \end{codeblock}
-
-\pnum
-\wgRem{The member type \tcode{reference} has the same interface as
-\tcode{basic_simd<T, Abi>::reference}, except its \tcode{value_type} is
-\tcode{bool}. (\mbox{\ref{simd.reference}})}
 
 \rSec2[simd.mask.ctor]{\tcode{basic_simd_mask} constructors}
 
@@ -1769,26 +1609,10 @@ template<class Out, class... Flags>
   {Copies the selected elements as if \tcode{first[$i$] = operator[]($i$)} \forallmaskedi.}
 \end{itemdescr}
 
-\rSec2[simd.mask.subscr]{\tcode{basic_simd_mask} subscript operator\texorpdfstring{\wgRem{s}}{s}}
-
-\begin{wgBRem}
-\begin{itemdecl}
-@\wgRem{constexpr reference operator[](\mbox{\simdsizetype} i) \&;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\wgRem{\expects
-  \tcode{i < size()}.}
-
-  \pnum\wgRem{\returns
-  A \tcode{reference} (see \mbox{\ref{simd.reference}}) referring to the $i^\text{th}$ element.}
-
-  \pnum\wgRem{\throws Nothing.}
-\end{itemdescr}
-\end{wgBRem}
+\rSec2[simd.mask.subscr]{\tcode{basic_simd_mask} subscript operator}
 
 \begin{itemdecl}
-constexpr value_type operator[](@\simdsizetype@ i) const@\wgRem{\&}@;
+constexpr value_type operator[](@\simdsizetype@ i) const;
 \end{itemdecl}
 
 \begin{itemdescr}
