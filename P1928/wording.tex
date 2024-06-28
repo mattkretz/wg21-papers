@@ -5,11 +5,13 @@
   \or\error
 \fi}
 
+\newcommand\openrange[1]{{[}\tcode{#1})}
+
 \renewcommand\foralli[1][]{for all $i$ in the range of [\tcode{0, #1size()})}
 %\renewcommand\forallmaskedi{for all selected indices $i$}
 
 \newcommand\validMaskedRange[1][first]{For all selected indices $i$,
-\tcode{[#1, #1 + $i$)} is a valid range.}
+[\tcode{#1, #1 + $i$ + 1}) is a valid range.}
 
 \newcommand\flagsRequires[2]{
 \item If the template parameter pack \tcode{Flags} contains the type
@@ -17,7 +19,7 @@
   point to storage aligned by \tcode{simd_alignment_v<#1>}.
 \item If the template parameter pack \tcode{Flags} contains the type
   identifying \tcode{simd_flag_overaligned<N>}, \tcode{addressof(*first)}
-  shall point to storage aligned by \tcode{N}.
+  points to storage aligned by \tcode{N}.
 }
 
 \newcommand\conversionFlagsMandate[2]{
@@ -26,15 +28,21 @@
   \tcode{#2} is value-preserving.
 }
 
-\newcommand\ConstraintOperatorTWellFormed[1][the indicated operator]{%
-\constraints Application of #1 to objects of type \tcode{value_type} is well-formed.
+\newcommand\op{\textrm{\textit{op}}}
+
+\newcommand\ConstraintUnaryOperatorWellFormed[2][const ]{%
+  \constraints \tcode{requires (#1value_type a) \{ #2; \}} is \tcode{true}.
+}
+
+\newcommand\ConstraintOperatorTWellFormed{%
+  \constraints \tcode{requires (value_type a, value_type b) \{ a \op{} b; \}} is \tcode{true}.
 }
 
 \rSec0[simd]{Data-parallel types}
 \rSec1[simd.general]{General}
 
 \pnum
-The simd subclause defines data-parallel types and operations on these types.
+[simd] defines data-parallel types and operations on these types.
 \begin{note}
 The intent is to support acceleration through data-parallel execution resources
 where available, such as SIMD registers and instructions or execution units
@@ -345,7 +353,7 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   \pnum
   The member \tcode{type} is present if and only if
   \begin{itemize}
-    \item \tcode{V} is either a specialization of \tcode{basic_simd} or
+    \item \tcode{V} is a specialization of either \tcode{basic_simd} or
       \tcode{basic_simd_mask},
     \item \tcode{T} is a vectorizable type, and
     \item \tcode{\deducet<T, V::size()>} has a member type \tcode{type}.
@@ -367,16 +375,16 @@ template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelo
 \begin{itemdescr}
   \pnum Let \tcode{T} denote
   \begin{itemize}
-    \item \tcode{V::value_type} if \tcode{V} is a specialization of
+    \item \tcode{typename V::value_type} if \tcode{V} is a specialization of
       \tcode{basic_simd} or
-    \item \tcode{\integerfrom<\maskelementsize<T>>} if \tcode{V} is a
+    \item \tcode{\integerfrom<\maskelementsize<V>>} if \tcode{V} is a
       specialization of \tcode{basic_simd_mask}.
   \end{itemize}
 
   \pnum
   The member \tcode{type} is present if and only if
   \begin{itemize}
-    \item \tcode{V} is either a specialization of \tcode{basic_simd} or
+    \item \tcode{V} is a specialization of either \tcode{basic_simd} or
       \tcode{basic_simd_mask}, and
     \item \tcode{\deducet<T, N>} has a member type \tcode{type}.
   \end{itemize}
@@ -460,9 +468,9 @@ public:
     constexpr explicit(@\seebelow@) basic_simd(const basic_simd<U, UAbi>&) noexcept;
   template<class G> constexpr explicit basic_simd(G&& gen) noexcept;
   template<class It, class... Flags>
-    constexpr basic_simd(It first, simd_flags<Flags...> = {});
+    constexpr explicit basic_simd(It first, simd_flags<Flags...> = {});
   template<class It, class... Flags>
-    constexpr basic_simd(It first, const mask_type& mask, simd_flags<Flags...> = {});
+    constexpr explicit basic_simd(It first, const mask_type& mask, simd_flags<Flags...> = {});
 
   // \ref{simd.copy}, \tcode{basic_simd} copy functions
   template<class It, class... Flags>
@@ -771,7 +779,7 @@ template<class U, class UAbi>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class G> constexpr basic_simd(G&& gen) noexcept;
+template<class G> constexpr explicit basic_simd(G&& gen) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -808,24 +816,22 @@ template<class G> constexpr basic_simd(G&& gen) noexcept;
   \end{itemize}
 
   \pnum\effects #2
-
-  \pnum\throws Nothing.
 }
 
 \begin{itemdecl}
 template<class It, class... Flags>
-  constexpr basic_simd(It first, simd_flags<Flags...> = {});
+  constexpr explicit basic_simd(It first, simd_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
   \SimdLoadDescr
-    {\tcode{[first, first + size())} is a valid range.}
+    {\openrange{first, first + size()} is a valid range.}
     {Initializes the $i^\text{th}$ element with \tcode{static_cast<T>(first[$i$])} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
 template<class It, class... Flags>
-  constexpr basic_simd(It first, const mask_type& mask, simd_flags<Flags...> = {});
+  constexpr explicit basic_simd(It first, const mask_type& mask, simd_flags<Flags...> = {});
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -843,7 +849,7 @@ template<class It, class... Flags>
 
 \begin{itemdescr}
   \SimdLoadDescr
-    {\tcode{[first, first + size())} is a valid range.}
+    {\openrange{first, first + size()} is a valid range.}
     {Replaces the elements of the \tcode{basic_simd} object such that the $i^\text{th}$ element is assigned with \tcode{static_cast<T>(first[$i$])} \foralli.}
 \end{itemdescr}
 
@@ -876,8 +882,6 @@ template<class It, class... Flags>
   \end{itemize}
 
   \pnum\effects #2
-
-  \pnum\throws Nothing.
 }
 
 \begin{itemdecl}
@@ -887,7 +891,7 @@ template<class Out, class... Flags>
 
 \begin{itemdescr}
   \SimdStoreDescr
-    {\tcode{[first, first + size())} is a valid range.}
+    {\openrange{first, first + size()} is a valid range.}
     {Copies all \tcode{basic_simd} elements as if \tcode{first[$i$] = static_cast<iter_value_t<Out>>(operator[]($i$))} \foralli.}
 \end{itemdescr}
 
@@ -926,7 +930,7 @@ constexpr value_type operator[](@\simdsizetype@ i) const@\wgRem{\&}@;
 
 \begin{itemdescr}
   \pnum\expects
-  \tcode{i < size()}.
+  \tcode{i >= 0 \&\& i < size()} is \tcode{true}.
 
   \pnum\returns
   The value of the $i^\text{th}$ element.
@@ -937,14 +941,14 @@ constexpr value_type operator[](@\simdsizetype@ i) const@\wgRem{\&}@;
 \rSec2[simd.unary]{\tcode{basic_simd} unary operators}
 
 \pnum
-Effects in this subclause are applied as unary element-wise operations.
+Effects in [simd.unary] are applied as unary element-wise operations.
 
 \begin{itemdecl}
 constexpr basic_simd& operator++() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\ConstraintOperatorTWellFormed[unary \tcode{++}]
+  \pnum\ConstraintUnaryOperatorWellFormed[]{++a}
 
   \pnum\effects
   Increments every element by one.
@@ -958,7 +962,7 @@ constexpr basic_simd operator++(int) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\ConstraintOperatorTWellFormed[unary \tcode{++}]
+  \pnum\ConstraintUnaryOperatorWellFormed[]{a++}
 
   \pnum\effects
   Increments every element by one.
@@ -972,7 +976,7 @@ constexpr basic_simd& operator--() noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\ConstraintOperatorTWellFormed[unary \tcode{--}]
+  \pnum\ConstraintUnaryOperatorWellFormed[]{--a}
 
   \pnum\effects
   Decrements every element by one.
@@ -986,7 +990,7 @@ constexpr basic_simd operator--(int) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\ConstraintOperatorTWellFormed[unary \tcode{--}]
+  \pnum\ConstraintUnaryOperatorWellFormed[]{a--}
 
   \pnum\effects
   Decrements every element by one.
@@ -1000,7 +1004,7 @@ constexpr mask_type operator!() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\ConstraintOperatorTWellFormed[unary \tcode{!}]
+  \pnum\ConstraintUnaryOperatorWellFormed{!a}
 
   \pnum\returns
   A \tcode{basic_simd_mask} object with the $i^\text{th}$ element set to \tcode{!operator[]($i$)} \foralli.
@@ -1011,7 +1015,7 @@ constexpr basic_simd operator~() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\ConstraintOperatorTWellFormed[unary \tcode{\~{}}]
+  \pnum\ConstraintUnaryOperatorWellFormed{\~{}a}
 
   \pnum\returns
   A \tcode{basic_simd} object where each bit is the inverse of the corresponding bit in \tcode{*this}.
@@ -1022,7 +1026,7 @@ constexpr basic_simd operator+() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\ConstraintOperatorTWellFormed[unary \tcode{+}]
+  \pnum\ConstraintUnaryOperatorWellFormed{+a}
 
   \pnum\returns
   \tcode{*this}.
@@ -1033,7 +1037,7 @@ constexpr basic_simd operator-() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\ConstraintOperatorTWellFormed[unary \tcode{-}]
+  \pnum\ConstraintUnaryOperatorWellFormed{-a}
 
   \pnum\returns
   A \tcode{basic_simd} object where the $i^\text{th}$ element is initialized to \tcode{-operator[]($i$)} \foralli.
@@ -1057,6 +1061,8 @@ friend constexpr basic_simd operator>>(const basic_simd& lhs, const basic_simd& 
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum Let \op{} be the operator.
+
   \pnum\ConstraintOperatorTWellFormed
 
   \pnum\returns
@@ -1069,6 +1075,8 @@ friend constexpr basic_simd operator>>(const basic_simd& v, @\simdsizetype@ n) n
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum Let \textit{op} be the operator.
+
   \pnum\ConstraintOperatorTWellFormed
 
   \pnum\returns
@@ -1091,6 +1099,8 @@ friend constexpr basic_simd& operator>>=(basic_simd& lhs, const basic_simd& rhs)
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum Let \textit{op} be the operator.
+
   \pnum\ConstraintOperatorTWellFormed
 
   \pnum\effects
@@ -1106,10 +1116,12 @@ friend constexpr basic_simd& operator>>=(basic_simd& lhs, @\simdsizetype@ n) noe
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum Let \textit{op} be the operator.
+
   \pnum\ConstraintOperatorTWellFormed
 
   \pnum\effects
-  Equivalent to: \tcode{return operator@=(lhs, basic_simd(n));}
+  Equivalent to: \tcode{return operator \textit{op} (lhs, basic_simd(n));}
 \end{itemdescr}
 
 \rSec2[simd.comparison]{\tcode{basic_simd} compare operators}
@@ -1124,6 +1136,8 @@ friend constexpr mask_type operator<(const basic_simd& lhs, const basic_simd& rh
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum Let \textit{op} be the operator.
+
   \pnum\ConstraintOperatorTWellFormed
 
   \pnum\returns
@@ -1145,7 +1159,12 @@ friend constexpr basic_simd
 \rSec2[simd.reductions]{\tcode{basic_simd} reductions}
 
 \pnum
-In this subclause, \tcode{BinaryOperation} shall be a binary element-wise operation.
+In [simd.reductions], \tcode{BinaryOperation} shall be a binary element-wise operation.
+
+\INFO{
+  In principle, reductions over signed integral \code{T} have a precondition.
+  It could actually be nice to call this out here, and implement a precondition check in simd reductions.
+}
 
 \begin{itemdecl}
 template<class T, class Abi, class BinaryOperation = plus<>>
@@ -1161,8 +1180,11 @@ template<class T, class Abi, class BinaryOperation = plus<>>
   \tcode{basic_simd<T, A1>} returning \tcode{basic_simd<T, A1>} for every
   \tcode{A1} that is an ABI tag type.
 
+  \pnum\expects
+  \tcode{BinaryOperation} does not modify \tcode{x}.
+
   \pnum\returns
-  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x.data[$i$], ...)} \foralli (\iref{numerics.defns}).
+  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$i$]), ...)[0]} \foralli{} (\iref{numerics.defns}).
 
   \pnum\throws
   Any exception thrown from \tcode{binary_op}.
@@ -1182,11 +1204,19 @@ template<class T, class Abi, class BinaryOperation>
   \tcode{binary_op} can be invoked with two arguments of type \tcode{basic_simd<T, A1>} returning \tcode{basic_simd<T, A1>} for every \tcode{A1} that is an ABI tag type.
 
   \pnum\expects
-  The results of \tcode{all_of(x == binary_op(basic_simd<T, A1>(identity_element), basic_simd<T, A1>(x)))} and \tcode{all_of(basic_simd<T, A1>(x) == binary_op(x, basic_simd<T, A1>(identity_element)))} shall be \tcode{true} for every \tcode{A1} that is an ABI tag type and for all finite values \tcode{x} representable by \tcode{T}.
+  \begin{itemize}
+    \item \tcode{BinaryOperation} does not modify \tcode{x}.
+
+    \item For every \tcode{A1} that is an ABI tag type and for all finite
+      values \tcode{y} representable by \tcode{T}, the results of
+      \tcode{all_of(y == binary_op(basic_simd<T, A1>(identity_element),
+      basic_simd<T, A1>(y)))} and \tcode{all_of(basic_simd<T, A1>(y) ==
+      binary_op(y, basic_simd<T, A1>(identity_element)))} are \tcode{true}.
+  \end{itemize}
 
   \pnum\returns
   If \tcode{none_of(mask)}, returns \tcode{identity_element}.
-  Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
+  Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$i$]), ...)[0]} \forallmaskedi.
 
   \pnum\throws
   Any exception thrown from \tcode{binary_op}.
@@ -1296,7 +1326,7 @@ template<class T, class Abi>
 
   \pnum\returns
   If \tcode{none_of(mask)}, returns \tcode{numeric_limits<V::value_type>::lowest()}.
-  Otherwise, returns the value of a selected element \tcode{x.data[$j$]} for which \tcode{x.data[$j$] < x.data[$i$]} is \tcode{false} \forallmaskedi.
+  Otherwise, returns the value of a selected element \tcode{x[$j$]} for which \tcode{x[$j$] < x[$i$]} is \tcode{false} \forallmaskedi.
 \end{itemdescr}
 
 \rSec2[simd.creation]{\tcode{basic_simd} and \tcode{basic_simd_mask} creation}
@@ -1657,7 +1687,7 @@ template<class It, class... Flags>
 
 \begin{itemdescr}
   \MaskLoadDescr
-    {\tcode{[first, first + size())} is a valid range.}
+    {\openrange{first, first + size()} is a valid range.}
     {Initializes the $i^\text{th}$ element with \tcode{first[$i$]} \foralli.}
 \end{itemdescr}
 
@@ -1681,7 +1711,7 @@ template<class It, class... Flags>
 
 \begin{itemdescr}
   \MaskLoadDescr
-  {\tcode{[first, first + size())} is a valid range.}
+  {\openrange{first, first + size()} is a valid range.}
   {Replaces the elements of the \tcode{basic_simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{first[$i$]} \foralli.}
 \end{itemdescr}
 
@@ -1722,7 +1752,7 @@ template<class Out, class... Flags>
 
 \begin{itemdescr}
   \MaskStoreDescr
-    {\tcode{[first, first + size())} is a valid range.}
+    {\openrange{first, first + size()} is a valid range.}
     {Copies all \tcode{basic_simd_mask} elements as if \tcode{first[$i$] = operator[]($i$)} \foralli.}
 \end{itemdescr}
 
@@ -1761,7 +1791,7 @@ constexpr value_type operator[](@\simdsizetype@ i) const@\wgRem{\&}@;
 
 \begin{itemdescr}
   \pnum\expects
-  \tcode{i < size()}.
+  \tcode{i >= 0 \&\& i < size()} is \tcode{true}.
 
   \pnum\returns
   The value of the $i^\text{th}$ element.
