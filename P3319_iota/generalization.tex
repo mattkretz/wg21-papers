@@ -1,0 +1,66 @@
+\section{Generalization}
+By defining a variable template \std\code{simd_iota_v<T>} where \code{T} must
+be a \simd type, we're simply initializing a sequence of values at compile time.
+We can create such an object for more types.
+This is especially interesting for the degenerate case in SIMD-generic
+programming, where \code{T} could \eg be an \code{int}.
+An \std\code{iota_v<int>} is nothing other than an object \code{int} with value
+\code{0}.
+
+We can easily generalize to \code{iota_v<std::array<T, N>>} and
+\code{iota_v<T[N]>}.
+And the next step then is to allow any type that
+\begin{itemize}
+  \item has a static extent,
+  \item has a \code{value_type} member type,
+  \item can be list-initialized with \code{N} numbers of type
+    \code{value_type}, where \code{N} equals the static extent of the type, and
+  \item where \code{value_type() + 1} is an constant expression and convertible to \code{value_type}.
+\end{itemize}
+
+But there are more types (in the standard library and beyond) where we can
+create such an object.
+All we need is a type
+\begin{enumerate}
+  \item with valid \code{ranges::range_value_t<T>} type (this could be weakened
+    to also allow \code{std::\MayBreak{}tuple<\MayBreak{}int, int>}),
+  \item with static extent (\code{T::size()}, \code{T::extent},
+    \code{std::extent_v<T>}, or \code{std::tuple_size_v<T>}),
+  \item and that can be list-initialized from a sequence of \code{N}
+    integers (cast to \code{range_value_t<T>}), where \code{N} equals
+    the static extent of the type.
+\end{enumerate}
+For the scalar case, a very general constraint requires \code{T} to be
+\begin{itemize}
+  \item a regular type
+  \item that can be list-initialized from a single value
+  \item and that compares equal to that value after construction.
+\end{itemize}
+
+Consequently you could write
+\medskip\begin{lstlisting}[style=Vc]
+auto x = std::iota_v<float[5]>;
+auto y = std::iota_v<std::array<my_fixed_point, 8>>;
+// ...
+\end{lstlisting}
+
+A second generalization could allow different sequences other than only
+\code{0, 1, 2, 3, 4, \ldots}.
+\std\code{iota} and \std\code{ranges::iota} take a \code{value} argument to
+define the first value in the sequence.
+They do not allow any different step other than applying the pre-increment
+operator.
+
+For \code{simd}, I would typically just write \eg
+\medskip\begin{lstlisting}[style=Vc]
+constexpr auto vec = std::iota_v<std::simd<int>> * 3 + 5; // 5, 8, 11, ...
+\end{lstlisting}
+To construct the same sequence for an array, \code{iota_v} would require a
+“first” and a “step” argument:
+\medskip\begin{lstlisting}[style=Vc]
+constexpr auto arr = std::iota_v<std::array<int, 4>, 5, 3>; // 5, 8, 11, 14
+\end{lstlisting}
+
+Providing a (defaulted) “step” argument is simple and more general.
+The only reason, that I can think of, for not adding it is that \std\code{iota}
+/ \std\code{ranges::iota} don't have it.

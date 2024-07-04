@@ -1,0 +1,62 @@
+\section{Motivation}
+The 90\%\footnote{Sorry, that number is completely made up.} use case for simd
+generator constructors is a simd with values 0, 1, 2, 3, \ldots{} potentially
+with scaling and offset applied.
+However, often it would be easier and more readable to use an “iota”
+\code{simd} object instead.
+
+\begingroup
+  \smaller[1]
+\begin{tabular}{p{.45\textwidth}|p{.45\textwidth}}
+  generator ctor & iota \\
+  \hline
+  \begin{lstlisting}
+std::simd<int> a([](int i) { return i; };
+
+std::simd<int> b([](int i) { return 2 + 3 * i; };
+  \end{lstlisting}
+  &
+  \begin{lstlisting}
+auto a = std::iota_v<std::simd<int>>;
+
+auto b = 2 + 3 * std::iota_v<std::simd<int>>;
+  \end{lstlisting}
+\end{tabular}
+\endgroup
+
+\pagebreak
+An example where an \code{iota_v<simd>} comes up is the calculation of the
+Mandelbrot set.
+The program needs to iterate over all visible pixels and calculate the
+corresponding value in the complex plane.
+Thus a loop like
+\medskip\begin{lstlisting}[style=Vc]
+for (int x = 0; x < 1024; ++x) {
+  float real = float(x) * scale + offset;
+\end{lstlisting}
+turns into
+\medskip\begin{lstlisting}[style=Vc]
+using floatv = simd<float>;
+using intv = rebind_simd_t<int, floatv>;
+for (intv x = iota_v<intv>; any_of(x < 1024); x += intv::size()) {
+  floatv real = floatv(x) * scale + offset;
+\end{lstlisting}
+
+The minimal definition I propose for \simd can look like this:
+\medskip\begin{lstlisting}[style=Vc]
+namespace std {
+  template <class T>
+    requires std::is_arithmetic_v<T> or detail::simd_type<T>
+    inline constexpr T
+    simd_iota_v = T();
+
+  template <detail::simd_type T>
+    inline constexpr T
+    simd_iota_v<T> = T([](auto i) { return static_cast<typename T::value_type>(i); });
+}
+\end{lstlisting}
+
+If \cite{P3287R0} is adopted to introduce a \std\code{simd} namespace, it would
+be called \std\code{simd::\MayBreak{}iota_v} (and
+\std\code{simd_generic::\MayBreak{}iota_v}) instead.
+

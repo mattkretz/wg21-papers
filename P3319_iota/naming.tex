@@ -1,0 +1,21 @@
+\section{Naming: Is reuse of the term “iota” confusing or helpful?}
+
+In the Vc library, the library behind the initial proposal back in 2013,
+there's a \code{Vc::\MayBreak{}Vector<T>::\MayBreak{}Indexes\MayBreak{}From\MayBreak{}Zero()} constant.
+Back then SG1/WG21 wanted to reduce the scope for the TS to a minimum and the
+constant was never considered any further.
+In any case, \code{IndexesFromZero} is a fairly descriptive/elaborate name.
+But in the standard library we already have a term for a sequence like this.
+And it's “iota”.
+Using a different term for something that isn't different (concept) is
+confusing and incoherent.
+
+\code{std::iota} has an existing meaning, as an algorithm that initializes a
+given existing range.
+What this paper proposes is still sufficiently different that we don't want to
+overload that exact name.
+Instead, since we're defining an “iota value”, we propose the name \code{iota_v}.
+
+If we don't move \code{simd} into a \std\code{simd} subnamespace and if we
+don't want to generalize the “iota value” beyond \code{simd}, then we should be
+considering \code{std::simd_iota_v} over \code{std::iota_v}.

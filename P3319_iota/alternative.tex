@@ -1,0 +1,63 @@
+\section{Alternative: reuse existing \code{iota}}
+
+We already have \code{std::iota} and \code{std::ranges::iota}.
+Why isn't that sufficient to create a solution that composes?
+
+One motivation for \code{iota_v<simd<int>>} instead of \code{simd<int>::iota}
+is that \code{iota_v<int>} works while \code{int::iota} cannot work.
+The same is true for \code{simd<int>(views::iota(0))} vs.
+\code{int(views::\MayBreak{}iota(0))}.
+Supporting the degenerate case is very helpful for SIMD-generic programming.
+
+\medskip\begin{lstlisting}[style=Vc]
+// scalar loop:
+for (int i = 0; i < 1024; ++i) {
+  ...
+}
+
+// simd loop:
+for (auto i = iota_v<simd<int>>; all_of(i < 1024); i += simd<int>::size) {
+  ...
+}
+
+// simd-generic loop:
+for (auto i = iota_v<T>; all_of(i < 1024); i += simd_size_v<T>) {
+  ...
+}
+
+// alternative:
+for (int ii = 0; ii < 1024; ii += simd_size_v<T>) {
+  T i = ii + iota_v<T>;
+  ...
+}
+\end{lstlisting}
+
+In addition, what \code{simd(range)} does depends on the outcome of P3299
+“range ctors”.
+In any case we are requiring contiguous_range.
+So \code{simd(random_access_range)} needs another paper altogether (while
+  convenient, this is rarely what the user wanted; making non-contiguous loads
+ill-formed helps against “performance errors”).
+So we could overload for specific non-contiguous ranges, where we know that we
+can restore good performance.
+But that's going to be a closed set, rather than a general concept.
+Why then would \code{simd(std::views:iota(0))} work but
+\code{simd(boost::\MayBreak{}views::\MayBreak{}iota(0))} is ill-formed?
+
+Our desired outcome of P3299 is that \code{simd(range)} requires a statically
+sized contiguous range with exactly matching size.
+Thus we would need to call
+\code{std::simd::load<simd<int>>(std::\MayBreak{}views::\MayBreak{}iota(0))} instead.
+This is now even more verbose than the current solution \code{simd<int>([](int
+i) { return i; })}.
+It completely fails at the goal to make the code more readable.
+
+Then what about \code{std::views::iota(0) | std::ranges::to<basic_simd>()}?
+It's still too long for a rather basic constant.
+And why should this work if both
+\begin{itemize}
+  \item \code{std::views::iota(0) | std::ranges::to<std::array>();} and
+  \item \code{std::views::iota(0) | std::ranges::to<std::array<int, 4>();}
+\end{itemize}
+don't work?
+
