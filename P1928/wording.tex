@@ -6,7 +6,7 @@
 \fi}
 
 \renewcommand\foralli[1][]{for all $i$ in the range of \range{0}{#1size()}}
-%\renewcommand\forallmaskedi{for all selected indices $i$}
+\renewcommand\forallmaskedi{for all selected indices $i$ of \tcode{mask}}
 
 \newcommand\validMaskedRange[1][first]{For all selected indices $i$,
 \range{#1}{#1 + $i$ + 1} is a valid range.}
@@ -526,7 +526,7 @@ public:
   friend constexpr mask_type operator>(const basic_simd&, const basic_simd&) noexcept;
   friend constexpr mask_type operator<(const basic_simd&, const basic_simd&) noexcept;
 
-  // \ref{simd.cond}, \tcode{basic_simd} conditional operators
+  // \ref{simd.cond}, \tcode{basic_simd} exposition-only conditional operators
   friend constexpr basic_simd @\simdselect@(
     const mask_type&, const basic_simd&, const basic_simd&) noexcept;
 };
@@ -989,7 +989,7 @@ friend constexpr mask_type operator<(const basic_simd& lhs, const basic_simd& rh
   A \tcode{basic_simd_mask} object initialized with the results of applying \op{} to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.cond]{\tcode{basic_simd} conditional operators}
+\rSec2[simd.cond]{\tcode{basic_simd} exposition-only conditional operators}
 
 \begin{itemdecl}
 friend constexpr basic_simd
@@ -1005,11 +1005,6 @@ friend constexpr basic_simd
 
 \pnum
 In [simd.reductions], \tcode{BinaryOperation} shall be a binary element-wise operation.
-
-\INFO{
-  In principle, reductions over signed integral \code{T} have a precondition.
-  It could actually be nice to call this out here, and implement a precondition check in simd reductions.
-}
 
 \begin{itemdecl}
 template<class T, class Abi, class BinaryOperation = plus<>>
@@ -1060,7 +1055,7 @@ template<class T, class Abi, class BinaryOperation>
   \end{itemize}
 
   \pnum\returns
-  If \tcode{none_of(mask)}, returns \tcode{identity_element}.
+  If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{identity_element}.
   Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$i$]), ...)[0]} \forallmaskedi.
 
   \pnum\throws
@@ -1075,7 +1070,7 @@ template<class T, class Abi>
 
 \begin{itemdescr}
   \pnum\returns
-  If \tcode{none_of(mask)}, returns \tcode{T()}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
+  If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{T()}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1086,7 +1081,7 @@ template<class T, class Abi>
 
 \begin{itemdescr}
   \pnum\returns
-  If \tcode{none_of(x)}, returns \tcode{1}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
+  If \tcode{none_of(x)} is \tcode{true}, returns \tcode{T(1)}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1100,7 +1095,7 @@ template<class T, class Abi>
   \tcode{is_integral_v<T>} is \tcode{true}.
 
   \pnum\returns
-  If \tcode{none_of(mask)}, returns \tcode{\~{}T()}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
+  If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{T(\~{}T())}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1117,7 +1112,7 @@ template<class T, class Abi>
   \tcode{is_integral_v<T>} is \tcode{true}.
 
   \pnum\returns
-  If \tcode{none_of(mask)}, returns \tcode{T()}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
+  If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{T()}. Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1143,7 +1138,7 @@ template<class T, class Abi>
   \tcode{T} models \tcode{totally_ordered}.
 
   \pnum\returns
-  If \tcode{none_of(mask)}, returns \tcode{numeric_limits<T>::max()}.
+  If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{numeric_limits<T>::max()}.
   Otherwise, returns the value of a selected element \tcode{x[$j$]} for which \tcode{x[$i$] < x[$j$]} is \tcode{false} \forallmaskedi.
 \end{itemdescr}
 
@@ -1170,7 +1165,7 @@ template<class T, class Abi>
   \tcode{T} models \tcode{totally_ordered}.
 
   \pnum\returns
-  If \tcode{none_of(mask)}, returns \tcode{numeric_limits<V::value_type>::lowest()}.
+  If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{numeric_limits<V::value_type>::lowest()}.
   Otherwise, returns the value of a selected element \tcode{x[$j$]} for which \tcode{x[$j$] < x[$i$]} is \tcode{false} \forallmaskedi.
 \end{itemdescr}
 
@@ -1418,7 +1413,7 @@ public:
   friend constexpr basic_simd_mask
     operator<(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 
-  // \ref{simd.mask.cond}, \tcode{basic_simd_mask} conditional operators
+  // \ref{simd.mask.cond}, \tcode{basic_simd_mask} exposition-only conditional operators
   friend constexpr basic_simd_mask @\simdselect@(
     const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept;
   friend constexpr basic_simd_mask @\simdselect@(
@@ -1724,7 +1719,7 @@ friend constexpr basic_simd_mask
   A \tcode{basic_simd_mask} object initialized with the results of applying the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.mask.cond]{\tcode{basic_simd_mask} conditional operators}
+\rSec2[simd.mask.cond]{\tcode{basic_simd_mask} exposition-only conditional operators}
 
 \begin{itemdecl}
 friend constexpr basic_simd_mask @\simdselect@(
