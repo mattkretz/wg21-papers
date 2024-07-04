@@ -5,13 +5,11 @@
   \or\error
 \fi}
 
-\newcommand\openrange[1]{{[}\tcode{#1})}
-
-\renewcommand\foralli[1][]{for all $i$ in the range of [\tcode{0, #1size()})}
+\renewcommand\foralli[1][]{for all $i$ in the range of \range{0}{#1size()}}
 %\renewcommand\forallmaskedi{for all selected indices $i$}
 
 \newcommand\validMaskedRange[1][first]{For all selected indices $i$,
-[\tcode{#1, #1 + $i$ + 1}) is a valid range.}
+\range{#1}{#1 + $i$ + 1} is a valid range.}
 
 \newcommand\flagsRequires[2]{
 \item If the template parameter pack \tcode{Flags} contains
@@ -73,8 +71,8 @@ An \defn{element-wise operation} applies a specified operation to the elements o
 
 \pnum\label{wording.selected.indices}%
 Given a \tcode{basic_simd_mask<Bytes, Abi>} object \tcode{mask}, the
-\defn{selected indices} signify the integers $i$ in the range \tcode{[0,
-mask.size())} for which \tcode{mask[$i$]} is \tcode{true}.
+\defn{selected indices} signify the integers $i$ in the range
+\range{0}{mask.size()} for which \tcode{mask[$i$]} is \tcode{true}.
 Given an object \tcode{data} of type \tcode{basic_simd<T, Abi>} or \tcode{basic_simd_mask<Bytes, Abi>},
 the \defn{selected elements} signify the elements \tcode{data[$i$]} for all selected indices $i$.
 
@@ -540,7 +538,7 @@ The specializations of class template \tcode{basic_simd} are data-parallel types
 \pnum
 Every specialization of \tcode{basic_simd} is a complete type.
 The types \tcode{basic_simd<T, \deducet<T, N>>} for all vectorizable
-\tcode{T} and with \tcode{N} in the range of \tcode{[1, 64]} are \defn{supported}.
+\tcode{T} and with \tcode{N} in the range of \crange{1}{64} are \defn{supported}.
 It is \impdef\ whether any other \tcode{basic_simd<T, Abi>} specializations
 with vectorizable \tcode{T} are supported.
 
@@ -686,7 +684,7 @@ template<class It, class... Flags>
 
 \begin{itemdescr}
   \SimdLoadDescr
-    {\openrange{first, first + size()} is a valid range.}
+    {\range{first}{first + size()} is a valid range.}
     {Initializes the $i^\text{th}$ element with \tcode{static_cast<T>(first[$i$])} \foralli.}
 \end{itemdescr}
 
@@ -710,7 +708,7 @@ template<class It, class... Flags>
 
 \begin{itemdescr}
   \SimdLoadDescr
-    {\openrange{first, first + size()} is a valid range.}
+    {\range{first}{first + size()} is a valid range.}
     {Replaces the elements of the \tcode{basic_simd} object such that the $i^\text{th}$ element is assigned with \tcode{static_cast<T>(first[$i$])} \foralli.}
 \end{itemdescr}
 
@@ -752,7 +750,7 @@ template<class Out, class... Flags>
 
 \begin{itemdescr}
   \SimdStoreDescr
-    {\openrange{first, first + size()} is a valid range.}
+    {\range{first}{first + size()} is a valid range.}
     {Copies all \tcode{basic_simd} elements as if \tcode{first[$i$] = static_cast<iter_value_t<Out>>(operator[]($i$))} \foralli.}
 \end{itemdescr}
 
@@ -1527,7 +1525,7 @@ template<class It, class... Flags>
 
 \begin{itemdescr}
   \MaskLoadDescr
-    {\openrange{first, first + size()} is a valid range.}
+    {\range{first}{first + size()} is a valid range.}
     {Initializes the $i^\text{th}$ element with \tcode{first[$i$]} \foralli.}
 \end{itemdescr}
 
@@ -1551,7 +1549,7 @@ template<class It, class... Flags>
 
 \begin{itemdescr}
   \MaskLoadDescr
-  {\openrange{first, first + size()} is a valid range.}
+  {\range{first}{first + size()} is a valid range.}
   {Replaces the elements of the \tcode{basic_simd_mask} object such that the $i^\text{th}$ element is replaced with \tcode{first[$i$]} \foralli.}
 \end{itemdescr}
 
@@ -1592,7 +1590,7 @@ template<class Out, class... Flags>
 
 \begin{itemdescr}
   \MaskStoreDescr
-    {\openrange{first, first + size()} is a valid range.}
+    {\range{first}{first + size()} is a valid range.}
     {Copies all \tcode{basic_simd_mask} elements as if \tcode{first[$i$] = operator[]($i$)} \foralli.}
 \end{itemdescr}
 
