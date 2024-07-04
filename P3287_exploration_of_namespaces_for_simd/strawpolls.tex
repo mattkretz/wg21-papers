@@ -1,2 +1,17 @@
 \section{Straw Polls}
-(placeholder)
+\subsection{LEWG --- St. Louis 2024}
+\wgPoll{We should introduce a \std\code{simd} namespace in P1928 (realizing
+    that this would mean we potentially have a type whose fully-qualified name is
+    \std\code{simd::simd} and would involve removing “simd” from
+  \code{basic_simd_mask}) and remove the \code{simd_} prefix from utilities moved
+into that namespace which currently have that prefix.}
+{9&6&3&1&1}
+
+\wgPoll{Operations on \std\code{simd::simd} should be available in the
+namespace \std\code{simd}.}
+{ 12 & 7 & 1 & 1 & 0 }
+
+\wgPoll{Element-wise overloads of existing functions in \code{std} which
+operate on \std\code{simd::simd} should also be available in the namespace
+\code{std}.}
+{ 4 & 7 & 5 & 1 & 1 }
