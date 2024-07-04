@@ -586,7 +586,7 @@ template<class U> constexpr basic_simd(U&&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum Let \tcode{From} denote the type \code{remove_cvref_t<U>}.
+  \pnum Let \tcode{From} denote the type \tcode{remove_cvref_t<U>}.
 
   \pnum\constraints
   \tcode{From} satisfies \tcode{convertible_to<value_type>}, and either
@@ -622,7 +622,7 @@ template<class U, class UAbi>
 
   \pnum\remarks
   %The constructor is \tcode{explicit} if
-  The expression inside \code{explicit} evaluates to \code{true} if either
+  The expression inside \tcode{explicit} evaluates to \tcode{true} if either
   \begin{itemize}
     \item the conversion from \tcode{U} to \tcode{value_type} is not
       value-preserving, or
@@ -1202,7 +1202,7 @@ template<class T, class Abi>
         The $i^\text{th}$ \simd or \mask element of the $j^\text{th}$
         \tcode{tuple} element of type \tcode{T} is initialized to the value of
         the element in \tcode{x} with index \tcode{$i$ + $j$ * T::size()}.
-        The $i^\text{th}$ \simd or \mask element of the \code{N}$^\text{th}$
+        The $i^\text{th}$ \simd or \mask element of the \tcode{N}$^\text{th}$
         \tcode{tuple} element is initialized to the value of the element in
         \tcode{x} with index \tcode{$i$ + $N$ * T::size()}.
     \end{itemize}
@@ -1855,7 +1855,7 @@ constexpr @\simdsizetype@ reduce_max_index(same_as<bool> auto z);
   \pnum\expects
   The value of the argument is \tcode{true}.
 
-  \pnum\returns \code{0}.
+  \pnum\returns \tcode{0}.
 \end{itemdescr}
 
 % vim: tw=0
