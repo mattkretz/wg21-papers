@@ -1045,6 +1045,13 @@ template<class T, class Abi, class BinaryOperation = plus<>>
   \tcode{binary_op} can be invoked with two arguments of type
   \tcode{basic_simd<T, A1>} returning \tcode{basic_simd<T, A1>} for every
   \tcode{A1} that is an ABI tag type.
+  \INFO{Better alternative? “[\ldots] for zero or more unspecified ABI tag types \tcode{A1}.”}
+  \FIXME{This is not supposed to require exhaustive testing of all ABI tags.
+    What we need to express is that the user-supplied \tcode{binary_op} \emph{can} be called
+    with every possible ABI tag since different implementations / compiler flags / targets will lead
+    to a different subset getting called.
+    Basically, (start waving hands) “\tcode{binary_op} can be invoked with the specializations of
+  \tcode{basic_simd} that the implementation needs” (stop waving hands).}
 
   \pnum\expects
   \tcode{BinaryOperation} does not modify \tcode{x}.
