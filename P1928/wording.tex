@@ -57,9 +57,13 @@ In addition, \tcode{std::float16_t}, \tcode{std::float32_t}, and
 \tcode{std::float64_t} are vectorizable types if defined ([basic.extended.fp]).
 
 \pnum
-The term \defn{data-parallel type} refers to all supported (\ref{simd.overview}) specializations of
+The term \defn{data-parallel type} refers to all enabled specializations of
 the \tcode{basic_simd} and \tcode{basic_simd_mask} class templates. A \defn{data-parallel object} is
 an object of \term{data-parallel type}.
+
+\pnum
+Each specialization of \tcode{basic_simd} or \tcode{basic_simd_mask} is either enabled or disabled,
+as described in \ref{simd.overview} and \ref{simd.mask.overview}.
 
 \pnum
 A data-parallel type consists of one or more elements of an underlying vectorizable type,
@@ -294,7 +298,7 @@ and can differ depending on \tcode{T}.
 Where present, \tcode{\deducet<T, N>} names an ABI tag type that satisfies
 \begin{itemize}
   \item \tcode{\simdsizev<T, \deducet<T, N>> == N}, and
-  \item \tcode{basic_simd<T, \deducet<T, N>>} is supported (see \ref{simd.overview}).
+  \item \tcode{basic_simd<T, \deducet<T, N>>} is enabled (see \ref{simd.overview}).
 \end{itemize}
 
 % TODO: If we really want the Abis... pack back this needs a paper to LEWG.
@@ -316,9 +320,10 @@ Implementations thus have to figure this out on their own.}
 
 \pnum
 \tcode{\nativeabi<T>} is an implementation-defined alias for an ABI tag.
+\tcode{basic_simd<T, \nativeabi<T>} is an enabled specialization.
 \begin{note}
 The intent is to use the ABI tag producing the most efficient data-parallel
-execution for the element type \tcode{T} that is supported on the currently
+execution for the element type \tcode{T} on the currently
 targeted system.
 For target architectures with ISA extensions, compiler flags can change the
 type of the \tcode{\nativeabi<T>} alias.
@@ -550,23 +555,24 @@ The specializations of class template \tcode{basic_simd} are data-parallel types
 \pnum
 Every specialization of \tcode{basic_simd} is a complete type.
 The types \tcode{basic_simd<T, \deducet<T, N>>} for all vectorizable
-\tcode{T} and with \tcode{N} in the range of \crange{1}{64} are \defn{supported}.
-It is \impdef\ whether any other \tcode{basic_simd<T, Abi>} specializations
-with vectorizable \tcode{T} are supported.
+\tcode{T} and with \tcode{N} in the range of \crange{1}{64} are enabled.
+It is implementation-defined whether any other \tcode{basic_simd<T, Abi>} specialization
+with vectorizable \tcode{T} is enabled.
+Any other specialization of \tcode{basic_simd} is disabled.
 
 \begin{note}
   The intent is for implementations to determine on the basis of the currently
-  targeted system, whether \tcode{basic_simd<T, Abi>} is supported.
+  targeted system, whether \tcode{basic_simd<T, Abi>} is enabled.
 \end{note}
 \FIXME{drop the note?}
 
-If \tcode{basic_simd<T, Abi>} is not supported, the specialization has a
+If \tcode{basic_simd<T, Abi>} is disabled, the specialization has a
 deleted default constructor, deleted destructor, deleted copy constructor, and
 deleted copy assignment.
 In addition only the \tcode{value_type}, \tcode{abi_type}, and
 \tcode{mask_type} members are present.
 
-If \tcode{basic_simd<T, Abi>} is supported, \tcode{basic_simd<T, Abi>} is
+If \tcode{basic_simd<T, Abi>} is enabled, \tcode{basic_simd<T, Abi>} is
 trivially copyable.
 
 \pnum\recommended:
@@ -1495,26 +1501,24 @@ type \tcode{bool}.
 
 \pnum
 Every specialization of \tcode{basic_simd_mask} is a complete type.
-The specialization \tcode{basic_simd_mask<Bytes, Abi>} is not supported if the type
-\tcode{\integerfrom<Bytes>} does not exist or if it is not a vectorizable type.
+The types \tcode{basic_simd_mask<sizeof(T), \deducet<T, N>>} for all vectorizable
+\tcode{T} and with \tcode{N} in the range of \crange{1}{64} are enabled.
+It is implementation-defined whether any other \tcode{basic_simd_mask<sizeof(T), Abi>}
+specialization with vectorizable \tcode{T} is enabled.
+Any other specialization of \tcode{basic_simd_mask} is disabled.
 
-It is implementation-defined whether \tcode{basic_simd_mask<T, Abi>} is supported.
-\begin{note}The intent is for implementations to decide on the basis of the currently targeted
-system.\end{note}
+\begin{note}
+  The intent is for implementations to determine on the basis of the currently
+  targeted system, whether \tcode{basic_simd_mask<Bytes, Abi>} is enabled.
+\end{note}
+\FIXME{drop the note?}
 
-If \tcode{basic_simd_mask<Bytes, Abi>} is not supported, the specialization shall have a deleted
+If \tcode{basic_simd_mask<Bytes, Abi>} is disabled, the specialization has a deleted
 default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
-Otherwise, the following are true:
-\begin{itemize}
-  \item \tcode{is_nothrow_move_constructible_v<basic_simd_mask<Bytes, Abi>>}, and
-  \item \tcode{is_nothrow_move_assignable_v<basic_simd_mask<Bytes, Abi>>}, and
-  \item \tcode{is_nothrow_default_constructible_v<basic_simd_mask<Bytes, Abi>>}.
-\end{itemize}
+In addition only the \tcode{value_type} and \tcode{abi_type} members are present.
 
-\pnum
-Default initialization performs no initialization of the elements; value-initialization initializes
-each element with \tcode{false}. \begin{note}Thus, default initialization leaves the elements in an
-indeterminate state.\end{note}
+If \tcode{basic_simd_mask<Bytes, Abi>} is enabled, \tcode{basic_simd_mask<Bytes, Abi>} is
+trivially copyable.
 
 \pnum
 Implementations should enable explicit conversion from and to implementation-defined types. This
