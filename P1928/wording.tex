@@ -96,22 +96,22 @@ all possible values of \tcode{U} can be represented with type \tcode{T}.
 %\indexhdr{simd}
 \begin{codeblock}
 namespace std {
-  using @\simdsizetype@ = @\seebelow@; // \expos
+  using @\simdsizetype@ = @\seebelow@;                                  // \expos
   template <class T, class Abi> constexpr @\simdsizetype\ \simdsizev@ = @\seebelow@; // \expos
 
   template <class T> constexpr size_t @\maskelementsize@ = @\seebelow@; // \expos
-  template <size_t Bytes> using @\integerfrom@ = @\seebelow@; // \expos
+  template <size_t Bytes> using @\integerfrom@ = @\seebelow@;            // \expos
 
   template <class T>
-    concept @\constexprwrapperlike@ =                     // \expos
+    concept @\constexprwrapperlike@ =                                 // \expos
       convertible_to<T, decltype(T::value)> &&
       equality_comparable_with<T, decltype(T::value)> &&
       bool_constant<T() == T::value>::value &&
       bool_constant<static_cast<decltype(T::value)>(T()) == T::value>::value;
 
   // \ref{simd.abi}, \tcode{simd} ABI tags
-  template<class T> using @\nativeabi@ = @\seebelow@; // \expos
-  template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@; // \expos
+  template<class T> using @\nativeabi@ = @\seebelow@;                    // \expos
+  template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@;    // \expos
 
   // \ref{simd.traits}, \tcode{simd} type traits
   template<class T, class U = typename T::value_type> struct simd_alignment;
