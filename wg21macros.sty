@@ -415,6 +415,14 @@
 \newcommand{\UNSP}[1]{\textit{\texttt{#1}}}
 \newcommand{\seebelow}{\UNSP{see below}}
 
+%% Ranges
+\newcommand{\Range}[4]{\ensuremath{#1}\tcode{#3}\ensuremath{,}\,\penalty2000{}\tcode{#4}\ensuremath{#2}}
+\newcommand{\crange}[2]{\Range{[}{]}{#1}{#2}}
+\newcommand{\brange}[2]{\Range{(}{]}{#1}{#2}}
+\newcommand{\orange}[2]{\Range{(}{)}{#1}{#2}}
+\newcommand{\range}[2]{\Range{[}{)}{#1}{#2}}
+\newcommand{\countedrange}[2]{$\tcode{#1} + \range{0}{#2}$}
+
 %% Change descriptions
 \newcommand{\diffhead}[1]{\textbf{#1:}\space}
 \newcommand{\diffdef}[1]{\ifvmode\else\hfill\break\fi\diffhead{#1}}
