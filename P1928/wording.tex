@@ -610,17 +610,35 @@ template<class U> constexpr basic_simd(U&&) noexcept;
   \pnum\constraints
   \tcode{From} satisfies \tcode{convertible_to<value_type>}, and either
   \begin{itemize}
-    \item \tcode{From} satisfies \tcode{\constexprwrapperlike} (\ref{simd.syn})
-      and the actual value of \tcode{From::value} after conversion to
-      \tcode{value_type} will fit into \tcode{value_type} and will produce the
-      original value when converted back to \tcode{decltype(From::value)}, or
-
     \item \tcode{From} is a vectorizable type and the conversion from
       \tcode{From} to \tcode{value_type} is value-preserving
       (\ref{simd.general}), or
 
     \item \tcode{From} is not an arithmetic type and does not satisfy
-      \tcode{\constexprwrapperlike}.
+      \tcode{\constexprwrapperlike}, or
+
+    \item \tcode{From} satisfies \tcode{\constexprwrapperlike} (\ref{simd.syn})
+      and the actual value of \tcode{From::value} after conversion to
+      \tcode{value_type} will fit into \tcode{value_type} and will produce the
+      original value when converted back to \tcode{decltype(From::value)}.
+    \FIXME{
+      A value “after conversion to \tcode{To}” is always representable by \tcode{To}.
+      What I actually implemented is
+      \tcode{!(unsigned_integral<To> \&\& From::value < decltype(From::value)()
+          \&\& From::value <= numeric_limits<To>::max()
+        \&\& From::value >= numeric_limits<To>::lowest()}
+    }
+    \INFO{
+      Design intent:
+      I'm trying to allow \tcode{1.f $\rightarrow$ int} while disallowing \tcode{1.1f $\rightarrow$
+      int}.
+      Also, if \tcode{From::value} is a UDT, e.g. fixed-point, I believe we cannot use wording
+      such as “value can be represented” because how can we speak about the numerical value of a
+      UDT? Or more importantly, how would you implement such a constraint? That'd be hand waving
+      at best. We can speak about the value after conversion. But then we don't know what was lost
+      until we convert it back.\\
+      Ultimately, I think we need to aim for a reasonable heuristic, no more.
+    }
   \end{itemize}
 
   \pnum\effects
@@ -661,14 +679,17 @@ template<class G> constexpr explicit basic_simd(G&& gen) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum Let \tcode{From}$_i$ denote the type
+  \tcode{decltype(gen(integral_constant<\simdsizetype, $i$>()))}.
+
   \pnum\constraints
-  \tcode{basic_simd(gen(integral_constant<\simdsizetype, $i$>()))} is well-formed
-  and the return type of \tcode{gen(integral_constant<\simdsizetype, $i$>())}
-  satisfies \tcode{convertible_to<value_type>} \foralli.
+  \tcode{From}$_i$ satisfies \tcode{convertible_to<value_type>} \foralli.
+  In addition, \foralli, if \tcode{From}$_i$ is a vectorizable type, conversion from
+  \tcode{From}$_i$ to \tcode{value_type} is value-preserving.
 
   \pnum\effects
   Initializes the $i^\text{th}$ element with
-  \tcode{gen(integral_constant<\simdsizetype, i>())} \foralli.
+  \tcode{static_cast<value_type>(gen(integral_constant<\simdsizetype, i>()))} \foralli.
 
   \pnum
     The calls to \tcode{gen} are unsequenced with respect to each other.
