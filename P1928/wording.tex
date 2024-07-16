@@ -13,10 +13,10 @@
 
 \newcommand\flagsRequires[2]{
 \item If the template parameter pack \tcode{Flags} contains
-  \tcode{\alignedflag}, \tcode{addressof(*first)} points to storage
+  \tcode{\alignedflag}, \tcode{to_address(first)} points to storage
   aligned by \tcode{simd_alignment_v<#1>}.
 \item If the template parameter pack \tcode{Flags} contains
-  \tcode{\overalignedflag<N>}, \tcode{addressof(*first)}
+  \tcode{\overalignedflag<N>}, \tcode{to_address(first)}
   points to storage aligned by \tcode{N}.
 }
 
@@ -725,7 +725,8 @@ template<class It, class... Flags>
 \begin{itemdescr}
   \SimdLoadDescr
     {\range{first}{first + size()} is a valid range.}
-    {Initializes the $i^\text{th}$ element with \tcode{static_cast<T>(first[$i$])} \foralli.}
+    {Initializes the $i^\text{th}$ element with \tcode{static_cast<T>(to_address(first)[$i$])}
+    \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -736,7 +737,8 @@ template<class It, class... Flags>
 \begin{itemdescr}
   \SimdLoadDescr
     {\validMaskedRange}
-    {Initializes the $i^\text{th}$ element with \tcode{mask[$i$] ? static_cast<T>(first[$i$]) : T()}
+    {Initializes the $i^\text{th}$ element with \tcode{mask[$i$] ?
+      static_cast<T>(to_address(first)[$i$]) : T()}
     \foralli.}
 \end{itemdescr}
 
@@ -751,7 +753,7 @@ template<class It, class... Flags>
   \SimdLoadDescr
     {\range{first}{first + size()} is a valid range.}
     {Replaces the elements of the \tcode{basic_simd} object such that the $i^\text{th}$ element is
-    assigned with \tcode{static_cast<T>(first[$i$])} \foralli.}
+    assigned with \tcode{static_cast<T>(to_address(first)[$i$])} \foralli.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -763,7 +765,7 @@ template<class It, class... Flags>
   \SimdLoadDescr
     {\validMaskedRange}
     {Replaces the selected elements of the \tcode{basic_simd} object such that the $i^\text{th}$
-    element is replaced with \tcode{static_cast<T>(first[$i$])} \forallmaskedi.}
+    element is replaced with \tcode{static_cast<T>(to_address(first)[$i$])} \forallmaskedi.}
 \end{itemdescr}
 
 \newcommand\SimdStoreDescr[2]{
@@ -794,7 +796,7 @@ template<class Out, class... Flags>
 \begin{itemdescr}
   \SimdStoreDescr
     {\range{first}{first + size()} is a valid range.}
-    {Copies all \tcode{basic_simd} elements as if \tcode{first[$i$] =
+    {Copies all \tcode{basic_simd} elements as if \tcode{to_address(first)[$i$] =
     static_cast<iter_value_t<Out>>(operator[]($i$))} \foralli.}
 \end{itemdescr}
 
@@ -806,7 +808,7 @@ template<class Out, class... Flags>
 \begin{itemdescr}
   \SimdStoreDescr
     {\validMaskedRange}
-    {Copies the selected elements as if \tcode{first[$i$] =
+    {Copies the selected elements as if \tcode{to_address(first)[$i$] =
     static_cast<iter_value_t<Out>>(operator[]($i$))} \forallmaskedi.}
 \end{itemdescr}
 

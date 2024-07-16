@@ -179,6 +179,9 @@
 \item Apply improved wording from \ref{sec:simd.overview} to \ref{sec:simd.mask.overview}.
 \item Add comments for LWG to address to broadcast ctor (\ref{sec:simd.ctor}).
 \item Respecify generator ctor to not reuse broadcast constraint (\ref{sec:simd.ctor}).
+\item Use \code{to_address} on contiguous iterators (\ref{sec:simd.ctor} and \ref{sec:simd.copy}).
+  This is more explicit about allowing memcpy on the complete range rather than
+  having to iterate the range per element.
 
   %\todo Reorder \code{simd} and \code{simd_mask} specification in the wording (mask first).
 \end{revision}
