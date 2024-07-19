@@ -686,6 +686,13 @@ template<class G> constexpr explicit basic_simd(G&& gen) noexcept;
   \tcode{From}$_i$ satisfies \tcode{convertible_to<value_type>} \foralli.
   In addition, \foralli, if \tcode{From}$_i$ is a vectorizable type, conversion from
   \tcode{From}$_i$ to \tcode{value_type} is value-preserving.
+  \FIXME{
+    This allows \tcode{long double} and \tcode{std::float128_t} as return types.
+    So I think the last sentence needs to constrain on “arithmetic type” rather than “vectorizable
+    type”.
+    At the same time, we probably want to extend the definition of value-preserving from
+    vectorizable types to arithmetic types.
+  }
 
   \pnum\effects
   Initializes the $i^\text{th}$ element with
