@@ -188,6 +188,9 @@
 \item Fix default size of \code{simd} and \code{simd_mask} aliases
   (\ref{sec:simd.syn}, necessary for
   \std\code{destructible<\MayBreak{}\std{}simd<\MayBreak\std{}string>>} to be well-formed).
-  \todo FIXME on generator ctor constraints (\ref{sec:simd.ctor}).
+\item Extend value-preserving to encompass conversions from all arithmetic
+  types. Use this new freedom in \ref{sec:simd.ctor} to fully constrain the
+  generator constructor and to plug a specification hole in the broadcast
+  constructor.
   %\todo Reorder \code{simd} and \code{simd_mask} specification in the wording (mask first).
 \end{revision}
