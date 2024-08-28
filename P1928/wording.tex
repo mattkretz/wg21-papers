@@ -137,12 +137,12 @@ namespace std {
 
   // \ref{simd.class}, Class template \tcode{basic_simd}
   template<class T, class Abi = @\nativeabi@<T>> class basic_simd;
-  template<class T, @\simdsizetype@ N = basic_simd<T>::size()>
+  template<class T, @\simdsizetype@ N = @\simdsizev@<T, @\nativeabi@<T>>>
     using simd = basic_simd<T, @\deducet@<T, N>>;
 
   // \ref{simd.mask.class}, Class template \tcode{basic_simd_mask}
   template<size_t Bytes, class Abi = @\nativeabi@<@\integerfrom@<Bytes>>> class basic_simd_mask;
-  template<class T, @\simdsizetype@ N = basic_simd<T>::size()>
+  template<class T, @\simdsizetype@ N = @\simdsizev@<T, @\nativeabi@<T>>>
     using simd_mask = basic_simd_mask<sizeof(T), @\deducet@<T, N>>;
 
   // \ref{simd.creation}, \tcode{basic_simd} and \tcode{basic_simd_mask} creation
@@ -244,10 +244,12 @@ namespace std {
 \simdsizetype{} is an alias for a signed integer type.
 
 \pnum
-\tcode{\simdsizev<T, Abi>} denotes the width of \tcode{basic_simd<T, Abi>}.
+\tcode{\simdsizev<T, Abi>} denotes the width of \tcode{basic_simd<T, Abi>} if
+the specialization \tcode{basic_simd<T, Abi>} is enabled, or \tcode{0} otherwise.
 \begin{note}
   \tcode{\simdsizev<T, Abi>} does not require instantiation of \tcode{basic_simd<T, Abi>}.
 \end{note}
+\FIXME{drop the note?}
 
 \pnum
 \tcode{\maskelementsize<basic_simd_mask<Bytes, Abi>>} has the value \tcode{Bytes}.
