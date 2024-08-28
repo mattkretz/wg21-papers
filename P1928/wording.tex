@@ -453,9 +453,9 @@ template <class... Other>
   every type in pack \tcode{Flags2} is present either in pack \tcode{Flags} or
   pack \tcode{Other} and every type in packs \tcode{Flags} and \tcode{Other} is
   present in \tcode{Flags2}.
-  Additionally, if the packs \tcode{Flags} and \tcode{Other} contain two
+  If the packs \tcode{Flags} and \tcode{Other} contain two
   different specializations \tcode{\overalignedflag<N1>} and
-  \tcode{\overalignedflag<N2>}, \tcode{Flags2} does not have to contain the
+  \tcode{\overalignedflag<N2>}, \tcode{Flags2} is not required to contain the
   specialization \tcode{\overalignedflag<std\colcol{}min(N1, N2)>}.
 \end{itemdescr}
 
