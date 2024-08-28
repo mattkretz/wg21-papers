@@ -617,28 +617,9 @@ template<class U> constexpr basic_simd(U&&) noexcept;
     \item \tcode{From} is not an arithmetic type and does not satisfy
       \tcode{\constexprwrapperlike}, or
 
-    \item \tcode{From} satisfies \tcode{\constexprwrapperlike} (\ref{simd.syn})
-      and the actual value of \tcode{From::value} after conversion to
-      \tcode{value_type} will fit into \tcode{value_type} and will produce the
-      original value when converted back to \tcode{decltype(From::value)}.
-    \FIXME{
-      A value “after conversion to \tcode{To}” is always representable by \tcode{To}.
-      What I actually implemented is
-      \tcode{!(unsigned_integral<To> \&\& From::value < decltype(From::value)()
-          \&\& From::value <= numeric_limits<To>::max()
-        \&\& From::value >= numeric_limits<To>::lowest()}
-    }
-    \INFO{
-      Design intent:
-      I'm trying to allow \tcode{1.f $\rightarrow$ int} while disallowing \tcode{1.1f $\rightarrow$
-      int}.
-      Also, if \tcode{From::value} is a UDT, e.g. fixed-point, I believe we cannot use wording
-      such as “value can be represented” because how can we speak about the numerical value of a
-      UDT? Or more importantly, how would you implement such a constraint? That'd be hand waving
-      at best. We can speak about the value after conversion. But then we don't know what was lost
-      until we convert it back.\\
-      Ultimately, I think we need to aim for a reasonable heuristic, no more.
-    }
+    \item \tcode{From} satisfies \tcode{\constexprwrapperlike} (\ref{simd.syn}),
+      \tcode{remove_const_t<decltype(From::value)>} is an arithmetic type, and \tcode{From::value}
+      is representable by \tcode{value_type}.
   \end{itemize}
 
   \pnum\effects
