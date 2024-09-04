@@ -1070,7 +1070,7 @@ template<class T, class Abi, class BinaryOperation = plus<>>
   \tcode{binary_op} does not modify \tcode{x}.
 
   \pnum\returns
-  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$i$]), ...)[0]} \foralli{}
+  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[0]), $\ldots$, simd<T, 1>(x[x.size() - 1])[0]}
   (\iref{numerics.defns}).
 
   \pnum\throws
@@ -1104,8 +1104,9 @@ template<class T, class Abi, class BinaryOperation>
 
   \pnum\returns
   If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{identity_element}.
-  Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$i$]), ...)[0]}
-  \forallmaskedi.
+  Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$k_0$]),
+  $\ldots$, simd<T, 1>(x[$k_n$]))[0]} where $k_0, \ldots, k_n$ are the selected indices of
+  \tcode{mask}.
 
   \pnum\throws
   Any exception thrown from \tcode{binary_op}.
@@ -1120,7 +1121,8 @@ template<class T, class Abi>
 \begin{itemdescr}
   \pnum\returns
   If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{T()}. Otherwise, returns
-  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
+  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$k_0$]), $\ldots$, simd<T,
+  1>(x[$k_n$]))[0]} where $k_0, \ldots, k_n$ are the selected indices of \tcode{mask}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1131,8 +1133,9 @@ template<class T, class Abi>
 
 \begin{itemdescr}
   \pnum\returns
-  If \tcode{none_of(x)} is \tcode{true}, returns \tcode{T(1)}. Otherwise, returns
-  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
+  If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{T(1)}. Otherwise, returns
+  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$k_0$]), $\ldots$, simd<T,
+  1>(x[$k_n$]))[0]} where $k_0, \ldots, k_n$ are the selected indices of \tcode{mask}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1147,7 +1150,8 @@ template<class T, class Abi>
 
   \pnum\returns
   If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{T(\~{}T())}. Otherwise, returns
-  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
+  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$k_0$]), $\ldots$, simd<T,
+  1>(x[$k_n$]))[0]} where $k_0, \ldots, k_n$ are the selected indices of \tcode{mask}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1165,7 +1169,8 @@ template<class T, class Abi>
 
   \pnum\returns
   If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{T()}. Otherwise, returns
-  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, x[$i$], ...)} \forallmaskedi.
+  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$k_0$]), $\ldots$, simd<T,
+  1>(x[$k_n$]))[0]} where $k_0, \ldots, k_n$ are the selected indices of \tcode{mask}.
 \end{itemdescr}
 
 \begin{itemdecl}
