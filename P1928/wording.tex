@@ -561,10 +561,13 @@ with vectorizable \tcode{T} is enabled.
 Any other specialization of \tcode{basic_simd} is disabled.
 
 \begin{note}
-  The intent is for implementations to determine on the basis of the currently
-  targeted system, whether \tcode{basic_simd<T, Abi>} is enabled.
+  \tcode{basic_simd<T>} is intended to have the natural width suggested by the architecture of the
+  execution environment.
+  The other \tcode{basic_simd<T, Abi>} specializations are intended to be enabled if the
+  architecture of the execution environment allows.
 \end{note}
-\FIXME{drop the note?}
+\FIXME{LWG decided: preference to keep the note. Instead of “currently targeted system”, can we
+talk about “expected execution environment”?}
 
 If \tcode{basic_simd<T, Abi>} is disabled, the specialization has a
 deleted default constructor, deleted destructor, deleted copy constructor, and
@@ -587,7 +590,7 @@ constexpr explicit basic_simd(const @\impdef@& init);
 
 \begin{example}
   Consider an implementation that supports the type \tcode{__vec4f} and the function \tcode{__vec4f
-  _vec4f_addsub(__vec4f, __vec4f)} for the currently targeted system.
+  _vec4f_addsub(__vec4f, __vec4f)} for the architecture of the execution environment.
   A user may require the use of \tcode{_vec4f_addsub} for maximum performance and thus writes:
   \begin{codeblock}
     using V = basic_simd<float, simd_abi::__simd128>;
@@ -1512,10 +1515,11 @@ specialization with vectorizable \tcode{T} is enabled.
 Any other specialization of \tcode{basic_simd_mask} is disabled.
 
 \begin{note}
-  The intent is for implementations to determine on the basis of the currently
-  targeted system, whether \tcode{basic_simd_mask<Bytes, Abi>} is enabled.
+  \tcode{basic_simd_mask<Bytes>} is intended to have the natural width suggested by the architecture
+  of the execution environment.
+  The other \tcode{basic_simd_mask<Bytes, Abi>} specializations are intended to be enabled if the
+  architecture of the execution environment allows.
 \end{note}
-\FIXME{drop the note?}
 
 If \tcode{basic_simd_mask<Bytes, Abi>} is disabled, the specialization has a deleted
 default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
