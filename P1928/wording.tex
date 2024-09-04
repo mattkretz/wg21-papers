@@ -1067,7 +1067,7 @@ template<class T, class Abi, class BinaryOperation = plus<>>
   \tcode{basic_simd} that the implementation needs” (stop waving hands).}
 
   \pnum\expects
-  \tcode{BinaryOperation} does not modify \tcode{x}.
+  \tcode{binary_op} does not modify \tcode{x}.
 
   \pnum\returns
   \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$i$]), ...)[0]} \foralli{}
@@ -1093,7 +1093,7 @@ template<class T, class Abi, class BinaryOperation>
 
   \pnum\expects
   \begin{itemize}
-    \item \tcode{BinaryOperation} does not modify \tcode{x}.
+    \item \tcode{binary_op} does not modify \tcode{x}.
 
     \item For every \tcode{A1} that is an ABI tag type and for all finite
       values \tcode{y} representable by \tcode{T}, the results of
