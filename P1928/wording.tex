@@ -1217,7 +1217,7 @@ template<class T, class Abi>
   \tcode{T} models \tcode{totally_ordered}.
 
   \pnum\returns
-  The result of the element-wise application of \tcode{std::min(a[$i$], b[$i$])} \foralli.
+  The result of the element-wise application of \tcode{min(a[$i$], b[$i$])} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1230,7 +1230,7 @@ template<class T, class Abi>
   \tcode{T} models \tcode{totally_ordered}.
 
   \pnum\returns
-  The result of the element-wise application of \tcode{std::max(a[$i$], b[$i$])} \foralli.
+  The result of the element-wise application of \tcode{max(a[$i$], b[$i$])} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1246,9 +1246,9 @@ template<class T, class Abi>
   \pnum\returns
   A \tcode{pair} initialized with
   \begin{itemize}
-    \item the result of element-wise application of \tcode{std::min(a[$i$], b[$i$])} \foralli{} in
+    \item the result of element-wise application of \tcode{min(a[$i$], b[$i$])} \foralli{} in
       the \tcode{first} member, and
-    \item the result of element-wise application of \tcode{std::max(a[$i$], b[$i$])} \foralli{} in
+    \item the result of element-wise application of \tcode{max(a[$i$], b[$i$])} \foralli{} in
       the \tcode{second} member.
   \end{itemize}
 \end{itemdescr}
@@ -1267,7 +1267,7 @@ template<class T, class Abi>
   No element in \tcode{lo} shall be greater than the corresponding element in \tcode{hi}.
 
   \pnum\returns
-  The result of element-wise application of \tcode{std::clamp(v[$i$], lo[$i$], hi[$i$])} \foralli.
+  The result of element-wise application of \tcode{clamp(v[$i$], lo[$i$], hi[$i$])} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
