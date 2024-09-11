@@ -185,25 +185,9 @@ namespace std {
   // \ref{simd.reductions}, \tcode{basic_simd} reductions
   template<class T, class Abi, class BinaryOperation = plus<>>
     constexpr T reduce(const basic_simd<T, Abi>&, BinaryOperation = {});
-  template<class T, class Abi, class BinaryOperation>
-    constexpr T reduce(const basic_simd<T, Abi>& x,
-      const typename basic_simd<T, Abi>::mask_type& mask, type_identity_t<T> identity_element,
-      BinaryOperation binary_op);
-  template<class T, class Abi>
-    constexpr T reduce(const basic_simd<T, Abi>& x,
-      const typename basic_simd<T, Abi>::mask_type& mask, plus<> binary_op = {}) noexcept;
-  template<class T, class Abi>
-    constexpr T reduce(const basic_simd<T, Abi>& x,
-      const typename basic_simd<T, Abi>::mask_type& mask, multiplies<> binary_op) noexcept;
-  template<class T, class Abi>
-    constexpr T reduce(const basic_simd<T, Abi>& x,
-      const typename basic_simd<T, Abi>::mask_type& mask, bit_and<> binary_op) noexcept;
-  template<class T, class Abi>
-    constexpr T reduce(const basic_simd<T, Abi>& x,
-      const typename basic_simd<T, Abi>::mask_type& mask, bit_or<> binary_op) noexcept;
-  template<class T, class Abi>
-    constexpr T reduce(const basic_simd<T, Abi>& x,
-      const typename basic_simd<T, Abi>::mask_type& mask, bit_xor<> binary_op) noexcept;
+  template<class T, class Abi, class BinaryOperation = plus<>>
+    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
+                       BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
 
   template<class T, class Abi>
     constexpr T reduce_min(const basic_simd<T, Abi>&) noexcept;
@@ -1069,9 +1053,9 @@ template<class T, class Abi, class BinaryOperation = plus<>>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi, class BinaryOperation>
+template<class T, class Abi, class BinaryOperation = plus<>>
   constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                     type_identity_t<T> identity_element, BinaryOperation binary_op);
+                     BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1101,67 +1085,17 @@ template<class T, class Abi, class BinaryOperation>
 
   \pnum\throws
   Any exception thrown from \tcode{binary_op}.
-\end{itemdescr}
 
-\begin{itemdecl}
-template<class T, class Abi>
-  constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                     plus<> binary_op = {}) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\returns
-  If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{T()}. Otherwise, returns
-  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$k_0$]), $\ldots$, simd<T,
-  1>(x[$k_n$]))[0]} where $k_0, \ldots, k_n$ are the selected indices of \tcode{mask}.
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class T, class Abi>
-  constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                     multiplies<> binary_op) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\returns
-  If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{T(1)}. Otherwise, returns
-  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$k_0$]), $\ldots$, simd<T,
-  1>(x[$k_n$]))[0]} where $k_0, \ldots, k_n$ are the selected indices of \tcode{mask}.
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class T, class Abi>
-  constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                     bit_and<> binary_op) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\constraints
-  \tcode{is_integral_v<T>} is \tcode{true}.
-
-  \pnum\returns
-  If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{T(\~{}T())}. Otherwise, returns
-  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$k_0$]), $\ldots$, simd<T,
-  1>(x[$k_n$]))[0]} where $k_0, \ldots, k_n$ are the selected indices of \tcode{mask}.
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class T, class Abi>
-  constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                     bit_or<> binary_op) noexcept;
-template<class T, class Abi>
-  constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                     bit_xor<> binary_op) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\constraints
-  \tcode{is_integral_v<T>} is \tcode{true}.
-
-  \pnum\returns
-  If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{T()}. Otherwise, returns
-  \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$k_0$]), $\ldots$, simd<T,
-  1>(x[$k_n$]))[0]} where $k_0, \ldots, k_n$ are the selected indices of \tcode{mask}.
+  \pnum\remarks
+  The default argument for \code{identity_element} is equal to
+  \begin{itemize}
+    \item \tcode{T()} if \code{BinaryOperation} is \code{plus<>},
+    \item \tcode{T(1)} if \code{BinaryOperation} is \code{multiplies<>},
+    \item \tcode{T(\~{}T())} if \code{BinaryOperation} is \code{bit_and<>},
+    \item \tcode{T()} if \code{BinaryOperation} is \code{bit_or<>},
+    \item \tcode{T()} if \code{BinaryOperation} is \code{bit_xor<>}, or
+    \item ill-formed otherwise.
+  \end{itemize}
 \end{itemdescr}
 
 \begin{itemdecl}

@@ -205,6 +205,10 @@
   \code{reduce}.
 \item Drop the notes that were trying to explain the intent behind
   enabling/disabling simd(mask) specializations.
+\item Reorder \code{binary_op} and \code{identity_element} on masked
+  \code{reduce}. Provide \code{std::plus<>} as default \code{BinaryOperation}
+  and specify a default argument for \code{identity_element}
+  (\ref{sec:simd.reductions}).
 
   %\todo Reorder \code{simd} and \code{simd_mask} specification in the wording (mask first).
 \end{revision}
