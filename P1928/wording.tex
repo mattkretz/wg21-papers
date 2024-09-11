@@ -1277,7 +1277,8 @@ template<class T, class Abi>
 \end{itemdecl}
 
 \begin{itemdescr}
-    \pnum\returns As-if \tcode{c ? a : b}.
+    \pnum\effects
+    Equivalent to: \tcode{return c ? a : b;}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1287,7 +1288,14 @@ template<class T, class Abi>
 \end{itemdecl}
 
 \begin{itemdescr}
-    \pnum\returns As-if \tcode{\simdselect(c, a, b)}.
+  \pnum\effects
+  Equivalent to:
+  \begin{codeblock}
+return @\simdselect@(c, a, b);
+  \end{codeblock}
+  where \tcode{\simdselect} is found by argument-dependent lookup \iref{basic.lookup.argdep}
+  contrary to \iref{contents}.
+  \FIXME{Should this exception be listed in \iref{contents} instead?}
 \end{itemdescr}
 
 \rSec2[simd.math]{\tcode{basic_simd} math library}
