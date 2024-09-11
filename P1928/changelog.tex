@@ -209,6 +209,8 @@
   \code{reduce}. Provide \code{std::plus<>} as default \code{BinaryOperation}
   and specify a default argument for \code{identity_element}
   (\ref{sec:simd.reductions}).
+\item Add exposition-only concept \reductionoperation and use it for
+  \code{BinaryOperation} in \code{reduce}.
 
   %\todo Reorder \code{simd} and \code{simd_mask} specification in the wording (mask first).
 \end{revision}
