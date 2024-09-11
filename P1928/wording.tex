@@ -560,15 +560,6 @@ It is implementation-defined whether any other \tcode{basic_simd<T, Abi>} specia
 with vectorizable \tcode{T} is enabled.
 Any other specialization of \tcode{basic_simd} is disabled.
 
-\begin{note}
-  \tcode{basic_simd<T>} is intended to have the natural width suggested by the architecture of the
-  execution environment.
-  The other \tcode{basic_simd<T, Abi>} specializations are intended to be enabled if the
-  architecture of the execution environment allows.
-\end{note}
-\FIXME{LWG decided: preference to keep the note. Instead of “currently targeted system”, can we
-talk about “expected execution environment”?}
-
 If \tcode{basic_simd<T, Abi>} is disabled, the specialization has a
 deleted default constructor, deleted destructor, deleted copy constructor, and
 deleted copy assignment.
@@ -1518,13 +1509,6 @@ The types \tcode{basic_simd_mask<sizeof(T), \deducet<T, N>>} for all vectorizabl
 It is implementation-defined whether any other \tcode{basic_simd_mask<sizeof(T), Abi>}
 specialization with vectorizable \tcode{T} is enabled.
 Any other specialization of \tcode{basic_simd_mask} is disabled.
-
-\begin{note}
-  \tcode{basic_simd_mask<Bytes>} is intended to have the natural width suggested by the architecture
-  of the execution environment.
-  The other \tcode{basic_simd_mask<Bytes, Abi>} specializations are intended to be enabled if the
-  architecture of the execution environment allows.
-\end{note}
 
 If \tcode{basic_simd_mask<Bytes, Abi>} is disabled, the specialization has a deleted
 default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
