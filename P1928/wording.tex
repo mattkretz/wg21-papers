@@ -1098,8 +1098,8 @@ template<class T, class Abi, class BinaryOperation>
     \item For every \tcode{A1} that is an ABI tag type and for all finite
       values \tcode{y} representable by \tcode{T}, the results of
       \tcode{all_of(y == binary_op(basic_simd<T, A1>(identity_element),
-      basic_simd<T, A1>(y)))} and \tcode{all_of(basic_simd<T, A1>(y) ==
-      binary_op(y, basic_simd<T, A1>(identity_element)))} are \tcode{true}.
+      basic_simd<T, A1>(y)))} and \tcode{all_of(y == binary_op(basic_simd<T, A1>(y), basic_simd<T,
+      A1>(identity_element)))} are \tcode{true}.
   \end{itemize}
 
   \pnum\returns
