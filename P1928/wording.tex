@@ -183,9 +183,15 @@ namespace std {
   constexpr @\simdsizetype@ reduce_max_index(same_as<bool> auto);
 
   // \ref{simd.reductions}, \tcode{basic_simd} reductions
-  template<class T, class Abi, class BinaryOperation = plus<>>
+  template <class BinaryOperation, class T>
+    concept @\reductionoperation@ =                                    // \expos
+      requires (BinaryOperation binary_op, simd<T, 1> v) {
+        { binary_op(v, v) } -> same_as<simd<T, 1>>;
+      };
+
+  template<class T, class Abi, @\reductionoperation@<T> BinaryOperation = plus<>>
     constexpr T reduce(const basic_simd<T, Abi>&, BinaryOperation = {});
-  template<class T, class Abi, class BinaryOperation = plus<>>
+  template<class T, class Abi, @\reductionoperation@<T> BinaryOperation = plus<>>
     constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                        BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
 
@@ -1020,27 +1026,20 @@ friend constexpr basic_simd
 \pnum
 In [simd.reductions], \tcode{BinaryOperation} shall be a binary element-wise operation.
 
+\TODO{
+  \todoitem Add own section for exposition-only concept \reductionoperation?
+  \todoitem Move the above paragraph into the semantic requirements.
+  \todoitem Add another semantic constraint: the binary operation can be invoked with two arguments
+  of type \code{basic_simd<T, Abi>}, with unspecified ABI tag \code{Abi}, returning a
+  \code{basic_simd<T, Abi>}.
+}
+
 \begin{itemdecl}
-template<class T, class Abi, class BinaryOperation = plus<>>
+template<class T, class Abi, @\reductionoperation@<T> BinaryOperation = plus<>>
   constexpr T reduce(const basic_simd<T, Abi>& x, BinaryOperation binary_op = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \tcode{BinaryOperation} satisfies \tcode{invocable<simd<T, 1>, simd<T, 1>>}.
-
-  \pnum\mandates
-  \tcode{binary_op} can be invoked with two arguments of type
-  \tcode{basic_simd<T, A1>} returning \tcode{basic_simd<T, A1>} for every
-  \tcode{A1} that is an ABI tag type.
-  \INFO{Better alternative? “[\ldots] for zero or more unspecified ABI tag types \tcode{A1}.”}
-  \FIXME{This is not supposed to require exhaustive testing of all ABI tags.
-    What we need to express is that the user-supplied \tcode{binary_op} \emph{can} be called
-    with every possible ABI tag since different implementations / compiler flags / targets will lead
-    to a different subset getting called.
-    Basically, (start waving hands) “\tcode{binary_op} can be invoked with the specializations of
-  \tcode{basic_simd} that the implementation needs” (stop waving hands).}
-
   \pnum\expects
   \tcode{binary_op} does not modify \tcode{x}.
 
@@ -1053,19 +1052,12 @@ template<class T, class Abi, class BinaryOperation = plus<>>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi, class BinaryOperation = plus<>>
+template<class T, class Abi, @\reductionoperation@<T> BinaryOperation = plus<>>
   constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                      BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \tcode{BinaryOperation} satisfies \tcode{invocable<simd<T, 1>, simd<T, 1>>}.
-
-  \pnum\mandates
-  \tcode{binary_op} can be invoked with two arguments of type \tcode{basic_simd<T, A1>} returning
-  \tcode{basic_simd<T, A1>} for every \tcode{A1} that is an ABI tag type.
-
   \pnum\expects
   \begin{itemize}
     \item \tcode{binary_op} does not modify \tcode{x}.
