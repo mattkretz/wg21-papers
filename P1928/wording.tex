@@ -186,8 +186,9 @@ namespace std {
   template<class T, class Abi, class BinaryOperation = plus<>>
     constexpr T reduce(const basic_simd<T, Abi>&, BinaryOperation = {});
   template<class T, class Abi, class BinaryOperation = plus<>>
-    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                       BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
+    constexpr T reduce(
+      const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
+      BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
 
   template<class T, class Abi>
     constexpr T reduce_min(const basic_simd<T, Abi>&) noexcept;
