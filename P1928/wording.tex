@@ -183,15 +183,9 @@ namespace std {
   constexpr @\simdsizetype@ reduce_max_index(same_as<bool> auto);
 
   // \ref{simd.reductions}, \tcode{basic_simd} reductions
-  template <class BinaryOperation, class T>
-    concept @\reductionoperation@ =                                    // \expos
-      requires (BinaryOperation binary_op, simd<T, 1> v) {
-        { binary_op(v, v) } -> same_as<simd<T, 1>>;
-      };
-
-  template<class T, class Abi, @\reductionoperation@<T> BinaryOperation = plus<>>
+  template<class T, class Abi, class BinaryOperation = plus<>>
     constexpr T reduce(const basic_simd<T, Abi>&, BinaryOperation = {});
-  template<class T, class Abi, @\reductionoperation@<T> BinaryOperation = plus<>>
+  template<class T, class Abi, class BinaryOperation = plus<>>
     constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                        BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
 
@@ -1023,23 +1017,36 @@ friend constexpr basic_simd
 
 \rSec2[simd.reductions]{\tcode{basic_simd} reductions}
 
-\pnum
-In [simd.reductions], \tcode{BinaryOperation} shall be a binary element-wise operation.
+\begin{itemdecl}
+  template <class BinaryOperation, class T>
+    concept @\reductionoperation@ =  // \expos
+      requires (BinaryOperation binary_op, simd<T, 1> v) {
+        { binary_op(v, v) } -> same_as<simd<T, 1>>;
+      };
+\end{itemdecl}
 
-\TODO{
-  \todoitem Add own section for exposition-only concept \reductionoperation?
-  \todoitem Move the above paragraph into the semantic requirements.
-  \todoitem Add another semantic constraint: the binary operation can be invoked with two arguments
-  of type \code{basic_simd<T, Abi>}, with unspecified ABI tag \code{Abi}, returning a
-  \code{basic_simd<T, Abi>}.
-}
+\begin{itemdescr}
+\pnum
+Types \tcode{BinaryOperation} and \tcode{T} model \tcode{\reductionoperation<BinaryOperation, T>}
+only if:
+\begin{itemize}
+  \item \tcode{BinaryOperation} is a binary element-wise operation and the operation is commutative.
+
+  \item An object of type \tcode{BinaryOperation} can be invoked with two arguments of type
+    \code{basic_simd<T, Abi>}, with unspecified ABI tag \code{Abi}, returning a \code{basic_simd<T,
+    Abi>}.
+\end{itemize}
+\end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi, @\reductionoperation@<T> BinaryOperation = plus<>>
+template<class T, class Abi, class BinaryOperation = plus<>>
   constexpr T reduce(const basic_simd<T, Abi>& x, BinaryOperation binary_op = {});
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{BinaryOperation} models \tcode{\reductionoperation<T>}.
+
   \pnum\expects
   \tcode{binary_op} does not modify \tcode{x}.
 
@@ -1052,12 +1059,15 @@ template<class T, class Abi, @\reductionoperation@<T> BinaryOperation = plus<>>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class Abi, @\reductionoperation@<T> BinaryOperation = plus<>>
+template<class T, class Abi, class BinaryOperation = plus<>>
   constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
                      BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \tcode{BinaryOperation} models \tcode{\reductionoperation<T>}.
+
   \pnum\mandates
   An argument for \tcode{identity_element} is provided for the invocation, unless
   \tcode{BinaryOperation} is one of \code{plus<>}, \code{multiplies<>}, \code{bit_and<>},
@@ -1067,11 +1077,9 @@ template<class T, class Abi, @\reductionoperation@<T> BinaryOperation = plus<>>
   \begin{itemize}
     \item \tcode{binary_op} does not modify \tcode{x}.
 
-    \item For every \tcode{A1} that is an ABI tag type and for all finite
-      values \tcode{y} representable by \tcode{T}, the results of
-      \tcode{all_of(y == binary_op(basic_simd<T, A1>(identity_element),
-      basic_simd<T, A1>(y)))} and \tcode{all_of(y == binary_op(basic_simd<T, A1>(y), basic_simd<T,
-      A1>(identity_element)))} are \tcode{true}.
+    \item For all finite values \tcode{y} representable by \tcode{T}, the results of
+      \tcode{y == binary_op(simd<T, 1>(identity_element), simd<T, 1>(y))[0]} and
+      \tcode{y == binary_op(simd<T, 1>(y), simd<T, 1>(identity_element))[0]} are \tcode{true}.
   \end{itemize}
 
   \pnum\returns
