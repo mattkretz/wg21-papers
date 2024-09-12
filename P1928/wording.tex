@@ -1058,6 +1058,11 @@ template<class T, class Abi, @\reductionoperation@<T> BinaryOperation = plus<>>
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\mandates
+  An argument for \tcode{identity_element} is provided for the invocation, unless
+  \tcode{BinaryOperation} is one of \code{plus<>}, \code{multiplies<>}, \code{bit_and<>},
+  \code{bit_or<>}, or \code{bit_xor<>}.
+
   \pnum\expects
   \begin{itemize}
     \item \tcode{binary_op} does not modify \tcode{x}.
@@ -1084,9 +1089,8 @@ template<class T, class Abi, @\reductionoperation@<T> BinaryOperation = plus<>>
     \item \tcode{T()} if \code{BinaryOperation} is \code{plus<>},
     \item \tcode{T(1)} if \code{BinaryOperation} is \code{multiplies<>},
     \item \tcode{T(\~{}T())} if \code{BinaryOperation} is \code{bit_and<>},
-    \item \tcode{T()} if \code{BinaryOperation} is \code{bit_or<>},
-    \item \tcode{T()} if \code{BinaryOperation} is \code{bit_xor<>}, or
-    \item ill-formed otherwise.
+    \item \tcode{T()} if \code{BinaryOperation} is \code{bit_or<>}, or
+    \item \tcode{T()} if \code{BinaryOperation} is \code{bit_xor<>}.
   \end{itemize}
 \end{itemdescr}
 

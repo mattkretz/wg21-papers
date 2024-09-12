@@ -213,6 +213,8 @@
   \code{BinaryOperation} in \code{reduce}.
 \item Use “Equivalent to” wording for \code{simd_select} and carve out an
   exception for ADL for \simdselect (\ref{sec:simd.alg}).
+\item Mandate an identity element argument for masked reduce if the binary
+  operation isn't one of the five known operations.
 
   %\todo Reorder \code{simd} and \code{simd_mask} specification in the wording (mask first).
 \end{revision}
