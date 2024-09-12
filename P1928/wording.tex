@@ -1067,12 +1067,13 @@ template<class T, class Abi, class BinaryOperation = plus<>>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{BinaryOperation} models \tcode{\reductionoperation<T>}.
+  \begin{itemize}
+    \item \tcode{BinaryOperation} models \tcode{\reductionoperation<T>}.
 
-  \pnum\mandates
-  An argument for \tcode{identity_element} is provided for the invocation, unless
-  \tcode{BinaryOperation} is one of \code{plus<>}, \code{multiplies<>}, \code{bit_and<>},
-  \code{bit_or<>}, or \code{bit_xor<>}.
+    \item An argument for \tcode{identity_element} is provided for the invocation, unless
+      \tcode{BinaryOperation} is one of \code{plus<>}, \code{multiplies<>}, \code{bit_and<>},
+      \code{bit_or<>}, or \code{bit_xor<>}.
+  \end{itemize}
 
   \pnum\expects
   \begin{itemize}

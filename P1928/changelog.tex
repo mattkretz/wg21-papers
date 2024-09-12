@@ -211,8 +211,8 @@
   (\ref{sec:simd.reductions}).
 \item Use “Equivalent to” wording for \code{simd_select} and carve out an
   exception for ADL for \simdselect (\ref{sec:simd.alg}).
-\item Mandate an identity element argument for masked reduce if the binary
-  operation isn't one of the five known operations.
+\item Add a constraint for a provided identity element argument for masked
+  reduce if the binary operation isn't one of the five known operations.
 \item Add exposition-only concept \reductionoperation with additional semantic
   constraints and use it in the \code{reduce} constraints
   (\ref{sec:simd.reductions}).
