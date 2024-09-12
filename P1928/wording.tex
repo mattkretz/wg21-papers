@@ -1175,8 +1175,15 @@ template<class T, class Abi>
 
   \pnum\constraints
   \begin{itemize}
-    \item For the first overload \tcode{T} is a specialization of \tcode{basic_simd}.
-    \item For the second overload \tcode{T} is a specialization of \tcode{basic_simd_mask}.
+    \item For the first overload \tcode{T} is an enabled specialization of \tcode{basic_simd}. If
+      \tcode{basic_simd<typename T\colcol{}value_type, Abi>\colcol{}size() \% T\colcol{}size()} is
+      not \tcode{0} then \tcode{resize_simd<basic_simd<typename T\colcol{}value_type,
+      Abi>\colcol{}size() \% T\colcol{}size(), T>} has a member \tcode{type}.
+
+    \item For the second overload \tcode{T} is an enabled specialization of \tcode{basic_simd_mask}.
+      If \tcode{basic_simd_mask<\maskelementsize<T>, Abi>\colcol{}size() \% T\colcol{}size()} is not
+      \tcode{0} then \tcode{resize_simd<basic_simd_mask<\MayBreak{}\maskelementsize<T>,
+      Abi>\colcol{}size() \% T\colcol{}size(), T>} has a member \tcode{type}.
   \end{itemize}
 
   \pnum Let $N$ be \tcode{x.size() / T::size()}.
@@ -1210,6 +1217,14 @@ template<size_t Bytes, class... Abis>
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum\constraints
+  \begin{itemize}
+    \item For the first overload \tcode{simd<T, (basic_simd<T, Abis>\colcol{}size() + ...)>} is enabled.
+
+    \item For the second overload \tcode{simd_mask<\deducet<\integerfrom<Bytes>,
+      (basic_simd_mask<Bytes, Abis>\colcol{}size() + ...)>} is enabled.
+  \end{itemize}
+
   \pnum\returns
   A data-parallel object initialized with the concatenated values in the \tcode{xs} pack of
   data-parallel objects: The $i^\text{th}$ \tcode{basic_simd}/\tcode{basic_simd_mask} element of the
