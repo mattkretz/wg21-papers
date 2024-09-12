@@ -97,7 +97,8 @@ all possible values of \tcode{U} can be represented with type \tcode{T}.
 \begin{codeblock}
 namespace std {
   using @\simdsizetype@ = @\seebelow@;                                  // \expos
-  template <class T, class Abi> constexpr @\simdsizetype\ \simdsizev@ = @\seebelow@; // \expos
+  template <class T, class Abi>
+    constexpr @\simdsizetype\ \simdsizev@ = @\seebelow@;                // \expos
 
   template <class T> constexpr size_t @\maskelementsize@ = @\seebelow@; // \expos
   template <size_t Bytes> using @\integerfrom@ = @\seebelow@;            // \expos
@@ -186,8 +187,9 @@ namespace std {
   template<class T, class Abi, class BinaryOperation = plus<>>
     constexpr T reduce(const basic_simd<T, Abi>&, BinaryOperation = {});
   template<class T, class Abi, class BinaryOperation = plus<>>
-    constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                       BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
+    constexpr T reduce(
+      const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
+      BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
 
   template<class T, class Abi>
     constexpr T reduce_min(const basic_simd<T, Abi>&) noexcept;
@@ -1060,8 +1062,9 @@ template<class T, class Abi, class BinaryOperation = plus<>>
 
 \begin{itemdecl}
 template<class T, class Abi, class BinaryOperation = plus<>>
-  constexpr T reduce(const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
-                     BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
+  constexpr T reduce(
+    const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
+    BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1236,7 +1239,8 @@ template<size_t Bytes, class... Abis>
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr basic_simd<T, Abi> min(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
+  constexpr basic_simd<T, Abi> min(const basic_simd<T, Abi>& a,
+                                   const basic_simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1249,7 +1253,8 @@ template<class T, class Abi>
 
 \begin{itemdecl}
 template<class T, class Abi>
-  constexpr basic_simd<T, Abi> max(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
+  constexpr basic_simd<T, Abi> max(const basic_simd<T, Abi>& a,
+                                   const basic_simd<T, Abi>& b) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1368,7 +1373,8 @@ public:
   using value_type = bool;
   using abi_type = Abi;
 
-  static constexpr integral_constant<@\simdsizetype@, @\simdsizev@<@\integerfrom@<Bytes>, Abi>> size {};
+  static constexpr integral_constant<@\simdsizetype@, @\simdsizev@<@\integerfrom@<Bytes>, Abi>>
+    size {};
 
   constexpr basic_simd_mask() noexcept = default;
 
@@ -1390,7 +1396,8 @@ public:
   template<class Out, class... Flags>
     constexpr void copy_to(Out first, simd_flags<Flags...> = {}) const;
   template<class Out, class... Flags>
-    constexpr void copy_to(Out first, const basic_simd_mask& mask, simd_flags<Flags...> = {}) const;
+    constexpr void copy_to(Out first, const basic_simd_mask& mask,
+                           simd_flags<Flags...> = {}) const;
 
   // \ref{simd.mask.subscr}, \tcode{basic_simd_mask} subscript operators
   constexpr value_type operator[](@\simdsizetype@) const;
@@ -1896,4 +1903,4 @@ constexpr @\simdsizetype@ reduce_max_index(same_as<bool> auto z);
   \pnum\returns \tcode{0}.
 \end{itemdescr}
 
-% vim: tw=100
+% vim: tw=100 cc=99
