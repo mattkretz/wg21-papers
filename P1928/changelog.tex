@@ -209,12 +209,16 @@
   \code{reduce}. Provide \code{std::plus<>} as default \code{BinaryOperation}
   and specify a default argument for \code{identity_element}
   (\ref{sec:simd.reductions}).
-\item Add exposition-only concept \reductionoperation and use it for
-  \code{BinaryOperation} in \code{reduce}.
 \item Use “Equivalent to” wording for \code{simd_select} and carve out an
   exception for ADL for \simdselect (\ref{sec:simd.alg}).
 \item Mandate an identity element argument for masked reduce if the binary
   operation isn't one of the five known operations.
+\item Add exposition-only concept \reductionoperation with additional semantic
+  constraints and use it in the \code{reduce} constraints
+  (\ref{sec:simd.reductions}).
+\item Simplify precondition on identity element, using only \code{simd<T, 1>}
+  instead of all possible ABI tags. The latter follows from the former through
+  mandating an \emph{element-wise binary operation}.
 
   %\todo Reorder \code{simd} and \code{simd_mask} specification in the wording (mask first).
 \end{revision}
