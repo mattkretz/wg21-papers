@@ -222,6 +222,207 @@ namespace std {
   template<size_t Bytes, class Abi, class T, class U>
     constexpr auto simd_select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b)
     noexcept -> decltype(@\simdselect@(c, a, b));
+
+  // \ref{simd.math}, Mathematical functions
+  template<typename V>
+    concept @\simdfloatingpoint@ =  // \expos
+      same_as<V, basic_simd<typename V::value_type, typename V::abi_type>
+      && is_default_constructible<V> && floating_point<typename V::value_type>;
+
+  template<typename V, typename... Ts>
+    concept @\multisimdfloatingpoint@ =  // \expos
+      @\simdfloatingpoint@<common_type_t<V, Ts...>>;
+
+  template<@\simdfloatingpoint@ V>
+    constexpr V acos(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V asin(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V atan(const V& x);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr common_type_t<V0, V1> atan2(const V0& y, const V1& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V cos(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V sin(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V tan(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V acosh(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V asinh(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V atanh(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V cosh(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V sinh(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V tanh(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V exp(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V exp2(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V expm1(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V frexp(const V& value, rebind_simd_t<int, V>* exp);
+  template<@\simdfloatingpoint@ V>
+    constexpr rebind_simd_t<int, V> ilogb(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V ldexp(const V& x, const rebind_simd_t<int, V>& exp);
+  template<@\simdfloatingpoint@ V>
+    constexpr V log(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V log10(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V log1p(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V log2(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V logb(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V modf(const type_identity_t<V>& value, V* iptr);
+  template<@\simdfloatingpoint@ V>
+    constexpr V scalbn(const V& x, const rebind_simd_t<int, V>& n);
+  template<@\simdfloatingpoint@ V>
+    constexpr V scalbln(const V& x, const rebind_simd_t<long int, V>& n);
+  template<@\simdfloatingpoint@ V>
+    constexpr V cbrt(const V& x);
+  template<integral T, class Abi>
+    constexpr V abs(const V& j);
+  template<@\simdfloatingpoint@ V>
+    constexpr V abs(const V& j);
+  template<@\simdfloatingpoint@ V>
+    constexpr V fabs(const V& x);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr common_type_t<V0, V1> hypot(const V0& x, const V1& y);
+  template<typename V0, typename V1, @\multisimdfloatingpoint@<V0, V1> V2>
+    constexpr common_type_t<V0, V1, V2> hypot(const V0& x, const V1& y, const V2& z);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr common_type_t<V0, V1> pow(const V0& x, const V1& y);
+  template<@\simdfloatingpoint@ V>
+    constexpr V sqrt(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V erf(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V erfc(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V lgamma(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V tgamma(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V ceil(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V floor(const V& x);
+  template<@\simdfloatingpoint@ V>
+    V nearbyint(const V& x);
+  template<@\simdfloatingpoint@ V>
+    V rint(const V& x);
+  template<@\simdfloatingpoint@ V>
+    rebind_simd_t<long int, V> lrint(const V& x);
+  template<@\simdfloatingpoint@ V>
+    rebind_simd_t<long long int, V> llrint(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V round(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr rebind_simd_t<long int, V> lround(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr rebind_simd_t<long long int, V> llround(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr V trunc(const V& x);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr common_type_t<V0, V1> fmod(const V0& x, const V1& y);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr common_type_t<V0, V1> remainder(const V0& x, const V1& y);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr common_type_t<V0, V1> remquo(const V0& x, const V1& y,
+                                           rebind_simd_t<int, common_type_t<V0, V1>>* quo);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr common_type_t<V0, V1> copysign(const V0& x, const V1& y);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr common_type_t<V0, V1> nextafter(const V0& x, const V1& y);
+    @\textrm{\INFO{\code{nexttoward} is intentionally missing (because it needs a \code{long double}
+    \ argument). We expect \code{nextup} and \code{nextdown} to provide a better replacement.}}@
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr common_type_t<V0, V1> fdim(const V0& x, const V1& y);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr common_type_t<V0, V1> fmax(const V0& x, const V1& y);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr common_type_t<V0, V1> fmin(const V0& x, const V1& y);
+  template<typename V0, typename V1, @\multisimdfloatingpoint@<V0, V1> V2>
+    constexpr common_type_t<V0, V1, V2> fma(const V0& x, const V1& y, const V2& z);
+  template<typename V0, typename V1, @\multisimdfloatingpoint@<V0, V1> V2>
+    constexpr common_type_t<V0, V1, V2> lerp(const V0& a, const V1& b, const V2& t) noexcept;
+  template<@\simdfloatingpoint@ V>
+    constexpr rebind_simd_t<int, V> fpclassify(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr typename V::mask_type isfinite(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr typename V::mask_type isinf(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr typename V::mask_type isnan(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr typename V::mask_type isnormal(const V& x);
+  template<@\simdfloatingpoint@ V>
+    constexpr typename V::mask_type signbit(const V& x);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr typename common_type_t<V0, V1>::mask_type isgreater(const V0& x, const V1& y);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr typename common_type_t<V0, V1>::mask_type isgreaterequal(const V0& x, const V1& y);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr typename common_type_t<V0, V1>::mask_type isless(const V0& x, const V1& y);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr typename common_type_t<V0, V1>::mask_type islessequal(const V0& x, const V1& y);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr typename common_type_t<V0, V1>::mask_type islessgreater(const V0& x, const V1& y);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    constexpr typename common_type_t<V0, V1>::mask_type isunordered(const V0& x, const V1& y);
+  template<@\simdfloatingpoint@ V>
+    V assoc_laguerre(const rebind_simd_t<unsigned, V>& n, const rebind_simd_t<unsigned, V>& m,
+                     const V& x);
+  template<@\simdfloatingpoint@ V>
+    V assoc_legendre(const rebind_simd_t<unsigned, V>& l, const rebind_simd_t<unsigned, V>& m,
+                     const V& x);
+  multisimdfloatingpoint<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    common_type_t<V0, V1> beta(const V0& x, const V1& y);
+  template<@\simdfloatingpoint@ V>
+    V comp_ellint_1(const V& k);
+  template<@\simdfloatingpoint@ V>
+    V comp_ellint_2(const V& k);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    common_type_t<V0, V1> comp_ellint_3(const V0& k, const V1& nu);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    common_type_t<V0, V1> cyl_bessel_i(const V0& nu, const V1& x);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    common_type_t<V0, V1> cyl_bessel_j(const V0& nu, const V1& x);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    common_type_t<V0, V1> cyl_bessel_k(const V0& nu, const V1& x);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    common_type_t<V0, V1> cyl_neumann(const V0& nu, const V1& x);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    common_type_t<V0, V1> ellint_1(const V0& k, const V1& phi);
+  template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+    common_type_t<V0, V1> ellint_2(const V0& k, const V1& phi);
+  template<typename V0, typename V1, @\multisimdfloatingpoint@<V0, V1> V2>
+    common_type_t<V0, V1, V2> ellint_3(const V0& k, const V1& nu, const V2& phi);
+  template<@\simdfloatingpoint@ V>
+    V expint(const V& x);
+  template<@\simdfloatingpoint@ V>
+    V hermite(const rebind_simd_t<unsigned, V>& n, const V& x);
+  template<@\simdfloatingpoint@ V>
+    V laguerre(const rebind_simd_t<unsigned, V>& n, const V& x);
+  template<@\simdfloatingpoint@ V>
+    V legendre(const rebind_simd_t<unsigned, V>& l, const V& x);
+  template<@\simdfloatingpoint@ V>
+    V riemann_zeta(const V& x);
+  template<@\simdfloatingpoint@ V>
+    V sph_bessel(const rebind_simd_t<unsigned, V>& n, const V& x);
+  template<@\simdfloatingpoint@ V>
+    V sph_legendre(const rebind_simd_t<unsigned, V>& l, const rebind_simd_t<unsigned, V>& m,
+                   const V& theta);
+  template<@\simdfloatingpoint@ V>
+    V sph_neumann(const rebind_simd_t<unsigned, V>& n, const V& x);
 }
 \end{codeblock}
 
@@ -1318,7 +1519,7 @@ return @\simdselect@(c, a, b);
   \FIXME{Should this exception be listed in \iref{contents} instead?}
 \end{itemdescr}
 
-\rSec2[simd.math]{\tcode{basic_simd} math library}
+\rSec2[simd.math]{Mathematical functions}
 
 \pnum
 For each set of overloaded functions within \tcode{<cmath>}, there shall be additional overloads
