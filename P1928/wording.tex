@@ -1190,7 +1190,7 @@ template<class T, class Abi>
 
     \pnum\returns
     \begin{itemize}
-      \item If \tcode{x.size() \% T::size() == 0}, an \tcode{array<T, $N$>} with
+      \item If \tcode{x.size() \% T::size() == 0} is \tcode{true}, an \tcode{array<T, $N$>} with
         the $i^\text{th}$ \simd or \mask element of the $j^\text{th}$ \tcode{array}
         element initialized to the value of the element in \tcode{x} with index
         \tcode{$i$ + $j$ * T::size()}.
