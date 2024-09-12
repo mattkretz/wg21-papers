@@ -1267,17 +1267,8 @@ template<class T, class Abi>
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \tcode{T} models \tcode{totally_ordered}.
-
-  \pnum\returns
-  A \tcode{pair} initialized with
-  \begin{itemize}
-    \item the result of element-wise application of \tcode{min(a[$i$], b[$i$])} \foralli{} in
-      the \tcode{first} member, and
-    \item the result of element-wise application of \tcode{max(a[$i$], b[$i$])} \foralli{} in
-      the \tcode{second} member.
-  \end{itemize}
+  \pnum\effects
+  Equivalent to: \tcode{return pair\{min(a, b), max(a, b)\};}
 \end{itemdescr}
 
 \begin{itemdecl}
