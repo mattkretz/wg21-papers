@@ -182,6 +182,48 @@
 \item Use \code{to_address} on contiguous iterators (\ref{sec:simd.ctor} and \ref{sec:simd.copy}).
   This is more explicit about allowing memcpy on the complete range rather than
   having to iterate the range per element.
+\end{revision}
+
+\begin{revision}
+\item Fix default size of \code{simd} and \code{simd_mask} aliases
+  (\ref{sec:simd.syn}, necessary for
+  \std\code{destructible<\MayBreak{}\std{}simd<\MayBreak\std{}string>>} to be well-formed).
+\item Extend value-preserving to encompass conversions from all arithmetic
+  types. Use this new freedom in \ref{sec:simd.ctor} to fully constrain the
+  generator constructor and to plug a specification hole in the broadcast
+  constructor.
+\item Fix broadcast constructor wording by constraining \constexprwrapperlike
+  arguments to arithmetic types.
+\item Reword the note in \ref{sec:simd.overview} and
+  \ref{sec:simd.mask.overview} to talk about the “architecture of the execution
+  environment” as used in the note on \code{int} in [basic.fundamental].
+\item Say \code{binary_op} instead of \code{BinaryOperation} in “\ldots does
+  not modify \code{x}”. (\ref{sec:simd.reductions})
+\item Improve presentation of inputs given to
+  \code{\placeholdernc{GENERALIZED_SUM}} in \ref{sec:simd.reductions}.
+\item Fix use of the simd broadcast constructor in precondition of
+  \code{reduce}.
+\item Drop the notes that were trying to explain the intent behind
+  enabling/disabling simd(mask) specializations.
+\item Reorder \code{binary_op} and \code{identity_element} on masked
+  \code{reduce}. Provide \code{std::plus<>} as default \code{BinaryOperation}
+  and specify a default argument for \code{identity_element}
+  (\ref{sec:simd.reductions}).
+\item Use “Equivalent to” wording for \code{simd_select} and carve out an
+  exception for ADL for \simdselect (\ref{sec:simd.alg}).
+\item Add a constraint for a provided identity element argument for masked
+  reduce if the binary operation isn't one of the five known operations.
+\item Add exposition-only concept \reductionoperation with additional semantic
+  constraints and use it in the \code{reduce} constraints
+  (\ref{sec:simd.reductions}).
+\item Simplify precondition on identity element, using only \code{simd<T, 1>}
+  instead of all possible ABI tags. The latter follows from the former through
+  mandating an \emph{element-wise binary operation}.
+\item Add constraints for \code{simd_split} and \code{simd_cat}, requiring
+  enabled \code{basic_simd}/\code{basic_simd_mask} types
+  (\ref{sec:simd.creation}).
+\item Specify \code{minmax} using “Equivalent to:” wording.
+  (\ref{sec:simd.alg})
 
   %\todo Reorder \code{simd} and \code{simd_mask} specification in the wording (mask first).
 \end{revision}
