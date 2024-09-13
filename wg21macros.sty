@@ -246,7 +246,7 @@
     \addcontentsline{toc}{#1}{%
       \theWGClause{} #2 [#3] (\thesubsection{})%
     }%
-    {\noindent\wgOrigSection{#1}\larger[2]\arabic{WGClause} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}\\%
+    {\noindent\wgOrigSection{#1}\larger[2]\textbf{\arabic{WGClause} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}}\\%
     \noindent%
 }
 \newcommand\wgSubsection[3][subsubsection]{%
@@ -264,7 +264,7 @@
     \addcontentsline{toc}{#1}{%
       \theWGSubSection{} #2 [#3] (\thesubsubsection{})%
     }%
-    {\noindent\wgOrigSection{#1}\larger[1]\theWGSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}\\%
+    {\noindent\wgOrigSection{#1}\larger[1]\textbf{\theWGSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}}\\%
     \noindent%
 }
 \newcommand\wgSubsubsection[3][paragraph]{%
@@ -281,7 +281,7 @@
     \addcontentsline{toc}{#1}{%
       \theWGSubSubSection{} #2 [#3] (\theparagraph{})%
     }%
-    {\noindent\wgOrigSection{#1}\theWGSubSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}\\%
+    {\noindent\wgOrigSection{#1}\larger[1]\textbf{\theWGSubSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}}\\%
     \noindent%
 }
 \newcommand\wgSubsubsubsection[3][subparagraph]{%
@@ -297,7 +297,7 @@
     \addcontentsline{toc}{#1}{%
       \theWGSubSubSubSection{} #2 [#3] (\thesubparagraph{})%
     }%
-    {\noindent\wgOrigSection{#1}\theWGSubSubSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}\\%
+    {\noindent\wgOrigSection{#1}\larger[1]\textbf{\theWGSubSubSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}}\\%
     \noindent%
 }
 \makeatother
