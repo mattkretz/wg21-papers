@@ -73,8 +73,8 @@
 \newcommand\wgRemove[1]{\textcolor{WgRem}{\st{#1}}} % deprecated
 \newcommand\wgRem[1]{\textcolor{WgRem}{\st{#1}}}
 \newcommand\wgChange[2]{\wgRem{#1}\wgAdd{#2}}
-\newcommand\wgItemAdd{\color{WgAdd}\item[\ul{\mbox{ \textbullet }}]\hspace*{-\labelsep}\ul{\mbox{\hspace*{\labelsep}}}}
-\newcommand\wgItemRem{\color{WgRem}\item[\st{\mbox{ \textbullet }}]\hspace*{-\labelsep}\st{\mbox{\hspace*{\labelsep}}}}
+\newcommand\wgItemAdd[1][]{\color{WgAdd}\item[\ul{\mbox{ \textbullet }}]\hspace*{-\labelsep}\ul{\mbox{\hspace*{\labelsep}}}\wgAdd{#1}}
+\newcommand\wgItemRem[1][]{\color{WgRem}\item[\st{\mbox{ \textbullet }}]\hspace*{-\labelsep}\st{\mbox{\hspace*{\labelsep}}}\wgRem{#1}}
 \newenvironment{wgBAdd}{\color{WgAdd}}{\color{black}}
 \newenvironment{wgBRem}{\color{WgRem}}{\color{black}}
 \newcommand\wgTextFonts{\def\ttdefault{wgCodeFont}\rmfamily\smaller[1]}
@@ -338,12 +338,12 @@
 \end{table}%
 }
 
-\newcommand{\ttref}[1]{Tony~Table~\ref{tt:#1}}
+\newcommand{\ttref}[1]{\st{Tony~}Table~\ref{tt:#1}}
 
 \newcounter{TonyTable}
 
 \newenvironment{tonytable}[2][before]{%
-\renewcommand\tablename{Tony Table}%
+  \renewcommand\tablename{\st{Tony}Before/After Table}%
 \let\prevthetable\thetable%
 \addtocounter{table}{-1}%
 \stepcounter{TonyTable}%
