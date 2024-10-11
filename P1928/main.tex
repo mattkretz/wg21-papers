@@ -496,18 +496,32 @@ The utility of such a crippled \simd is highly questionable.
 Note that freestanding is just the baseline requirement and embedded targets
 are still free to add \code{simd} support.
 
+\section{Design clarifications while in LWG review}
+\subsection{Should the \code{simd_flags} template be exposition only?}\label{sec:simd_flags-expos}
+
+The \code{simd_flags} class template could be exposition only in the standard
+without breaking any of the direct use cases of the \simd interface.
+However, if a user needs to write a function that passes \code{simd_flags} into
+a function, how should the function parameter be constrained?
+Do we want everyone to write an unconstrained:
+\medskip\begin{lstlisting}[style=Vc]
+void f(auto flags) { v.copy_to(data, flags); }
+\end{lstlisting}
+or do we want to enable:
+\medskip\begin{lstlisting}[style=Vc]
+template <typename... Flags>
+void f(std::simd_flags<Flags...> flags) { v.copy_to(data, flags); }
+\end{lstlisting}
+
+If we make the \code{simd_flags} class template exposition only we should
+consider adding a \code{concept} or at least a type trait in its place:
+\medskip\begin{lstlisting}[style=Vc]
+void f(std::simd_flags auto flags) { v.copy_to(data, flags); }
+\end{lstlisting}
+I don't think this is a clear improvement.
+In any case, a change like this would need to go via LEWG.
+
 \section{Outlook}
-\subsection{\code{element_reference} is overspecified}
-\code{element_reference} is spelled out in a lot of detail.
-It may be better to define its requirements in a list of requirements or a table instead.
-
-This change is not reflected in the wording, pending encouragement from WG21 (mostly LWG).
-
-As an alternative \cite{P3275R0} discusses removal of non-const subscripts
-altogether.
-This would imply removal of \code{element_reference}, simplifying the wording
-by a good chunk.
-
 \subsection{Clean up math function overloads}
 The wording that produces \simd overloads misses a few cases and leaves room for ambiguity.
 There is also no explicit mention of integral overloads that are supported in \code{<cmath>} (e.g. \std\code{cos(1)} calling \std\code{cos(double)}).

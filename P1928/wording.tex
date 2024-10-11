@@ -603,6 +603,12 @@ template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelo
 
 \rSec2[simd.flags.overview]{Class template \tcode{simd_flags} overview}
 
+\INFO{
+  On 2024-08-28, in an LWG telecon, the question was raised whether \code{simd_flags} could/should
+  be \expos.
+  Discussed in \sect{simd_flags-expos}.
+}
+
 \begin{codeblock}
 template <class... Flags> struct simd_flags {
   // \ref{simd.flags.oper}, \tcode{simd_flags} operators
