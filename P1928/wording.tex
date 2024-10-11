@@ -91,29 +91,194 @@ The conversion from an arithmetic type \tcode{U} to a vectorizable type \tcode{T
 \defn{value-preserving} if
 all possible values of \tcode{U} can be represented with type \tcode{T}.
 
+\rSec1[simd.expos]{Exposition only types, variables, and concepts}
+
+\begin{codeblock}
+using @\simdsizetype@ = @\seebelow@;                                 // \expos
+template<size_t Bytes> using @\integerfrom@ = @\seebelow@;            // \expos
+
+template<class T, class Abi>
+  constexpr @\simdsizetype\ \simdsizev@ = @\seebelow@;               // \expos
+template<class T> constexpr size_t @\maskelementsize@ = @\seebelow@; // \expos
+
+template<class T>
+  concept @\constexprwrapperlike@ =                                // \expos
+    convertible_to<T, decltype(T::value)> &&
+    equality_comparable_with<T, decltype(T::value)> &&
+    bool_constant<T() == T::value>::value &&
+    bool_constant<static_cast<decltype(T::value)>(T()) == T::value>::value;
+template<class V>
+  concept @\simdfloatingpoint@ =                                   // \expos
+    same_as<V, basic_simd<typename V::value_type, typename V::abi_type> &&
+    is_default_constructible<V> && floating_point<typename V::value_type>;
+template<class V, class... Ts>
+  concept @\multisimdfloatingpoint@ =                         // \expos
+    @\simdfloatingpoint@<common_type_t<V, Ts...>>;
+template<class BinaryOperation, class T>
+  concept @\reductionoperation@ =                            // \expos
+    requires (BinaryOperation binary_op, simd<T, 1> v) {
+      { binary_op(v, v) } -> same_as<simd<T, 1>>;
+    };
+
+// \ref{simd.expos.abi}, \tcode{simd} ABI tags
+template<class T> using @\nativeabi@ = @\seebelow@;                   // \expos
+template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@;   // \expos
+
+// \ref{simd.flags}, Load and store flags
+struct @\convertflag@;                                              // \expos
+struct @\alignedflag@;                                              // \expos
+template<size_t N> struct @\overalignedflag@;                       // \expos
+\end{codeblock}
+
+\begin{itemdecl}
+using @\simdsizetype@ = @\seebelow@; // \expos
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  \simdsizetype{} is an alias for a signed integer type.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<size_t Bytes> using @\integerfrom@ = @\seebelow@; // \expos
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  \tcode{\integerfrom<Bytes>} is an alias for a signed integer type \tcode{T} so that
+  \tcode{sizeof(T) == Bytes}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class T, class Abi>
+  constexpr @\simdsizetype\ \simdsizev@ = @\seebelow@; // \expos
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  \tcode{\simdsizev<T, Abi>} denotes the width of \tcode{basic_simd<T, Abi>} if
+  the specialization \tcode{basic_simd<T, Abi>} is enabled, or \tcode{0} otherwise.
+  \begin{note}
+    \tcode{\simdsizev<T, Abi>} does not require instantiation of \tcode{basic_simd<T, Abi>}.
+  \end{note}
+  \FIXME{drop the note?}
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class T> constexpr size_t @\maskelementsize@ = @\seebelow@; // \expos
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  \tcode{\maskelementsize<basic_simd_mask<Bytes, Abi>>} has the value \tcode{Bytes}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class BinaryOperation, class T>
+  concept @\reductionoperation@ =  // \expos
+    requires (BinaryOperation binary_op, simd<T, 1> v) {
+      { binary_op(v, v) } -> same_as<simd<T, 1>>;
+    };
+\end{itemdecl}
+\begin{itemdescr}
+\pnum
+Types \tcode{BinaryOperation} and \tcode{T} model \tcode{\reductionoperation<BinaryOperation, T>}
+only if:
+\begin{itemize}
+  \item \tcode{BinaryOperation} is a binary element-wise operation and the operation is commutative.
+
+  \item An object of type \tcode{BinaryOperation} can be invoked with two arguments of type
+    \code{basic_simd<T, Abi>}, with unspecified ABI tag \code{Abi}, returning a \code{basic_simd<T,
+    Abi>}.
+\end{itemize}
+\end{itemdescr}
+
+\rSec2[simd.expos.abi]{\tcode{simd} ABI tags}
+
+\begin{itemdecl}
+template<class T> using @\nativeabi@ = @\seebelow@; // \expos
+template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@; // \expos
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum\label{wording.ABI.tag}
+An \defn{ABI tag} is a type that indicates a choice of size and binary
+representation for objects of data-parallel type.
+\begin{note}
+  The intent is for the size and binary representation to depend on the target
+  architecture and compiler flags.
+\end{note}
+The ABI tag, together with a given element type, implies the width.
+
+\pnum
+\begin{note}
+The ABI tag is orthogonal to selecting the machine instruction set.
+The selected machine instruction set limits the usable ABI tag types, though
+(see \ref{simd.overview}).
+The ABI tags enable users to safely pass objects of data-parallel type between
+translation unit boundaries (e.g. function calls or I/O).
+\end{note}
+
+\pnum
+An implementation defines ABI tag types as necessary for the following aliases.
+
+\pnum\label{wording.deducet}
+\tcode{\deducet<T, N>} is defined if
+\begin{itemize}
+  \item \tcode{T} is a vectorizable type,
+  \item \tcode{N} is greater than zero, and
+  \item \tcode{N} is not larger than an implementation-defined maximum.
+\end{itemize}
+The implementation-defined maximum for \tcode{N} is not smaller than 64
+and can differ depending on \tcode{T}.
+
+\pnum
+Where present, \tcode{\deducet<T, N>} names an ABI tag type that satisfies
+\begin{itemize}
+  \item \tcode{\simdsizev<T, \deducet<T, N>> == N}, and
+  \item \tcode{basic_simd<T, \deducet<T, N>>} is enabled (see \ref{simd.overview}).
+\end{itemize}
+
+% TODO: If we really want the Abis... pack back this needs a paper to LEWG.
+%       The pack allows e.g. to stay with ymm registers even when zmm is available,
+%         or to implement an MMX ABI that doesn't get used unless explicitly called for.
+%       Also one can imagine a target with multiple different SIMD execution facilities
+%         where moving between them has a high cost and shouldn't happen without a request.
+%\begin{note}
+  %If multiple ABI tags can satisfy the above conditions, differences in \tcode{Abis...} can lead to different results.
+%\end{note}
+
+\INFO{I removed the paragraph saying “The type of \tcode{\deducet<T, N>} in
+  translation unit 1 differs from the type of \tcode{\deducet<T, N>} in
+  translation unit 2 if and only if the type of \tcode{\nativeabi<T>} in
+  translation unit 1 differs from the type of \tcode{\nativeabi<T>} in
+  translation unit 2.” after consulting Jens.
+  He said I can't reasonably say anything about working around ODR problems in an implementation.
+Implementations thus have to figure this out on their own.}
+
+\pnum
+\tcode{\nativeabi<T>} is an implementation-defined alias for an ABI tag.
+\tcode{basic_simd<T, \nativeabi<T>} is an enabled specialization.
+\begin{note}
+The intent is to use the ABI tag producing the most efficient data-parallel
+execution for the element type \tcode{T} on the currently
+targeted system.
+For target architectures with ISA extensions, compiler flags can change the
+type of the \tcode{\nativeabi<T>} alias.
+\end{note}\\
+\begin{example}
+  Consider a target architecture supporting the ABI tags
+  \tcode{__simd128} and \tcode{__simd256}, where hardware support for
+  \tcode{__simd256} exists only for floating-point types.
+  The implementation therefore defines \tcode{\nativeabi<T>} as an alias for
+  \begin{itemize}
+    \item \tcode{__simd256} if \tcode{T} is a floating-point type, and
+    \item \tcode{__simd128} otherwise.
+  \end{itemize}
+\end{example}
+\end{itemdescr}
+
 \rSec1[simd.syn]{Header \texorpdfstring{\tcode{<simd>}}{<simd>} synopsis}
 
 %\indexhdr{simd}
 \begin{codeblock}
 namespace std {
-  using @\simdsizetype@ = @\seebelow@;                                  // \expos
-  template <class T, class Abi>
-    constexpr @\simdsizetype\ \simdsizev@ = @\seebelow@;                // \expos
-
-  template <class T> constexpr size_t @\maskelementsize@ = @\seebelow@; // \expos
-  template <size_t Bytes> using @\integerfrom@ = @\seebelow@;            // \expos
-
-  template <class T>
-    concept @\constexprwrapperlike@ =                                 // \expos
-      convertible_to<T, decltype(T::value)> &&
-      equality_comparable_with<T, decltype(T::value)> &&
-      bool_constant<T() == T::value>::value &&
-      bool_constant<static_cast<decltype(T::value)>(T()) == T::value>::value;
-
-  // \ref{simd.abi}, \tcode{simd} ABI tags
-  template<class T> using @\nativeabi@ = @\seebelow@;                    // \expos
-  template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@;    // \expos
-
   // \ref{simd.traits}, \tcode{simd} type traits
   template<class T, class U = typename T::value_type> struct simd_alignment;
   template<class T, class U = typename T::value_type>
@@ -125,10 +290,6 @@ namespace std {
   template<@\simdsizetype@ N, class V> using resize_simd_t = typename resize_simd<N, V>::type;
 
   // \ref{simd.flags}, Load and store flags
-  struct @\convertflag@; // \expos
-  struct @\alignedflag@; // \expos
-  template<size_t N> struct @\overalignedflag@; // \expos
-
   template <class... Flags> struct simd_flags;
   inline constexpr simd_flags<> simd_flag_default{};
   inline constexpr simd_flags<@\convertflag@> simd_flag_convert{};
@@ -225,15 +386,6 @@ namespace std {
     noexcept -> decltype(@\simdselect@(c, a, b));
 
   // \ref{simd.math}, Mathematical functions
-  template<typename V>
-    concept @\simdfloatingpoint@ =  // \expos
-      same_as<V, basic_simd<typename V::value_type, typename V::abi_type>
-      && is_default_constructible<V> && floating_point<typename V::value_type>;
-
-  template<typename V, typename... Ts>
-    concept @\multisimdfloatingpoint@ =  // \expos
-      @\simdfloatingpoint@<common_type_t<V, Ts...>>;
-
   template<@\simdfloatingpoint@ V> constexpr V acos(const V& x);
   template<@\simdfloatingpoint@ V> constexpr V asin(const V& x);
   template<@\simdfloatingpoint@ V> constexpr V atan(const V& x);
@@ -368,107 +520,6 @@ namespace std {
   template<@\simdfloatingpoint@ V> V sph_neumann(const rebind_simd_t<unsigned, V>& n, const V& x);
 }
 \end{codeblock}
-
-\pnum
-\simdsizetype{} is an alias for a signed integer type.
-
-\pnum
-\tcode{\simdsizev<T, Abi>} denotes the width of \tcode{basic_simd<T, Abi>} if
-the specialization \tcode{basic_simd<T, Abi>} is enabled, or \tcode{0} otherwise.
-\begin{note}
-  \tcode{\simdsizev<T, Abi>} does not require instantiation of \tcode{basic_simd<T, Abi>}.
-\end{note}
-\FIXME{drop the note?}
-
-\pnum
-\tcode{\maskelementsize<basic_simd_mask<Bytes, Abi>>} has the value \tcode{Bytes}.
-
-\pnum
-\tcode{\integerfrom<Bytes>} is an alias for a signed integer type \tcode{T} so that \tcode{sizeof(T)
-== Bytes}.
-
-\rSec1[simd.abi]{\tcode{simd} ABI tags}
-
-\begin{codeblock}
-template<class T> using @\nativeabi@ = @\seebelow@; // \expos
-template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@; // \expos
-\end{codeblock}
-
-\pnum\label{wording.ABI.tag}
-An \defn{ABI tag} is a type that indicates a choice of size and binary
-representation for objects of data-parallel type.
-\begin{note}
-  The intent is for the size and binary representation to depend on the target
-  architecture and compiler flags.
-\end{note}
-The ABI tag, together with a given element type, implies the width.
-
-\pnum
-\begin{note}
-The ABI tag is orthogonal to selecting the machine instruction set.
-The selected machine instruction set limits the usable ABI tag types, though
-(see \ref{simd.overview}).
-The ABI tags enable users to safely pass objects of data-parallel type between
-translation unit boundaries (e.g. function calls or I/O).
-\end{note}
-
-\pnum
-An implementation defines ABI tag types as necessary for the following aliases.
-
-\pnum\label{wording.deducet}
-\tcode{\deducet<T, N>} is defined if
-\begin{itemize}
-  \item \tcode{T} is a vectorizable type,
-  \item \tcode{N} is greater than zero, and
-  \item \tcode{N} is not larger than an implementation-defined maximum.
-\end{itemize}
-The implementation-defined maximum for \tcode{N} is not smaller than 64
-and can differ depending on \tcode{T}.
-
-\pnum
-Where present, \tcode{\deducet<T, N>} names an ABI tag type that satisfies
-\begin{itemize}
-  \item \tcode{\simdsizev<T, \deducet<T, N>> == N}, and
-  \item \tcode{basic_simd<T, \deducet<T, N>>} is enabled (see \ref{simd.overview}).
-\end{itemize}
-
-% TODO: If we really want the Abis... pack back this needs a paper to LEWG.
-%       The pack allows e.g. to stay with ymm registers even when zmm is available,
-%         or to implement an MMX ABI that doesn't get used unless explicitly called for.
-%       Also one can imagine a target with multiple different SIMD execution facilities
-%         where moving between them has a high cost and shouldn't happen without a request.
-%\begin{note}
-  %If multiple ABI tags can satisfy the above conditions, differences in \tcode{Abis...} can lead to different results.
-%\end{note}
-
-\INFO{I removed the paragraph saying “The type of \tcode{\deducet<T, N>} in
-  translation unit 1 differs from the type of \tcode{\deducet<T, N>} in
-  translation unit 2 if and only if the type of \tcode{\nativeabi<T>} in
-  translation unit 1 differs from the type of \tcode{\nativeabi<T>} in
-  translation unit 2.” after consulting Jens.
-  He said I can't reasonably say anything about working around ODR problems in an implementation.
-Implementations thus have to figure this out on their own.}
-
-\pnum
-\tcode{\nativeabi<T>} is an implementation-defined alias for an ABI tag.
-\tcode{basic_simd<T, \nativeabi<T>} is an enabled specialization.
-\begin{note}
-The intent is to use the ABI tag producing the most efficient data-parallel
-execution for the element type \tcode{T} on the currently
-targeted system.
-For target architectures with ISA extensions, compiler flags can change the
-type of the \tcode{\nativeabi<T>} alias.
-\end{note}\\
-\begin{example}
-  Consider a target architecture supporting the ABI tags
-  \tcode{__simd128} and \tcode{__simd256}, where hardware support for
-  \tcode{__simd256} exists only for floating-point types.
-  The implementation therefore defines \tcode{\nativeabi<T>} as an alias for
-  \begin{itemize}
-    \item \tcode{__simd256} if \tcode{T} is a floating-point type, and
-    \item \tcode{__simd128} otherwise.
-  \end{itemize}
-\end{example}
 
 \rSec1[simd.traits]{\tcode{simd} type traits}
 
@@ -1165,27 +1216,6 @@ friend constexpr basic_simd
 \end{itemdescr}
 
 \rSec2[simd.reductions]{\tcode{basic_simd} reductions}
-
-\begin{itemdecl}
-  template <class BinaryOperation, class T>
-    concept @\reductionoperation@ =  // \expos
-      requires (BinaryOperation binary_op, simd<T, 1> v) {
-        { binary_op(v, v) } -> same_as<simd<T, 1>>;
-      };
-\end{itemdecl}
-
-\begin{itemdescr}
-\pnum
-Types \tcode{BinaryOperation} and \tcode{T} model \tcode{\reductionoperation<BinaryOperation, T>}
-only if:
-\begin{itemize}
-  \item \tcode{BinaryOperation} is a binary element-wise operation and the operation is commutative.
-
-  \item An object of type \tcode{BinaryOperation} can be invoked with two arguments of type
-    \code{basic_simd<T, Abi>}, with unspecified ABI tag \code{Abi}, returning a \code{basic_simd<T,
-    Abi>}.
-\end{itemize}
-\end{itemdescr}
 
 \begin{itemdecl}
 template<class T, class Abi, class BinaryOperation = plus<>>
