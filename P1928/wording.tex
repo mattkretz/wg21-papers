@@ -290,7 +290,7 @@ namespace std {
   template<@\simdsizetype@ N, class V> using resize_simd_t = typename resize_simd<N, V>::type;
 
   // \ref{simd.flags}, Load and store flags
-  template <class... Flags> struct simd_flags;
+  template<class... Flags> struct simd_flags;
   inline constexpr simd_flags<> simd_flag_default{};
   inline constexpr simd_flags<@\convertflag@> simd_flag_convert{};
   inline constexpr simd_flags<@\alignedflag@> simd_flag_aligned{};
@@ -610,9 +610,9 @@ template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelo
 }
 
 \begin{codeblock}
-template <class... Flags> struct simd_flags {
+template<class... Flags> struct simd_flags {
   // \ref{simd.flags.oper}, \tcode{simd_flags} operators
-  template <class... Other>
+  template<class... Other>
     friend consteval auto operator|(simd_flags, simd_flags<Other...>);
 };
 \end{codeblock}
@@ -629,7 +629,7 @@ Every type in \tcode{Flags} is one of \tcode{\convertflag},
 \rSec2[simd.flags.oper]{\tcode{simd_flags} operators}
 
 \begin{itemdecl}
-template <class... Other>
+template<class... Other>
   friend consteval auto operator|(simd_flags a, simd_flags<Other...> b);
 \end{itemdecl}
 
@@ -1598,7 +1598,7 @@ public:
   constexpr basic_simd<@\integerfrom@<Bytes>, Abi> operator~() const noexcept;
 
   // \ref{simd.mask.conv}, \tcode{basic_simd_mask} conversion operators
-  template <class U, class A>
+  template<class U, class A>
     constexpr explicit(sizeof(U) != Bytes) operator basic_simd<U, A>() const noexcept;
 
   // \ref{simd.mask.binary}, \tcode{basic_simd_mask} binary operators
@@ -1640,7 +1640,7 @@ public:
     const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept;
   friend constexpr basic_simd_mask @\simdselect@(
     const basic_simd_mask&, same_as<bool> auto, same_as<bool> auto) noexcept;
-  template <class T0, class T1>
+  template<class T0, class T1>
     friend constexpr simd<@\seebelow@, size()>
       @\simdselect@(const basic_simd_mask&, const T0&, const T1&) noexcept;
 };
@@ -1870,7 +1870,7 @@ constexpr basic_simd<@\integerfrom@<Bytes>, Abi> operator~() const noexcept;
 \rSec2[simd.mask.conv]{\tcode{basic_simd_mask} conversion operators}
 
 \begin{itemdecl}
-template <class U, class A>
+template<class U, class A>
   constexpr explicit(sizeof(U) != Bytes) operator basic_simd<U, A>() const noexcept;
 \end{itemdecl}
 
@@ -1974,7 +1974,7 @@ friend constexpr basic_simd_mask
 \end{itemdescr}
 
 \begin{itemdecl}
-template <class T0, class T1>
+template<class T0, class T1>
   friend constexpr simd<@\seebelow@, size()>
     @\simdselect@(const basic_simd_mask& mask, const T0& a, const T1& b) noexcept;
 \end{itemdecl}
