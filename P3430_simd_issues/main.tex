@@ -1,0 +1,493 @@
+\newcommand\wgTitle{simd issues: explicit, unsequenced, identity-element position, and members of
+disabled simd}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{D3430R0}
+\newcommand\wgGroup{LEWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{ba\-sic\_simd#1}\xspace}
+\newcommand\simdT{\type{ba\-sic\_simd\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\valuetype{\type{val\-ue\_type}\xspace}
+\newcommand\referencetype{\type{ref\-er\-ence}\xspace}
+\newcommand\mask[1][]{\type{ba\-sic\_simd\_mask#1}\xspace}
+\newcommand\maskT{\type{ba\-sic\_simd\_mask\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\newcommand\nativeabi{\UNSP{native-abi}}
+\newcommand\deducet{\UNSP{deduce-t}}
+\newcommand\simdsizev{\UNSP{simd-size-v}}
+\newcommand\simdsizetype{\UNSP{simd-size-type}}
+\newcommand\simdselect{\UNSP{simd-select-impl}}
+\newcommand\maskelementsize{\UNSP{mask-element-size}}
+\newcommand\integerfrom{\UNSP{integer-from}}
+\newcommand\constexprwrapperlike{\UNSP{constexpr-wrapper-like}}
+\newcommand\convertflag{\UNSP{convert-flag}}
+\newcommand\alignedflag{\UNSP{aligned-flag}}
+\newcommand\overalignedflag{\UNSP{overaligned-flag}}
+\newcommand\reductionoperation{\UNSP{reduction-binary-operation}}
+\newcommand\simdfloatingpoint{\UNSP{simd-floating-point}}
+\newcommand\multisimdfloatingpoint{\UNSP{multi-arg-simd-floating-point}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper collects all issues that came up in LWG review of P1928 (merge
+  \code{std::simd}), which require LEWG approval.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\section{Issue 1: \code{explicit}}
+
+\newcommand\statusquo[1]{#1}
+\newcommand\reconsider{
+  {\color{Maroon}$\leftarrow$ reconsider!}
+}
+
+\code{simd} has 7 constructors and one conversion operator:
+
+\medskip
+\noindent
+\begin{tabularx}{\linewidth}{XXl}
+  \toprule
+  default constructor & \statusquo{not \code{explicit}} & \\\midrule
+
+  copy constructor & \statusquo{not \code{explicit}} & \\\midrule
+
+  broadcast constructor &
+    \statusquo{not \code{explicit}, ill-formed when not value-preserving} &
+    \reconsider{} \\\midrule
+
+  conversion constructor &
+    \statusquo{conditionally \code{explicit}: depends on participating value types} & \\\midrule
+
+  generator construtor &
+    \statusquo{\code{explicit}} & \\\midrule
+
+  load constructors &
+    \statusquo{\code{explicit}} & \\\midrule
+
+  \textit{Recommended practice:} conversion constructor from \emph{implementation-defined} set
+    of types (intrinsics / vector builtin) &
+    \statusquo{\code{explicit}} &
+    \reconsider{} \\\midrule
+
+  \textit{Recommended practice:} conversion operator to \emph{implementation-defined} set of
+    types (intrinsics / vector builtin) &
+    \statusquo{\code{explicit}} &
+    \reconsider{} \\\bottomrule
+\end{tabularx}
+
+\subsection{Broadcast constructor}\label{sec:broadcast}
+
+The authors do not recall that moving the constraint of the broadcast constructor to a conditional
+\code{explicit} was considered in LEWG.
+The behavior of broadcast and \simd conversion constructors is currently inconsistent.
+One allows conversions that are not value-preserving, via explicit constructor / \code{static_cast}.
+The other does not.
+We recommend that the broadcast constructor is changed to be conditionally \code{explicit}:
+\begin{wgText}
+\begin{itemdecl}
+template<class U>
+  constexpr @\wgAdd{explicit(\mbox{\seebelow}) }@basic_simd(U&&@\wgAdd{ x}@) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum Let \tcode{From} denote the type \tcode{remove_cvref_t<U>}.
+
+  \pnum\constraints
+  \wgAdd{\tcode{value_type} satisfies \tcode{constructible_from<U>}.}
+  \wgRem{\tcode{From} satisfies \tcode{convertible_to<value_type>}, and either}
+  \begin{itemize}
+    \wgItemRem[ \tcode{From} is an arithmetic type and the conversion from
+      \tcode{From} to \tcode{value_type} is value-preserving
+    (\mbox{[simd.general]}), or]
+
+    \wgItemRem[ \tcode{From} is not an arithmetic type and does not satisfy
+    \mbox{\tcode{\constexprwrapperlike}}, or]
+
+    \wgItemRem[ \tcode{From} satisfies \mbox{\tcode{\constexprwrapperlike}} (\mbox{[simd.syn]})
+      \tcode{remove_const_t<decltype(From::value)>} is an arithmetic type, and \tcode{From::value}
+      is representable by \tcode{value_type}.]
+  \end{itemize}
+
+  \pnum\effects
+  Initializes each element to \wgChange{the value of the argument after conversion to
+  \tcode{value_type}}{\tcode{value_type(forward<U>(x))}}.
+
+  \pnum\wgAdd{\remarks
+  The expression inside \tcode{explicit} evaluates to \tcode{false} if and only if \tcode{From}
+  satisfies \tcode{convertible_to<value_type>}, and either}
+  \begin{itemize}
+    \wgItemAdd[ \tcode{From} is an arithmetic type and the conversion from
+      \tcode{From} to \tcode{value_type} is value-preserving
+    (\mbox{[simd.general]}), or]
+
+    \wgItemAdd[ \tcode{From} is not an arithmetic type and does not satisfy
+    \mbox{\tcode{\constexprwrapperlike}}, or]
+
+    \wgItemAdd[ \tcode{From} satisfies \mbox{\tcode{\constexprwrapperlike}} (\mbox{[simd.syn]}),
+      \tcode{remove_const_t<decltype(From::value)>} is an arithmetic type, and \tcode{From::value}
+    is representable by \tcode{value_type}.]
+  \end{itemize}
+\end{itemdescr}
+
+\end{wgText}
+
+\begin{tonytable}{caption?}
+  \begin{lstlisting}
+using floatv = std::simd<float>;
+
+void f(floatv x)
+{
+  x + 2; // ill-formed
+  x + float(2); // OK
+  x + floatv(2); // ill-formed
+
+  x = 2 // ill-formed
+  x = float(2) // OK
+  x = floatv(2) // ill-formed
+}
+  \end{lstlisting}
+  &
+  \begin{lstlisting}
+using floatv = std::simd<float>;
+
+void f(floatv x)
+{
+  x + 2; // ill-formed
+  x + float(2); // OK
+  x + floatv(2); // OK
+
+  x = 2 // ill-formed
+  x = float(2) // OK
+  x = floatv(2) // OK
+}
+  \end{lstlisting}
+\end{tonytable}
+
+\subsection{Conversion from/to intrinsic}\label{sec:intrinsics-conversion}
+
+The policy draft on \code{explicit} says “Implicit conversions should exist only between types that
+are fundamentally the same”.
+The intrinsic types and vector builtin types implemented as extensions in basically every compiler
+are “fundamentally the same” as the \code{simd} types of equal value type and width.
+Consequently, we should consider implicit conversions.
+The reason for the current wording to say \code{explicit} still stems from the TS design which
+deliberately wanted to err on the “too strict” side\footnote{that wasn't my preference, but guidance
+from WG21 at the time}.
+This choice was never reconsidered while merging the TS wording to the IS.
+
+\begin{wgText}
+\setcounter{Paras}{2}%
+\pnum\recommended
+Implementations should enable \wgChange{explicit}{implicit} conversion from and to
+implementation-defined types. This adds one or more of the following
+declarations to class \tcode{basic_simd}:
+
+\begin{codeblock}
+constexpr @\wgRem{explicit }@operator @\impdef@() const;
+constexpr @\wgRem{explicit }@basic_simd(const @\impdef@& init);
+\end{codeblock}
+
+\begin{example}
+  Consider an implementation that supports the type \tcode{__vec4f} and the function \tcode{__vec4f
+  _vec4f_addsub(__vec4f, __vec4f)} for the architecture of the execution environment.
+  A user may require the use of \tcode{_vec4f_addsub} for maximum performance and thus writes:
+  \begin{codeblock}
+    using V = basic_simd<float, simd_abi::__simd128>;
+    V addsub(V a, V b) {
+      return @\wgRem{static_cast<V>(}@_vec4f_addsub(@\wgRem{static_cast<__vec4f>(}a\wgRem{)}, \wgRem{static_cast<__vec4f>(}b\wgRem{))}@);
+    }
+  \end{codeblock}
+\end{example}
+\end{wgText}
+
+\begin{tonytable}{Calling an SSE intrinsic}\label{tt:intrinsic}
+  \begin{lstlisting}
+void f(std::simd<int, 4> x)
+{
+  x = static_cast<std::simd<int, 4>>(
+    _mm_add_epi32(static_cast<__m128i>(x),
+                  static_cast<__m128i>(x)));
+}
+  \end{lstlisting}
+  &
+  \begin{lstlisting}
+void f(std::simd<int, 4> x)
+{
+  x = _mm_add_epi32(x, x);
+
+
+}
+  \end{lstlisting}
+\end{tonytable}%
+
+\subsection{Suggested Polls}
+\wgPoll{Make the broadcast constructor conditionally \code{explicit} (\wgDocumentNumber{}
+\sect{sec:broadcast})}{&&&&}
+
+\wgPoll{Make conversions to/from implementation-defined vector types implicit (strike
+\code{explicit}) (\wgDocumentNumber{} \sect{sec:intrinsics-conversion})}{&&&&}
+
+\section{Issue 2: drop “unsequenced” from generator ctor}\label{sec:generatorctor}
+
+The current wording for the generator constructors (\simd and \mask) says:
+\begin{wgText}
+    The calls to \tcode{gen} are unsequenced with respect to each other.
+    Vectorization-unsafe (\iref{algorithms.parallel.defns}) standard library
+    functions may not be invoked by \tcode{gen}.
+\end{wgText}
+
+To the authors knowledge this has never been explicitly implemented.
+Yes, compilers can relatively easily vectorize generator constructor calls, but that doesn't require
+this wording.
+In other words, there is no need to restrict user code for the cases where we expect vectorization.
+
+On the other hand, this requirement on user code is likely to be violated in practice.
+However, as long as implementations implement the broadcast constructor as an unrolled loop over all
+calls, the UB will never materialize.
+Unless, at some point in the future an implementation can annotate its unrolled loop with the
+necessary “unsequenced” property.
+Suddenly latent bugs would materialize.
+
+Furthermore, the current restriction disallows legitimate use cases, such as calling a random number
+generator/distribution, performing potentially blocking/synchronizing calls, throwing an exception,
+or \std\code{print} debugging.
+
+Therefore, we propose to remove the requirement on the user code and at the same time drop
+\code{noexcept} (because throwing from the callable is a valid strategy for error handling).
+
+If we ever find the need for a function that generates \code{simd} objects from unsequenced calls to
+scalar functions we can add a named function to do so.
+The name of such a function could help to indicate unsequenced execution, which helps in code
+reviews to catch potential issues.
+
+\begin{wgText}[{[simd.ctor]}]\setcounter{Paras}{6}
+\begin{itemdecl}
+template<class G> constexpr explicit basic_simd(G&& gen)@\wgRem{ noexcept}@;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum Let \tcode{From}$_i$ denote the type
+  \tcode{decltype(gen(integral_constant<\simdsizetype, $i$>()))}.
+
+  \pnum\constraints
+  \tcode{From}$_i$ satisfies \tcode{convertible_to<value_type>} \foralli.
+  In addition, \foralli, if \tcode{From}$_i$ is an arithmetic type, conversion from
+  \tcode{From}$_i$ to \tcode{value_type} is value-preserving.
+
+  \pnum\effects
+  Initializes the $i^\text{th}$ element with
+  \tcode{static_cast<value_type>(gen(integral_constant<\simdsizetype, i>()))} \foralli.
+
+  \pnum
+    \wgRem{The calls to \tcode{gen} are unsequenced with respect to each other.
+      Vectorization-unsafe (\mbox{\iref{algorithms.parallel.defns}}) standard library
+    functions may not be invoked by \tcode{gen}.}
+    \tcode{gen} is invoked exactly once for each $i$.
+\end{itemdescr}
+\end{wgText}
+
+\begin{wgText}[{[simd.mask.ctor]}]\setcounter{Paras}{3}
+\begin{itemdecl}
+template<class G> constexpr explicit basic_simd_mask(G&& gen)@\wgRem{ noexcept}@;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
+  \tcode{static_cast<bool>(gen(integral_constant<\simdsizetype, i>()))} is
+  well-formed \foralli.
+
+  \pnum\effects
+  Initializes the $i^\text{th}$ element with
+  \tcode{gen(integral_constant<\simdsizetype, i>())} \foralli.
+
+  \pnum
+    \wgRem{The calls to \tcode{gen} are unsequenced with respect to each other.
+      Vectorization-unsafe (\mbox{\iref{algorithms.parallel.defns}}) standard library
+    functions may not be invoked by \tcode{gen}.}
+    \tcode{gen} is invoked exactly once for each $i$.
+\end{itemdescr}
+\end{wgText}
+
+\subsection{Suggested Poll}
+\wgPoll{Remove wording that unconditionally allows calls to \code{gen} from the generator
+  constructors to be unsequenced with respect to each other. At the same time, remove
+\code{noexcept} from the constructors. (\wgDocumentNumber{} \sect{sec:generatorctor})}{&&&&}
+
+\section{Issue 3: reorder \code{identity_element} and \code{binary_op} on \code{reduce}}
+
+The masked \std\code{reduce} overloads for \code{simd} require an identity element (for efficient
+implementation\footnote{The basic idea is to fill all masked elements of the given \code{simd}
+object with the identity element and then perform a tree reduction over all elements of the
+\code{simd}.}).
+The value of the identity element is know for all vectorizable types and if the
+\code{BinaryOperation} is one of \std\code{plus<>}, \std\code{multiplies<>}, \std\code{bit_and<>},
+\std\code{bit_or<>}, or \std\code{bit_xor<>}.
+For every other user-defined binary operation, the caller must provide a value for the identity
+element:
+
+\begin{wgText}[P1928R11]
+  \setcounter{Paras}{0}
+  \begin{codeblock}
+  template<class T, class Abi, class BinaryOperation = plus<>>
+    constexpr T reduce(
+      const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
+      type_identity_t<T> identity_element, BinaryOperation binary_op)
+  \end{codeblock}
+\end{wgText}
+
+The original \code{reduce} overload for the TS was modeled after the overloads that provide an
+\emph{initial value}: \code{reduce(InputIt first, InputIt last, T init, BinaryOp op)}.
+For these functions the \code{init} parameter precedes the \code{BinaryOp} parameter.
+
+However, the initial value is a very different parameter: It provides an additional value that is
+included in the reduction together with the given range.
+This is not the case for the \code{simd} overload, where the identity element is included
+0--\code{simd::size()} times in the reduction.
+More importantly, the value must be such that it doesn't influence the result, otherwise it violates
+a precondition of \code{reduce}.
+
+Because of this different nature of the parameter, and because we can provide a default for known
+binary operations, the \code{identity_element} parameter can and should be after the
+\code{BinaryOp}.
+Then the 6 overloads for masked reductions are reduced to a single overload of the form:
+
+\begin{wgText}[P1928R12]
+  \setcounter{Paras}{5}
+\begin{itemdecl}
+template<class T, class Abi, class BinaryOperation = plus<>>
+  constexpr T reduce(
+    const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
+    BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{BinaryOperation} models \tcode{\reductionoperation<T>}.
+
+    \item An argument for \tcode{identity_element} is provided for the invocation, unless
+      \tcode{BinaryOperation} is one of \code{plus<>}, \code{multiplies<>}, \code{bit_and<>},
+      \code{bit_or<>}, or \code{bit_xor<>}.
+  \end{itemize}
+
+  \pnum\expects
+  \begin{itemize}
+    \item \tcode{binary_op} does not modify \tcode{x}.
+
+    \item For all finite values \tcode{y} representable by \tcode{T}, the results of
+      \tcode{y == binary_op(simd<T, 1>(identity_element), simd<T, 1>(y))[0]} and
+      \tcode{y == binary_op(simd<T, 1>(y), simd<T, 1>(identity_element))[0]} are \tcode{true}.
+  \end{itemize}
+
+  \pnum\returns
+  If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{identity_element}.
+  Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[$k_0$]),
+  $\ldots$, simd<T, 1>(x[$k_n$]))[0]} where $k_0, \ldots, k_n$ are the selected indices of
+  \tcode{mask}.
+
+  \pnum\throws
+  Any exception thrown from \tcode{binary_op}.
+
+  \pnum\remarks
+  The default argument for \code{identity_element} is equal to
+  \begin{itemize}
+    \item \tcode{T()} if \code{BinaryOperation} is \code{plus<>},
+    \item \tcode{T(1)} if \code{BinaryOperation} is \code{multiplies<>},
+    \item \tcode{T(\~{}T())} if \code{BinaryOperation} is \code{bit_and<>},
+    \item \tcode{T()} if \code{BinaryOperation} is \code{bit_or<>}, or
+    \item \tcode{T()} if \code{BinaryOperation} is \code{bit_xor<>}.
+  \end{itemize}
+\end{itemdescr}
+\end{wgText}
+
+Note that the latest revision of P1928, already contains this new signature / wording, as this was
+preferred by LWG.
+LEWG still needs to re-confirm that change, otherwise I will have to roll it back.
+
+\subsection{Suggested Poll}
+
+\wgPoll{Reorder \code{binary_op} and \code{identity_element} as suggested by LWG and implemented in
+P1928R12.}{&&&&}
+
+\section{Issue 4: Undo removal of members of disabled \simd{}}
+
+LEWG directed me to remove the \code{size} member from \simd and \mask for disabled specializations
+(it was called “not supported” back then):
+
+\wgPoll{Make \code{simd_size} exposition only and cause \code{simd} to have the size static data member if and only if \code{T} is a vectorizable type and \code{Abi} is an ABI tag.}
+{1&7&4&1&0}
+
+But that change breaks valid uses cases on constexpr if:
+\medskip\begin{lstlisting}[style=Vc]
+if constexpr (std::default_initializable<V>) {
+  constexpr int width = V::size();
+}
+\end{lstlisting}
+Because \code{size} is not a member of disabled \simd specializations anymore, the code above is
+still ill-formed even though the user tried to guard against it with the constexpr if branch.
+What we need to consider is that name lookup still isn't allowed to fail inside constexpr if
+branches.
+It is okay if no viable overload exists, as long as there is at least one.\footnote{Well... depends:
+\url{https://compiler-explorer.com/z/xP3PPjezx}}
+The same argument can be made for all the other members of \simd and \mask.
+
+Possible resolutions:
+\begin{itemize}
+  \item Bite the bullet and go all the way: Make disabled \simd and \mask
+    incomplete types.
+
+  \item Walk back the change requested by LEWG in Varna and keep all the members in disabled \simd
+    and \mask specializations. (TS behavior and my preference / suggestion)
+\end{itemize}
+
+Suggested wording change:
+
+\begin{wgText}[{[simd.overview]}]
+  \setcounter{Paras}{1}
+\pnum
+Every specialization of \tcode{basic_simd} is a complete type.
+The types \tcode{basic_simd<T, \deducet<T, N>>} for all vectorizable
+\tcode{T} and with \tcode{N} in the range of \crange{1}{64} are enabled.
+It is implementation-defined whether any other \tcode{basic_simd<T, Abi>} specialization
+with vectorizable \tcode{T} is enabled.
+Any other specialization of \tcode{basic_simd} is disabled.
+
+If \tcode{basic_simd<T, Abi>} is disabled, the specialization has a
+deleted default constructor, deleted destructor, deleted copy constructor, and
+deleted copy assignment.
+\wgRem{In addition only the \tcode{value_type}, \tcode{abi_type}, and
+\tcode{mask_type} members are present.}
+
+If \tcode{basic_simd<T, Abi>} is enabled, \tcode{basic_simd<T, Abi>} is
+trivially copyable.
+\end{wgText}
+
+
+\subsection{Suggested Poll}
+\wgPoll{Name lookup of members of disabled \code{basic_simd} specializations works if it works for
+enabled \code{basic_simd} specializations. Likewise for \code{basic_simd_mask}.}{&&&&}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=100

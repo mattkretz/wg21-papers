@@ -23,6 +23,7 @@ This repository holds the LuaLaTeX sources for my papers to the C++ committee.
 | [P3275](https://wg21.link/p3275) | [D3275](https://web-docs.gsi.de/~mkretz/D3275.pdf) | Replace simd operator[] with getter and setter functions --- or not | accepted: applied to P1928R10 |
 | [P3287](https://wg21.link/p3287) | [D3287](https://web-docs.gsi.de/~mkretz/D3287.pdf) | Exploration of namespaces for std::simd   | LEWG (encouragement)       |
 | [P3319](https://wg21.link/p3319) | [D3319](https://web-docs.gsi.de/~mkretz/D3319.pdf) | Add an iota object for simd (and more)    | LEWG                       |
+| [P3430](https://wg21.link/p3430) | [D3430](https://web-docs.gsi.de/~mkretz/D3430.pdf) | simd issues: explicit, unsequenced, identity-element position, and members of disabled simd | LEWG                       |
 
 
 To build the papers you need make, LuaLaTeX (only tested with a recent TeXLive distribution), and Biber.
