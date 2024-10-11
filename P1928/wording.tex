@@ -1487,7 +1487,10 @@ return @\simdselect@(c, a, b);
       well-formed.”)
 
     \item \code{simd} implementations of math functions are allowed to have different rounding
-      errors compared to the existing overloads.
+      errors compared to the existing overloads. Also different ABI tags can lead to different
+      rounding errors (Most obvious reason: \code{std::sin(simd<float, 1>)} directly calls
+        \code{std::sin(float)} whereas \code{std::sin(simd<float, 4>)} could use a different
+      implementation.)
 
     \item Precise functions like \code{round}, \code{isgreaterequal}, \code{isnormal}, \ldots{} are
       an exact element-wise application of the existing functions.
