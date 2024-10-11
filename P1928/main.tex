@@ -300,7 +300,7 @@ Different to the TS, this paper uses \code{\simdsizetype} instead of \code{size_
 
 Alignments and values identifying a \code{sizeof} still use \code{size_t}.
 
-The type \simdsizetype{} is an exposition-only alias for a signed integer type.
+The type \simdsizetype{} is an exposition only alias for a signed integer type.
 I.e. the implementation is free to choose any signed integer type.
 
 The rationale given in the LEWG discussion was a desire to avoid type
@@ -609,7 +609,7 @@ objects differently from \code{random_access_range}.
 %
 %\subsection{\code{simd_select} overload set}\label{sec:simdselectwording}
 %
-%\wglink{P1928R6} presented the following overload set of the exposition-only
+%\wglink{P1928R6} presented the following overload set of the exposition only
 %hidden friend \code{\simdselect}:
 %\begin{codeblock}
 %template<class T, class Abi> class basic_simd {

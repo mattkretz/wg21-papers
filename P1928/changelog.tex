@@ -85,7 +85,7 @@
 \item Use \code{indirectly_writable} instead of \code{output_iterator}.
 \item Replace most \code{size_t} and \code{int} uses by \code{\textit{simd-size-type}} signed integer type.
 \item Remove everything in \code{simd_abi} and the namespace itself.
-\item Reword section on ABI tags using exposition-only ABI tag aliases.
+\item Reword section on ABI tags using exposition only ABI tag aliases.
 \item Guarantee generator ctor calls callable exactly once per index.
 \item Remove \code{int}/\code{unsigned int} exception from conversion rules of broadcast ctor.
 \item Rename \code{loadstore_flags} to \code{simd_flags}.
@@ -97,7 +97,7 @@
 \item Rename \code{simd<T, Abi>} to \code{basic_simd<Bytes, Abi>} and replace all occurrences accordingly.
 \item Remove \code{long double} from the set of vectorizable types.
 \item Remove \code{is_abi_tag}, \code{is_simd}, and \code{is_simd_mask} traits.
-\item Make \code{simd_size} exposition-only.
+\item Make \code{simd_size} exposition only.
 \end{revision}
 
 \begin{revision}
@@ -119,7 +119,7 @@
 \begin{revision}
 \item Include \code{std::optional} return value from \code{reduce_min_index} and \code{reduce_max_index} in the exploration.
 \item Fix \LaTeX{} markup errors.
-\item Remove repetitive mention of “exposition-only” before \deducet.
+\item Remove repetitive mention of “exposition only” before \deducet.
 \item Replace “TU” with “translation unit”.
 \item Reorder first paragraphs in the wording, especially reducing the note on compiling down to SIMD instructions.
 \item Replace cv-unqualified arithmetic types with a more precise list of types.
@@ -139,7 +139,7 @@
 \item Add instructions to add \code{<simd>} to the table of headers in [headers].
 \item Add instructions to add a new subclause to the table in [numerics.general].
 \item Add instructions to add \code{<simd>} [diff.23.library].
-\item Add \simdsizev to the wording and replace \code{simd_size_v} to actually implement “Make \code{simd_size} exposition-only.”
+\item Add \simdsizev to the wording and replace \code{simd_size_v} to actually implement “Make \code{simd_size} exposition only.”
 \item Restored precondition (and removed \code{noexcept}) on
   \code{reduce_min_index} and \code{reduce_max_index} as directed by LEWG.
 \end{revision}
@@ -173,7 +173,7 @@
 \item Fix constraints on shift operators with \simdsizetype{} on the right operand.
 \item Remove wording removed by P3275 (non-const \code{operator[]}).
 \item Make intrinsics conversion recommended practice.
-\item Make \code{simd_flags} template arguments exposition-only.
+\item Make \code{simd_flags} template arguments exposition only.
 \item Make \code{simd_alignment} \emph{not} implementation-defined.
 \item Reword “supported” to “enabled or disabled”.
 \item Apply improved wording from \ref{sec:simd.overview} to \ref{sec:simd.mask.overview}.
@@ -213,7 +213,7 @@
   exception for ADL for \simdselect (\ref{sec:simd.alg}).
 \item Add a constraint for a provided identity element argument for masked
   reduce if the binary operation isn't one of the five known operations.
-\item Add exposition-only concept \reductionoperation with additional semantic
+\item Add exposition only concept \reductionoperation with additional semantic
   constraints and use it in the \code{reduce} constraints
   (\ref{sec:simd.reductions}).
 \item Simplify precondition on identity element, using only \code{simd<T, 1>}

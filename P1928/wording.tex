@@ -729,7 +729,7 @@ public:
   friend constexpr mask_type operator>(const basic_simd&, const basic_simd&) noexcept;
   friend constexpr mask_type operator<(const basic_simd&, const basic_simd&) noexcept;
 
-  // \ref{simd.cond}, \tcode{basic_simd} exposition-only conditional operators
+  // \ref{simd.cond}, \tcode{basic_simd} exposition only conditional operators
   friend constexpr basic_simd @\simdselect@(
     const mask_type&, const basic_simd&, const basic_simd&) noexcept;
 };
@@ -1208,7 +1208,7 @@ friend constexpr mask_type operator<(const basic_simd& lhs, const basic_simd& rh
   \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.cond]{\tcode{basic_simd} exposition-only conditional operators}
+\rSec2[simd.cond]{\tcode{basic_simd} exposition only conditional operators}
 
 \begin{itemdecl}
 friend constexpr basic_simd
@@ -1635,7 +1635,7 @@ public:
   friend constexpr basic_simd_mask
     operator<(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 
-  // \ref{simd.mask.cond}, \tcode{basic_simd_mask} exposition-only conditional operators
+  // \ref{simd.mask.cond}, \tcode{basic_simd_mask} exposition only conditional operators
   friend constexpr basic_simd_mask @\simdselect@(
     const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept;
   friend constexpr basic_simd_mask @\simdselect@(
@@ -1949,7 +1949,7 @@ friend constexpr basic_simd_mask
   to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
-\rSec2[simd.mask.cond]{\tcode{basic_simd_mask} exposition-only conditional operators}
+\rSec2[simd.mask.cond]{\tcode{basic_simd_mask} exposition only conditional operators}
 
 \begin{itemdecl}
 friend constexpr basic_simd_mask @\simdselect@(
