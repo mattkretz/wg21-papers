@@ -217,13 +217,18 @@ if (std::all_of(x > 0)) /*...*/
     \end{itemize}
 \end{description}
 
-\pagebreak\input{alt1}
-\pagebreak\input{alt2}
-\pagebreak\input{alt3}
-\pagebreak\input{alt4}
-\pagebreak\input{alt5}
+\subsection{Explorations in previous revision(s) of this paper}
+\begin{itemize}
+  \item Alternative 1: every function is a non-member with \code{simd} prefix
+  \item Alternative 2: every function is a non-member without \code{simd} prefix
+  \item Alternative 3: place everything but types into a namespace
+  \item Alternative 4: make all non-member functions hidden friends
+\end{itemize}
+
+\input{alt5}
 \pagebreak\input{alt6}
 \pagebreak\input{alt7}
+\pagebreak\input{alt8}
 
 \input{naming}
 
@@ -258,12 +263,12 @@ Any vote would be against the status quo, which so far can be summarized as:
   \item traits and types need a \code{simd} in their name
 \end{itemize}
 
-\wgPoll{Adopt Alternative 7 from \wgDocumentNumber\ while renaming
+\wgPoll{Adopt Alternative 8 from \wgDocumentNumber\ while renaming
   (\code{basic_})\code{simd_mask} to (\code{basic_})\code{mask} (without
 making a decision on non-member load, store, and generate)}
 {&&&&}
 
-\wgPoll{Adopt Alternative 7 from \wgDocumentNumber\ while renaming
+\wgPoll{Adopt Alternative 8 from \wgDocumentNumber\ while renaming
   (\code{basic_})\code{simd_mask} to (\code{basic_})\code{mask} and
   (\code{basic_})\code{simd} to (\code{basic_})\code{vec} (without making a
 decision on non-member load, store, and generate)}
@@ -271,7 +276,35 @@ decision on non-member load, store, and generate)}
 
 \section{Wording}\label{sec:wording}
 
-TBD
+This is fairly mechanical work, adding namespaces and adjusting type and
+function names.
+
+In general the instructions go like this:
+\begin{enumerate}
+  \item Move every type and function in “Data-Parallel types [simd]” from
+    namespace \code{std} to namespace \std\code{simd}.
+
+  \item Replace all occurences of \code{basic_simd_mask} with
+    \code{basic_mask}.
+
+  \item Replace all occurences of \code{simd_mask} with \code{mask}.
+
+  \item (TBD) Replace all occurences of \code{basic_simd} with \code{basic_vec}.
+
+  \item (TBD) Replace all occurences of \code{simd} with \code{vec}.
+
+  \item Rename all functions and remaining types / class templates: \code{s/\backslash<simd_//}.
+
+  \item \code{s/rebind_simd/rebind/}
+
+  \item \code{s/resize_simd/resize/}
+
+  \item Add using-declarations in namespace \code{std} for the following functions:
+    \begin{itemize}
+      \item all function defined in [simd.math], and
+      \item \code{min}, \code{max}, \code{minmax}, and \code{clamp} in [simd.alg].
+    \end{itemize}
+\end{enumerate}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=0

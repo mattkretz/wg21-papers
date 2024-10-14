@@ -1,4 +1,5 @@
 \subsection{Alternative 7: Place \code{simd} into a single namespace with a different namespace for \simdgeneric interfaces}
+\label{sec:alt7}
 
 \medskip\begin{lstlisting}[style=Vc]
 namespace std::simd {
@@ -166,18 +167,3 @@ namespaces.
   scalar / SIMD / \simdgeneric; happy about concise code through namespace
   aliases
 }
-
-\subsubsection{On renaming \code{std::simd::simd} to \code{std::simd::vec}}
-Personally, I don't think \std\code{simd::simd} is a problem.
-Especially, considering that users might introduce a namespace alias or even
---- heaven forbid --- import the whole \std\code{simd} (or
-\std\code{simd_generic}) namespace into their local scope.
-If \code{vec} needs to stand on its own without the \code{simd::} part of the
-name, I fear we might lose clarity compared to \code{simd}.
-
-I believe the situation is different for \std\code{simd::simd_mask}, which,
-in my opinion, can live without the \code{simd_} part in its name.
-Thus, even after a \code{using namespace std::simd;} the alias template name
-\code{mask} is expressive enough.
-(Because \code{mask} only appears in proximity to \code{simd} --- if it
-appears in code at all.)

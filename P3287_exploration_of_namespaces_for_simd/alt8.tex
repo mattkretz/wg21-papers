@@ -1,15 +1,11 @@
-\subsection{Alternative 6: Place everything but obvious overloads into a
-single namespace}\label{sec:alt6}
+\subsection{Alternative 8: Everything in a single namespace with using-declarations in std}
+\label{sec:singlenamespace2}
 
-The preceding alternative probably went too far with moving \code{<cmath>}
-overloads and algorithms like \code{min}, \code{clamp}, etc. into the
-\std\code{simd} namespace.
-So let's keep all functions that are a clear overload (\code{f(simd<T>)}) from
-an existing function (\code{f(T)}) directly in the \code{std} namespace.
-This is the “namespace equivalent” to the status-quo approach of whether a
-\code{simd_} prefix is needed or not.
+After LEWG feedback in St. Louis, I added this alternative, which is basically
+a combination of Alternatives 5 and 6 (Sections \ref{sec:singlenamespace} and
+\ref{sec:alt6}).
 
-\medskip\begin{lstlisting}[style=Vc]
+\medskip\begin{lstlisting}
 namespace std::simd {
 
 template<class T, class Abi = /*...*/>
@@ -40,6 +36,14 @@ template<size_t Bytes, class Abi, class T, class U>
   select(const basic_simd_mask<Bytes, Abi>& c, const T& a, const U& b)
     -> decltype(simd-select-impl(c, a, b));
 
+template<class T, class Abi>
+  basic_simd<T, Abi>
+  exp(const basic_simd<T, Abi>& x);
+
+template<class T, class Abi>
+  basic_simd<T, Abi>
+  min(const basic_simd<T, Abi>& x, const basic_simd<T, Abi>& y);
+
 template<size_t Bs, class Abi>
   bool
   all_of(const basic_simd_mask<Bs, Abi>&);
@@ -53,15 +57,8 @@ template<class T>
 }
 
 namespace std {
-
-template<class T, class Abi>
-  simd::basic_simd<T, Abi>
-  exp(const simd::basic_simd<T, Abi>& x);
-
-template<class T, class Abi>
-  simd::basic_simd<T, Abi>
-  min(const simd::basic_simd<T, Abi>& x, const simd::basic_simd<T, Abi>& y);
-
+  using simd::exp;
+  using simd::min;
 }
 \end{lstlisting}
 
@@ -80,12 +77,26 @@ void f(std::simd::simd<float> vf, const std::vector<int>& data) {
 }
 \end{lstlisting}
 
-When relying on ADL, nothing changes compared to the example in the preceding
-section.
-However, if we now create a namespace alias and call everything fully
-qualified, the necessary qualifications could be considered slightly
-incoherent:
+Again, this is fairly verbose, so a user might decide to rather rely on ADL:
+\medskip\begin{lstlisting}[style=Vc]
+void f(std::simd::simd<float> vf, const std::vector<int>& data) {
+  auto iota = std::simd::generate<std::simd::simd<int>>([](int i) { return i; });
+  auto chunk = std::simd::load_from(data.begin());
+  auto chunk_swapped = gather_from(data, iota ^ 1);
+  auto chunk_swapped2 = permute(chunk, [](int i) { return i ^ 1; });
+  assert(all_of(chunk_swapped == chunk_swapped2));
 
+  vf = select(vf > 1.f, 1.f, vf);
+  vf = exp(vf);
+  auto lo = min(iota, chunk);
+}
+\end{lstlisting}
+
+But as we can see, ADL only works for some of the functions.
+If the function requires a template argument or none of the arguments are a
+\simd / \mask, then the call still must be qualified.
+Consequently, if a user wants to reduce the character overhead, a namespace
+alias might be better suited:
 \medskip\begin{lstlisting}[style=Vc]
 namespace smd = std::simd;
 
@@ -97,18 +108,10 @@ void f(smd::simd<float> vf, const std::vector<int>& data) {
   assert(smd::all_of(chunk_swapped == chunk_swapped2));
 
   vf = smd::select(vf > 1.f, 1.f, vf);
-  vf = std::exp(vf);
-  auto lo = std::min(iota, chunk);
+  vf = smd::exp(vf);
+  auto lo = smd::min(iota, chunk);
 }
 \end{lstlisting}
-
-At this point all functions already work for \simdgeneric code (or can be made
-to work with suitable overloads in the \std\code{simd} namespace).
-If LEWG were to adopt this naming style, then we need to decide on a per
-function basis, whether the function is “SIMD-only” or whether an overload for
-the value-type is useful on its own.
-For the latter, the function goes into \code{std} otherwise it needs to go
-into \std\code{simd}.
 
 The \simdgeneric programming example from previous sections now looks like
 this:
@@ -120,7 +123,7 @@ T scalar_only(T a, T b) {
 
 template<std::simd::integral T>
 T simd_only(T a, T b) {
-  return 2 * std::min(a, b);
+  return 2 * std::simd::min(a, b);
 }
 
 template<std::simd::generic_integral T>
@@ -129,27 +132,31 @@ T generic(T a, T b) {
 }
 \end{lstlisting}
 
+This is different to Alternative 7 (\sect{sec:alt7}), where simd-generic
+programming requires an opt-in, i.e. a code-change from scalar code.
+With this approach existing non-simd code (\code{scalar_only}) can be modified
+to use data-parallel types and every function that exists in \code{std} and can
+be used in simd-generic code needs no further work (\code{generic}).
+
 \begin{description}
   \item[pros]
     \begin{itemize}
       \item We are free to grab names out of the new namespace.
-      \item ADL works.
-      \item Fairly consistent.
-      \item[$\Rightarrow$] Users need to learn: “If it's in the \std\code{simd}
-        namespace then it works for \code{simd}s.
-        When searching for a function for \code{simd}, if the same function
-        exists / could exist for scalars look for it in \code{std}, otherwise
-        look in the \std\code{simd} namespace.”
-      \item \simdgeneric programming is straightforward to provide and use.
+      \item ADL still works.
+      \item Consistent.
+      \item[$\Rightarrow$] Users only need to learn: “If it's in the
+        \std\code{simd} namespace then it works for \code{simd}s.
+        When searching for a function for \code{simd}, look in the
+        \std\code{simd} namespace.”
+      \item \simdgeneric programming works.
     \end{itemize}
 
   \item[cons]
     \begin{itemize}
       \item The class template name \std\code{simd::simd} is a bit awkward.
-
-      \item We have a mix of non-member functions in \code{std} and
-        \std\code{simd}.
+        (There are alternative names that we could adopt instead.)
     \end{itemize}
 \end{description}
 
-\myrating{acceptable; but not much different from the status quo --- not convinced this is actually \emph{better}}
+\myrating{I like it. Clear separation of \code{simd} and non-\code{simd}
+functions while still providing good support for \simdgeneric programming}
