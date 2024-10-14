@@ -24,7 +24,7 @@ template<class V, class G>
 
 template<class V = void, class It, class... Flags>
   conditional_t<is_same_v<V, void>, simd<iter_value_t<It>>, V>
-  copy_from(It first, simd_flags<Flags...> f = {});
+  load_from(It first, simd_flags<Flags...> f = {});
 
 template<class Rg, std::integral Idx, class AbiIdx, class... Flags>
   simd<ranges::range_value_t<Rg>, basic_simd<Idx, AbiIdx>::size()>
@@ -69,7 +69,7 @@ Usage example:
 \medskip\begin{lstlisting}[style=Vc]
 void f(std::simd::simd<float> vf, const std::vector<int>& data) {
   auto iota = std::simd::generate<std::simd::simd<int>>([](int i) { return i; });
-  auto chunk = std::simd::copy_from(data.begin());
+  auto chunk = std::simd::load_from(data.begin());
   auto chunk_swapped = std::simd::gather_from(data, iota ^ 1);
   auto chunk_swapped2 = std::simd::permute(chunk, [](int i) { return i ^ 1; });
   assert(std::simd::all_of(chunk_swapped == chunk_swapped2));
@@ -91,7 +91,7 @@ namespace smd = std::simd;
 
 void f(smd::simd<float> vf, const std::vector<int>& data) {
   auto iota = smd::generate<smd::simd<int>>([](int i) { return i; });
-  auto chunk = smd::copy_from(data.begin());
+  auto chunk = smd::load_from(data.begin());
   auto chunk_swapped = smd::gather_from(data, iota ^ 1);
   auto chunk_swapped2 = smd::permute(chunk, [](int i) { return i ^ 1; });
   assert(smd::all_of(chunk_swapped == chunk_swapped2));

@@ -7,7 +7,7 @@ template<class V, class G>
 
 template<class V = void, class It, class... Flags>
   conditional_t<is_same_v<V, void>, simd<iter_value_t<It>>, V>
-  copy_from(It first, simd_flags<Flags...> f = {});
+  load_from(It first, simd_flags<Flags...> f = {});
 
 template<class Rg, std::integral Idx, class AbiIdx, class... Flags>
   simd<ranges::range_value_t<Rg>, basic_simd<Idx, AbiIdx>::size()>
@@ -47,7 +47,7 @@ Usage example:
 \medskip\begin{lstlisting}[style=Vc]
 void f(std::simd<float> vf, const std::vector<int>& data) {
   auto iota = std::generate<std::simd<int>>([](int i) { return i; });
-  auto chunk = std::copy_from(data.begin());
+  auto chunk = std::load_from(data.begin());
   auto chunk_swapped = std::gather_from(data, iota ^ 1);
   auto chunk_swapped2 = std::permute(chunk, [](int i) { return i ^ 1; });
   assert(std::all_of(chunk_swapped == chunk_swapped2));
@@ -63,7 +63,7 @@ The most important variation is using unqualified calls, relying on ADL:
 \medskip\begin{lstlisting}[style=Vc]
 void f(std::simd<float> vf, const std::vector<int>& data) {
   auto iota = std::generate<std::simd<int>>([](int i) { return i; });
-  auto chunk = std::copy_from(data.begin());
+  auto chunk = std::load_from(data.begin());
   auto chunk_swapped = gather_from(data, iota ^ 1);
   auto chunk_swapped2 = permute(chunk, [](int i) { return i ^ 1; });
   assert(all_of(chunk_swapped == chunk_swapped2));
@@ -102,7 +102,7 @@ T generic(T a, T b) {
 
   \item[cons]
     \begin{itemize}
-      \item Nothing in e.g. \code{auto x = std::copy_from(data.begin())} hints
+      \item Nothing in e.g. \code{auto x = std::load_from(data.begin())} hints
         at the creation of a \simd object.
       \item Non-\code{simd} overloads for the same names become questionable
         as soon as the functionality isn't equivalent. (huge “name grab”)
