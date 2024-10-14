@@ -84,6 +84,38 @@ This paper tries to explore the field as far as I believe is still sensible.
 The goal is to come up with a consistent naming strategy for everything related
 to \code{simd}.
 
+\subsection{Motivation for a \code{std::simd} namespace}
+\label{sec:namespacemotivation}
+
+A \std\code{simd} namespace encapsulates everything related to data-parallel
+types, creating an easy-to-explore, isolated space for these functionalities.
+It avoids the need for (inconsistent) \code{simd_} prefixes by grouping related
+functions into their own namespace.
+It increases flexibility for future extensions to be organized within the
+\std\code{simd} namespace.
+Users can easily alias the namespace (e.g. \code{namespace simd = std::simd}),
+reducing verbosity in the code but maintaining a clean and logical structure.
+
+The \std\code{simd} namespace approach might be cleaner in the long term.
+It avoids overloads like \code{std::reduce} and \code{std::all_of}, reducing
+the likelihood of confusion.
+While a \code{simd::simd} duplication in naming would be a bit awkward, it is a
+one-time issue that users can learn to live with.
+And we should consider renaming the alias template to
+\std\code{simd::\MayBreak{}vec} (\std\code{simd::\MayBreak{}basic_vec} for the
+class template).
+
+This approach also aligns with other \CC{} standard library features,
+where sub-namespaces are used to logically group related functionality:\\
+\std\code{chrono},
+\std\code{execution},
+\std\code{filesystem},
+\std\code{linalg},
+\std\code{numbers},
+\std\code{pmr},\\
+\std\code{ranges}, and
+\std\code{ranges::views}/\std\code{views}.
+
 \subsection{\simdgeneric programming}
 
 In this paper I want to use the term \emph{\simdgeneric} programming.
