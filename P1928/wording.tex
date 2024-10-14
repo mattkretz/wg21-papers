@@ -93,6 +93,16 @@ all possible values of \tcode{U} can be represented with type \tcode{T}.
 
 \rSec1[simd.expos]{Exposition only types, variables, and concepts}
 
+\FIXME{\simdfloatingpoint{} could possibly do
+  \code{floating_point<decltype(basic_simd(declval<V>()))::value_type> and convertible_to<V,
+  decltype(basic_simd(declval<V>()))>}.
+  I.e. is the given argument somehow convertible to \simd, and the resulting \code{value_type}
+  satisfies \code{floating_point}.
+  This would allow e.g. \code{std::sin(std::ref(a_simd_object))}.
+  But is it worth the trouble?
+  Up to now, the wording (and design) kept this as an implementation choice.
+}
+
 \begin{codeblock}
 using @\simdsizetype@ = @\seebelow@;                                 // \expos
 template<size_t Bytes> using @\integerfrom@ = @\seebelow@;            // \expos
@@ -1543,14 +1553,74 @@ return @\simdselect@(c, a, b);
 }
 
 \pnum
-Each mathematical function overload for \tcode{basic_simd} applies the corresponding \tcode{<cmath>}
-function element-wise. For the mathematical functions, the results per element only need to be
-approximately equal to the application of the function which is overloaded for the element type.
+Unless otherwise specified, each mathematical function declared in \tcode{<simd>} yields a
+\tcode{basic_simd} result, where the value of each element approximates the result obtained by
+applying the function with the same name from \tcode{<cmath>} to the corresponding elements of the
+arguments.
+The value of an element of the result is unspecified if a domain, pole, or range error occurs for
+the corresponding elements of the arguments.
+”errno“ (xref) is never modified.
 
-\pnum
-The result is unspecified if a domain, pole, or range error occurs when the input argument(s) are
-applied to the indicated \tcode{<cmath>} function.
 \recommended Implementations are encouraged to follow the C specification (specifically Annex F).
+
+\begin{itemdecl}
+template<@\simdfloatingpoint@ V> constexpr V frexp(const V& value, rebind_simd_t<int, V>* exp);
+template<@\simdfloatingpoint@ V> constexpr rebind_simd_t<int, V> ilogb(const V& x);
+template<@\simdfloatingpoint@ V> constexpr V ldexp(const V& x, const rebind_simd_t<int, V>& exp);
+template<@\simdfloatingpoint@ V> constexpr V modf(const type_identity_t<V>& value, V* iptr);
+template<@\simdfloatingpoint@ V> constexpr V scalbn(const V& x, const rebind_simd_t<int, V>& n);
+template<@\simdfloatingpoint@ V>
+  constexpr V scalbln(const V& x, const rebind_simd_t<long int, V>& n);
+template<signed_integral T, class Abi>
+  constexpr basic_simd<T, Abi> abs(const basic_simd<T, Abi>& j);
+template<@\simdfloatingpoint@ V> constexpr V abs(const V& j);
+template<@\simdfloatingpoint@ V> constexpr V fabs(const V& x);
+template<@\simdfloatingpoint@ V> constexpr V sqrt(const V& x);
+template<@\simdfloatingpoint@ V> constexpr V ceil(const V& x);
+template<@\simdfloatingpoint@ V> constexpr V floor(const V& x);
+template<@\simdfloatingpoint@ V> V nearbyint(const V& x);
+template<@\simdfloatingpoint@ V> V rint(const V& x);
+template<@\simdfloatingpoint@ V> rebind_simd_t<long int, V> lrint(const V& x);
+template<@\simdfloatingpoint@ V> rebind_simd_t<long long int, V> llrint(const V& x);
+template<@\simdfloatingpoint@ V> constexpr V round(const V& x);
+template<@\simdfloatingpoint@ V> constexpr rebind_simd_t<long int, V> lround(const V& x);
+template<@\simdfloatingpoint@ V> constexpr rebind_simd_t<long long int, V> llround(const V& x);
+template<@\simdfloatingpoint@ V> constexpr V trunc(const V& x);
+template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+  constexpr common_type_t<V0, V1> copysign(const V0& x, const V1& y);
+template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+  constexpr common_type_t<V0, V1> nextafter(const V0& x, const V1& y);
+template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+  constexpr common_type_t<V0, V1> fdim(const V0& x, const V1& y);
+template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+  constexpr common_type_t<V0, V1> fmax(const V0& x, const V1& y);
+template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+  constexpr common_type_t<V0, V1> fmin(const V0& x, const V1& y);
+template<typename V0, typename V1, @\multisimdfloatingpoint@<V0, V1> V2>
+  constexpr common_type_t<V0, V1, V2> fma(const V0& x, const V1& y, const V2& z);
+template<@\simdfloatingpoint@ V> constexpr rebind_simd_t<int, V> fpclassify(const V& x);
+template<@\simdfloatingpoint@ V> constexpr typename V::mask_type isfinite(const V& x);
+template<@\simdfloatingpoint@ V> constexpr typename V::mask_type isinf(const V& x);
+template<@\simdfloatingpoint@ V> constexpr typename V::mask_type isnan(const V& x);
+template<@\simdfloatingpoint@ V> constexpr typename V::mask_type isnormal(const V& x);
+template<@\simdfloatingpoint@ V> constexpr typename V::mask_type signbit(const V& x);
+template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+  constexpr typename common_type_t<V0, V1>::mask_type isgreater(const V0& x, const V1& y);
+template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+  constexpr typename common_type_t<V0, V1>::mask_type isgreaterequal(const V0& x, const V1& y);
+template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+  constexpr typename common_type_t<V0, V1>::mask_type isless(const V0& x, const V1& y);
+template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+  constexpr typename common_type_t<V0, V1>::mask_type islessequal(const V0& x, const V1& y);
+template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+  constexpr typename common_type_t<V0, V1>::mask_type islessgreater(const V0& x, const V1& y);
+template<typename V0, @\multisimdfloatingpoint@<V0> V1>
+  constexpr typename common_type_t<V0, V1>::mask_type isunordered(const V0& x, const V1& y);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\effects
+  Equivalent to: Element-wise application of the corresponding function.
+\end{itemdescr}
 
 \rSec1[simd.mask.class]{Class template \tcode{basic_simd_mask}}
 
