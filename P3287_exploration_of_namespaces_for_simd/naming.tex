@@ -1,0 +1,85 @@
+\section{Renaming simd and simd_mask}\label{sec:naming}
+R0 of this paper discussed naming in “Alternative 5”.
+But renaming isn't tied to one specific alternative but a general consideration
+if the class templates are moved into a namespace.
+
+\subsection{Namespace names}
+Conceivable \emph{variations} for the \std\code{simd} namespace are
+\begin{itemize}
+  \item \std\code{datapar} (The \simd and \mask types are in the “Data-parallel types” section in the IS.)
+  \item \std\code{dp} (data-parallel)
+  \item \std\code{dpt} (data-parallel types)
+  \item \std\code{unseq}
+\end{itemize}
+Personally, I don't believe any of these are an improvement.
+
+\subsection{Class template names}
+However, I suggest renaming \std\code{simd::}\MayBreak\mask to
+\std\code{simd::}\MayBreak\code{basic_mask}, and accordingly
+\std\code{simd::simd_mask} to \std\code{simd::mask}.
+
+Consequently, if we're reading the namespace as part of the type name
+(\code{simd::mask}) we should consider renaming \code{simd::simd} to:
+\begin{list}{}{
+  \setlength{\topsep}{0pt}%
+  \setlength{\leftmargin}{7em}%
+  \setlength{\rightmargin}{0pt}%
+  \setlength{\labelwidth}{7em}%
+}
+
+  \item[\code{simd::vector}]
+    We often speak about “SIMD vectors”; so in principle this a good name.
+    However, I fear that using the heavily overloaded term “vector” has too
+    much potential for confusion.
+    Especially the use of \code{using namespace std; using namespace
+    std::simd;}\footnote{huge foot-gun, which WG21 members will quickly
+    recognize as such} or even just \code{using namespace std::simd} by
+    itself would lead to a lot of confusion.
+
+  \item[\code{simd::vec}]
+    This name tries to avoid the confusion by spelling “vector” as an
+    abbreviation (and thus avoid the “hold on, why does it say \code{vector}
+    here?” moments when reviewing code)
+
+  \item[\code{simd::value}]
+    Note the naming precedent in \code{valarray}, which is called “value
+    array”.
+
+  \item[\code{simd::values}]
+
+  \item[\code{simd::array}]
+    The static extent matches \std\code{array}; it's a \std\code{array} with
+    SIMD operations; also, I believe conversions between \code{simd} and
+    \std\code{array} of equal extent should be implicit\ldots
+\end{list}
+
+From all of these, I'd prefer if we could use \code{simd::vector<T>} --- and
+in the library where this work originates it was called \code{Vc::Vector<T>}
+--- but I fear this will lead to confusion and just isn't worth the trouble.
+It seems however that \code{simd::vec<T>} could resolve that issue and still
+be fairly close to the term we use in speech.
+Next best\ldots{} \code{simd::array} is starting to grow on me.
+This term was never considered before, if I remember correctly.
+It appeals to me be because I believe we should make CTAD and implicit
+conversions work for \code{simd<T, N>} $\leftrightarrow$ \code{array<T, N>}\footnote{See P3299}.
+In terms of bit-representation, they typically are the same thing.
+They differ in alignment\footnote{Note that alignment can influence
+\code{sizeof}.}, function argument passing\footnote{\Eg the Itanium ABI passes
+  \code{array<float, 4>} as two \code{XMM} registers and \code{simd<float, 4>}
+as one \code{XMM} register.}, and whether you can apply operators that the
+value-type provides.
+
+\subsection{On renaming \code{std::simd::simd} to \code{std::simd::vec}}
+Personally, I don't think \std\code{simd::simd} is a problem.
+Especially, considering that users might introduce a namespace alias or even
+--- heaven forbid --- import the whole \std\code{simd} (or
+\std\code{simd_generic}) namespace into their local scope.
+If \code{vec} needs to stand on its own without the \code{simd::} part of the
+name, I fear we might lose clarity compared to \code{simd}.
+
+I believe the situation is different for \std\code{simd::simd_mask}, which,
+in my opinion, can live without the \code{simd_} part in its name.
+Thus, even after a \code{using namespace std::simd;} the alias template name
+\code{mask} is expressive enough.
+(Because \code{mask} only appears in proximity to \code{simd} --- if it
+appears in code at all.)

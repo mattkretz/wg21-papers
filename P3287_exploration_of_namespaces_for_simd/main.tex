@@ -225,7 +225,24 @@ if (std::all_of(x > 0)) /*...*/
 \pagebreak\input{alt6}
 \pagebreak\input{alt7}
 
-\pagebreak \section{Proposed polls}
+\input{naming}
+
+\section{Recommendation: An example after renaming}
+
+\medskip\begin{lstlisting}
+namespace simd = std::simd;
+
+// compute log for positive inputs
+simd::vec<float> f(std::span<float> data)
+{
+  simd::vec<float>  x = simd::load_from(data);
+  simd::mask<float> positive = x > 0.f;
+  simd::vec<float>  l = std::log(simd::select(positive, x, 1.f));
+  return simd::select(positive, l, x);
+}
+\end{lstlisting}
+
+\section{Proposed polls}
 
 Any vote would be against the status quo, which so far can be summarized as:
 \begin{itemize}
