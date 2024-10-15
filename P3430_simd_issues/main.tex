@@ -1,7 +1,7 @@
 \newcommand\wgTitle{simd issues: explicit, unsequenced, identity-element position, and members of
 disabled simd}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D3430R0}
+\newcommand\wgDocumentNumber{P3430R0}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
@@ -153,7 +153,7 @@ template<class U>
 
 \end{wgText}
 
-\begin{tonytable}{caption?}
+\begin{tonytable}{Make explicit conversions more consistent}
   \begin{lstlisting}
 using floatv = std::simd<float>;
 
