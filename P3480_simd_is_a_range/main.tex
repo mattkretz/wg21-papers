@@ -1,0 +1,419 @@
+\newcommand\wgTitle{std::simd is a range}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{P3480R0}
+\newcommand\wgGroup{SG9, LEWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{ba\-sic\_simd#1}\xspace}
+\newcommand\simdT{\type{ba\-sic\_simd\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\valuetype{\type{val\-ue\_type}\xspace}
+\newcommand\referencetype{\type{ref\-er\-ence}\xspace}
+\newcommand\mask[1][]{\type{ba\-sic\_simd\_mask#1}\xspace}
+\newcommand\maskT{\type{ba\-sic\_simd\_mask\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\newcommand\nativeabi{\UNSP{native-abi}}
+\newcommand\deducet{\UNSP{deduce-t}}
+\newcommand\simdsizev{\UNSP{simd-size-v}}
+\newcommand\simdsizetype{\UNSP{simd-size-type}}
+\newcommand\simdselect{\UNSP{simd-select-impl}}
+\newcommand\maskelementsize{\UNSP{mask-element-size}}
+\newcommand\integerfrom{\UNSP{integer-from}}
+\newcommand\constexprwrapperlike{\UNSP{constexpr-wrapper-like}}
+\newcommand\convertflag{\UNSP{convert-flag}}
+\newcommand\alignedflag{\UNSP{aligned-flag}}
+\newcommand\overalignedflag{\UNSP{overaligned-flag}}
+\newcommand\reductionoperation{\UNSP{reduction-binary-operation}}
+\newcommand\simdfloatingpoint{\UNSP{simd-floating-point}}
+\newcommand\multisimdfloatingpoint{\UNSP{multi-arg-simd-floating-point}}
+\newcommand\simditeratorsentinel{\UNSP{simd-iterator-sentinel}}
+\newcommand\simditerator{\UNSP{simd-iterator}}
+\newcommand\maskiterator{\UNSP{mask-iterator}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  P1928 “std::simd --- merge data-parallel types from the Parallelism TS 2” promised a paper on
+  making \code{simd} a range. This paper explores the addition of iterators to \simd and \mask.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\section{Introduction, or why \code{simd} wasn't a range in the TS}
+
+The Parallelism TS 2 was based on \CC{}17.
+Ranges were added in \CC{}20.
+Before ranges, an iterator category was tied to whether \code{operator*} of iterators returned an
+lvalue reference.
+Since \simd and \mask objects are not composed of sub-objects (in other words, a \code{simd<int>}
+contains no \code{int} \emph{objects}), \code{operator[]} returns prvalues (or a proxy reference
+in the TS for the non-const case).
+An iterator needs to do the same and thus never could be in any other iterator category than
+\emph{Cpp17InputIterator}.
+In reality, the iterator category always was “random access” (never contiguous; because while \simd
+is a contiguous range in memory it isn't one in the object model of \CC{}).
+In order to not cement that mismatch, it was never proposed to make \simd/\mask a range for the TS.
+
+Now that the iterator concepts don't require an lvalue reference anymore we can easily make
+\simd/\mask a read-only range.
+Iterator dereference would return a prvalue (a copy of the value stored in the \simd/\mask object).
+In addition, the abstraction of a sentinel instead of an iterator pointing beyond the last value of
+the \simd seems like a useful tool for \simd.
+
+\section{Motivation}
+
+After the technical reasons for \emph{not} adding iterators to \simd/\mask are resolved, we still
+need to consider why \simd should be a range in the first place.
+
+\section{Integration with the standard library}
+
+We can improve integration of \simd/\mask with the rest of the standard library.
+By making \simd/\mask a range many of the existing facilities in the standard library become
+easily accessible.
+All of these facilities do work as intended — in other words: presenting \simd/\mask as a range
+matches on the semantic level, not only syntactically.
+
+\subsection{Read-only subscript should imply read-only iteration}
+
+With P1928R12 we can write
+\medskip\begin{lstlisting}
+std::simd<int> v = ...;
+for (int i = 0; i < v.size(); ++i) {
+  do_something(v[i]);
+}
+\end{lstlisting}
+
+Why then, can we not also write
+\medskip\begin{lstlisting}
+for (auto x : v) {
+  do_something(x);
+}
+\end{lstlisting}
+and
+\medskip\begin{lstlisting}
+std::for_each(v.begin(), v.end(), [](auto x) {
+  do_something(x);
+});
+\end{lstlisting}
+and
+\medskip\begin{lstlisting}
+v | std::views::filter([](auto x) { return x > 0; }) | std::ranges::to<std::vector>();
+\end{lstlisting}
+
+\CC{} users have learned that whenever a for loop with subscript does what they need to do, then a
+ranged for loop, standard algorithm, or range adaptor are valid alternatives.
+This expectation should not get an exception with \simd and \mask.
+
+\subsection{Present a range of simd as a range of simd's value-type}
+
+In some applications it is more efficient (and simpler) to work with \simd objects internally,
+instead of constantly doing loads and stores.
+Thus a fairly simple container that comes up in applications could be
+\code{std::vector<std::simd<float>>}.
+On I/O such an application typically cannot communicate in \simd objects anymore.
+Instead it needs to present a range of \code{float}s.
+Read-only iterators on \simd do not help with the input side.
+But for output we can easily turn the \code{vector<simd<float>>} into a range of \code{float}:
+\medskip\begin{lstlisting}
+std::vector<std::simd<float>> data;
+auto range_of_float = data | std::views::join;
+\end{lstlisting}
+
+\section{Downsides of making \code{simd} a range}
+
+Really, I can't think of any downsides of making \simd/\mask a range.
+In principle one could argue that \simd/\mask is not a container \cite{P0851R0}.
+Consequently, it shouldn't have a container interface and thus no iterators.
+But then we should probably remove the subscript operator as well.
+
+\section{Wording}
+
+This is just a sketch derived from my implementation of \simd and \mask iterators.
+
+Add the following:
+
+\begin{wgText}[{[simd.iterators]}]
+  \setcounter{Paras}{0}
+  \begin{codeblock}
+namespace std
+{
+  class @\simditeratorsentinel@ {};
+
+  template <typename T, typename Abi>
+    class @\simditerator@
+    {
+      const basic_simd<T, Abi>* data_ = nullptr; // \expos
+      int offset_ = 0;                           // \expos
+
+    public:
+      using value_type = T;
+      using iterator_category = std::random_access_iterator_tag;
+      using difference_type = int;
+
+      constexpr @\simditerator@() = default;
+
+      constexpr
+      @\simditerator@(const basic_simd<T, Abi>& d, int x)
+      : data_(&d), offset_(x)
+      {}
+
+      constexpr
+      @\simditerator@(const @\simditerator@ &) = default;
+
+      constexpr @\simditerator@&
+      operator=(const @\simditerator@ &) = default;
+
+      constexpr value_type
+      operator*() const
+      { return (*data_)[offset_]; }
+
+      constexpr @\simditerator@&
+      operator++()
+      {
+        ++offset_;
+        return *this;
+      }
+
+      constexpr @\simditerator@
+      operator++(int)
+      {
+        @\simditerator@ r = *this;
+        ++offset_;
+        return r;
+      }
+
+      constexpr @\simditerator@&
+      operator--()
+      {
+        --offset_;
+        return *this;
+      }
+
+      constexpr @\simditerator@
+      operator--(int)
+      {
+        @\simditerator@ r = *this;
+        --offset_;
+        return r;
+      }
+
+      constexpr difference_type
+      operator-(@\simditerator@ rhs) const
+      { return offset_ - rhs.offset_; }
+
+      constexpr friend difference_type
+      operator-(@\simditerator@ it, @\simditeratorsentinel@)
+      { return it.offset_ - difference_type(_Vp::size.value); }
+
+      constexpr friend difference_type
+      operator-(@\simditeratorsentinel@, @\simditerator@ it)
+      { return difference_type(_Vp::size.value) - it.offset_; }
+
+      constexpr friend @\simditerator@
+      operator+(difference_type x, const @\simditerator@& it)
+      { return @\simditerator@(*it.data_, it.offset_ + x); }
+
+      constexpr friend @\simditerator@
+      operator+(const @\simditerator@& it, difference_type x)
+      { return @\simditerator@(*it.data_, it.offset_ + x); }
+
+      constexpr friend @\simditerator@
+      operator-(difference_type x, const @\simditerator@& it)
+      { return @\simditerator@(*it.data_, it.offset_ - x); }
+
+      constexpr friend @\simditerator@
+      operator-(const @\simditerator@& it, difference_type x)
+      { return @\simditerator@(*it.data_, it.offset_ - x); }
+
+      constexpr @\simditerator@&
+      operator+=(difference_type x)
+      {
+        offset_ += x;
+        return *this;
+      }
+
+      constexpr @\simditerator@&
+      operator-=(difference_type x)
+      {
+        offset_ -= x;
+        return *this;
+      }
+
+      constexpr value_type
+      operator[](difference_type i) const
+      { return (*data_)[offset_ + i]; }
+
+      constexpr friend auto operator<=>(@\simditerator@ a, @\simditerator@ b)
+      { return a.offset_ <=> b.offset_; }
+
+      constexpr friend bool operator==(@\simditerator@ a, @\simditerator@ b) = default;
+
+      constexpr friend bool operator==(@\simditerator@ a, @\simditeratorsentinel@)
+      { return a.offset_ == difference_type(_Vp::size.value); }
+    };
+
+  template <size_t Bs, typename Abi>
+    class @\maskiterator@
+    {
+      const basic_mask<Bs, Abi>* data_ = nullptr; // \expos
+      int offset_ = 0;                            // \expos
+
+    public:
+      using value_type = bool;
+      using iterator_category = std::random_access_iterator_tag;
+      using difference_type = int;
+
+      constexpr @\maskiterator@() = default;
+
+      constexpr
+      @\maskiterator@(const basic_mask<Bs, Abi>& d, int x)
+      : data_(&d), offset_(x)
+      {}
+
+      constexpr
+      @\maskiterator@(const @\maskiterator@ &) = default;
+
+      constexpr @\maskiterator@&
+      operator=(const @\maskiterator@ &) = default;
+
+      constexpr value_type
+      operator*() const
+      { return (*data_)[offset_]; }
+
+      constexpr @\maskiterator@&
+      operator++()
+      {
+        ++offset_;
+        return *this;
+      }
+
+      constexpr @\maskiterator@
+      operator++(int)
+      {
+        @\maskiterator@ r = *this;
+        ++offset_;
+        return r;
+      }
+
+      constexpr @\maskiterator@&
+      operator--()
+      {
+        --offset_;
+        return *this;
+      }
+
+      constexpr @\maskiterator@
+      operator--(int)
+      {
+        @\maskiterator@ r = *this;
+        --offset_;
+        return r;
+      }
+
+      constexpr difference_type
+      operator-(@\maskiterator@ rhs) const
+      { return offset_ - rhs.offset_; }
+
+      constexpr friend @\maskiterator@
+      operator+(difference_type x, const @\maskiterator@& it)
+      { return @\maskiterator@(*it.data_, it.offset_ + x); }
+
+      constexpr friend @\maskiterator@
+      operator+(const @\maskiterator@& it, difference_type x)
+      { return @\maskiterator@(*it.data_, it.offset_ + x); }
+
+      constexpr friend @\maskiterator@
+      operator-(difference_type x, const @\maskiterator@& it)
+      { return @\maskiterator@(*it.data_, it.offset_ - x); }
+
+      constexpr friend @\maskiterator@
+      operator-(const @\maskiterator@& it, difference_type x)
+      { return @\maskiterator@(*it.data_, it.offset_ - x); }
+
+      constexpr @\maskiterator@&
+      operator+=(difference_type x)
+      {
+        offset_ += x;
+        return *this;
+      }
+
+      constexpr @\maskiterator@&
+      operator-=(difference_type x)
+      {
+        offset_ -= x;
+        return *this;
+      }
+
+      constexpr value_type
+      operator[](difference_type i) const
+      { return (*data_)[offset_ + i]; }
+
+      constexpr friend auto operator<=>(@\maskiterator@ a, @\maskiterator@ b)
+      { return a.offset_ <=> b.offset_; }
+
+      constexpr friend bool operator==(@\maskiterator@ a, @\maskiterator@ b) = default;
+
+      constexpr friend bool operator==(@\maskiterator@ a, @\simditeratorsentinel@)
+      { return a.offset_ == difference_type(_Vp::size.value); }
+    };
+}
+  \end{codeblock}
+\end{wgText}
+
+\begin{wgText}[{[simd.overview]}]
+\setcounter{Paras}{0}
+\begin{codeblock}
+template<class T, class Abi> class basic_simd {
+public:
+  using value_type = T;
+  using mask_type = basic_simd_mask<sizeof(T), Abi>;
+  using abi_type = Abi;
+  @\wgAdd{using iterator = \mbox{\simditerator}<T, Abi>;}@
+  @\wgAdd{using const_iterator = iterator;}@
+
+  @\wgAdd{constexpr const_iterator begin() const;}@
+  @\wgAdd{constexpr const_iterator cbegin() const;}@
+  @\wgAdd{constexpr \mbox{\simditeratorsentinel} end() const;}@
+  @\wgAdd{constexpr \mbox{\simditeratorsentinel} cend() const;}@
+\end{codeblock}
+\end{wgText}
+
+\begin{wgText}[{[simd.mask.overview]}]
+\setcounter{Paras}{0}
+\begin{codeblock}
+template<size_t Bytes, class Abi> class basic_simd_mask {
+public:
+  using value_type = bool;
+  using abi_type = Abi;
+  @\wgAdd{using iterator = \mbox{\maskiterator}<Bytes, Abi>;}@
+  @\wgAdd{using const_iterator = iterator;}@
+
+  @\wgAdd{constexpr const_iterator begin() const;}@
+  @\wgAdd{constexpr const_iterator cbegin() const;}@
+  @\wgAdd{constexpr \mbox{\simditeratorsentinel} end() const;}@
+  @\wgAdd{constexpr \mbox{\simditeratorsentinel} cend() const;}@
+\end{codeblock}
+\end{wgText}
+
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=100
