@@ -1,0 +1,50 @@
+\section{Possible original intent}
+
+This section only explains the options.
+In other words, we want to be able to choose one of these and say “this is the
+design intent”.
+A discussion of the options follows in the next section.
+
+\subsection{strictest: Disallow all excess precision}\label{o:1}
+
+\begin{itemize}
+  \item \code{FLT_EVAL_METHOD} must always be \code{0}.
+
+  \item Any evaluation of a \fp expression applies a single rounding to the
+    precision of the \fp type after every operation.
+\end{itemize}
+\discussionref{1}
+
+\subsection{compatible: Do exactly the same as C}\label{o:2}
+
+\begin{itemize}
+  \item Intermediate rounding is controlled by \code{FLT_EVAL_METHOD}.
+
+  \item Implementations are allowed (and thus encouraged?) to store constants
+    with highest possible precision. (relevant only with \code{FLT_EVAL_METHOD
+    != 0})
+
+  \item Evaluation of constant expressions and compile-time evaluation of
+    expressions may use excess precision.
+\end{itemize}
+\discussionref{2}
+
+\subsection{like C but only for run-time evaluation}\label{o:3}
+
+\begin{itemize}
+  \item \code{FLT_EVAL_METHOD} only applies to run-time evaluation of \fp expressions.
+
+  \item The value of a \fp literal is always rounded to the precision of its
+    type.
+
+  \item Evaluation of floating-point expressions at compile time is not allowed
+    to use excess precision.
+
+  \item \code{FLT_EVAL_METHOD != 0} at runtime is permitted.
+
+  \item Floating-point evaluation at runtime can use higher precision and is
+    only required to round to the precision of the floating-point type on cast
+    and assignment. The intermediate precision is exposed to the program via
+    \code{FLT_EVAL_METHOD} and thus cannot exceed \code{long double}.
+\end{itemize}
+\discussionref{3}

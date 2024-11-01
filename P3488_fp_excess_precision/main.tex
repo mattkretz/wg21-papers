@@ -1,0 +1,349 @@
+\newcommand\wgTitle{Floating-Point Excess Precision}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{D3488R0}
+\newcommand\wgGroup{SG6, EWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{ }
+
+\usepackage{mymacros}
+\usepackage{wg21}
+%\setcounter{tocdepth}{2} % show sections and subsections in TOC
+%\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+%\usepackage{comment}
+
+\addbibresource{extra.bib}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\newcommand\fp{floating-point\xspace}
+\newcommand\Fp{Floating-point\xspace}
+\newcommand\discussionref[1]{\hyperref[d:#1]{\color{Headings}$\rightarrow$ Discussion}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  CWG2752 asks about the design intent for handling excess-precision
+  floating-point computations in \CC{}.
+  The main question we need answered is whether literals must be rounded or can
+  be stored with excess precision.
+  The secondary question is the use of excess precision in constant expressions
+  and in compile-time evaluation of floating-point operations.
+  The goal is to find a consensus on what the original design intent had been.
+  This paper lists possible original intent and discusses their implications on
+  potential optimizations.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\section{Introduction}
+
+(This is an extended/modified copy of CWG2752.)
+
+Consider:
+
+\begin{lstlisting}
+int main()
+{
+  constexpr auto x = 3.14f;
+  assert( x == 3.14f );         // can fail?
+  static_assert( x == 3.14f );  // can fail?
+}
+\end{lstlisting}
+
+Can a conforming implementation represent a floating-point literal with excess
+precision, causing the comparisons to fail?
+
+Subclause 5.13.4 [lex.fcon] paragraph 3 specifies:
+
+\begin{wgText}[\CC{} {[lex.fcon]}]
+  \setcounter{Paras}{2}\pnum
+  If the scaled value is not in the range of representable values for its type,
+  the program is ill-formed. Otherwise, the value of a floating-point-literal
+  is the scaled value if representable, else the larger or smaller
+  representable value nearest the scaled value, chosen in an
+  implementation-defined manner.
+\end{wgText}
+
+This phrasing leaves little leeway for excess precision.
+In contrast, C23 specifies:
+
+\begin{wgText}[ISO/IEC 9899:2024 6.4.4.3 Floating constants]
+  \setcounter{Paras}{5}\pnum
+  The values of floating constants may be represented in greater range and
+  precision than that required by the type (determined by the suffix); the
+  types are not changed thereby. See 5.2.5.3.3 regarding evaluation
+  formats.\footnote{Hexadecimal floating constants can be used to obtain exact
+    values in the semantic type that are independent of the evaluation format.
+    Casts produce values in the semantic type, though depend on the rounding
+    mode and may raise the inexact floating-point exception.}
+\end{wgText}
+
+Subclause 7.1 [expr.pre] paragraph 6 uses very similar wording to allow excess
+precision for floating-point computations (including their operands):
+
+\begin{wgText}[\CC{} {[expr.pre]}]
+  \setcounter{Paras}{5}\pnum
+  The values of the floating-point operands and the results of floating-point
+  expressions may be represented in greater precision and range than that
+  required by the type; the types are not changed thereby.%
+  \footnote{The cast and assignment operators must still perform their specific
+    conversions as described in 7.6.1.4 [expr.type.conv], 7.6.3 [expr.cast],
+    7.6.1.9 [expr.static.cast] and 7.6.19 [expr.ass].}
+\end{wgText}
+
+Taken together, that means that \code{314.f / 100.f} can be computed and
+represented more precisely than \code{3.14f}, which is hard to justify.
+The footnote appears to imply that \code{(float)3.14f} is required to yield a
+value with \float precision, but that conversion (eventually) ends up at 9.4.1
+[dcl.init.general] bullet 16.9:
+
+\begin{wgText}[\CC{} {[dcl.init.general]}]
+  \setcounter{Paras}{0}
+  [\ldots]
+  Otherwise, the initial value of the object being initialized is the (possibly
+  converted) value of the initializer expression.
+  [\ldots]
+\end{wgText}
+
+This phrasing leaves no permission to discard excess precision when converting
+from a \float value to type \float ("[\ldots] is the value [\ldots]").
+
+However, if initialization is intended to drop excess precision, then an
+overloaded operator returning \float can never behave like a built-in operation
+with excess precision, because returning a value means initializing the return
+value.
+
+The \CC{} standard library inherits the \code{FLT_EVAL_METHOD} macro from the C
+standard library. C23 specifies it as follows:
+
+\begin{wgText}[ISO/IEC 9899:2024 5.2.5.3.3 Characteristics of floating types \code{<float.h>}]
+  \setcounter{Paras}{25}\pnum
+  The values of floating type yielded by operators subject to the usual
+  arithmetic conversions, including the values yielded by the implicit
+  conversion of operands, and the values of floating constants are evaluated to
+  a format whose range and precision may be greater than required by the type.
+  Such a format is called an evaluation format.
+  In all cases, assignment and cast operators yield values in the format of the
+  type.
+  The extent to which evaluation formats are used is characterized by the value
+  of \code{FLT_EVAL_METHOD}:
+  \begin{itemize}
+    \item [-1] indeterminable;
+
+    \item [0] evaluate all operations and constants just to the range and
+      precision of the type;
+
+    \item [1] evaluate operations and constants of type \float and \double to
+      the range and precision of the \double type, evaluate \code{long double}
+      operations and constants to the range and precision of the \code{long
+      double} type;
+
+    \item [2] evaluate all operations and constants to the range and precision
+      of the \code{long double} type.
+  \end{itemize}
+  All other negative values for \code{FLT_EVAL_METHOD} characterize
+  implementation-defined behavior.
+  The value of \code{FLT_EVAL_METHOD} does not characterize values returned by
+  function calls (see 6.8.7.5, F.6).
+\end{wgText}
+
+Taken together, a conforming \CC{} implementation cannot define
+\code{FLT_EVAL_METHOD} to 1 or 2, because literals (= "constants") cannot be
+represented with excess precision in \CC{}.
+
+\subsection{Annex H of C23}
+
+Annex H of C23 “specifies extension types for programming language C that have
+the arithmetic interchange and extended floating-point formats specified in
+ISO/IEC 60559”.
+
+This annex modifies \code{FLT_EVAL_METHOD} and is relevant with regard to
+discussion around evaluation of e.g. \code{std::float16_t} operations:
+\begin{wgText}[ISO/IEC 9899:2024 H.3 Characteristics in \code{<float.h>}]
+  \setcounter{Paras}{1}\pnum
+  If \code{FLT_RADIX} is \code{2}, the value of \code{FLT_EVAL_METHOD}
+  (5.2.5.3.3) characterizes the use of evaluation formats for standard floating
+  types and for binary floating types:
+  \begin{itemize}
+    \item[\code{-1}] indeterminable;
+    \item [\code 0] evaluate all operations and constants, whose semantic type
+      comprises a set of values that is a strict subset of the values of
+      \float, to the range and precision of \float; evaluate all other
+      operations and constants to the range and precision of the semantic type;
+    \item [\code 1] evaluate operations and constants, whose semantic type comprises
+      a set of values that is a strict subset of the values of \double, to the
+      range and precision of \double; evaluate all other operations and
+      constants to the range and precision of the semantic type;
+    \item [\code 2] evaluate operations and constants, whose semantic type comprises
+      a set of values that is a strict subset of the values of \code{long
+      double}, to the range and precision of \code{long double}; evaluate all
+      other operations and constants to the range and precision of the semantic
+      type;
+    \item [$N$] where \code{_Float$N$} is a supported interchange floating
+      type, evaluate operations and constants, whose semantic type comprises a
+      set of values that is a strict subset of the values of \code{_Float$N$},
+      to the range and precision of \code{_Float$N$}; evaluate all other
+      operations and constants to the range and precision of the semantic type;
+    \item [$N + \code{1}$] where \code{_Float$N$x} is a supported extended
+      floating type, evaluate operations and constants, whose semantic type
+      comprises a set of values that is a strict subset of the values of
+      \code{_Float$N$x}, to the range and precision of \code{_Float$N$x};
+      evaluate all other operations and constants to the range and precision of
+      the semantic type.
+  \end{itemize}
+\end{wgText}
+
+\subsection{Relevance of this issue}
+
+This issue should be irrelevant for all environments where
+\code{FLT_EVAL_METHOD} is \code{0}.
+An example environment where \code{FLT_EVAL_METHOD} is non-zero is GCC
+compiling with \code{-m32} or \code{-mfpmath=387}.
+With GCC 13 or later and one of the mentioned compiler flags and e.g.
+\code{-std=c++23} the above code example fails both the \code{static_assert}
+and the runtime \code{assert}\footnote{\url{https://compiler-explorer.com/z/vrYoT5cer}}.
+
+An example that exhibits different behavior for constant propagation /
+expressions can also be constructed%
+\footnote{\url{https://compiler-explorer.com/z/5KGoebo75}}:
+\begin{lstlisting}
+constexpr float a = 0x1.000003p0f; // this rounds to nearest
+static_assert(a ==  0x1.000004p0f); // as expected
+
+constexpr float b = 0x2.000005p0f; // this rounds to nearest
+static_assert(b ==  0x2.000004p0f); // as expected
+
+constexpr float b0 = 0x1.000002p0f + 0x1.000003p0f;
+// -> without intermediate rounding: 0x2.000005p0f
+//           -> subsequent rounding: 0x2.000004p0f (A)
+// ->    with intermediate rounding: 0x2.000006p0f (B')
+//           -> subsequent rounding: 0x2.000008p0f (B)
+static_assert(b0 != 0x2.000004p0f); // (A)
+static_assert(b0 == 0x2.000006p0f); // (B')
+static_assert(b0 == 0x2.000008p0f); // (B)
+
+constexpr float b1 = 0x1.000002p0f + a;
+// same constants as 'b0' except rounding for 'a' is required
+// -> 0x2.000006p0f -> subsequent rounding: 0x2.000008p0f
+static_assert(b1 == 0x2.000008p0f);
+
+constexpr float b2 = 0x1.000002p0f + a - 1.f;
+// 0x2.000006p0f - 1 -> 0x1.000006p0f (C)
+// 0x2.000006p0f rounds to 0x2.000008p0f -> subtract 1 -> 0x1.000008p0f (D)
+
+static_assert(b2 != 0x1.000006p0f); // (C)
+static_assert(b2 == 0x1.000008p0f); // (D)
+
+constexpr float third = 1 / 3.f;
+constexpr float five_third = 5 * third;
+constexpr float five_third_ = 5 * (1 / 3.f);
+static_assert(five_third == five_third_); // (E)
+\end{lstlisting}
+All of these static assertions hold on GCC, Clang, and MSVC as far as I tested
+them, except when compiling with GCC 13 (and up) and the \code{-m32} flag
+(targeting 32-bit x86).
+There, the assertions marked \code{(A)}, \code{(B')} \code{(B)}, \code{(C)},
+\code{(D)}, and \code{(E)} fail.
+This is due to \code{FLT_EVAL_METHOD == 2} which GCC interprets as allowing /
+requesting constants in \code{long double} precision.
+
+\section{A plan on how to reach a conclusion}
+
+Three steps:
+\begin{enumerate}
+  \item SG6 documents the possible original intent and their implications for
+    resolving CWG2752.
+    The group then makes a recommendation on how the issue should be resolved.
+    Irrespective of whether a consensus is reached, the paper then progresses
+    to EWG.
+
+  \item EWG does what it does.
+    Most importantly EWG is the group that has the final say in how this issue
+    is resolved.
+
+  \item CWG.
+\end{enumerate}
+
+\input{resolutions}
+\input{discussion}
+
+\section{Floating-point contraction}
+
+\Fp contraction is the transformation of \code{a * b + c} into
+\code{std::fma(a, b, c)}.
+This effectively increases the intermediate precision of the multiplication
+result.
+Thus, \fp contraction is related to this discussion.
+[expr.pre] p6 appears to allow \fp contraction.
+
+ISO/IEC 60559:2020 specifies
+\begin{wgText}[ISO/IEC 60559:2020 10.4 Literal meaning and value-changing optimizations]
+  A language standard should also define, and require implementations to
+  provide, attributes that allow and disallow value-changing optimizations,
+  separately or collectively, for a block.
+  These optimizations might include, but are not limited to:
+  \begin{itemize}
+    \item Applying the associative or distributive laws.
+
+    \item Synthesis of a \textbf{fusedMultiplyAdd} operation from a \textbf{multiplication} and
+      an \textbf{addition}.
+
+    \item Synthesis of a \textit{formatOf} operation from an operation and a conversion
+      of the result of the operation.
+
+    \item Use of wider intermediate results in expression evaluation.
+  \end{itemize}
+\end{wgText}
+
+The fourth item is what this paper has been discussing so far.
+
+The second item is considered a different optimization in the 60559 standard.
+Therefore, we should also consider \fp contraction separately from
+\code{FLT_EVAL_METHOD}.
+It is unclear what the original intent for \fp contraction for \CC{} had been.
+Existing practice is to default to \fp contraction as an optimization
+independent of \code{FLT_EVAL_METHOD}.
+Therefore, I suggest we ensure the wording matches existing practice.
+
+Note that the 60559 wording talks about “attributes that allow and disallow
+value-changing optimizations”.
+\CC{} does not provide such attributes.
+However, implementations typically provide them (e.g. as compiler flags
+treating one complete translation unit as a “block”, but also as vendor
+attributes that can be applied to functions).
+This appears to follow the guidance in 60559 which says that if a language
+standard doesn't define something it is implementation defined.
+
+Consequently, I'd be wary of making \fp contraction non-conforming.
+Rather we want to keep it as a conforming optimization and (for now) continue
+to trust the implementations to provide the necessary “attributes” to control
+\fp contraction.
+Adding such an “attribute” to \CC{} itself is material for another paper, but
+should not be done in a resolution to a core issue.
+
+\section{Wording}
+
+Very much TBD.
+But here's at least a sketch:
+
+\begin{enumerate}
+  \item Clarify [expr.pre] that it only provides this freedom for run-time
+    evaluation.
+
+  \item Clarify [expr.pre] that \fp contraction is a conforming transformation (but not required)
+
+  \item Stop inheriting \code{FLT_EVAL_METHOD} verbatim from C.
+    We need to write our own wording that clarifies \code{FLT_EVAL_METHOD} only
+    applies to run-time evaluation and not to constants.
+    Also we need to consider adopting and adjusting the wording from Annex H,
+    which is important for \code{std::float16_t} and \code{std::bfloat16_t}.
+\end{enumerate}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0

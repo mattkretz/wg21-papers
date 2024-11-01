@@ -1,0 +1,64 @@
+\section{Discussion}
+
+A simplification where the implementation were free to use excess precision at
+runtime as it deems best would lead to suprising results:
+Consider two floating-point values \code{a} and \code{b} where
+\code{std::isfinite(b)} is statically known to be \code{true}.
+With arbitrary excess precision the optimizer would then be allowed to replace
+\code{a + b - b} with \code{a}.
+
+\subsection{strictest: Disallow all excess precision}\label{d:1}
+
+I believe [expr.pre] p6 is fairly clear that it was never the design intent to
+exclude all excess precision.
+
+Implications:
+\begin{itemize}
+  \item \Fp contraction into FMAs is non-conforming.
+
+  \item The x87 FPU cannot be used with a single “precision control” value,
+    because double rounding is not correct (e.g. FPU configured to 80-bit with
+    subsequent rounding to 64/32-bit).
+    This implies that the compiler would have to set the x87 floating-point
+    control word (FPCW) using the FLDCW instruction whenever it needs to
+    execute \fp operations (with different precision).
+
+  \item This is likely an ABI break and unnacceptable for existing
+    implementations.
+\end{itemize}
+
+\subsection{compatible: Do exactly the same as C}\label{d:2}
+
+This may have been the original intent, but [lex.fcon] p3 suggests otherwise.
+
+\begin{itemize}
+  \item \code{float x = 3.14f;} can require 8, 12, 16, or even more bytes to be
+    stored in the resulting binary.
+
+  \item \code{float x = 3.14f; assert(x == 3.14f);} is allowed to fail
+    depending on implementation, target, and compiler flags.
+
+  \item \code{std::float16_t} and \code{std::bfloat16_t} can either use a
+    soft-float implementation or requires dedicated hardware.
+    Double rounding, by using binary32 instructions is impossible with
+    \code{FLT_EVAL_METHOD == 0}.
+    An implementation that wants to evaluate
+    \code{std::float16_t}/\code{std::bfloat16_t} in higher intermediate
+    precision needs to set \code{FLT_EVAL_METHOD} to 1 or 2 (or 32?).
+\end{itemize}
+
+\subsection{like C but only for run-time evaluation}\label{d:3}
+
+\begin{itemize}
+  \item The intent here appears to be that we want to prescribe reproducible
+    \fp behavior.
+    In other words, all floating-point code that is \emph{not} evaluated at
+    run-time is reproducible.
+
+  \item However, we acknowledge the existence of hardware where this comes at
+    unreasonable performance cost. Because of these cases --- and only for
+    these --- the non-zero \code{FLT_EVAL_METHOD} modes exist.
+
+  \item Consequence: evaluation at higher precision leads to double rounding
+    and thus potentially worse errors.
+\end{itemize}
