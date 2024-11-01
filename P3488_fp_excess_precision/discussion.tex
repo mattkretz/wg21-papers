@@ -1,5 +1,6 @@
 \section{Discussion}
 
+A general observation:
 A simplification where the implementation were free to use excess precision at
 runtime as it deems best would lead to suprising results:
 Consider two floating-point values \code{a} and \code{b} where
@@ -7,12 +8,25 @@ Consider two floating-point values \code{a} and \code{b} where
 With arbitrary excess precision the optimizer would then be allowed to replace
 \code{a + b - b} with \code{a}.
 
+A general consequence of excess precision is that \fp evaluation leads to
+double rounding and thus potentially worse errors.
+Where the second rounding occurs is not fully reproducible and can potentially
+change via unrelated code changes in the translation unit\footnote{e.g. because of register allocation}.
+
+Without excess precision \code{std::float16_t} and \code{std::bfloat16_t} can
+either use a soft-float implementation or dedicated hardware is required.
+Using \float (binary32) instructions is impossible with the current possible
+values for \code{FLT_EVAL_METHOD}.
+An implementation that wants to evaluate \std\code{float16_t} /
+\std\code{bfloat16_t} in higher intermediate precision needs to set
+\code{FLT_EVAL_METHOD} to 1 or 2 (or 32?).
+
 \subsection{strictest: Disallow all excess precision}\label{d:1}
 
 I believe [expr.pre] p6 is fairly clear that it was never the design intent to
 exclude all excess precision.
 
-Implications:
+Implications of disallowing all excess precision:
 \begin{itemize}
   \item \Fp contraction into FMAs is non-conforming.
 
@@ -29,36 +43,31 @@ Implications:
 
 \subsection{compatible: Do exactly the same as C}\label{d:2}
 
-This may have been the original intent, but [lex.fcon] p3 suggests otherwise.
+It might have been the original intent to do the same as C, but [lex.fcon] p3
+suggests otherwise.
 
+Implications of adopting this as resolution:
 \begin{itemize}
   \item \code{float x = 3.14f;} can require 8, 12, 16, or even more bytes to be
     stored in the resulting binary.
+    (This is the status quo of GCC since version 13.)
 
   \item \code{float x = 3.14f; assert(x == 3.14f);} is allowed to fail
     depending on implementation, target, and compiler flags.
-
-  \item \code{std::float16_t} and \code{std::bfloat16_t} can either use a
-    soft-float implementation or requires dedicated hardware.
-    Double rounding, by using binary32 instructions is impossible with
-    \code{FLT_EVAL_METHOD == 0}.
-    An implementation that wants to evaluate
-    \code{std::float16_t}/\code{std::bfloat16_t} in higher intermediate
-    precision needs to set \code{FLT_EVAL_METHOD} to 1 or 2 (or 32?).
+    (This is the status quo of GCC since version 13.)
 \end{itemize}
 
-\subsection{like C but only for run-time evaluation}\label{d:3}
+\subsection{like C but only for runtime evaluation}\label{d:3}
 
 \begin{itemize}
   \item The intent here appears to be that we want to prescribe reproducible
     \fp behavior.
-    In other words, all floating-point code that is \emph{not} evaluated at
-    run-time is reproducible.
 
-  \item However, we acknowledge the existence of hardware where this comes at
-    unreasonable performance cost. Because of these cases --- and only for
-    these --- the non-zero \code{FLT_EVAL_METHOD} modes exist.
-
-  \item Consequence: evaluation at higher precision leads to double rounding
-    and thus potentially worse errors.
+  \item However, since that has potentially dramatic consequences on runtime
+    performance, this restriction is only a recomendation for runtime
+    evaluation.
+    We thus acknowledge the existence of hardware where reproducible \fp
+    behavior comes at unreasonable performance cost.
+    Because of these cases --- and only for these --- the non-zero
+    \code{FLT_EVAL_METHOD} modes exist.
 \end{itemize}

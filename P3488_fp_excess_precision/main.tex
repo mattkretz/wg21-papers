@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Floating-Point Excess Precision}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D3488R0}
+\newcommand\wgDocumentNumber{P3488R0}
 \newcommand\wgGroup{SG6, EWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{ }
@@ -327,20 +327,68 @@ to trust the implementations to provide the necessary “attributes” to contro
 Adding such an “attribute” to \CC{} itself is material for another paper, but
 should not be done in a resolution to a core issue.
 
+\subsection{Guaranteed opt-out of \fp contraction}
+
+It appears that accoding to the footnote of [expr.pre] p6 the expression
+\lstinline@a * b + c@ can be transformed into an FMA, whereas
+\lstinline@auto(a * b) + c@ cannot.
+Likewise \lstinline@auto ab = a * b; ab * c@ would not lead to \fp contraction.
+
+It is unclear whether a simple \fp wrapper class would inhibit \fp contraction:
+\medskip
+\begin{lstlisting}
+class Float
+{
+  float x;
+
+public:
+  Float(float xx) : x(xx) {}
+
+  friend Float operator+(Float a, Float b) { return a.x. + b.x; }
+  friend Float operator*(Float a, Float b) { return a.x. * b.x; }
+};
+
+Float test(Float a, Float b, Float c)
+{ return a * b + c; } // is contraction allowed or not?
+\end{lstlisting}
+
+The copy constructor of \code{Float} implicitly assigns to the data member \code{x}.
+But there is no assignment or cast expression.
+The return statements in the binary operators of \code{Float} call the
+\code{Float(float)} constructor which copies the \code{float} into \code{xx}
+and subsequently into \code{x}.
+Both copies are neither using a cast not assignment expression.
+Consequently this wrapper class would still allow \fp contraction, correct?
+
+With a minor change to the \code{Float(float)} constructor to
+\medskip
+\begin{lstlisting}
+  Float(float xx) : x(float(xx)) {}
+\end{lstlisting}
+\fp contractions would be inhibited.
+
+I believe we need to clarify whether this matches the intent and at least
+add a note in the wording to explain this subtlety.
+
+
+
 \section{Wording}
 
-Very much TBD.
-But here's at least a sketch:
+TBD.
+But here's at least a sketch if we agree on adopting \ref{o:3}:
 
 \begin{enumerate}
-  \item Clarify [expr.pre] that it only provides this freedom for run-time
+  \item Clarify [expr.pre] that it only provides this freedom for runtime
     evaluation.
 
-  \item Clarify [expr.pre] that \fp contraction is a conforming transformation (but not required)
+  \item Clarify [expr.pre] that \fp contraction is a conforming transformation
+    (but not required)
+
+  \item Add the above \code{Float} class example to [expr.pre]?
 
   \item Stop inheriting \code{FLT_EVAL_METHOD} verbatim from C.
     We need to write our own wording that clarifies \code{FLT_EVAL_METHOD} only
-    applies to run-time evaluation and not to constants.
+    applies to runtime evaluation and not to constants.
     Also we need to consider adopting and adjusting the wording from Annex H,
     which is important for \code{std::float16_t} and \code{std::bfloat16_t}.
 \end{enumerate}
