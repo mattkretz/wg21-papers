@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Floating-Point Excess Precision}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3488R0}
+\newcommand\wgDocumentNumber{D3488R0}
 \newcommand\wgGroup{SG6, EWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{ }
@@ -25,14 +25,20 @@
 \begin{document}
 \selectlanguage{american}
 \begin{wgTitlepage}
-  CWG2752 asks about the design intent for handling excess-precision
-  floating-point computations in \CC{}.
-  The main question we need answered is whether literals must be rounded or can
-  be stored with excess precision.
+  CWG2752 asks whether a conforming implementation can represent a \fp literal
+  with excess precision.
+  This issue was opened after GCC implemented excess precision for \CC{}.
+  Notably, GCC also uses excess precision for evaluation at compile-time as
+  shown in this paper.
+  For a holistic answer this paper considers excess precision of constants and
+  in evaluation.
+  Therefore, the main question we need answered is whether literals must be
+  rounded or can be stored with excess precision.
   The secondary question is the use of excess precision in constant expressions
   and in compile-time evaluation of floating-point operations.
-  The goal is to find a consensus on what the original design intent had been.
-  This paper lists possible original intent and discusses their implications on
+  The goal is to find a consensus on what the design intent should be, without
+  breaking performance or correctness requirements of \CC{} users.
+  This paper lists possible design intent and discusses their implications on
   potential optimizations.
 \end{wgTitlepage}
 
@@ -257,8 +263,7 @@ requesting constants in \code{long double} precision.
 
 Three steps:
 \begin{enumerate}
-  \item SG6 documents the possible original intent and their implications for
-    resolving CWG2752.
+  \item SG6 documents possible design intent and their implications.
     The group then makes a recommendation on how the issue should be resolved.
     Irrespective of whether a consensus is reached, the paper then progresses
     to EWG.
