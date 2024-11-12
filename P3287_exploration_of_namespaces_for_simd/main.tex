@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Exploration of namespaces for std::simd}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3287R1}
+\newcommand\wgDocumentNumber{D3287R2}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
 \newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews.}
@@ -264,8 +264,24 @@ if (std::all_of(x > 0)) /*...*/
 
 \input{naming}
 
-\section{Recommendation: An example after renaming}
+\pagebreak
+\section{Recommendation: Two examples after renaming}
 
+Option 1:
+\medskip\begin{lstlisting}
+namespace dp = std::datapar;
+
+// compute log for positive inputs
+dp::simd<float> f(std::span<float> data)
+{
+  dp::simd<float>  x = dp::load_from(data);
+  dp::mask<float> positive = x > 0.f;
+  dp::simd<float>  l = std::log(dp::select(positive, x, 1.f));
+  return dp::select(positive, l, x);
+}
+\end{lstlisting}
+
+Option 2:
 \medskip\begin{lstlisting}
 namespace simd = std::simd;
 
@@ -278,6 +294,19 @@ simd::vec<float> f(std::span<float> data)
   return simd::select(positive, l, x);
 }
 \end{lstlisting}
+
+Compare against the status quo:
+\medskip\begin{lstlisting}
+// compute log for positive inputs
+std::simd<float> f(std::span<float> data)
+{
+  std::simd<float>  x = std::simd_load_from(data);
+  std::simd_mask<float> positive = x > 0.f;
+  std::simd<float>  l = std::log(std::simd_select(positive, x, 1.f));
+  return std::simd_select(positive, l, x);
+}
+\end{lstlisting}
+
 
 \section{Proposed polls}
 
@@ -295,14 +324,17 @@ Any vote would be against the status quo, which so far can be summarized as:
   \item traits and types need a \code{simd} in their name
 \end{itemize}
 
-\wgPoll{Adopt wording instructions (Alternative 8) from \wgDocumentNumber\,
-  renaming (\code{basic_})\code{simd_mask} to (\code{basic_})\code{mask} but
-  \emph{not} (\code{basic_})\code{simd} to (\code{basic_})\code{vec}}
+\wgPoll{Adopt wording instructions (\sect{sec:wording}) from \wgDocumentNumber\,
+  \emph{without} renaming (\code{basic_})\code{simd} to (\code{basic_})\code{vec}}
 {&&&&}
 
-\wgPoll{Adopt wording instructions (Alternative 8) from \wgDocumentNumber\,
-  renaming (\code{basic_})\code{simd_mask} to (\code{basic_})\code{mask}
-  \emph{and} (\code{basic_})\code{simd} to (\code{basic_})\code{vec}}
+\wgPoll{Adopt wording instructions (\sect{sec:wording}) from \wgDocumentNumber\,
+  renaming (\code{basic_})\code{simd} to (\code{basic_})\code{vec}}
+{&&&&}
+
+\wgPoll{Adopt wording instructions (\sect{sec:wording}) from \wgDocumentNumber\,
+  using namespace \code{std::datapar} instead of \code{std::simd}
+  \emph{without} renaming (\code{basic_})\code{simd} to (\code{basic_})\code{vec}}
 {&&&&}
 
 \section{Wording}\label{sec:wording}

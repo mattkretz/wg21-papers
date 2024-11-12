@@ -1,4 +1,4 @@
-\section{Renaming simd and simd_mask}\label{sec:naming}
+\section{Naming discussion of namespace and simd / simd_mask}\label{sec:naming}
 R0 of this paper discussed naming in “Alternative 5”.
 But renaming isn't tied to one specific alternative but a general consideration
 if the class templates are moved into a namespace.
@@ -11,15 +11,38 @@ Conceivable \emph{variations} for the \std\code{simd} namespace are
   \item \std\code{dpt} (data-parallel types)
   \item \std\code{unseq}
 \end{itemize}
-Personally, I don't believe any of these are an improvement.
+
+If we were to use the \code{std::datapar} namespace, I'd expect users to write:\smallskip
+\begin{lstlisting}
+namespace dp = std::datapar;
+\end{lstlisting}
+analogous to how many already use:\smallskip
+\begin{lstlisting}
+namespace fs = std::filesystem;
+\end{lstlisting}
+
+Typically, the name of the namespace should capture the intent/name of the
+package.
+In this case the name \code{std::simd} appears to express “types and associated
+functions for SIMD (computation and data structures)”.
+The name \code{std::datapar} (a shorthand for \code{std::dataparallel}) appears
+to express “types and associated functions for expressing data-parallel
+computation and data structures”.
+
+As already discussed back when \stdx\code{datapar<T, Abi>} was renamed to
+\stdx\code{simd<T, Abi>}, \code{datapar} is less misleading about the
+abstraction level:
+This package is about expressing data-parallelism, which only incidentally
+allows access to SIMD registers in a CPU.
+
 
 \subsection{Class template names}
-However, I suggest renaming \std\code{simd::}\MayBreak\mask to
-\std\code{simd::}\MayBreak\code{basic_mask}, and accordingly
-\std\code{simd::simd_mask} to \std\code{simd::mask}.
+In any case, I suggest renaming \mask to \code{basic_mask}, and accordingly
+\code{simd_mask} to \code{mask}.
 
-Consequently, if we're reading the namespace as part of the type name
-(\code{simd::mask}) we should consider renaming \code{simd::simd} to:
+If we stick to \std\code{simd} as the namespace name and read the namespace as
+part of the type name (\code{simd::mask}) we could consider renaming
+\code{simd::simd} to:
 \begin{list}{}{
   \setlength{\topsep}{0pt}%
   \setlength{\leftmargin}{7em}%
@@ -70,7 +93,7 @@ as one \code{XMM} register.}, and whether you can apply operators that the
 value-type provides.
 
 \subsection{On renaming \code{std::simd::simd} to \code{std::simd::vec}}
-Personally, I don't think \std\code{simd::simd} is a problem.
+Personally, I don't think \std\code{simd::simd} is a big problem.
 Especially, considering that users might introduce a namespace alias or even
 --- heaven forbid --- import the whole \std\code{simd} (or
 \std\code{simd_generic}) namespace into their local scope.
