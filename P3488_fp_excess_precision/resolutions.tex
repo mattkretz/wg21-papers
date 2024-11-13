@@ -10,40 +10,48 @@ A discussion of the options follows in the next section.
 \begin{itemize}
   \item \code{FLT_EVAL_METHOD} must always be \code{0}.
 
+  \item [expr.pre] must disallow greater precision / range in \fp expressions.
+
   \item Any evaluation of a \fp expression applies a single rounding to the
-    precision of the \fp type after every operation.
+    precision of the \fp type after each operation.
 \end{itemize}
 \discussionref{1}
 
 \subsection{compatible: Do exactly the same as C}\label{o:2}
 
 \begin{itemize}
-  \item Intermediate rounding is controlled by \code{FLT_EVAL_METHOD}.
-
-  \item Implementations are allowed (and thus encouraged?) to store constants
-    with highest possible precision. (relevant only with \code{FLT_EVAL_METHOD
-    != 0})
+  \item [lex.fcon] must allow representing \fp constants in greater range and
+    precision.
 
   \item Evaluation of constant expressions and compile-time evaluation of
     expressions may use excess precision.
+
+  \item Intermediate rounding in runtime and compile-time evaluation is
+    reflected by \code{FLT_EVAL_METHOD}.
 \end{itemize}
 \discussionref{2}
 
 \subsection{like C but only for runtime evaluation}\label{o:3}
 
 \begin{itemize}
-  \item \code{FLT_EVAL_METHOD} only applies to runtime evaluation of \fp expressions.
-
   \item The value of a \fp literal is always rounded to the precision of its
-    type.
+    type (status quo of [lex.fcon]).
 
   \item Evaluation of floating-point expressions at compile-time is not allowed
     to use excess precision.
 
-  \item \code{FLT_EVAL_METHOD != 0} at runtime is permitted.
-    \Fp evaluation at runtime can use higher precision and is only required to
-    round to the precision of the \fp type on cast and assignment.
+  \item \code{FLT_EVAL_METHOD} only reflects on runtime evaluation of \fp
+    expressions.
+
+  \item \Fp evaluation at runtime can use (arbitrary) greater precision and
+    range and is only required to round to the precision and range of the \fp
+    type on cast and assignment.
     The intermediate precision is exposed to the program via
     \code{FLT_EVAL_METHOD}.
+
+  \item We should consider adding a note to [expr.pre] saying that while excess
+    precision in evaluation is allowed, it is only allowed for performance
+    reasons and it is preferred that intermediate precision and range match the
+    \fp type.
 \end{itemize}
 \discussionref{3}

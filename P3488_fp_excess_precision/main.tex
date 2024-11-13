@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Floating-Point Excess Precision}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D3488R0}
+\newcommand\wgDocumentNumber{P3488R0}
 \newcommand\wgGroup{SG6, EWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{ }
@@ -48,6 +48,34 @@
 \input{strawpolls}
 
 \section{Introduction}
+
+This paper tries to take a holistic approach at the questions around excess
+precision in \CC{}.
+As such it is not constrained to resolving only the issue described in CWG2752.
+
+The following issues are considered:
+\begin{itemize}
+  \item CWG2752: can the value of a floating-point literal be stored with
+    excess precision?
+
+  \item A library clause, especially a macro inherited from C, should not add
+    constraints to the core language.
+    We need to ensure that the library wording simply allows reflecting on
+    implementation choices of the core wording.
+
+  \item Can floating-point expressions use higher intermediate precision (and
+    range) at compile-time?
+    Or, in other words, does \code{FLT_EVAL_METHOD} apply only to runtime
+    evaluation?
+
+  \item The language allows greater intermediate precision and range without
+    constraints, but \code{FLT_EVAL_METHOD} constrains it to \code{double} and
+    \code{long double}.
+    This makes evaluating \code{std::float16_t} and \code{std::bfloat16_t} in
+    intermediate precision of \code{std::float32_t} impossible.
+    An implementation would have to use \code{double} and then evaluate
+    \code{float} in \code{double} precision and range.
+\end{itemize}
 
 (This is an extended/modified copy of CWG2752.)
 
@@ -117,8 +145,11 @@ value with \float precision, but that conversion (eventually) ends up at 9.4.1
   [\ldots]
 \end{wgText}
 
-This phrasing leaves no permission to discard excess precision when converting
-from a \float value to type \float ("[\ldots] is the value [\ldots]").
+If values produced from literals were permitted to carry excess precision, this
+phrasing does not seem to convery permission to discard excess precision when
+converting from a \float value to type \float ("[\ldots] is the value
+[\ldots]"), apparently requiring that the target object's value also carry the
+excess precision.
 
 However, if initialization is intended to drop excess precision, then an
 overloaded operator returning \float can never behave like a built-in operation
@@ -282,8 +313,8 @@ Three steps:
 
 \Fp contraction is the transformation of \code{a * b + c} into
 \code{std::fma(a, b, c)}.
-This effectively increases the intermediate precision of the multiplication
-result.
+This effectively increases the intermediate precision and range of the
+multiplication result.
 Thus, \fp contraction is related to this discussion.
 [expr.pre] p6 appears to allow \fp contraction.
 
@@ -329,8 +360,9 @@ Consequently, I'd be wary of making \fp contraction non-conforming.
 Rather we want to keep it as a conforming optimization and (for now) continue
 to trust the implementations to provide the necessary “attributes” to control
 \fp contraction.
-Adding such an “attribute” to \CC{} itself is material for another paper, but
-should not be done in a resolution to a core issue.
+Adding such an “attribute” to \CC{} itself (and possibly adding a trait to
+determine whether \fp contraction should be expected) is material for another
+paper.
 
 \subsection{Guaranteed opt-out of \fp contraction}
 
@@ -387,7 +419,7 @@ But here's at least a sketch if we agree on adopting \ref{o:3}:
     evaluation.
 
   \item Clarify [expr.pre] that \fp contraction is a conforming transformation
-    (but not required)
+    for runtime evaluation (but not required)
 
   \item Add the above \code{Float} class example to [expr.pre]?
 

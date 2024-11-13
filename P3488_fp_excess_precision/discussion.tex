@@ -68,6 +68,23 @@ Implications of adopting this as resolution:
     evaluation.
     We thus acknowledge the existence of hardware where reproducible \fp
     behavior comes at unreasonable performance cost.
-    Because of these cases --- and only for these --- the non-zero
-    \code{FLT_EVAL_METHOD} modes exist.
+    Because of these cases --- and only for these --- [expr.pre] allows excess
+    precision in evaluation, which should be reflected by non-zero
+    \code{FLT_EVAL_METHOD}.
+
+  \item We should consider a new type trait along the lines of
+    \begin{lstlisting}
+template <floating-point T>
+struct evaluation_type {
+  using type = @\seebelow@;
+};
+
+template <floating-point T>
+using evaluation_type_t = typename evaluation_type<T>::type;
+    \end{lstlisting}
+    Where e.g. \code{evaluation_type_t<float16_t>} could be \code{float}.
+    This would supersede the use of the \code{FLT_EVAL_METHOD}.
+    Implementations could then reasonably set \code{FLT_EVAL_METHOD} to
+    \code{-1} and rely solely on the traits for reflection of \fp evaluation
+    behavior.
 \end{itemize}
