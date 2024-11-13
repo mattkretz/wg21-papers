@@ -35,6 +35,21 @@ abstraction level:
 This package is about expressing data-parallelism, which only incidentally
 allows access to SIMD registers in a CPU.
 
+Note that if the namespace and type names differ, and the type name can stand
+on its own, it is possible to introduce an alias in the \code{std} namespace\footnote{
+  Thanks to Bryce for the suggestion!
+}:
+\smallskip\begin{lstlisting}
+namespace std {
+  namespace datapar {
+    template<class T, class Abi> class basic_simd;
+    template<class T, @\simdsizetype@ N> using simd = basic_simd<T, … >;
+  }
+  using datapar::basic_simd;
+  using datapar::simd;
+}
+\end{lstlisting}
+This is not proposed at this point.
 
 \subsection{Class template names}
 In any case, I suggest renaming \mask to \code{basic_mask}, and accordingly
