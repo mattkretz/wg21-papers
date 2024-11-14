@@ -369,7 +369,7 @@ paper.
 It appears that accoding to the footnote of [expr.pre] p6 the expression
 \lstinline@a * b + c@ can be transformed into an FMA, whereas
 \lstinline@auto(a * b) + c@ cannot.
-Likewise \lstinline@auto ab = a * b; ab * c@ would not lead to \fp contraction.
+Likewise \lstinline@auto ab = a * b; ab + c@ would not lead to \fp contraction.
 
 It is unclear whether a simple \fp wrapper class would inhibit \fp contraction:
 \medskip
