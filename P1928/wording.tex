@@ -1601,7 +1601,12 @@ return @\simdselect@(c, a, b);
 
 \pnum
 Unless otherwise specified, each mathematical function declared in \tcode{<simd>} yields a
-\tcode{basic_simd} result, where the value of each element approximates the result obtained by
+\tcode{basic_simd} result, where
+\INFO{Better?\\
+Unless otherwise specified, each mathematical function declared in \tcode{<simd>} returns a prvalue
+of a data-parallel type, where [\ldots]
+}\noindent
+the value of each element approximates the result obtained by
 applying the function with the same name from \tcode{<cmath>} to the corresponding elements of the
 arguments.
 The value of an element of the result is unspecified if a domain, pole, or range error occurs for
@@ -1667,6 +1672,7 @@ template<class V0, class V1>
 \begin{itemdescr}
   \pnum\effects
   Equivalent to: Element-wise application of the corresponding function.
+  \INFO{except \tcode{errno} is not modified}
 \end{itemdescr}
 
 \rSec1[simd.mask.class]{Class template \tcode{basic_simd_mask}}
