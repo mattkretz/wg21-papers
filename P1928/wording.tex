@@ -1969,7 +1969,8 @@ constexpr basic_simd_mask operator!() const noexcept;
 
 \begin{itemdescr}
   \pnum\returns
-  The result of the element-wise application of \tcode{operator!}.
+  A data-parallel object where the $i^\text{th}$ element is initialized to \tcode{!operator[]($i$)}
+  \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1979,11 +1980,11 @@ constexpr basic_simd<@\integerfrom@<Bytes>, Abi> operator~() const noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  Application of the indicated unary operator to objects of type \tcode{T} is well-formed.
+  \pnum Let \op{} be the operator.
 
   \pnum\returns
-  The result of applying the indicated operator to \tcode{static_cast<simd_type>(*this)}.
+  A data-parallel object where the $i^\text{th}$ element is initialized to the results of applying
+  \op{} to \tcode{operator[]($i$)} \foralli.
 \end{itemdescr}
 
 \rSec2[simd.mask.conv]{\tcode{basic_simd_mask} conversion operators}
@@ -1998,7 +1999,7 @@ template<class U, class A>
   \tcode{\simdsizev<U, A> == \simdsizev<T, Abi>}.
 
   \pnum\returns
-  An object where the $i^\text{th}$ element is initialized to
+  A data-parallel object where the $i^\text{th}$ element is initialized to
   \tcode{static_cast<U>(operator[]($i$))}.
 \end{itemdescr}
 
@@ -2020,8 +2021,10 @@ friend constexpr basic_simd_mask
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum Let \op{} be the operator.
+
   \pnum\returns
-  A \tcode{basic_simd_mask} object initialized with the results of applying the indicated operator
+  A \tcode{basic_simd_mask} object initialized with the results of applying \op{}
   to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
@@ -2037,8 +2040,10 @@ friend constexpr basic_simd_mask&
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum Let \op{} be the operator.
+
   \pnum\effects
-  These operators apply the indicated operator to \tcode{lhs} and \tcode{rhs} as a binary
+  These operators apply \op{} to \tcode{lhs} and \tcode{rhs} as a binary
   element-wise operation.
 
   \pnum\returns
@@ -2063,8 +2068,10 @@ friend constexpr basic_simd_mask
 \end{itemdecl}
 
 \begin{itemdescr}
+  \pnum Let \op{} be the operator.
+
   \pnum\returns
-  A \tcode{basic_simd_mask} object initialized with the results of applying the indicated operator
+  A \tcode{basic_simd_mask} object initialized with the results of applying \op{}
   to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
 \end{itemdescr}
 
