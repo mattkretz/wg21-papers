@@ -1811,7 +1811,7 @@ template<size_t UBytes, class UAbi>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{\simdsizev<U, UAbi> == size()}.
+  \tcode{basic_simd_mask<UBytes, UAbi>::size() == size()}.
 
   \pnum\effects
   Initializes the $i^\text{th}$ element with \tcode{x[$i$]} \foralli.
@@ -1823,12 +1823,12 @@ template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{static_cast<bool>(gen(integral_constant<\simdsizetype, i>()))} is
-  well-formed \foralli.
+  The expression \tcode{gen(integral_constant<\simdsizetype, i>())} is well-formed and its type is
+  \tcode{bool} \foralli.
 
   \pnum\effects
   Initializes the $i^\text{th}$ element with
-  \tcode{static_cast<bool>(gen(integral_constant<\simdsizetype, i>()))} \foralli.
+  \tcode{gen(integral_constant<\simdsizetype, i>())} \foralli.
 
   \pnum
     The calls to \tcode{gen} are unsequenced with respect to each other.
@@ -2112,7 +2112,7 @@ template<class T0, class T1>
   \end{itemize}
 
   \pnum\returns
-  A \tcode{basic_simd<U, Abi>} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a :
+  A \tcode{simd<U, size()>} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a :
   b} \foralli.
 \end{itemdescr}
 
