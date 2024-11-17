@@ -83,8 +83,8 @@ operation that applies a binary operation to corresponding elements of two data-
 Given a \tcode{basic_simd_mask<Bytes, Abi>} object \tcode{mask}, the
 \defn{selected indices} signify the integers $i$ in the range
 \range{0}{mask.size()} for which \tcode{mask[$i$]} is \tcode{true}.
-Given an object \tcode{data} of type \tcode{basic_simd<T, Abi>} or \tcode{basic_simd_mask<Bytes, Abi>},
-the \defn{selected elements} signify the elements \tcode{data[$i$]} for all selected indices $i$.
+Given a data-parallel object \tcode{data}, the \defn{selected elements} signify the elements
+\tcode{data[$i$]} for all selected indices $i$.
 
 \pnum
 The conversion from an arithmetic type \tcode{U} to a vectorizable type \tcode{T} is
@@ -623,8 +623,7 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   \pnum
   The member \tcode{type} is present if and only if
   \begin{itemize}
-    \item \tcode{V} is a specialization of either \tcode{basic_simd} or
-      \tcode{basic_simd_mask},
+    \item \tcode{V} is a data-parallel type,
     \item \tcode{T} is a vectorizable type, and
     \item \tcode{\deducet<T, V::size()>} has a member type \tcode{type}.
   \end{itemize}
@@ -654,8 +653,7 @@ template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelo
   \pnum
   The member \tcode{type} is present if and only if
   \begin{itemize}
-    \item \tcode{V} is a specialization of either \tcode{basic_simd} or
-      \tcode{basic_simd_mask}, and
+    \item \tcode{V} is a data-parallel type,
     \item \tcode{\deducet<T, N>} has a member type \tcode{type}.
   \end{itemize}
 
@@ -803,9 +801,6 @@ public:
     const mask_type&, const basic_simd&, const basic_simd&) noexcept;
 };
 \end{codeblock}
-
-\pnum
-The specializations of class template \tcode{basic_simd} are data-parallel types.
 
 \pnum
 Every specialization of \tcode{basic_simd} is a complete type.
@@ -1767,10 +1762,6 @@ public:
       @\simdselect@(const basic_simd_mask&, const T0&, const T1&) noexcept;
 };
 \end{codeblock}
-
-\pnum
-The specializations of class template \tcode{basic_simd_mask} are data-parallel types with element
-type \tcode{bool}.
 
 \pnum
 Every specialization of \tcode{basic_simd_mask} is a complete type.
