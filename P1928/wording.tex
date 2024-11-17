@@ -1613,7 +1613,8 @@ The value of an element of the result is unspecified if a domain, pole, or range
 the corresponding elements of the arguments.
 ”errno“ (xref) is never modified.
 
-\recommended Implementations are encouraged to follow the C specification (specifically Annex F).
+\recommended Implementations are encouraged to follow the C specification (specifically Annex F) for
+the element-wise application of the mathematical functions.
 
 \begin{itemdecl}
 template<@\mathfloatingpoint@ V> constexpr V frexp(const V& value, rebind_simd_t<int, V>* exp);
