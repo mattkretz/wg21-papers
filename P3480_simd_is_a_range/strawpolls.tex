@@ -1,2 +1,27 @@
 \section{Straw Polls}
-(placeholder)
+\subsection{SG9 at Wroclaw 2024}
+\wgPoll{We want \code{std::basic_simd} to be a range.}
+{6 & 2 & 0 & 0 & 0}
+
+\wgPoll{We want \code{std::basic_simd} to be a common range.}
+{0 & 0 & 3 & 4 & 1}
+
+\wgPoll{We want \code{std::basic_simd::operator[]} and
+\code{std::basic_simd::begin/end} in C++26 without mutation support, knowing
+that we might not be able to do it later due to ABI issues (e.g.
+\code{decltype(auto) f(std::simd<float> x) \{ return x[0]; \}} could change
+return type).}
+{6 & 2 & 0 & 0 & 0}
+
+\wgPoll{We want \code{std::basic_simd::iterator} and
+\code{std::basic_simd::const_iterator} to be different types to make the
+transition to mutable iteration easier. This also means adding a non-const
+\code{begin()} overload that returns a different type than the const
+\code{begin()} overload but currently has the same semantics.}
+{2 & 3 & 3 & 0 & 0}
+
+\wgUnanimous{Use \code{std::default_sentinel_t} instead of
+\code{\textit{simd-iterator-sentinel}}.}
+
+\wgPoll{Forward P3480R1 with the changes above to LEWG for inclusion in C++26.}
+{7 & 1 & 0 & 0 & 0}

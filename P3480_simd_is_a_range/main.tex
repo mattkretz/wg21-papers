@@ -1,6 +1,6 @@
 \newcommand\wgTitle{std::simd is a range}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3480R1}
+\newcommand\wgDocumentNumber{D3480R2}
 \newcommand\wgGroup{SG9, LEWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{}
@@ -37,7 +37,7 @@
 \newcommand\reductionoperation{\UNSP{reduction-binary-operation}}
 \newcommand\simdfloatingpoint{\UNSP{simd-floating-point}}
 \newcommand\multisimdfloatingpoint{\UNSP{multi-arg-simd-floating-point}}
-\newcommand\simditeratorsentinel{\UNSP{simd-iterator-sentinel}}
+\newcommand\simditeratorsentinel{default\_sentinel\_t}
 \newcommand\simditerator{\UNSP{simd-iterator}}
 
 \renewcommand{\lst}[1]{Listing~\ref{#1}}
@@ -169,12 +169,10 @@ Add the following:
   \begin{codeblock}
 namespace std
 {
-  class @\simditeratorsentinel@ {}; // \expos
-
   template <typename V>
-    class @\simditerator@       // \expos
+    class @\simditerator@         // \expos
     {
-      const V* data_ = nullptr; // \expos
+      V* data_ = nullptr;       // \expos
       int offset_ = 0;          // \expos
 
     public:
@@ -185,7 +183,7 @@ namespace std
       constexpr @\simditerator@() = default;
 
       constexpr
-      @\simditerator@(const V& d, int x)
+      @\simditerator@(V& d, int x)
       : data_(&d), offset_(x)
       {}
 
@@ -292,8 +290,9 @@ public:
   using mask_type = basic_simd_mask<sizeof(T), Abi>;
   using abi_type = Abi;
   @\wgAdd{using iterator = \mbox{\simditerator}<basic_simd>;}@
-  @\wgAdd{using const_iterator = iterator;}@
+  @\wgAdd{using const_iterator = \mbox{\simditerator}<const basic_simd>;}@
 
+  @\wgAdd{constexpr iterator begin();}@
   @\wgAdd{constexpr const_iterator begin() const;}@
   @\wgAdd{constexpr const_iterator cbegin() const;}@
   @\wgAdd{constexpr \mbox{\simditeratorsentinel} end() const;}@
@@ -309,8 +308,9 @@ public:
   using value_type = bool;
   using abi_type = Abi;
   @\wgAdd{using iterator = \mbox{\simditerator}<basic_simd_mask>;}@
-  @\wgAdd{using const_iterator = iterator;}@
+  @\wgAdd{using const_iterator = \mbox{\simditerator}<const basic_simd_mask>;}@
 
+  @\wgAdd{constexpr iterator begin();}@
   @\wgAdd{constexpr const_iterator begin() const;}@
   @\wgAdd{constexpr const_iterator cbegin() const;}@
   @\wgAdd{constexpr \mbox{\simditeratorsentinel} end() const;}@
