@@ -109,7 +109,7 @@ for (auto x : v) {
 \end{lstlisting}
 and
 \medskip\begin{lstlisting}
-std::for_each(v.begin(), v.end(), [](auto x) {
+std::ranges::for_each(v.begin(), v.end(), [](auto x) {
   do_something(x);
 });
 \end{lstlisting}
