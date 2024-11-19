@@ -275,7 +275,7 @@
     \stepcounter{WGSubSubSection}%
     \setcounter{Paras}{0}%
     \def\theWgStableName{#3}%
-    \def\theWGSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}}%
+    \def\theWGSubSubSection{\theWGClause{}.\arabic{WGSubSection}.\arabic{WGSubSubSection}}%
     \def\theWGSubSubSubSection{\theWGSubSubSection}%
     \protected@edef\@currentlabel{[#3]}%
     \addcontentsline{toc}{#1}{%
@@ -292,7 +292,7 @@
     \stepcounter{WGSubSubSubSection}%
     \setcounter{Paras}{0}%
     \def\theWgStableName{#3}%
-    \def\theWGSubSubSubSection{\theWGSubSection{}.\arabic{WGSubSubSection}.\arabic{WGSubSubSubSection}}%
+    \def\theWGSubSubSubSection{\theWGClause{}.\arabic{WGSubSection}.\arabic{WGSubSubSection}.\arabic{WGSubSubSubSection}}%
     \protected@edef\@currentlabel{[#3]}%
     \addcontentsline{toc}{#1}{%
       \theWGSubSubSubSection{} #2 [#3] (\thesubparagraph{})%

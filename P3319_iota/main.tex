@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Add an iota object for simd (and more)}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3319R1}
+\newcommand\wgDocumentNumber{P3319R2}
 \newcommand\wgGroup{SG9, LEWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
@@ -77,8 +77,63 @@ programming)}{&&&&}
 \wgPoll{The iota facility should be generalized to allow a different step value}{&&&&}
 
 \section{Wording}\label{sec:wording}
+\def\rSec#1[#2]#3{%
+  \ifcase#1\wgSubsection[subsection]{#3}{#2}
+  \or\wgSubsubsection[subsubsection]{#3}{#2}
+  \or\wgSubsubsubsection[paragraph]{#3}{#2}
+  \or\error
+\fi}
 
-TBD after deciding on the preferred solution.
+Add the following to \iref{simd.syn}, after the declaration of \code{simd_cat}:
+\begin{wgText}[{[simd.syn]}]
+\begin{codeblock}
+  template<size_t Bs, class... Abis>
+    constexpr basic_simd_mask<Bs, @\deducet@<@\integerfrom@<Bs>,
+                              (basic_simd_mask<Bs, Abis>::size() + ...)>>
+      simd_cat(const basic_simd_mask<Bs, Abis>&...) noexcept;
+
+  @\wgAdd{template<class T> inline constexpr T simd_iota = \mbox{\seebelow};}@
+
+  // [simd.mask.reductions], \tcode{basic_simd_mask} reductions
+\end{codeblock}
+\end{wgText}
+
+Add the following at the end of \iref{simd.creation}:
+\begin{wgText}[{[simd.creation]}]
+  \setcounter{WGClause}{29}
+  \setcounter{WGSubSection}{10}
+  \setcounter{WGSubSubSection}{7}
+  \setcounter{WGSubSubSubSection}{6}
+  \setcounter{Paras}{4}
+\begin{itemdescr}
+  \pnum\returns
+  A data-parallel object initialized with the concatenated values in the \tcode{xs} pack of
+  data-parallel objects: The $i^\text{th}$ \tcode{basic_simd}/\tcode{basic_simd_mask} element of the
+  $j^\text{th}$ parameter in the \tcode{xs} pack is copied to the return value's element with index
+  $i$ + the sum of the width of the first $j$ parameters in the \tcode{xs} pack.
+\end{itemdescr}
+
+\begin{wgBAdd}
+\begin{itemdecl}
+@\wgAdd{template<class T> inline constexpr T simd_iota = \mbox{\seebelow};}@
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  \wgAdd{\constraints \tcode{is_arithmetic_v<T>} is \tcode{true} or \tcode{T}
+  is an enabled specialization of \code{basic_simd}.}
+
+  \pnum
+  \wgAdd{\effects
+    If \tcode{is_arithmetic_v<T>} is \tcode{true} the value of
+    \tcode{simd_iota<T>} is equal to \tcode{T()}.
+    Otherwise, the value of \tcode{simd_iota<T>} is equal to \tcode{T([](typename
+    T::value_type i) \{ return i; \})}.
+  }
+\end{itemdescr}
+\end{wgBAdd}
+
+\wgSubsubsubsection[paragraph]{Algorithms}{simd.alg}
+\end{wgText}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=0
