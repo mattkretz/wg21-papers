@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Floating-Point Excess Precision}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3488R0}
+\newcommand\wgDocumentNumber{P3488R1}
 \newcommand\wgGroup{SG6, EWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{ }
@@ -246,6 +246,7 @@ With GCC 13 or later and one of the mentioned compiler flags and e.g.
 \code{-std=c++23} the above code example fails both the \code{static_assert}
 and the runtime \code{assert}\footnote{\url{https://compiler-explorer.com/z/vrYoT5cer}}.
 
+\pagebreak
 An example that exhibits different behavior for constant propagation /
 expressions can also be constructed%
 \footnote{\url{https://compiler-explorer.com/z/5KGoebo75}}:
@@ -309,7 +310,7 @@ Three steps:
 \input{resolutions}
 \input{discussion}
 
-\section{Floating-point contraction}
+\section{Floating-point contraction}\label{sec:fma}
 
 \Fp contraction is the transformation of \code{a * b + c} into
 \code{std::fma(a, b, c)}.

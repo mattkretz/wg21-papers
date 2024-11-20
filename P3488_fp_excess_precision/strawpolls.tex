@@ -1,2 +1,37 @@
 \section{Straw Polls}
-(placeholder)
+\subsection{SG6 at Wrocław 2024}
+\wgPoll{Constant expressions (not constant folding) may not use greater 
+precision and range than the type. $\Rightarrow$ Reproducibility in constant expressions. 
+If you need more precision and range use \code{std::float128_t} in constant 
+expressions.}
+{ 4 & 2 & 0 & 0 & 0 }
+
+\wgPoll{Constant folding behavior follows runtime evaluation behavior.}
+{ 5 & 1 & 0 & 0 & 0 }
+
+\wgPoll{Literals are always rounded to their types. (Never can a higher 
+precision and range value be used in subsequent operations. \code{1.1f + x} where 
+\code{x} is a \code{double} cannot be evaluated as \code{1.1 + x}.)}
+{ 3 & 3 & 0 & 0 & 0 }
+
+\wgPoll{We should consider not allowing excess precision in runtime 
+evaluation at all (except if we introduce an "attribute" that controls this, as 
+documented in 60559). Every binary operation on floating-point is rounded once 
+to the precision and range of its type (\code{decltype(expr)}).}
+{ 2 & 3 & 0 & 1 & 0 }
+
+\wgPoll{Excess precision in runtime evaluation should be a permissible 
+optimization for implementations. The implementation choice of what 
+intermediate type was used is reflected by \code{FLT_EVAL_METHOD} (potentially as a 
+different trait or with the extended values as defined in C23 Annex H).}
+{ 1 & 2 & 1 & 2 & 0 }
+
+\wgPoll{Comparison operators should always round their operands to the 
+precision and range of their types in case excess precision is used. In 
+addition to operators we expect the \code{<cmath>} comparison functions to have the 
+same behavior (\code{std::isless(a, b)} etc...)}
+{ 3 & 0 & 2 & 0 & 1 }
+
+SA: Not worth differing from C in this. x87 does comparison on long double 
+types.
+

@@ -10,13 +10,18 @@ With arbitrary excess precision the optimizer would then be allowed to replace
 
 A general consequence of excess precision is that \fp evaluation leads to
 double rounding and thus potentially worse errors.
+However, for \code{+-*/} and \code{sqrt}, if there are twice as many precision
+bits in the intermediate type, then double rounding after each operation does
+not lead to additional errors.
 Where the second rounding occurs is not fully reproducible and can potentially
 change via unrelated code changes in the translation unit\footnote{e.g. because of register allocation}.
 
 Without excess precision \code{std::float16_t} and \code{std::bfloat16_t} can
-either use a soft-float implementation or dedicated hardware is required.
-Using \float (binary32) instructions is impossible with the current possible
-values for \code{FLT_EVAL_METHOD}.
+either use a soft-float implementation, round back after every \code{float32_t}
+operation, or dedicated hardware is required.
+Using \float (binary32) instructions without rounding back down after every
+operation is impossible with the current possible values for
+\code{FLT_EVAL_METHOD}.
 An implementation that wants to evaluate \std\code{float16_t} /
 \std\code{bfloat16_t} in higher intermediate precision needs to set
 \code{FLT_EVAL_METHOD} to 1 or 2 (or 32?).
@@ -28,8 +33,6 @@ exclude all excess precision.
 
 Implications of disallowing all excess precision:
 \begin{itemize}
-  \item \Fp contraction into FMAs is non-conforming.
-
   \item The x87 FPU cannot be used with a single “precision control” value,
     because double rounding is not correct (e.g. FPU configured to 80-bit with
     subsequent rounding to 64/32-bit).
@@ -37,8 +40,8 @@ Implications of disallowing all excess precision:
     control word (FPCW) using the FLDCW instruction whenever it needs to
     execute \fp operations (with different precision).
 
-  \item This is likely an ABI break and unnacceptable for existing
-    implementations.
+  \item However, the x87 FPU is not really an important target anymore. Every x86
+    CPU since the last 20 years can use SSE instructions instead.
 \end{itemize}
 
 \subsection{compatible: Do exactly the same as C}\label{d:2}
@@ -48,8 +51,8 @@ suggests otherwise.
 
 Implications of adopting this as resolution:
 \begin{itemize}
-  \item \code{float x = 3.14f;} can require 8, 12, 16, or even more bytes to be
-    stored in the resulting binary.
+  \item \code{x + 3.14f;} can require 8, 12, 16, or even more bytes to store
+    the constant in the resulting binary.
     (This is the status quo of GCC since version 13.)
 
   \item \code{float x = 3.14f; assert(x == 3.14f);} is allowed to fail
