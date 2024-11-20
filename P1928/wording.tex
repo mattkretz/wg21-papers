@@ -112,22 +112,19 @@ template<class T> using @\deducedsimd@ = @\seebelow@;               // \expos
 
 template<class V>
   concept @\simdfloatingpoint@ =                                   // \expos
-    same_as<V, basic_simd<typename V::value_type, typename V::abi_type> &&
+    same_as<V, basic_simd<typename V::value_type, typename V::abi_type>> &&
     is_default_constructible<V> && floating_point<typename V::value_type>;
 
 template<class... Ts>
   concept @\mathfloatingpoint@ =                                   // \expos
-    = (@\simdfloatingpoint@<typename @\deducedsimd@<Ts>::type> or ...);
+    = (@\simdfloatingpoint@<@\deducedsimd@<Ts>> or ...);
 
 template<class... Ts>
   requires @\mathfloatingpoint@<Ts...>
     using @\mathcommonsimd@ = @\seebelow@;                         // \expos
 
 template<class BinaryOperation, class T>
-  concept @\reductionoperation@ =                            // \expos
-    requires (BinaryOperation binary_op, simd<T, 1> v) {
-      { binary_op(v, v) } -> same_as<simd<T, 1>>;
-    };
+  concept @\reductionoperation@ = @\seebelow@;                     // \expos
 
 // \ref{simd.expos.abi}, \tcode{simd} ABI tags
 template<class T> using @\nativeabi@ = @\seebelow@;                   // \expos
@@ -194,7 +191,7 @@ template<class T> constexpr size_t @\maskelementsize@ = @\seebelow@; // \expos
 template<class T> using @\deducedsimd@ = @\seebelow@; // \expos
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum Let \tcode{x} denote a \tcode{const} lvalue reference of type \tcode{T}.
+  \pnum Let \tcode{x} denote an lvalue of type \tcode{const T}.
 
   \pnum \tcode{\deducedsimd<T>} is an alias for
   \begin{itemize}
@@ -217,20 +214,27 @@ template<class... Ts>
 \end{itemdecl}
 \begin{itemdescr}
   \pnum
-  Let \tcode{T0} denote the first type in \tcode{Ts}.
-  Let \tcode{T1} denote the second type in \tcode{Ts}.
-  Let \tcode{TRest} be a pack that denotes \tcode{Ts...} without the first two types.
+  Let \tcode{T0} denote \tcode{Ts...[0]}.
+  Let \tcode{T1} denote \tcode{Ts...[1]}.
+  Let \tcode{TRest} denote a pack such that \tcode{T0, T1, TRest...} is equivalent to \tcode{Ts...}.
 
   \pnum
   Let \tcode{\mathcommonsimd<Ts...>} be an alias for
   \begin{itemize}
-    \item \tcode{\deducedsimd<T0>}, if \tcode{sizeof...(Ts)} equals 1; otherwise
+    \item \tcode{\deducedsimd<T0>}, if \tcode{sizeof...(Ts)} equals $1$; otherwise
 
     \item \tcode{common_type_t<\mathcommonsimd<T0>, \mathcommonsimd<T1>>}, if \tcode{sizeof...(Ts)}
-      equals 2; otherwise
+      equals $2$ and \tcode{\mathfloatingpoint<T0> \&\& \mathfloatingpoint<T1>} is \tcode{true};
+      otherwise
+
+    \item \tcode{common_type_t<\mathcommonsimd<T0>, T1>}, if \tcode{sizeof...(Ts)}
+      equals $2$ and \tcode{\mathfloatingpoint<T0>} is \tcode{true}; otherwise
+
+    \item \tcode{common_type_t<T0, \mathcommonsimd<T1>>}, if \tcode{sizeof...(Ts)}
+      equals $2$ and \tcode{\mathfloatingpoint<T1>} is \tcode{true}; otherwise
 
     \item \tcode{common_type_t<\mathcommonsimd<T0, T1>, TRest...>}, if
-      \tcode{common_type<\mathcommonsimd<T0>, \mathcommonsimd<T1>>} has a type member \tcode{type};
+      \tcode{common_type_t<\mathcommonsimd<T0>, \mathcommonsimd<T1>>} is valid and denotes a type;
       otherwise
 
     \item \tcode{common_type_t<\mathcommonsimd<TRest...>, T0, T1>}.
@@ -241,7 +245,7 @@ template<class... Ts>
 \begin{itemdecl}
 template<class BinaryOperation, class T>
   concept @\reductionoperation@ =  // \expos
-    requires (BinaryOperation binary_op, simd<T, 1> v) {
+    requires (const BinaryOperation binary_op, const simd<T, 1> v) {
       { binary_op(v, v) } -> same_as<simd<T, 1>>;
     };
 \end{itemdecl}
@@ -377,12 +381,12 @@ namespace std {
     using simd_mask = basic_simd_mask<sizeof(T), @\deducet@<T, N>>;
 
   // \ref{simd.creation}, \tcode{basic_simd} and \tcode{basic_simd_mask} creation
-  template<class V, class Abi>
+  template<class T, class Abi>
     constexpr auto
-      simd_split(const basic_simd<typename V::value_type, Abi>& x) noexcept;
-  template<class M, class Abi>
+      simd_split(const basic_simd<typename T::value_type, Abi>& x) noexcept;
+  template<class T, class Abi>
     constexpr auto
-      simd_split(const basic_simd_mask<@\maskelementsize@<M>, Abi>& x) noexcept;
+      simd_split(const basic_simd_mask<@\maskelementsize@<T>, Abi>& x) noexcept;
 
   template<class T, class... Abis>
     constexpr basic_simd<T, @\deducet@<T, (basic_simd<T, Abis>::size() + ...)>>
@@ -455,61 +459,65 @@ namespace std {
     noexcept -> decltype(@\simdselect@(c, a, b));
 
   // \ref{simd.math}, Mathematical functions
-  template<@\mathfloatingpoint@ V> constexpr V acos(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V asin(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V atan(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> acos(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> asin(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> atan(const V& x);
   template<class V0, class V1>
     constexpr @\mathcommonsimd@<V0, V1> atan2(const V0& y, const V1& x);
-  template<@\mathfloatingpoint@ V> constexpr V cos(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V sin(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V tan(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V acosh(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V asinh(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V atanh(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V cosh(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V sinh(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V tanh(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V exp(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V exp2(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V expm1(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V frexp(const V& value, rebind_simd_t<int, V>* exp);
-  template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, V> ilogb(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V ldexp(const V& x, const rebind_simd_t<int, V>& exp);
-  template<@\mathfloatingpoint@ V> constexpr V log(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V log10(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V log1p(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V log2(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V logb(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V modf(const type_identity_t<V>& value, V* iptr);
-  template<@\mathfloatingpoint@ V> constexpr V scalbn(const V& x, const rebind_simd_t<int, V>& n);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> cos(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> sin(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> tan(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> acosh(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> asinh(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> atanh(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> cosh(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> sinh(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> tanh(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> exp(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> exp2(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> expm1(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> frexp(const V& value,
+  rebind_simd_t<int, @\deducedsimd@<V>>* exp);
+  template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, @\deducedsimd@<V>> ilogb(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> ldexp(const V& x, const
+  rebind_simd_t<int, @\deducedsimd@<V>>& exp);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> log(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> log10(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> log1p(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> log2(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> logb(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> modf(const
+  type_identity_t<@\deducedsimd@<V>>& value, V* iptr);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> scalbn(const V& x, const
+  rebind_simd_t<int, @\deducedsimd@<V>>& n);
   template<@\mathfloatingpoint@ V>
-    constexpr V scalbln(const V& x, const rebind_simd_t<long int, V>& n);
-  template<@\mathfloatingpoint@ V> constexpr V cbrt(const V& x);
+    constexpr @\deducedsimd@<V> scalbln(const V& x, const rebind_simd_t<long int, @\deducedsimd@<V>>& n);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> cbrt(const V& x);
   template<signed_integral T, class Abi>
     constexpr basic_simd<T, Abi> abs(const basic_simd<T, Abi>& j);
-  template<@\mathfloatingpoint@ V> constexpr V abs(const V& j);
-  template<@\mathfloatingpoint@ V> constexpr V fabs(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> abs(const V& j);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> fabs(const V& x);
   template<class V0, class V1>
     constexpr @\mathcommonsimd@<V0, V1> hypot(const V0& x, const V1& y);
   template<class V0, class V1, class V2>
     constexpr @\mathcommonsimd@<V0, V1, V2> hypot(const V0& x, const V1& y, const V2& z);
   template<class V0, class V1>
     constexpr @\mathcommonsimd@<V0, V1> pow(const V0& x, const V1& y);
-  template<@\mathfloatingpoint@ V> constexpr V sqrt(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V erf(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V erfc(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V lgamma(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V tgamma(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V ceil(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V floor(const V& x);
-  template<@\mathfloatingpoint@ V> V nearbyint(const V& x);
-  template<@\mathfloatingpoint@ V> V rint(const V& x);
-  template<@\mathfloatingpoint@ V> rebind_simd_t<long int, V> lrint(const V& x);
-  template<@\mathfloatingpoint@ V> rebind_simd_t<long long int, V> llrint(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V round(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long int, V> lround(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long long int, V> llround(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr V trunc(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> sqrt(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> erf(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> erfc(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> lgamma(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> tgamma(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> ceil(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> floor(const V& x);
+  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> nearbyint(const V& x);
+  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> rint(const V& x);
+  template<@\mathfloatingpoint@ V> rebind_simd_t<long int, @\deducedsimd@<V>> lrint(const V& x);
+  template<@\mathfloatingpoint@ V> rebind_simd_t<long long int, V> llrint(const @\deducedsimd@<V>& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> round(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long int, @\deducedsimd@<V>> lround(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long long int, @\deducedsimd@<V>> llround(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> trunc(const V& x);
   template<class V0, class V1>
     constexpr @\mathcommonsimd@<V0, V1> fmod(const V0& x, const V1& y);
   template<class V0, class V1>
@@ -533,12 +541,12 @@ namespace std {
     constexpr @\mathcommonsimd@<V0, V1, V2> fma(const V0& x, const V1& y, const V2& z);
   template<class V0, class V1, class V2>
     constexpr @\mathcommonsimd@<V0, V1, V2> lerp(const V0& a, const V1& b, const V2& t) noexcept;
-  template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, V> fpclassify(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr typename V::mask_type isfinite(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr typename V::mask_type isinf(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr typename V::mask_type isnan(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr typename V::mask_type isnormal(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr typename V::mask_type signbit(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, @\deducedsimd@<V>> fpclassify(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isfinite(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isinf(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isnan(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isnormal(const V& x);
+  template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type signbit(const V& x);
   template<class V0, class V1>
     constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isgreater(const V0& x, const V1& y);
   template<class V0, class V1>
@@ -552,15 +560,17 @@ namespace std {
   template<class V0, class V1>
     constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isunordered(const V0& x, const V1& y);
   template<@\mathfloatingpoint@ V>
-    V assoc_laguerre(const rebind_simd_t<unsigned, V>& n, const rebind_simd_t<unsigned, V>& m,
+    @\deducedsimd@<V> assoc_laguerre(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& n, const
+      rebind_simd_t<unsigned, @\deducedsimd@<V>>& m,
                      const V& x);
   template<@\mathfloatingpoint@ V>
-    V assoc_legendre(const rebind_simd_t<unsigned, V>& l, const rebind_simd_t<unsigned, V>& m,
+    @\deducedsimd@<V> assoc_legendre(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& l, const
+      rebind_simd_t<unsigned, @\deducedsimd@<V>>& m,
                      const V& x);
   template<class V0, class V1>
     @\mathcommonsimd@<V0, V1> beta(const V0& x, const V1& y);
-  template<@\mathfloatingpoint@ V> V comp_ellint_1(const V& k);
-  template<@\mathfloatingpoint@ V> V comp_ellint_2(const V& k);
+  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> comp_ellint_1(const V& k);
+  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> comp_ellint_2(const V& k);
   template<class V0, class V1>
     @\mathcommonsimd@<V0, V1> comp_ellint_3(const V0& k, const V1& nu);
   template<class V0, class V1>
@@ -577,16 +587,22 @@ namespace std {
     @\mathcommonsimd@<V0, V1> ellint_2(const V0& k, const V1& phi);
   template<class V0, class V1, class V2>
     @\mathcommonsimd@<V0, V1, V2> ellint_3(const V0& k, const V1& nu, const V2& phi);
-  template<@\mathfloatingpoint@ V> V expint(const V& x);
-  template<@\mathfloatingpoint@ V> V hermite(const rebind_simd_t<unsigned, V>& n, const V& x);
-  template<@\mathfloatingpoint@ V> V laguerre(const rebind_simd_t<unsigned, V>& n, const V& x);
-  template<@\mathfloatingpoint@ V> V legendre(const rebind_simd_t<unsigned, V>& l, const V& x);
-  template<@\mathfloatingpoint@ V> V riemann_zeta(const V& x);
-  template<@\mathfloatingpoint@ V> V sph_bessel(const rebind_simd_t<unsigned, V>& n, const V& x);
+  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> expint(const V& x);
+  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> hermite(const rebind_simd_t<unsigned,
+  @\deducedsimd@<V>>& n, const V& x);
+  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> laguerre(const rebind_simd_t<unsigned,
+  @\deducedsimd@<V>>& n, const V& x);
+  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> legendre(const rebind_simd_t<unsigned,
+  @\deducedsimd@<V>>& l, const V& x);
+  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> riemann_zeta(const V& x);
+  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> sph_bessel(const rebind_simd_t<unsigned,
+  @\deducedsimd@<V>>& n, const V& x);
   template<@\mathfloatingpoint@ V>
-    V sph_legendre(const rebind_simd_t<unsigned, V>& l, const rebind_simd_t<unsigned, V>& m,
+    @\deducedsimd@<V> sph_legendre(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& l, const
+      rebind_simd_t<unsigned, @\deducedsimd@<V>>& m,
                    const V& theta);
-  template<@\mathfloatingpoint@ V> V sph_neumann(const rebind_simd_t<unsigned, V>& n, const V& x);
+  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> sph_neumann(const rebind_simd_t<unsigned,
+  @\deducedsimd@<V>>& n, const V& x);
 }
 \end{codeblock}
 
@@ -1428,13 +1444,13 @@ template<class T, class Abi>
   \begin{itemize}
     \item For the first overload \tcode{T} is an enabled specialization of \tcode{basic_simd}. If
       \tcode{basic_simd<typename T\colcol{}value_type, Abi>\colcol{}size() \% T\colcol{}size()} is
-      not \tcode{0} then \tcode{resize_simd<basic_simd<typename T\colcol{}value_type,
-      Abi>\colcol{}size() \% T\colcol{}size(), T>} has a member \tcode{type}.
+      not \tcode{0} then \tcode{resize_simd_t<basic_simd<typename T\colcol{}value_type,
+      Abi>\colcol{}size() \% T\colcol{}size(), T>} is valid and denotes a type.
 
     \item For the second overload \tcode{T} is an enabled specialization of \tcode{basic_simd_mask}.
       If \tcode{basic_simd_mask<\maskelementsize<T>, Abi>\colcol{}size() \% T\colcol{}size()} is not
-      \tcode{0} then \tcode{resize_simd<basic_simd_mask<\MayBreak{}\maskelementsize<T>,
-      Abi>\colcol{}size() \% T\colcol{}size(), T>} has a member \tcode{type}.
+      \tcode{0} then \tcode{resize_simd_t<basic_simd_mask<\MayBreak{}\maskelementsize<T>,
+      Abi>\colcol{}size() \% T\colcol{}size(), T>} is valid and denotes a type.
   \end{itemize}
 
   \pnum Let $N$ be \tcode{x.size() / T::size()}.
@@ -1600,45 +1616,45 @@ return @\simdselect@(c, a, b);
 }
 
 \pnum
-Unless otherwise specified, each mathematical function declared in \tcode{<simd>} yields a
-\tcode{basic_simd} result, where
-\INFO{Better?\\
-Unless otherwise specified, each mathematical function declared in \tcode{<simd>} returns a prvalue
-of a data-parallel type, where [\ldots]
-}\noindent
-the value of each element approximates the result obtained by
+Unless otherwise specified below, each mathematical function declared in \tcode{<simd>} returns a
+prvalue \tcode{result} of a data-parallel type, where
+the value of each element approximates the value obtained by
 applying the function with the same name from \tcode{<cmath>} to the corresponding elements of the
 arguments.
 The value of an element of the result is unspecified if a domain, pole, or range error occurs for
 the corresponding elements of the arguments.
-”errno“ (xref) is never modified.
+It is unspecified whether \tcode{errno} (\iref{errno}) is accessed.
 
 \recommended Implementations are encouraged to follow the C specification (specifically Annex F) for
 the element-wise application of the mathematical functions.
 
 \begin{itemdecl}
-template<@\mathfloatingpoint@ V> constexpr V frexp(const V& value, rebind_simd_t<int, V>* exp);
-template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, V> ilogb(const V& x);
-template<@\mathfloatingpoint@ V> constexpr V ldexp(const V& x, const rebind_simd_t<int, V>& exp);
-template<@\mathfloatingpoint@ V> constexpr V modf(const type_identity_t<V>& value, V* iptr);
-template<@\mathfloatingpoint@ V> constexpr V scalbn(const V& x, const rebind_simd_t<int, V>& n);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> frexp(const V& value,
+rebind_simd_t<int, @\deducedsimd@<V>>* exp);
+template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, @\deducedsimd@<V>> ilogb(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> ldexp(const V& x, const
+rebind_simd_t<int, @\deducedsimd@<V>>& exp);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> modf(const
+type_identity_t<@\deducedsimd@<V>>& value, V* iptr);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> scalbn(const V& x, const
+rebind_simd_t<int, @\deducedsimd@<V>>& n);
 template<@\mathfloatingpoint@ V>
-  constexpr V scalbln(const V& x, const rebind_simd_t<long int, V>& n);
+  constexpr @\deducedsimd@<V> scalbln(const V& x, const rebind_simd_t<long int, @\deducedsimd@<V>>& n);
 template<signed_integral T, class Abi>
   constexpr basic_simd<T, Abi> abs(const basic_simd<T, Abi>& j);
-template<@\mathfloatingpoint@ V> constexpr V abs(const V& j);
-template<@\mathfloatingpoint@ V> constexpr V fabs(const V& x);
-template<@\mathfloatingpoint@ V> constexpr V sqrt(const V& x);
-template<@\mathfloatingpoint@ V> constexpr V ceil(const V& x);
-template<@\mathfloatingpoint@ V> constexpr V floor(const V& x);
-template<@\mathfloatingpoint@ V> V nearbyint(const V& x);
-template<@\mathfloatingpoint@ V> V rint(const V& x);
-template<@\mathfloatingpoint@ V> rebind_simd_t<long int, V> lrint(const V& x);
-template<@\mathfloatingpoint@ V> rebind_simd_t<long long int, V> llrint(const V& x);
-template<@\mathfloatingpoint@ V> constexpr V round(const V& x);
-template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long int, V> lround(const V& x);
-template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long long int, V> llround(const V& x);
-template<@\mathfloatingpoint@ V> constexpr V trunc(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> abs(const V& j);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> fabs(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> sqrt(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> ceil(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> floor(const V& x);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> nearbyint(const V& x);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> rint(const V& x);
+template<@\mathfloatingpoint@ V> rebind_simd_t<long int, @\deducedsimd@<V>> lrint(const V& x);
+template<@\mathfloatingpoint@ V> rebind_simd_t<long long int, @\deducedsimd@<V>> llrint(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> round(const V& x);
+template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long int, @\deducedsimd@<V>> lround(const V& x);
+template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long long int, @\deducedsimd@<V>> llround(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> trunc(const V& x);
 template<class V0, class V1>
   constexpr @\mathcommonsimd@<V0, V1> copysign(const V0& x, const V1& y);
 template<class V0, class V1>
@@ -1651,12 +1667,12 @@ template<class V0, class V1>
   constexpr @\mathcommonsimd@<V0, V1> fmin(const V0& x, const V1& y);
 template<class V0, class V1, class V2>
   constexpr @\mathcommonsimd@<V0, V1, V2> fma(const V0& x, const V1& y, const V2& z);
-template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, V> fpclassify(const V& x);
-template<@\mathfloatingpoint@ V> constexpr typename V::mask_type isfinite(const V& x);
-template<@\mathfloatingpoint@ V> constexpr typename V::mask_type isinf(const V& x);
-template<@\mathfloatingpoint@ V> constexpr typename V::mask_type isnan(const V& x);
-template<@\mathfloatingpoint@ V> constexpr typename V::mask_type isnormal(const V& x);
-template<@\mathfloatingpoint@ V> constexpr typename V::mask_type signbit(const V& x);
+template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, @\deducedsimd@<V>> fpclassify(const V& x);
+template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isfinite(const V& x);
+template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isinf(const V& x);
+template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isnan(const V& x);
+template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isnormal(const V& x);
+template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type signbit(const V& x);
 template<class V0, class V1>
   constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isgreater(const V0& x, const V1& y);
 template<class V0, class V1>
@@ -1672,8 +1688,8 @@ template<class V0, class V1>
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\effects
-  Equivalent to: Element-wise application of the corresponding function.
-  \INFO{except \tcode{errno} is not modified}
+  Equivalent to: Element-wise application of the corresponding function,
+  except it is unspecified whether \tcode{errno} is accessed.
 \end{itemdescr}
 
 \rSec1[simd.mask.class]{Class template \tcode{basic_simd_mask}}
