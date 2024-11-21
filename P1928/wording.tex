@@ -791,6 +791,20 @@ public:
   constexpr basic_simd operator+() const noexcept;
   constexpr basic_simd operator-() const noexcept;
 
+  // \ref{simd.cassign}, \tcode{basic_simd} compound assignment
+  constexpr basic_simd& operator+=(const basic_simd&) noexcept;
+  constexpr basic_simd& operator-=(const basic_simd&) noexcept;
+  constexpr basic_simd& operator*=(const basic_simd&) noexcept;
+  constexpr basic_simd& operator/=(const basic_simd&) noexcept;
+  constexpr basic_simd& operator%=(const basic_simd&) noexcept;
+  constexpr basic_simd& operator&=(const basic_simd&) noexcept;
+  constexpr basic_simd& operator|=(const basic_simd&) noexcept;
+  constexpr basic_simd& operator^=(const basic_simd&) noexcept;
+  constexpr basic_simd& operator<<=(const basic_simd&) noexcept;
+  constexpr basic_simd& operator>>=(const basic_simd&) noexcept;
+  constexpr basic_simd& operator<<=(@\simdsizetype@) noexcept;
+  constexpr basic_simd& operator>>=(@\simdsizetype@) noexcept;
+
   // \ref{simd.binary}, \tcode{basic_simd} binary operators
   friend constexpr basic_simd operator+(const basic_simd&, const basic_simd&) noexcept;
   friend constexpr basic_simd operator-(const basic_simd&, const basic_simd&) noexcept;
@@ -804,20 +818,6 @@ public:
   friend constexpr basic_simd operator>>(const basic_simd&, const basic_simd&) noexcept;
   friend constexpr basic_simd operator<<(const basic_simd&, @\simdsizetype@) noexcept;
   friend constexpr basic_simd operator>>(const basic_simd&, @\simdsizetype@) noexcept;
-
-  // \ref{simd.cassign}, \tcode{basic_simd} compound assignment
-  friend constexpr basic_simd& operator+=(basic_simd&, const basic_simd&) noexcept;
-  friend constexpr basic_simd& operator-=(basic_simd&, const basic_simd&) noexcept;
-  friend constexpr basic_simd& operator*=(basic_simd&, const basic_simd&) noexcept;
-  friend constexpr basic_simd& operator/=(basic_simd&, const basic_simd&) noexcept;
-  friend constexpr basic_simd& operator%=(basic_simd&, const basic_simd&) noexcept;
-  friend constexpr basic_simd& operator&=(basic_simd&, const basic_simd&) noexcept;
-  friend constexpr basic_simd& operator|=(basic_simd&, const basic_simd&) noexcept;
-  friend constexpr basic_simd& operator^=(basic_simd&, const basic_simd&) noexcept;
-  friend constexpr basic_simd& operator<<=(basic_simd&, const basic_simd&) noexcept;
-  friend constexpr basic_simd& operator>>=(basic_simd&, const basic_simd&) noexcept;
-  friend constexpr basic_simd& operator<<=(basic_simd&, @\simdsizetype@) noexcept;
-  friend constexpr basic_simd& operator>>=(basic_simd&, @\simdsizetype@) noexcept;
 
   // \ref{simd.comparison}, \tcode{basic_simd} compare operators
   friend constexpr mask_type operator==(const basic_simd&, const basic_simd&) noexcept;
@@ -1176,6 +1176,49 @@ constexpr basic_simd operator-() const noexcept;
   \tcode{-operator[]($i$)} \foralli.
 \end{itemdescr}
 
+\rSec2[simd.cassign]{\tcode{basic_simd} compound assignment}
+
+\begin{itemdecl}
+constexpr basic_simd& operator+=(const basic_simd& rhs) noexcept;
+constexpr basic_simd& operator-=(const basic_simd& rhs) noexcept;
+constexpr basic_simd& operator*=(const basic_simd& rhs) noexcept;
+constexpr basic_simd& operator/=(const basic_simd& rhs) noexcept;
+constexpr basic_simd& operator%=(const basic_simd& rhs) noexcept;
+constexpr basic_simd& operator&=(const basic_simd& rhs) noexcept;
+constexpr basic_simd& operator|=(const basic_simd& rhs) noexcept;
+constexpr basic_simd& operator^=(const basic_simd& rhs) noexcept;
+constexpr basic_simd& operator<<=(const basic_simd& rhs) noexcept;
+constexpr basic_simd& operator>>=(const basic_simd& rhs) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum Let \textit{op} be the operator.
+
+  \pnum\ConstraintOperatorTWellFormed
+
+  \pnum\effects
+  These operators apply the indicated operator to \tcode{*this} and \tcode{rhs} as an element-wise
+  operation.
+
+  \pnum\returns
+  \tcode{*this}.
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr basic_simd& operator<<=(@\simdsizetype@ n) noexcept;
+constexpr basic_simd& operator>>=(@\simdsizetype@ n) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum Let \textit{op} be the operator.
+
+  \pnum\constraints
+  \tcode{requires (value_type a, \simdsizetype{} b) \{ a \op{} b; \}} is \tcode{true}.
+
+  \pnum\effects
+  Equivalent to: \tcode{return operator \textit{op} (*this, basic_simd(n));}
+\end{itemdescr}
+
 \rSec1[simd.nonmembers]{\tcode{basic_simd} non-member operations}
 
 \rSec2[simd.binary]{\tcode{basic_simd} binary operators}
@@ -1217,49 +1260,6 @@ friend constexpr basic_simd operator>>(const basic_simd& v, @\simdsizetype@ n) n
   \pnum\returns
   A \tcode{basic_simd} object where the $i^\text{th}$ element is initialized to the result of
   applying \op{} to \tcode{v[$i$]} and \tcode{n} \foralli.
-\end{itemdescr}
-
-\rSec2[simd.cassign]{\tcode{basic_simd} compound assignment}
-
-\begin{itemdecl}
-friend constexpr basic_simd& operator+=(basic_simd& lhs, const basic_simd& rhs) noexcept;
-friend constexpr basic_simd& operator-=(basic_simd& lhs, const basic_simd& rhs) noexcept;
-friend constexpr basic_simd& operator*=(basic_simd& lhs, const basic_simd& rhs) noexcept;
-friend constexpr basic_simd& operator/=(basic_simd& lhs, const basic_simd& rhs) noexcept;
-friend constexpr basic_simd& operator%=(basic_simd& lhs, const basic_simd& rhs) noexcept;
-friend constexpr basic_simd& operator&=(basic_simd& lhs, const basic_simd& rhs) noexcept;
-friend constexpr basic_simd& operator|=(basic_simd& lhs, const basic_simd& rhs) noexcept;
-friend constexpr basic_simd& operator^=(basic_simd& lhs, const basic_simd& rhs) noexcept;
-friend constexpr basic_simd& operator<<=(basic_simd& lhs, const basic_simd& rhs) noexcept;
-friend constexpr basic_simd& operator>>=(basic_simd& lhs, const basic_simd& rhs) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum Let \textit{op} be the operator.
-
-  \pnum\ConstraintOperatorTWellFormed
-
-  \pnum\effects
-  These operators apply the indicated operator to \tcode{lhs} and \tcode{rhs} as an element-wise
-  operation.
-
-  \pnum\returns
-  \tcode{lhs}.
-\end{itemdescr}
-
-\begin{itemdecl}
-friend constexpr basic_simd& operator<<=(basic_simd& lhs, @\simdsizetype@ n) noexcept;
-friend constexpr basic_simd& operator>>=(basic_simd& lhs, @\simdsizetype@ n) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum Let \textit{op} be the operator.
-
-  \pnum\constraints
-  \tcode{requires (value_type a, \simdsizetype{} b) \{ a \op{} b; \}} is \tcode{true}.
-
-  \pnum\effects
-  Equivalent to: \tcode{return operator \textit{op} (lhs, basic_simd(n));}
 \end{itemdescr}
 
 \rSec2[simd.comparison]{\tcode{basic_simd} compare operators}
@@ -1909,6 +1909,11 @@ public:
   template<class U, class A>
     constexpr explicit(sizeof(U) != Bytes) operator basic_simd<U, A>() const noexcept;
 
+  // \ref{simd.mask.cassign}, \tcode{basic_simd_mask} compound assignment
+  constexpr basic_simd_mask& operator&=(const basic_simd_mask&) noexcept;
+  constexpr basic_simd_mask& operator|=(const basic_simd_mask&) noexcept;
+  constexpr basic_simd_mask& operator^=(const basic_simd_mask&) noexcept;
+
   // \ref{simd.mask.binary}, \tcode{basic_simd_mask} binary operators
   friend constexpr basic_simd_mask
     operator&&(const basic_simd_mask&, const basic_simd_mask&) noexcept;
@@ -1920,14 +1925,6 @@ public:
     operator|(const basic_simd_mask&, const basic_simd_mask&) noexcept;
   friend constexpr basic_simd_mask
     operator^(const basic_simd_mask&, const basic_simd_mask&) noexcept;
-
-  // \ref{simd.mask.cassign}, \tcode{basic_simd_mask} compound assignment
-  friend constexpr basic_simd_mask&
-    operator&=(basic_simd_mask&, const basic_simd_mask&) noexcept;
-  friend constexpr basic_simd_mask&
-    operator|=(basic_simd_mask&, const basic_simd_mask&) noexcept;
-  friend constexpr basic_simd_mask&
-    operator^=(basic_simd_mask&, const basic_simd_mask&) noexcept;
 
   // \ref{simd.mask.comparison}, \tcode{basic_simd_mask} comparisons
   friend constexpr basic_simd_mask
@@ -2176,6 +2173,25 @@ template<class U, class A>
   \tcode{static_cast<U>(operator[]($i$))}.
 \end{itemdescr}
 
+\rSec2[simd.mask.cassign]{\tcode{basic_simd_mask} compound assignment}
+
+\begin{itemdecl}
+constexpr basic_simd_mask& operator&=(const basic_simd_mask& rhs) noexcept;
+constexpr basic_simd_mask& operator|=(const basic_simd_mask& rhs) noexcept;
+constexpr basic_simd_mask& operator^=(const basic_simd_mask& rhs) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum Let \op{} be the operator.
+
+  \pnum\effects
+  These operators apply \op{} to \tcode{*this} and \tcode{rhs} as a binary
+  element-wise operation.
+
+  \pnum\returns
+  \tcode{*this}.
+\end{itemdescr}
+
 \rSec1[simd.mask.nonmembers]{Non-member operations}
 
 \rSec2[simd.mask.binary]{\tcode{basic_simd_mask} binary operators}
@@ -2199,28 +2215,6 @@ friend constexpr basic_simd_mask
   \pnum\returns
   A \tcode{basic_simd_mask} object initialized with the results of applying \op{}
   to \tcode{lhs} and \tcode{rhs} as a binary element-wise operation.
-\end{itemdescr}
-
-\rSec2[simd.mask.cassign]{\tcode{basic_simd_mask} compound assignment}
-
-\begin{itemdecl}
-friend constexpr basic_simd_mask&
-  operator&=(basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
-friend constexpr basic_simd_mask&
-  operator|=(basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
-friend constexpr basic_simd_mask&
-  operator^=(basic_simd_mask& lhs, const basic_simd_mask& rhs) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum Let \op{} be the operator.
-
-  \pnum\effects
-  These operators apply \op{} to \tcode{lhs} and \tcode{rhs} as a binary
-  element-wise operation.
-
-  \pnum\returns
-  \tcode{lhs}.
 \end{itemdescr}
 
 \rSec2[simd.mask.comparison]{\tcode{basic_simd_mask} comparisons}
