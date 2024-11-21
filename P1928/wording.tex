@@ -8,24 +8,6 @@
 \renewcommand\foralli[1][]{for all $i$ in the range of \range{0}{#1size()}}
 \renewcommand\forallmaskedi{for all selected indices $i$ of \tcode{mask}}
 
-\newcommand\validMaskedRange[1][first]{For all selected indices $i$,
-\range{#1}{#1 + $i$ + 1} is a valid range.}
-
-\newcommand\flagsRequires[2]{
-\item If the template parameter pack \tcode{Flags} contains
-  \tcode{\alignedflag}, \tcode{to_address(first)} points to storage
-  aligned by \tcode{simd_alignment_v<#1>}.
-\item If the template parameter pack \tcode{Flags} contains
-  \tcode{\overalignedflag<N>}, \tcode{to_address(first)}
-  points to storage aligned by \tcode{N}.
-}
-
-\newcommand\conversionFlagsMandate[2]{
-  If the template parameter pack \tcode{Flags} does not contain
-  \tcode{\convertflag}, then the conversion from \tcode{#1} to
-  \tcode{#2} is value-preserving.
-}
-
 \newcommand\op{\textrm{\textit{op}}}
 
 \newcommand\ConstraintUnaryOperatorWellFormed[2][const ]{%
@@ -157,6 +139,8 @@ template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@;   // \expos
 struct @\convertflag@;                                              // \expos
 struct @\alignedflag@;                                              // \expos
 template<size_t N> struct @\overalignedflag@;                       // \expos
+struct @\allowpartialloadstoreflag@;                              // \expos
+struct @\assumesizeflag@;                                          // \expos
 \end{codeblock}
 
 \begin{itemdecl}
@@ -382,6 +366,8 @@ namespace std {
   inline constexpr simd_flags<@\alignedflag@> simd_flag_aligned{};
   template<size_t N> requires (has_single_bit(N))
     inline constexpr simd_flags<@\overalignedflag<N>@> simd_flag_overaligned{};
+  inline constexpr simd_flags<@\allowpartialloadstoreflag@> simd_flag_allow_partial_loadstore{};
+  inline constexpr simd_flags<@\assumesizeflag@> simd_flag_assume_size_match{};
 
   // \ref{simd.class}, Class template \tcode{basic_simd}
   template<class T, class Abi = @\nativeabi@<T>> class basic_simd;
@@ -392,6 +378,50 @@ namespace std {
   template<size_t Bytes, class Abi = @\nativeabi@<@\integerfrom@<Bytes>>> class basic_simd_mask;
   template<class T, @\simdsizetype@ N = @\simdsizev@<T, @\nativeabi@<T>>>
     using simd_mask = basic_simd_mask<sizeof(T), @\deducet@<T, N>>;
+
+  // \ref{simd.loadstore}, \tcode{basic_simd} load and store functions
+  template<class V = @\seebelow@, ranges::contiguous_range R, class... Flags>
+    requires ranges::sized_range<R>
+    constexpr V load_from(R&& r, simd_flags<Flags...> f = {});
+  template<class V = @\seebelow@, ranges::contiguous_range R, class... Flags>
+    requires ranges::sized_range<R>
+    constexpr V load_from(R&& r, const typename V::mask_type& k, simd_flags<Flags...> f = {});
+  template<class V = @\seebelow@, contiguous_iterator I, class... Flags>
+    constexpr V load_from(I first, iter_difference_t<I> n, simd_flags<Flags...> f = {});
+  template<class V = @\seebelow@, contiguous_iterator I, class... Flags>
+    constexpr V load_from(I first, iter_difference_t<I> n, const typename V::mask_type& k,
+                          simd_flags<Flags...> f = {});
+  template<class V = @\seebelow@, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
+    constexpr V load_from(I first, S last, simd_flags<Flags...> f = {});
+  template<class V = @\seebelow@, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
+    constexpr V load_from(I first, S last, const typename V::mask_type& k,
+                          simd_flags<Flags...> f = {});
+
+  template<class T, class Abi, ranges::contiguous_range R, class... Flags>
+    requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+    constexpr void store_to(const basic_simd<T, Abi>& v, R&& r, simd_flags<Flags...> f = {});
+  template<class T, class Abi, ranges::contiguous_range R, class... Flags>
+    requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+    constexpr void store_to(const basic_simd<T, Abi>& v, R&& r,
+                            const typename basic_simd<T, Abi>::mask_type& mask,
+                            simd_flags<Flags...> f = {});
+  template<class T, class Abi, contiguous_iterator I, class... Flags>
+    requires indirectly_writable<I, T>
+    constexpr void store_to(const basic_simd<T, Abi>& v, I first, iter_difference_t<I> n,
+                            simd_flags<Flags...> f = {});
+  template<class T, class Abi, contiguous_iterator I, class... Flags>
+    requires indirectly_writable<I, T>
+    constexpr void store_to(const basic_simd<T, Abi>& v, I first, iter_difference_t<I> n,
+                            const typename basic_simd<T, Abi>::mask_type& mask,
+                            simd_flags<Flags...> f = {});
+  template<class T, class Abi, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
+    requires indirectly_writable<I, T>
+    constexpr void store_to(const basic_simd<T, Abi>& v, I first, S last, simd_flags<Flags...> f = {});
+  template<class T, class Abi, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
+    requires indirectly_writable<I, T>
+    constexpr void store_to(const basic_simd<T, Abi>& v, I first, S last,
+                            const typename basic_simd<T, Abi>::mask_type& mask,
+                            simd_flags<Flags...> f = {});
 
   // \ref{simd.creation}, \tcode{basic_simd} and \tcode{basic_simd_mask} creation
   template<class T, class Abi>
@@ -637,7 +667,7 @@ template<class T, class U = typename T::value_type> struct simd_alignment { @\se
 \pnum
 If \tcode{value} is present, the type \tcode{simd_alignment<T, U>} is a \tcode{BinaryTypeTrait} with
 a base characteristic of \tcode{integral_constant<size_t, N>} for some unspecified
-\tcode{N} (see \ref{simd.copy} and \ref{simd.mask.copy}). \begin{note}\tcode{value} identifies the
+\tcode{N} (see \ref{simd.ctor} and \ref{simd.loadstore}). \begin{note}\tcode{value} identifies the
 alignment restrictions on pointers used for (converting) loads and stores for the given type
 \tcode{T} on arrays of type \tcode{U}.\end{note}
 
@@ -763,20 +793,10 @@ public:
   template<class U, class UAbi>
     constexpr explicit(@\seebelow@) basic_simd(const basic_simd<U, UAbi>&) noexcept;
   template<class G> constexpr explicit basic_simd(G&& gen) noexcept;
-  template<class It, class... Flags>
-    constexpr explicit basic_simd(It first, simd_flags<Flags...> = {});
-  template<class It, class... Flags>
-    constexpr explicit basic_simd(It first, const mask_type& mask, simd_flags<Flags...> = {});
-
-  // \ref{simd.copy}, \tcode{basic_simd} copy functions
-  template<class It, class... Flags>
-    constexpr void copy_from(It first, simd_flags<Flags...> f = {});
-  template<class It, class... Flags>
-    constexpr void copy_from(It first, const mask_type& mask, simd_flags<Flags...> f = {});
-  template<class Out, class... Flags>
-    constexpr void copy_to(Out first, simd_flags<Flags...> f = {}) const;
-  template<class Out, class... Flags>
-    constexpr void copy_to(Out first, const mask_type& mask, simd_flags<Flags...> f = {}) const;
+  template<class R, class... Flags>
+    constexpr explicit basic_simd(R&& range, simd_flags<Flags...> = {});
+  template<class R, class... Flags>
+    constexpr basic_simd(R&& range, const mask_type& mask, simd_flags<Flags...> = {});
 
   // \ref{simd.subscr}, \tcode{basic_simd} subscript operators
   constexpr value_type operator[](@\simdsizetype@) const;
@@ -831,6 +851,9 @@ public:
   friend constexpr basic_simd @\simdselect@(
     const mask_type&, const basic_simd&, const basic_simd&) noexcept;
 };
+
+template<ranges::contiguous_range R, class... Ts>
+  basic_simd(R&& r, Ts...) -> @\seebelow@;
 \end{codeblock}
 
 \pnum
@@ -938,118 +961,56 @@ template<class G> constexpr explicit basic_simd(G&& gen) noexcept;
     change for \code{basic_simd_mask}} \NOTE{P3430R0 asks for striking 'unsequenced'.}
 \end{itemdescr}
 
-\newcommand\SimdLoadDescr[2]{
+\begin{itemdecl}
+template<class R, class... Flags>
+  constexpr explicit basic_simd(R&& r, simd_flags<Flags...> = {});
+template<class R, class... Flags>
+  constexpr explicit basic_simd(R&& r, const mask_type& mask, simd_flags<Flags...> = {});
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum
+  Let \code{mask} be \code{mask_type(true)} for the overload with no \code{mask} parameter.
+
   \pnum\constraints
   \begin{itemize}
-    \item \tcode{iter_value_t<It>} is a vectorizable type, and
-    \item \tcode{It} models \tcode{contiguous_iterator}.
+    \item \tcode{R} models \tcode{ranges::contiguous_range} and \tcode{ranges::sized_range},
+    \item \tcode{ranges::size(r)} is a constant expression, and
+    \item \tcode{ranges::size(r)} is equal to \tcode{size()}.
   \end{itemize}
 
   \pnum\mandates
-  \conversionFlagsMandate{iter_value_t<It>}{value_type}
+  \begin{itemize}
+    \item \tcode{ranges::range_value_t<R>} is a vectorizable type, and
+    \item if the template parameter pack \tcode{Flags} does not contain \tcode{\convertflag}, then
+      the conversion from \tcode{ranges::range_value_t<R>} to \tcode{value_type} is
+      value-preserving.
+  \end{itemize}
 
   \pnum\expects
   \begin{itemize}
-    \item #1
-    \flagsRequires{basic_simd, iter_value_t<It>}{iter_value_t<It>}
+    \item If the template parameter pack \tcode{Flags} contains \tcode{\alignedflag},
+      \tcode{ranges::data(range)} points to storage aligned by \tcode{simd_alignment_v<basic_simd,
+      ranges::range_value_t<R>>}.
+    \item If the template parameter pack \tcode{Flags} contains \tcode{\overalignedflag<N>},
+      \tcode{ranges::data(range)} points to storage aligned by \tcode{N}.
   \end{itemize}
 
-  \pnum\effects #2
-}
-
-\begin{itemdecl}
-template<class It, class... Flags>
-  constexpr explicit basic_simd(It first, simd_flags<Flags...> = {});
-\end{itemdecl}
-
-\begin{itemdescr}
-  \SimdLoadDescr
-    {\range{first}{first + size()} is a valid range.}
-    {Initializes the $i^\text{th}$ element with \tcode{static_cast<T>(to_address(first)[$i$])}
-    \foralli.}
+  \pnum\effects
+    Initializes the $i^\text{th}$ element with \tcode{mask[$i$] ?
+    static_cast<T>(ranges::data(range)[$i$]) : T()} \foralli.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class It, class... Flags>
-  constexpr explicit basic_simd(It first, const mask_type& mask, simd_flags<Flags...> = {});
+template<ranges::contiguous_range R, class... Ts>
+  basic_simd(R&& r, Ts...) -> @\seebelow@;
 \end{itemdecl}
-
 \begin{itemdescr}
-  \SimdLoadDescr
-    {\validMaskedRange}
-    {Initializes the $i^\text{th}$ element with \tcode{mask[$i$] ?
-      static_cast<T>(to_address(first)[$i$]) : T()}
-    \foralli.}
-\end{itemdescr}
-
-\rSec2[simd.copy]{\tcode{basic_simd} copy functions}
-
-\begin{itemdecl}
-template<class It, class... Flags>
-  constexpr void copy_from(It first, simd_flags<Flags...> f = {});
-\end{itemdecl}
-
-\begin{itemdescr}
-  \SimdLoadDescr
-    {\range{first}{first + size()} is a valid range.}
-    {Replaces the elements of the \tcode{basic_simd} object such that the $i^\text{th}$ element is
-    assigned with \tcode{static_cast<T>(to_address(first)[$i$])} \foralli.}
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class It, class... Flags>
-  constexpr void copy_from(It first, const mask_type& mask, simd_flags<Flags...> f = {});
-\end{itemdecl}
-
-\begin{itemdescr}
-  \SimdLoadDescr
-    {\validMaskedRange}
-    {Replaces the selected elements of the \tcode{basic_simd} object such that the $i^\text{th}$
-    element is replaced with \tcode{static_cast<T>(to_address(first)[$i$])} \forallmaskedi.}
-\end{itemdescr}
-
-\newcommand\SimdStoreDescr[2]{
   \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<Out>} is a vectorizable type, and
-    \item \tcode{Out} models \tcode{contiguous_iterator}, and
-    \item \tcode{Out} models \tcode{indirectly_writable<value_type>}.
-  \end{itemize}
+  \code{ranges::size(r)} is a constant expression.
 
-  \pnum\mandates
-  \conversionFlagsMandate{value_type}{iter_value_t<Out>}
-
-  \pnum\expects
-  \begin{itemize}
-    \item #1
-    \flagsRequires{basic_simd, iter_value_t<Out>}{iter_value_t<Out>}
-  \end{itemize}
-
-  \pnum\effects #2
-}
-
-\begin{itemdecl}
-template<class Out, class... Flags>
-  constexpr void copy_to(Out first, simd_flags<Flags...> f = {}) const;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \SimdStoreDescr
-    {\range{first}{first + size()} is a valid range.}
-    {Copies all \tcode{basic_simd} elements as if \tcode{to_address(first)[$i$] =
-    static_cast<iter_value_t<Out>>(operator[]($i$))} \foralli.}
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class Out, class... Flags>
-  constexpr void copy_to(Out first, const mask_type& mask, simd_flags<Flags...> f = {}) const;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \SimdStoreDescr
-    {\validMaskedRange}
-    {Copies the selected elements as if \tcode{to_address(first)[$i$] =
-    static_cast<iter_value_t<Out>>(operator[]($i$))} \forallmaskedi.}
+  \pnum\remarks
+  The deduced type is equivalent to \code{simd<ranges::range_value_t<R>, ranges::size(r)>}.
 \end{itemdescr}
 
 \rSec2[simd.subscr]{\tcode{basic_simd} subscript operator}
@@ -1420,6 +1381,157 @@ template<class T, class Abi>
   If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{numeric_limits<V::value_type>::lowest()}.
   Otherwise, returns the value of a selected element \tcode{x[$j$]} for which \tcode{x[$j$] <
   x[$i$]} is \tcode{false} \forallmaskedi.
+\end{itemdescr}
+
+\rSec2[simd.loadstore]{\tcode{basic_simd} load and store functions}
+
+\begin{itemdecl}
+template<class V = @\seebelow@, ranges::contiguous_range R, class... Flags>
+  requires ranges::sized_range<R>
+  constexpr V load_from(R&& r, simd_flags<Flags...> f = {});
+
+template<class V = @\seebelow@, ranges::contiguous_range R, class... Flags>
+  requires ranges::sized_range<R>
+  constexpr V load_from(R&& r, const typename V::mask_type& mask, simd_flags<Flags...> f = {});
+
+template<class V = @\seebelow@, contiguous_iterator I, class... Flags>
+  constexpr V load_from(I first, iter_difference_t<I> n, simd_flags<Flags...> f = {});
+
+template<class V = @\seebelow@, contiguous_iterator I, class... Flags>
+  constexpr V load_from(I first, iter_difference_t<I> n, const typename V::mask_type& mask,
+                        simd_flags<Flags...> f = {});
+
+template<class V = @\seebelow@, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
+  constexpr V load_from(I first, S last, simd_flags<Flags...> f = {});
+
+template<class V = @\seebelow@, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
+  constexpr V load_from(I first, S last, const typename V::mask_type& mask,
+                        simd_flags<Flags...> f = {});
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  Let
+  \begin{itemize}
+    \item \code{mask} be \code{V::mask_type(true)} for overloads with no \code{mask} parameter;
+    \item \tcode{R} be \tcode{span<const iter_value_t<I>>} for overloads with no template parameter
+      \tcode{R};
+  %Let \code{k} be \code{0} if \code{none_of(mask)} is \code{true}, \code{min(n,
+      %reduce_max_index(mask) + 1} otherwise.
+    \item \tcode{r} be \tcode{R(first, n)} for overloads with \tcode{n} parameter and
+      \tcode{R(first, last)} for overloads with \tcode{last} parameter.
+  \end{itemize}
+
+  \pnum\mandates
+  \begin{itemize}
+    \item \tcode{ranges::range_value_t<R>} is a vectorizable type,
+    \item the template parameter pack \code{Flags} either contains \code{\allowpartialloadstoreflag} or
+      \code{\assumesizeflag},
+    \item \code{same_as<remove_cvref_t<V>, V>} is \code{true},
+    \item \code{V} is an enabled specialization of \code{basic_simd}, and
+    \item if the template parameter pack \tcode{Flags} does not contain \tcode{\convertflag}, then
+      the conversion from \tcode{ranges::range_value_t<R>} to \tcode{V::value_type} is
+      value-preserving, and
+    \item if the template parameter pack \code{Flags} contains \code{\assumesizeflag} and
+      \code{ranges::size(r)} is a constant expression then \code{ranges::size(r)} $\ge$
+      \tcode{V::size()}.
+  \end{itemize}
+
+  \pnum\expects
+  \begin{itemize}
+    \item \range{first}{first + n} is a valid range for overloads with \code{n} parameter.
+    \item \range{first}{last} is a valid range for overloads with \code{last} parameter.
+    \item If the template parameter pack \code{Flags} contains
+    \code{\assumesizeflag} then \code{ranges::size(r)} $\ge$ \tcode{V::size()}
+    \item If the template parameter pack \tcode{Flags} contains \tcode{\alignedflag},
+      \tcode{ranges::data(r)} points to storage aligned by \tcode{simd_alignment_v<basic_simd,
+      ranges::range_value_t<R>>}.
+    \item If the template parameter pack \tcode{Flags} contains \tcode{\overalignedflag<N>},
+      \tcode{ranges::data(r)} points to storage aligned by \tcode{N}.
+  \end{itemize}
+
+  \pnum\effects
+  Initializes the $i^\text{th}$ element with \tcode{mask[$i$] \&\& $i$ < ranges::size(r) ?
+  static_cast<T>(ranges::data(r)[$i$]) : T()} \foralli.
+
+  \pnum\remarks
+  The default argument for template parameter \code{V} is
+  \code{basic_simd<ranges::range_value_t<R>>}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class T, class Abi, ranges::contiguous_range R, class... Flags>
+  requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+  constexpr void store_to(const basic_simd<T, Abi>& v, R&& r, simd_flags<Flags...> f = {});
+
+template<class T, class Abi, ranges::contiguous_range R, class... Flags>
+  requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+  constexpr void store_to(const basic_simd<T, Abi>& v, R&& r,
+                          const typename basic_simd<T, Abi>::mask_type& mask,
+                          simd_flags<Flags...> f = {});
+
+template<class T, class Abi, contiguous_iterator I, class... Flags>
+  requires indirectly_writable<I, T>
+  constexpr void store_to(const basic_simd<T, Abi>& v, I first, iter_difference_t<I> n,
+                          simd_flags<Flags...> f = {});
+
+template<class T, class Abi, contiguous_iterator I, class... Flags>
+  requires indirectly_writable<I, T>
+  constexpr void store_to(const basic_simd<T, Abi>& v, I first, iter_difference_t<I> n,
+                          const typename basic_simd<T, Abi>::mask_type& mask,
+                          simd_flags<Flags...> f = {});
+
+template<class T, class Abi, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
+  requires indirectly_writable<I, T>
+  constexpr void store_to(const basic_simd<T, Abi>& v, I first, S last, simd_flags<Flags...> f = {});
+
+template<class T, class Abi, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
+  requires indirectly_writable<I, T>
+  constexpr void store_to(const basic_simd<T, Abi>& v, I first, S last,
+                          const typename basic_simd<T, Abi>::mask_type& mask,
+                          simd_flags<Flags...> f = {});
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  Let
+  \begin{itemize}
+    \item \code{mask} be \code{basic_simd<T, Abi>::mask_type(true)} for overloads with no
+      \code{mask} parameter;
+    \item \tcode{R} be \tcode{span<iter_value_t<I>>} for overloads with no template parameter
+      \tcode{R};
+  %Let \code{k} be \code{0} if \code{none_of(mask)} is \code{true}, \code{min(n,
+      %reduce_max_index(mask) + 1} otherwise.
+    \item \tcode{r} be \tcode{R(first, n)} for overloads with \tcode{n} parameter and
+      \tcode{R(first, last)} for overloads with \tcode{last} parameter.
+  \end{itemize}
+
+  \pnum\mandates
+  \begin{itemize}
+    \item \tcode{ranges::range_value_t<R>} is a vectorizable type,
+    \item the template parameter pack \code{Flags} either contains \code{\allowpartialloadstoreflag} or
+      \code{\assumesizeflag},
+    \item if the template parameter pack \tcode{Flags} does not contain \tcode{\convertflag}, then
+      the conversion from \tcode{T} to \tcode{ranges::range_value_t<R>} is value-preserving, and
+    \item if the template parameter pack \code{Flags} contains \code{\assumesizeflag} and
+      \code{ranges::size(r)} is a constant expression then \code{ranges::size(r)} $\ge$
+      \tcode{\simdsizev<T, Abi>}.
+  \end{itemize}
+
+  \pnum\expects
+  \begin{itemize}
+    \item \range{first}{first + n} is a valid range for overloads with \code{n} parameter.
+    \item \range{first}{last} is a valid range for overloads with \code{last} parameter.
+    \item If the template parameter pack \code{Flags} contains
+    \code{\assumesizeflag} then \code{ranges::size(r)} $\ge$ \tcode{\simdsizev<T, Abi>}
+    \item If the template parameter pack \tcode{Flags} contains \tcode{\alignedflag},
+      \tcode{ranges::data(r)} points to storage aligned by \tcode{simd_alignment_v<basic_simd,
+      ranges::range_value_t<R>>}.
+    \item If the template parameter pack \tcode{Flags} contains \tcode{\overalignedflag<N>},
+      \tcode{ranges::data(r)} points to storage aligned by \tcode{N}.
+  \end{itemize}
+
+  \pnum\effects
+  Evaluates \code{ranges::data(r)[$i$] = v[$i$]}, if \tcode{mask[$i$] \&\& $i$ < ranges::size(r)} is
+  \code{true} \foralli.
 \end{itemdescr}
 
 \rSec2[simd.creation]{\tcode{basic_simd} and \tcode{basic_simd_mask} creation}
@@ -1880,21 +1992,6 @@ public:
   template<size_t UBytes, class UAbi>
     constexpr explicit basic_simd_mask(const basic_simd_mask<UBytes, UAbi>&) noexcept;
   template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
-  template<class It, class... Flags>
-    constexpr basic_simd_mask(It first, Flags = {});
-  template<class It, class... Flags>
-    constexpr basic_simd_mask(It first, const basic_simd_mask& mask, simd_flags<Flags...> = {});
-
-  // \ref{simd.mask.copy}, \tcode{basic_simd_mask} copy functions
-  template<class It, class... Flags>
-    constexpr void copy_from(It first, simd_flags<Flags...> = {});
-  template<class It, class... Flags>
-    constexpr void copy_from(It first, const basic_simd_mask& mask, simd_flags<Flags...> = {});
-  template<class Out, class... Flags>
-    constexpr void copy_to(Out first, simd_flags<Flags...> = {}) const;
-  template<class Out, class... Flags>
-    constexpr void copy_to(Out first, const basic_simd_mask& mask,
-                           simd_flags<Flags...> = {}) const;
 
   // \ref{simd.mask.subscr}, \tcode{basic_simd_mask} subscript operators
   constexpr value_type operator[](@\simdsizetype@) const;
@@ -2014,114 +2111,6 @@ template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
     Vectorization-unsafe (\iref{algorithms.parallel.defns}) standard library
     functions may not be invoked by \tcode{gen}.
     \tcode{gen} is invoked exactly once for each $i$.
-\end{itemdescr}
-
-\newcommand\MaskLoadDescr[2]{
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<It>} is of type \tcode{bool}, and
-    \item \tcode{It} models \tcode{contiguous_iterator}.
-  \end{itemize}
-
-  \pnum\expects
-  \begin{itemize}
-    \item #1
-    \flagsRequires{basic_simd_mask}{value_type}
-  \end{itemize}
-
-  \pnum\effects #2
-
-  \pnum\throws Nothing.
-}
-
-\begin{itemdecl}
-template<class It, class... Flags>
-  constexpr basic_simd_mask(It first, simd_flags<Flags...> = {});
-\end{itemdecl}
-
-\begin{itemdescr}
-  \MaskLoadDescr
-    {\range{first}{first + size()} is a valid range.}
-    {Initializes the $i^\text{th}$ element with \tcode{first[$i$]} \foralli.}
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class It, class... Flags>
-  constexpr basic_simd_mask(It first, const basic_simd_mask& mask, simd_flags<Flags...> = {});
-\end{itemdecl}
-
-\begin{itemdescr}
-  \MaskLoadDescr
-    {\validMaskedRange}
-    {Initializes the $i^\text{th}$ element with \tcode{mask[$i$] ? first[$i$] : false} \foralli.}
-\end{itemdescr}
-
-\rSec2[simd.mask.copy]{\tcode{basic_simd_mask} copy functions}
-
-\begin{itemdecl}
-template<class It, class... Flags>
-  constexpr void copy_from(It first, simd_flags<Flags...> = {});
-\end{itemdecl}
-
-\begin{itemdescr}
-  \MaskLoadDescr
-  {\range{first}{first + size()} is a valid range.}
-  {Replaces the elements of the \tcode{basic_simd_mask} object such that the $i^\text{th}$ element
-  is replaced with \tcode{first[$i$]} \foralli.}
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class It, class... Flags>
-  constexpr void copy_from(It first, const basic_simd_mask& mask, simd_flags<Flags...> = {});
-\end{itemdecl}
-
-\begin{itemdescr}
-  \MaskLoadDescr
-    {\validMaskedRange}
-    {Replaces the selected elements of the \tcode{basic_simd_mask} object such that the
-    $i^\text{th}$ element is replaced with \tcode{first[$i$]} \forallmaskedi.}
-\end{itemdescr}
-
-\newcommand\MaskStoreDescr[2]{
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{iter_value_t<Out>} is of type \tcode{bool}, and
-    \item \tcode{Out} models \tcode{contiguous_iterator}, and
-    \item \tcode{Out} models \tcode{indirectly_writable<value_type>}.
-  \end{itemize}
-
-  \pnum\expects
-  \begin{itemize}
-    \item #1
-    \flagsRequires{basic_simd_mask}{value_type}
-  \end{itemize}
-
-  \pnum\effects #2
-
-  \pnum\throws Nothing.
-}
-
-\begin{itemdecl}
-template<class Out, class... Flags>
-  constexpr void copy_to(Out first, simd_flags<Flags...> = {}) const;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \MaskStoreDescr
-    {\range{first}{first + size()} is a valid range.}
-    {Copies all \tcode{basic_simd_mask} elements as if \tcode{first[$i$] = operator[]($i$)}
-    \foralli.}
-\end{itemdescr}
-
-\begin{itemdecl}
-template<class Out, class... Flags>
-  constexpr void copy_to(Out first, const basic_simd_mask& mask, simd_flags<Flags...> = {}) const;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \MaskStoreDescr
-  {\validMaskedRange}
-  {Copies the selected elements as if \tcode{first[$i$] = operator[]($i$)} \forallmaskedi.}
 \end{itemdescr}
 
 \rSec2[simd.mask.subscr]{\tcode{basic_simd_mask} subscript operator}
