@@ -682,12 +682,15 @@ template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   \end{itemize}
 
   \pnum
-  Let \tcode{Abi1} denote an ABI tag such that \tcode{basic_simd<T,
-  Abi1>::size() == V::size()}.
-  Where present, the member typedef \tcode{type} names \tcode{basic_simd<T,
-  Abi1>} if \tcode V is a specialization of \tcode{basic_simd} or
-  \tcode{basic_simd_mask<sizeof(T), Abi1>} if \tcode V is a specialization of
-  \tcode{basic_simd_mask}.
+  If \tcode V is a specialization of \tcode{basic_simd} let \tcode{Abi1} denote an ABI tag such that
+  \tcode{basic_simd<T, Abi1>::size()} equals \tcode{V::size()}.
+  If \tcode V is a specialization of \tcode{basic_simd_mask} let \tcode{Abi1} denote an ABI tag such
+  that \tcode{basic_simd_mask<sizeof(T), Abi1>::size()} equals \tcode{V::size()}.
+
+  \pnum
+  Where present, the member typedef \tcode{type} names \tcode{basic_simd<T, Abi1>} if \tcode V is a
+  specialization of \tcode{basic_simd} or \tcode{basic_simd_mask<sizeof(T), Abi1>} if \tcode V is a
+  specialization of \tcode{basic_simd_mask}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -711,8 +714,12 @@ template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelo
   \end{itemize}
 
   \pnum
-  Let \tcode{Abi1} denote an ABI tag such that \tcode{basic_simd<T,
-  Abi1>::size() == V::size()}.
+  If \tcode V is a specialization of \tcode{basic_simd} let \tcode{Abi1} denote an ABI tag such that
+  \tcode{basic_simd<T, Abi1>::size()} equals \tcode{V::size()}.
+  If \tcode V is a specialization of \tcode{basic_simd_mask} let \tcode{Abi1} denote an ABI tag such
+  that \tcode{basic_simd_mask<sizeof(T), Abi1>::size()} equals \tcode{V::size()}.
+
+  \pnum
   Where present, the member typedef \tcode{type} names \tcode{basic_simd<T,
   Abi1>} if \tcode V is a specialization of \tcode{basic_simd} or
   \tcode{basic_simd_mask<sizeof(T), Abi1>} if \tcode V is a specialization of
