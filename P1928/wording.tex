@@ -136,7 +136,7 @@ template<class V, class T> using @\makecompatiblesimdt@ = @\seebelow@; // \expos
 template<class V>
   concept @\simdfloatingpoint@ =                                   // \expos
     same_as<V, basic_simd<typename V::value_type, typename V::abi_type>> &&
-    is_default_constructible<V> && floating_point<typename V::value_type>;
+    is_default_constructible_v<V> && floating_point<typename V::value_type>;
 
 template<class... Ts>
   concept @\mathfloatingpoint@ =                                   // \expos
