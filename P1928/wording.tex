@@ -36,6 +36,27 @@
   \constraints \tcode{requires (value_type a, value_type b) \{ a \op{} b; \}} is \tcode{true}.
 }
 
+\newcommand\ConversionsToIntrinsics{
+\recommended
+Implementations should support explicit conversions between specializations of basic_simd_mask and
+appropriate implementation-defined types.
+\begin{note}
+  the vector types which are available on the architecture of the execution environment.
+\end{note}
+
+%\begin{example}
+  %Consider an implementation that supports the type \tcode{__vec4f} and the function \tcode{__vec4f
+  %_vec4f_addsub(__vec4f, __vec4f)} for the architecture of the execution environment.
+  %A user may require the use of \tcode{_vec4f_addsub} for maximum performance and thus writes:
+  %\begin{codeblock}
+    %using V = basic_simd<float, simd_abi::__simd128>;
+    %V addsub(V a, V b) {
+      %return static_cast<V>(_vec4f_addsub(static_cast<__vec4f>(a), static_cast<__vec4f>(b)));
+    %}
+  %\end{codeblock}
+%\end{example}
+}
+
 \rSec0[simd]{Data-parallel types}
 \rSec1[simd.general]{General}
 
@@ -835,28 +856,7 @@ In addition only the \tcode{value_type}, \tcode{abi_type}, and
 If \tcode{basic_simd<T, Abi>} is enabled, \tcode{basic_simd<T, Abi>} is
 trivially copyable.
 
-\pnum\recommended
-Implementations should enable explicit conversion from and to
-implementation-defined types. This adds one or more of the following
-declarations to class \tcode{basic_simd}:
-
-\begin{codeblock}
-constexpr explicit operator @\impdef@() const;
-constexpr explicit basic_simd(const @\impdef@& init);
-\end{codeblock}
-
-\begin{example}
-  Consider an implementation that supports the type \tcode{__vec4f} and the function \tcode{__vec4f
-  _vec4f_addsub(__vec4f, __vec4f)} for the architecture of the execution environment.
-  A user may require the use of \tcode{_vec4f_addsub} for maximum performance and thus writes:
-  \begin{codeblock}
-    using V = basic_simd<float, simd_abi::__simd128>;
-    V addsub(V a, V b) {
-      return static_cast<V>(_vec4f_addsub(static_cast<__vec4f>(a), static_cast<__vec4f>(b)));
-    }
-  \end{codeblock}
-\end{example}
-
+\pnum\ConversionsToIntrinsics
 
 \rSec2[simd.ctor]{\tcode{basic_simd} constructors}
 
@@ -1970,14 +1970,7 @@ In addition only the \tcode{value_type} and \tcode{abi_type} members are present
 If \tcode{basic_simd_mask<Bytes, Abi>} is enabled, \tcode{basic_simd_mask<Bytes, Abi>} is
 trivially copyable.
 
-\pnum
-Implementations should enable explicit conversion from and to implementation-defined types. This
-adds one or more of the following declarations to class \tcode{basic_simd_mask}:
-
-\begin{codeblock}
-constexpr explicit operator @\impdef@() const;
-constexpr explicit basic_simd_mask(const @\impdef@& init);
-\end{codeblock}
+\pnum\ConversionsToIntrinsics
 
 \rSec2[simd.mask.ctor]{\tcode{basic_simd_mask} constructors}
 
