@@ -216,8 +216,8 @@ template<class T> using @\deducedsimd@ = @\seebelow@; // \expos
 
   \pnum \tcode{\deducedsimd<T>} is an alias for
   \begin{itemize}
-    \item \tcode{decltype(basic_simd(x))}, if \tcode{basic_simd(x)} is well-formed and
-      \tcode{is_convertible_v<const T\&, decltype(basic_simd(x))>} is true; otherwise
+    %\item \tcode{decltype(basic_simd(x))}, if \tcode{basic_simd(x)} is well-formed and
+      %\tcode{is_convertible_v<const T\&, decltype(basic_simd(x))>} is true; otherwise
 
     \item \tcode{decltype(x + x)},
       if the type of \tcode{x + x} is an enabled specialization of \tcode{basic_simd};
