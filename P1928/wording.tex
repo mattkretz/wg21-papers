@@ -41,7 +41,7 @@
 Implementations should support explicit conversions between specializations of basic_simd_mask and
 appropriate implementation-defined types.
 \begin{note}
-  the vector types which are available on the architecture of the execution environment.
+  The appropriate vector types which are available in the implementation.
 \end{note}
 
 %\begin{example}
@@ -130,6 +130,8 @@ template<class T>
     bool_constant<static_cast<decltype(T::value)>(T()) == T::value>::value;
 
 template<class T> using @\deducedsimd@ = @\seebelow@;               // \expos
+
+template<class V, class T> using @\makecompatiblesimdt@ = @\seebelow@; // \expos
 
 template<class V>
   concept @\simdfloatingpoint@ =                                   // \expos
@@ -225,6 +227,20 @@ template<class T> using @\deducedsimd@ = @\seebelow@; // \expos
       otherwise
 
     \item \tcode{void}.
+  \end{itemize}
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class V, class T> using @\makecompatiblesimdt@ = @\seebelow@; // \expos
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  Let \tcode{x} denote an lvalue of type \tcode{const T}.
+
+  \pnum \tcode{\makecompatiblesimdt<V, T>} is an alias for
+  \begin{itemize}
+    \item \tcode{\deducedsimd<T>}, if that type is not \tcode{void}, otherwise
+    \item \tcode{simd<decltype(x + x), V::size()>}.
   \end{itemize}
 \end{itemdescr}
 
@@ -841,11 +857,13 @@ public:
 
 \pnum
 Every specialization of \tcode{basic_simd} is a complete type.
-The types \tcode{basic_simd<T, \deducet<T, N>>} for all vectorizable
-\tcode{T} and with \tcode{N} in the range of \crange{1}{64} are enabled.
-It is implementation-defined whether any other \tcode{basic_simd<T, Abi>} specialization
-with vectorizable \tcode{T} is enabled.
-Any other specialization of \tcode{basic_simd} is disabled.
+The specialization of \tcode{basic_simd<T, Abi>} is
+\begin{itemize}
+  \item enabled, if \tcode{T} is a vectorizable type, and there exists value \tcode{N} in the range
+    \crange{1}{64}, such that \tcode{Abi} is \tcode{\deducet<T, N>},
+  \item otherwise, disabled, if \tcode{T} is not a vectorizable type,
+  \item otherwise, it is implementation-defined if such a specialization is enabled.
+\end{itemize}
 
 If \tcode{basic_simd<T, Abi>} is disabled, the specialization has a
 deleted default constructor, deleted destructor, deleted copy constructor, and
@@ -932,15 +950,14 @@ template<class G> constexpr explicit basic_simd(G&& gen) noexcept;
   Initializes the $i^\text{th}$ element with
   \tcode{static_cast<value_type>(gen(integral_constant<\simdsizetype, i>()))} \foralli.
 
-  \pnum
+  \pnum\remarks
     The calls to \tcode{gen} are unsequenced with respect to each other.
     Vectorization-unsafe (\iref{algorithms.parallel.defns}) standard library
     functions may not be invoked by \tcode{gen}.
     \tcode{gen} is invoked exactly once for each $i$.
 
-  \FIXME{Should this be a \remarks? And do we need to specify the order in which \code{gen} is called
-    (increasing $i$)? (same change for \code{basic_simd_mask}}
-    \NOTE{P3430R0 asks for striking 'unsequenced'.}
+  \FIXME{And do we need to specify the order in which \code{gen} is called (increasing $i$)? (same
+    change for \code{basic_simd_mask}} \NOTE{P3430R0 asks for striking 'unsequenced'.}
 \end{itemdescr}
 
 \newcommand\SimdLoadDescr[2]{
@@ -1586,34 +1603,88 @@ return @\simdselect@(c, a, b);
 \end{itemdescr}
 
 \rSec2[simd.math]{Mathematical functions}
-\nopagebreak
-\INFO{
-  Design intent:
-  \begin{enumerate}
-    \item Allow conversions, similar to how binary operators of \code{simd} behave.
-      (relevant TS wording: “It is unspecified whether a call to these overloads with arguments that
-        are all convertible to \tcode{simd<T, Abi>} but are not of type \tcode{simd<T, Abi>} is
-      well-formed.”)
 
-    \item \code{simd} implementations of math functions are allowed to have different rounding
-      errors compared to the existing overloads. Also different ABI tags can lead to different
-      rounding errors (Most obvious reason: \code{std::sin(simd<float, 1>)} directly calls
-        \code{std::sin(float)} whereas \code{std::sin(simd<float, 4>)} could use a different
-      implementation.)
-
-    \item Precise functions like \code{round}, \code{isgreaterequal}, \code{isnormal}, \ldots{} are
-      an exact element-wise application of the existing functions.
-
-    \item No \code{simd} overload of the math functions ever touches \code{errno} (no read, no
-      write).
-
-    \item No undefined behavior: Domain, pole, and range errors lead to \emph{unspecified results},
-      with \recommended to follow Annex F of the C specification.
-  \end{enumerate}
-
-  We should be able to use “\effects Equivalent to:” for the classification, compare, and rounding
-  functions, but not for the remaining functions.
+\begin{itemdecl}
+template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, @\deducedsimd@<V>> ilogb(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> ldexp(const V& x, const
+rebind_simd_t<int, @\deducedsimd@<V>>& exp);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> scalbn(const V& x, const
+rebind_simd_t<int, @\deducedsimd@<V>>& n);
+template<@\mathfloatingpoint@ V>
+  constexpr @\deducedsimd@<V> scalbln(const V& x, const rebind_simd_t<long int, @\deducedsimd@<V>>& n);
+template<signed_integral T, class Abi>
+  constexpr basic_simd<T, Abi> abs(const basic_simd<T, Abi>& j);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> abs(const V& j);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> fabs(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> ceil(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> floor(const V& x);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> nearbyint(const V& x);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> rint(const V& x);
+template<@\mathfloatingpoint@ V> rebind_simd_t<long int, @\deducedsimd@<V>> lrint(const V& x);
+template<@\mathfloatingpoint@ V> rebind_simd_t<long long int, @\deducedsimd@<V>> llrint(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> round(const V& x);
+template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long int, @\deducedsimd@<V>> lround(const V& x);
+template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long long int, @\deducedsimd@<V>> llround(const V& x);
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> fmod(const V0& x, const V1& y);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> trunc(const V& x);
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> remainder(const V0& x, const V1& y);
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> copysign(const V0& x, const V1& y);
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> nextafter(const V0& x, const V1& y);
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> fdim(const V0& x, const V1& y);
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> fmax(const V0& x, const V1& y);
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> fmin(const V0& x, const V1& y);
+template<class V0, class V1, class V2>
+  constexpr @\mathcommonsimd@<V0, V1, V2> fma(const V0& x, const V1& y, const V2& z);
+template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, @\deducedsimd@<V>> fpclassify(const V& x);
+template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isfinite(const V& x);
+template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isinf(const V& x);
+template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isnan(const V& x);
+template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isnormal(const V& x);
+template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type signbit(const V& x);
+template<class V0, class V1>
+  constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isgreater(const V0& x, const V1& y);
+template<class V0, class V1>
+  constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isgreaterequal(const V0& x, const V1& y);
+template<class V0, class V1>
+  constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isless(const V0& x, const V1& y);
+template<class V0, class V1>
+  constexpr typename @\mathcommonsimd@<V0, V1>::mask_type islessequal(const V0& x, const V1& y);
+template<class V0, class V1>
+  constexpr typename @\mathcommonsimd@<V0, V1>::mask_type islessgreater(const V0& x, const V1& y);
+template<class V0, class V1>
+  constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isunordered(const V0& x, const V1& y);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  Let \tcode{Ret} denote the return type of the specialization of a function template with the name
+  \textit{math-func}.
+  Let \textit{math-func-simd} denote:
+  \begin{codeblock}
+template<class... Args>
+Ret @\textit{math-func-simd}@(Args... args) {
+  return Ret([&](@\simdsizetype@ i) {
+      @\textit{math-func}@(@\makecompatiblesimdt@<Ret, Args>(args)[i]...);
+  });
 }
+  \end{codeblock}
+
+  \pnum\returns
+  A value \tcode{ret} of type \tcode{Ret}, that is element-wise equal to the result of calling
+  \textit{math-func-simd} with the arguments of the above functions.
+  If in an invocation of a scalar overload of \textit{math-func} for index \tcode{i} in
+  \textit{math-func-simd} a domain, pole, or range error would occur, the value of \tcode{ret[i]} is
+  unspecified.
+
+  \pnum\remarks
+  It is unspecified whether \tcode{errno} (\iref{errno}) is accessed.
+\end{itemdescr}
 
 \begin{itemdecl}
 template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> acos(const V& x);
@@ -1704,9 +1775,9 @@ template<@\mathfloatingpoint@ V> @\deducedsimd@<V> sph_neumann(const rebind_simd
   Let \textit{math-func-simd} denote:
   \begin{codeblock}
 template<class... Args>
-auto @\textit{math-func-simd}@(Args... args) {
+Ret @\textit{math-func-simd}@(Args... args) {
   return Ret([&](@\simdsizetype@ i) {
-      @\textit{math-func}@(@\deducedsimd@<Args>(args)[i]...);
+      @\textit{math-func}@(@\makecompatiblesimdt@<Ret, Args>(args)[i]...);
   });
 }
   \end{codeblock}
@@ -1723,104 +1794,30 @@ auto @\textit{math-func-simd}@(Args... args) {
 \end{itemdescr}
 
 \begin{itemdecl}
-template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, @\deducedsimd@<V>> ilogb(const V& x);
-template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> ldexp(const V& x, const
-rebind_simd_t<int, @\deducedsimd@<V>>& exp);
-template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> scalbn(const V& x, const
-rebind_simd_t<int, @\deducedsimd@<V>>& n);
-template<@\mathfloatingpoint@ V>
-  constexpr @\deducedsimd@<V> scalbln(const V& x, const rebind_simd_t<long int, @\deducedsimd@<V>>& n);
-template<signed_integral T, class Abi>
-  constexpr basic_simd<T, Abi> abs(const basic_simd<T, Abi>& j);
-template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> abs(const V& j);
-template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> fabs(const V& x);
-template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> ceil(const V& x);
-template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> floor(const V& x);
-template<@\mathfloatingpoint@ V> @\deducedsimd@<V> nearbyint(const V& x);
-template<@\mathfloatingpoint@ V> @\deducedsimd@<V> rint(const V& x);
-template<@\mathfloatingpoint@ V> rebind_simd_t<long int, @\deducedsimd@<V>> lrint(const V& x);
-template<@\mathfloatingpoint@ V> rebind_simd_t<long long int, @\deducedsimd@<V>> llrint(const V& x);
-template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> round(const V& x);
-template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long int, @\deducedsimd@<V>> lround(const V& x);
-template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long long int, @\deducedsimd@<V>> llround(const V& x);
-template<class V0, class V1>
-  constexpr @\mathcommonsimd@<V0, V1> fmod(const V0& x, const V1& y);
-template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> trunc(const V& x);
-template<class V0, class V1>
-  constexpr @\mathcommonsimd@<V0, V1> remainder(const V0& x, const V1& y);
-template<class V0, class V1>
-  constexpr @\mathcommonsimd@<V0, V1> copysign(const V0& x, const V1& y);
-template<class V0, class V1>
-  constexpr @\mathcommonsimd@<V0, V1> nextafter(const V0& x, const V1& y);
-template<class V0, class V1>
-  constexpr @\mathcommonsimd@<V0, V1> fdim(const V0& x, const V1& y);
-template<class V0, class V1>
-  constexpr @\mathcommonsimd@<V0, V1> fmax(const V0& x, const V1& y);
-template<class V0, class V1>
-  constexpr @\mathcommonsimd@<V0, V1> fmin(const V0& x, const V1& y);
-template<class V0, class V1, class V2>
-  constexpr @\mathcommonsimd@<V0, V1, V2> fma(const V0& x, const V1& y, const V2& z);
-template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, @\deducedsimd@<V>> fpclassify(const V& x);
-template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isfinite(const V& x);
-template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isinf(const V& x);
-template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isnan(const V& x);
-template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isnormal(const V& x);
-template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type signbit(const V& x);
-template<class V0, class V1>
-  constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isgreater(const V0& x, const V1& y);
-template<class V0, class V1>
-  constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isgreaterequal(const V0& x, const V1& y);
-template<class V0, class V1>
-  constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isless(const V0& x, const V1& y);
-template<class V0, class V1>
-  constexpr typename @\mathcommonsimd@<V0, V1>::mask_type islessequal(const V0& x, const V1& y);
-template<class V0, class V1>
-  constexpr typename @\mathcommonsimd@<V0, V1>::mask_type islessgreater(const V0& x, const V1& y);
-template<class V0, class V1>
-  constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isunordered(const V0& x, const V1& y);
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum
-  Let \tcode{Ret} denote the return type of the specialization of a function template with the name
-  \textit{math-func}.
-  Let \textit{math-func-simd} denote:
-  \begin{codeblock}
-template<class... Args>
-auto @\textit{math-func-simd}@(Args... args) {
-  return Ret([&](@\simdsizetype@ i) {
-      @\textit{math-func}@(@\deducedsimd@<Args>(args)[i]...);
-  });
-}
-  \end{codeblock}
-
-  \pnum\returns
-  A value \tcode{ret} of type \tcode{Ret}, that is equal to the result of calling with the arguments
-  of the above functions.
-  If in an invocation of a scalar overload of \textit{math-func} for index \tcode{i} in
-  \textit{math-func-simd} a domain, pole, or range error would occur, the value of \tcode{ret[i]} is
-  unspecified.
-
-  \pnum\remarks
-  It is unspecified whether \tcode{errno} (\iref{errno}) is accessed.
-\end{itemdescr}
-
-\begin{itemdecl}
 template<@\mathfloatingpoint@ V>
   constexpr @\deducedsimd@<V> frexp(const V& value, rebind_simd_t<int, @\deducedsimd@<V>>* exp);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\returns
-  A value \tcode{ret} of type \tcode{\deducedsimd<V>}, where each element is equal to the result of
+  \pnum
+  Let \tcode{Ret} be \tcode{\deducedsimd<V>}.
+  Let \textit{frexp-simd} denote:
   \begin{codeblock}
-@\deducedsimd@<V>([&](@\simdsizetype@ i) {
-  int x;
-  auto r = std::frexp(@\deducedsimd@<V>(value)[i], &x);
-  *exp = rebind_simd_t<int, @\deducedsimd@<V>>([&](@\simdsizetype@ j) {
-    return i == j ? x : *exp[j];
-  });
-  return r;
-});
+template<class V>
+  pair<Ret, rebind_simd_t<int, Ret>> @\textit{frexp-simd}@(const V& x) {
+    int r1[Ret::size()];
+    Ret r0([&](@\simdsizetype@ i) {
+      frexp(@\makecompatiblesimdt@<Ret, V>(x)[i], &r1[i]);
+    });
+    return {r0, rebind_simd_t<int, Ret>(r1)};
+  }
   \end{codeblock}
+  Let \tcode{ret} be a value of type \tcode{pair<Ret, rebind_simd_t<int, Ret>>} that is the same
+  value as the result of calling \textit{frexp-simd}\tcode{(x)}.
+
+  \pnum\effects
+  Sets \tcode{*exp} to \tcode{ret.second}.
+
+  \pnum\returns \tcode{ret.first}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1830,24 +1827,32 @@ template<class V0, class V1>
 \end{itemdecl}
 \begin{itemdescr}
   \pnum
-  Let \textit{math-func-simd} denote:
+  Let \tcode{Ret} be \tcode{\mathcommonsimd<V0, V1>}.
+  Let \textit{remquo-simd} denote:
   \begin{codeblock}
-template<class... Args>
-pair<Ret, rebind_simd_t<int, @\mathcommonsimd@<V0, V1>>>
-@\textit{math-func-simd}@(Args... args, ptr) {
-  return Ret([&](@\simdsizetype@ i) {
-      int x;
-      @\textit{math-func}@(@\deducedsimd@<Args>(args)[i]..., &x);
-      @\textit{simd-set}@(*ptr, i, x);
-  });
-}
+template<class V0, class V1>
+  pair<Ret, rebind_simd_t<int, Ret>> @\textit{remquo-simd}@(const V0& x, const V1& y) {
+    int r1[Ret::size()];
+    Ret r0([&](@\simdsizetype@ i) {
+      remquo(@\makecompatiblesimdt@<Ret, V0>(x)[i],
+             @\makecompatiblesimdt@<Ret, V1>(y)[i], &r1[i]);
+    });
+    return {r0, rebind_simd_t<int, Ret>(r1)};
+  }
   \end{codeblock}
+  Let \tcode{ret} be a value of type \tcode{pair<Ret, rebind_simd_t<int, Ret>>} that is the same
+  value as the result of calling \textit{remquo-simd}\tcode{(x, y)}.
+  If in an invocation of a scalar overload of \tcode{remquo} for index \tcode{i} in
+  \textit{remquo-simd} a domain, pole, or range error would occur, the value of \tcode{ret[i]} is
+  unspecified.
 
   \pnum\effects
+  Sets \tcode{*quo} to \tcode{ret.second}.
 
-  \pnum\returns
-  A value \tcode{ret} of type \tcode{Ret}, that is equal to the result of calling
-  \textit{math-func-simd}.
+  \pnum\returns \tcode{ret.first}.
+
+  \pnum\remarks
+  It is unspecified whether \tcode{errno} (\iref{errno}) is accessed.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1856,10 +1861,26 @@ template<class T, class Abi>
                                     basic_simd<T, Abi>* iptr);
 \end{itemdecl}
 \begin{itemdescr}
-  <++>
+  \pnum
+  Let \tcode{V} be \tcode{basic_simd<T, Abi>}.
+  Let \textit{modf-simd} denote:
+  \begin{codeblock}
+pair<V, V> @\textit{modf-simd}@(const V& x) {
+  T r1[Ret::size()];
+  V r0([&](@\simdsizetype@ i) {
+    modf(V(x)[i], &r1[i]);
+  });
+  return {r0, V(r1)};
+}
+  \end{codeblock}
+  Let \tcode{ret} be a value of type \tcode{pair<V, V>} that is the same value as the result of
+  calling \textit{modf-simd}\tcode{(value)}.
+
+  \pnum\effects
+  Sets \tcode{*iptr} to \tcode{ret.second}.
+
+  \pnum\returns \tcode{ret.first}.
 \end{itemdescr}
-
-
 
 \rSec1[simd.mask.class]{Class template \tcode{basic_simd_mask}}
 
@@ -1957,11 +1978,15 @@ public:
 
 \pnum
 Every specialization of \tcode{basic_simd_mask} is a complete type.
-The types \tcode{basic_simd_mask<sizeof(T), \deducet<T, N>>} for all vectorizable
-\tcode{T} and with \tcode{N} in the range of \crange{1}{64} are enabled.
-It is implementation-defined whether any other \tcode{basic_simd_mask<sizeof(T), Abi>}
-specialization with vectorizable \tcode{T} is enabled.
-Any other specialization of \tcode{basic_simd_mask} is disabled.
+The specialization of \tcode{basic_simd_mask<Bytes, Abi>} is:
+\begin{itemize}
+  \item disabled, if there is no vectorizable type \tcode{T} such that \tcode{Bytes} is
+    equal to \tcode{sizeof(T)},
+  \item otherwise, enabled, if there exists a vectorizable type \tcode{T} and a value \tcode{N} in
+    the range \crange{1}{64} such that \tcode{Bytes} is equal to \tcode{sizeof(T)} and \tcode{Abi}
+    is \tcode{\deducet<T, N>},
+  \item otherwise, it is implementation-defined if such a specialization is enabled.
+\end{itemize}
 
 If \tcode{basic_simd_mask<Bytes, Abi>} is disabled, the specialization has a deleted
 default constructor, deleted destructor, deleted copy constructor, and deleted copy assignment.
@@ -1990,7 +2015,7 @@ template<size_t UBytes, class UAbi>
 
 \begin{itemdescr}
   \pnum\constraints
-  \tcode{basic_simd_mask<UBytes, UAbi>::size() == size()}.
+  \tcode{basic_simd_mask<UBytes, UAbi>::size() == size()} is \tcode{true}.
 
   \pnum\effects
   Initializes the $i^\text{th}$ element with \tcode{x[$i$]} \foralli.
@@ -2009,7 +2034,7 @@ template<class G> constexpr explicit basic_simd_mask(G&& gen) noexcept;
   Initializes the $i^\text{th}$ element with
   \tcode{gen(integral_constant<\simdsizetype, i>())} \foralli.
 
-  \pnum
+  \pnum\remarks
     The calls to \tcode{gen} are unsequenced with respect to each other.
     Vectorization-unsafe (\iref{algorithms.parallel.defns}) standard library
     functions may not be invoked by \tcode{gen}.
@@ -2144,15 +2169,6 @@ constexpr value_type operator[](@\simdsizetype@ i) const;
 
 \begin{itemdecl}
 constexpr basic_simd_mask operator!() const noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-  \pnum\returns
-  A data-parallel object where the $i^\text{th}$ element is initialized to \tcode{!operator[]($i$)}
-  \foralli.
-\end{itemdescr}
-
-\begin{itemdecl}
 constexpr basic_simd<@\integerfrom@<Bytes>, Abi> operator+() const noexcept;
 constexpr basic_simd<@\integerfrom@<Bytes>, Abi> operator-() const noexcept;
 constexpr basic_simd<@\integerfrom@<Bytes>, Abi> operator~() const noexcept;
@@ -2285,20 +2301,15 @@ template<class T0, class T1>
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum Let \tcode{U} be the common type of \tcode{T0} and \tcode{T1} without
-  applying integral promotions on integral types with integer conversion rank
-  less than the rank of \tcode{int}.
-
   \pnum\constraints
   \begin{itemize}
-    \item \tcode{U} is a vectorizable type, and
-    \item \tcode{sizeof(U) == Bytes}, and
-    \item \tcode{T0} satisfies \tcode{convertible_to<simd<U, size()>>}, and
-    \item \tcode{T1} satisfies \tcode{convertible_to<simd<U, size()>>}.
+    \item \tcode{same_as<T0, T1>} is \tcode{true}, and
+    \item \tcode{T0} is a vectorizable type, and
+    \item \tcode{sizeof(T0) == Bytes}.
   \end{itemize}
 
   \pnum\returns
-  A \tcode{simd<U, size()>} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a :
+  A \tcode{simd<T0, size()>} object where the $i^\text{th}$ element equals \tcode{mask[$i$] ? a :
   b} \foralli.
 \end{itemdescr}
 
@@ -2311,7 +2322,7 @@ template<size_t Bytes, class Abi>
 
 \begin{itemdescr}
   \pnum\returns
-  \tcode{true} if all boolean elements in \tcode{k} are \tcode{true}, \tcode{false} otherwise.
+  \tcode{true} if all boolean elements in \tcode{k} are \tcode{true}, otherwise \tcode{false}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -2321,8 +2332,8 @@ template<size_t Bytes, class Abi>
 
 \begin{itemdescr}
   \pnum\returns
-  \tcode{true} if at least one boolean element in \tcode{k} is \tcode{true}, \tcode{false}
-  otherwise.
+  \tcode{true} if at least one boolean element in \tcode{k} is \tcode{true}, otherwise
+  \tcode{false}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -2331,9 +2342,7 @@ template<size_t Bytes, class Abi>
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\returns
-  \tcode{true} if none of the one boolean elements in \tcode{k} is \tcode{true}, \tcode{false}
-  otherwise.
+  \pnum\returns \tcode{!any_of(k)}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -2373,27 +2382,28 @@ template<size_t Bytes, class Abi>
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr bool all_of(same_as<bool> auto) noexcept;
-constexpr bool any_of(same_as<bool> auto) noexcept;
-constexpr bool none_of(same_as<bool> auto) noexcept;
+constexpr bool all_of(same_as<bool> auto x) noexcept;
+constexpr bool any_of(same_as<bool> auto x) noexcept;
 constexpr @\simdsizetype@ reduce_count(same_as<bool> auto x) noexcept;
 \end{itemdecl}
-
 \begin{itemdescr}
-  \pnum\returns
-  \tcode{all_of} and \tcode{any_of} return their arguments; \tcode{none_of}
-  returns the negation of its argument; \tcode{reduce_count} returns the
-  integral representation of \tcode{x}.
+  \pnum\returns \tcode{x}.
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr @\simdsizetype@ reduce_min_index(same_as<bool> auto y);
-constexpr @\simdsizetype@ reduce_max_index(same_as<bool> auto z);
+constexpr bool none_of(same_as<bool> auto x) noexcept;
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns \tcode{!x}.
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr @\simdsizetype@ reduce_min_index(same_as<bool> auto x);
+constexpr @\simdsizetype@ reduce_max_index(same_as<bool> auto x);
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\expects
-  The value of the argument is \tcode{true}.
+  \pnum\expects \tcode{x} is \tcode{true}.
 
   \pnum\returns \tcode{0}.
 \end{itemdescr}
