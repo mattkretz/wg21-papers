@@ -223,19 +223,18 @@ template<class... Ts>
   \begin{itemize}
     \item \tcode{\deducedsimd<T0>}, if \tcode{sizeof...(Ts)} equals $1$; otherwise
 
-    \item \tcode{common_type_t<\mathcommonsimd<T0>, \mathcommonsimd<T1>>}, if \tcode{sizeof...(Ts)}
+    \item \tcode{common_type_t<\deducedsimd<T0>, \deducedsimd<T1>>}, if \tcode{sizeof...(Ts)}
       equals $2$ and \tcode{\mathfloatingpoint<T0> \&\& \mathfloatingpoint<T1>} is \tcode{true};
       otherwise
 
-    \item \tcode{common_type_t<\mathcommonsimd<T0>, T1>}, if \tcode{sizeof...(Ts)}
+    \item \tcode{common_type_t<\deducedsimd<T0>, T1>}, if \tcode{sizeof...(Ts)}
       equals $2$ and \tcode{\mathfloatingpoint<T0>} is \tcode{true}; otherwise
 
-    \item \tcode{common_type_t<T0, \mathcommonsimd<T1>>}, if \tcode{sizeof...(Ts)}
-      equals $2$ and \tcode{\mathfloatingpoint<T1>} is \tcode{true}; otherwise
+    \item \tcode{common_type_t<T0, \deducedsimd<T1>>}, if \tcode{sizeof...(Ts)}
+      equals $2$; otherwise
 
-    \item \tcode{common_type_t<\mathcommonsimd<T0, T1>, TRest...>}, if
-      \tcode{common_type_t<\mathcommonsimd<T0>, \mathcommonsimd<T1>>} is valid and denotes a type;
-      otherwise
+    \item \tcode{common_type_t<\mathcommonsimd<T0, T1>, TRest...>}, if \tcode{\mathcommonsimd<T0,
+      T1>} is valid and denotes a type; otherwise
 
     \item \tcode{common_type_t<\mathcommonsimd<TRest...>, T0, T1>}.
   \end{itemize}
@@ -486,8 +485,9 @@ namespace std {
   template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> log1p(const V& x);
   template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> log2(const V& x);
   template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> logb(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> modf(const
-  type_identity_t<@\deducedsimd@<V>>& value, V* iptr);
+  template<class T, class Abi>
+    constexpr basic_simd<T, Abi> modf(const type_identity_t<basic_simd<T, Abi>>& value,
+                                      basic_simd<T, Abi>* iptr);
   template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> scalbn(const V& x, const
   rebind_simd_t<int, @\deducedsimd@<V>>& n);
   template<@\mathfloatingpoint@ V>
@@ -1615,27 +1615,117 @@ return @\simdselect@(c, a, b);
   functions, but not for the remaining functions.
 }
 
-\pnum
-Unless otherwise specified below, each mathematical function declared in \tcode{<simd>} returns a
-prvalue \tcode{result} of a data-parallel type, where
-the value of each element approximates the value obtained by
-applying the function with the same name from \tcode{<cmath>} to the corresponding elements of the
-arguments.
-The value of an element of the result is unspecified if a domain, pole, or range error occurs for
-the corresponding elements of the arguments.
-It is unspecified whether \tcode{errno} (\iref{errno}) is accessed.
+\begin{itemdecl}
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> acos(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> asin(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> atan(const V& x);
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> atan2(const V0& y, const V1& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> cos(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> sin(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> tan(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> acosh(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> asinh(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> atanh(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> cosh(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> sinh(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> tanh(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> exp(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> exp2(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> expm1(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> log(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> log10(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> log1p(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> log2(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> logb(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> cbrt(const V& x);
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> hypot(const V0& x, const V1& y);
+template<class V0, class V1, class V2>
+  constexpr @\mathcommonsimd@<V0, V1, V2> hypot(const V0& x, const V1& y, const V2& z);
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> pow(const V0& x, const V1& y);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> sqrt(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> erf(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> erfc(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> lgamma(const V& x);
+template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> tgamma(const V& x);
+template<class V0, class V1, class V2>
+  constexpr @\mathcommonsimd@<V0, V1, V2> lerp(const V0& a, const V1& b, const V2& t) noexcept;
+template<@\mathfloatingpoint@ V>
+  @\deducedsimd@<V> assoc_laguerre(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& n, const
+    rebind_simd_t<unsigned, @\deducedsimd@<V>>& m,
+                   const V& x);
+template<@\mathfloatingpoint@ V>
+  @\deducedsimd@<V> assoc_legendre(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& l, const
+    rebind_simd_t<unsigned, @\deducedsimd@<V>>& m,
+                   const V& x);
+template<class V0, class V1>
+  @\mathcommonsimd@<V0, V1> beta(const V0& x, const V1& y);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> comp_ellint_1(const V& k);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> comp_ellint_2(const V& k);
+template<class V0, class V1>
+  @\mathcommonsimd@<V0, V1> comp_ellint_3(const V0& k, const V1& nu);
+template<class V0, class V1>
+  @\mathcommonsimd@<V0, V1> cyl_bessel_i(const V0& nu, const V1& x);
+template<class V0, class V1>
+  @\mathcommonsimd@<V0, V1> cyl_bessel_j(const V0& nu, const V1& x);
+template<class V0, class V1>
+  @\mathcommonsimd@<V0, V1> cyl_bessel_k(const V0& nu, const V1& x);
+template<class V0, class V1>
+  @\mathcommonsimd@<V0, V1> cyl_neumann(const V0& nu, const V1& x);
+template<class V0, class V1>
+  @\mathcommonsimd@<V0, V1> ellint_1(const V0& k, const V1& phi);
+template<class V0, class V1>
+  @\mathcommonsimd@<V0, V1> ellint_2(const V0& k, const V1& phi);
+template<class V0, class V1, class V2>
+  @\mathcommonsimd@<V0, V1, V2> ellint_3(const V0& k, const V1& nu, const V2& phi);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> expint(const V& x);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> hermite(const rebind_simd_t<unsigned,
+@\deducedsimd@<V>>& n, const V& x);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> laguerre(const rebind_simd_t<unsigned,
+@\deducedsimd@<V>>& n, const V& x);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> legendre(const rebind_simd_t<unsigned,
+@\deducedsimd@<V>>& l, const V& x);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> riemann_zeta(const V& x);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> sph_bessel(const rebind_simd_t<unsigned,
+@\deducedsimd@<V>>& n, const V& x);
+template<@\mathfloatingpoint@ V>
+  @\deducedsimd@<V> sph_legendre(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& l,
+                                 const rebind_simd_t<unsigned, @\deducedsimd@<V>>& m,
+                                 const V& theta);
+template<@\mathfloatingpoint@ V> @\deducedsimd@<V> sph_neumann(const rebind_simd_t<unsigned,
+@\deducedsimd@<V>>& n, const V& x);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  Let \tcode{Ret} denote the return type of the specialization of a function template with the name
+  \textit{math-func}.
+  Let \textit{math-func-simd} denote:
+  \begin{codeblock}
+template<class... Args>
+auto @\textit{math-func-simd}@(Args... args) {
+  return Ret([&](@\simdsizetype@ i) {
+      @\textit{math-func}@(@\deducedsimd@<Args>(args)[i]...);
+  });
+}
+  \end{codeblock}
 
-\recommended Implementations are encouraged to follow the C specification (specifically Annex F) for
-the element-wise application of the mathematical functions.
+  \pnum\returns
+  A value \tcode{ret} of type \tcode{Ret}, that is element-wise approximately equal to the result of
+  calling \textit{math-func-simd} with the arguments of the above functions.
+  If in an invocation of a scalar overload of \textit{math-func} for index \tcode{i} in
+  \textit{math-func-simd} a domain, pole, or range error would occur, the value of \tcode{ret[i]} is
+  unspecified.
+
+  \pnum\remarks
+  It is unspecified whether \tcode{errno} (\iref{errno}) is accessed.
+\end{itemdescr}
 
 \begin{itemdecl}
-template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> frexp(const V& value,
-rebind_simd_t<int, @\deducedsimd@<V>>* exp);
 template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, @\deducedsimd@<V>> ilogb(const V& x);
 template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> ldexp(const V& x, const
 rebind_simd_t<int, @\deducedsimd@<V>>& exp);
-template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> modf(const
-type_identity_t<@\deducedsimd@<V>>& value, V* iptr);
 template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> scalbn(const V& x, const
 rebind_simd_t<int, @\deducedsimd@<V>>& n);
 template<@\mathfloatingpoint@ V>
@@ -1644,7 +1734,6 @@ template<signed_integral T, class Abi>
   constexpr basic_simd<T, Abi> abs(const basic_simd<T, Abi>& j);
 template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> abs(const V& j);
 template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> fabs(const V& x);
-template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> sqrt(const V& x);
 template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> ceil(const V& x);
 template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> floor(const V& x);
 template<@\mathfloatingpoint@ V> @\deducedsimd@<V> nearbyint(const V& x);
@@ -1654,7 +1743,11 @@ template<@\mathfloatingpoint@ V> rebind_simd_t<long long int, @\deducedsimd@<V>>
 template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> round(const V& x);
 template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long int, @\deducedsimd@<V>> lround(const V& x);
 template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long long int, @\deducedsimd@<V>> llround(const V& x);
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> fmod(const V0& x, const V1& y);
 template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> trunc(const V& x);
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> remainder(const V0& x, const V1& y);
 template<class V0, class V1>
   constexpr @\mathcommonsimd@<V0, V1> copysign(const V0& x, const V1& y);
 template<class V0, class V1>
@@ -1687,10 +1780,86 @@ template<class V0, class V1>
   constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isunordered(const V0& x, const V1& y);
 \end{itemdecl}
 \begin{itemdescr}
-  \pnum\effects
-  Equivalent to: Element-wise application of the corresponding function,
-  except it is unspecified whether \tcode{errno} is accessed.
+  \pnum
+  Let \tcode{Ret} denote the return type of the specialization of a function template with the name
+  \textit{math-func}.
+  Let \textit{math-func-simd} denote:
+  \begin{codeblock}
+template<class... Args>
+auto @\textit{math-func-simd}@(Args... args) {
+  return Ret([&](@\simdsizetype@ i) {
+      @\textit{math-func}@(@\deducedsimd@<Args>(args)[i]...);
+  });
+}
+  \end{codeblock}
+
+  \pnum\returns
+  A value \tcode{ret} of type \tcode{Ret}, that is equal to the result of calling with the arguments
+  of the above functions.
+  If in an invocation of a scalar overload of \textit{math-func} for index \tcode{i} in
+  \textit{math-func-simd} a domain, pole, or range error would occur, the value of \tcode{ret[i]} is
+  unspecified.
+
+  \pnum\remarks
+  It is unspecified whether \tcode{errno} (\iref{errno}) is accessed.
 \end{itemdescr}
+
+\begin{itemdecl}
+template<@\mathfloatingpoint@ V>
+  constexpr @\deducedsimd@<V> frexp(const V& value, rebind_simd_t<int, @\deducedsimd@<V>>* exp);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum\returns
+  A value \tcode{ret} of type \tcode{\deducedsimd<V>}, where each element is equal to the result of
+  \begin{codeblock}
+@\deducedsimd@<V>([&](@\simdsizetype@ i) {
+  int x;
+  auto r = std::frexp(@\deducedsimd@<V>(value)[i], &x);
+  *exp = rebind_simd_t<int, @\deducedsimd@<V>>([&](@\simdsizetype@ j) {
+    return i == j ? x : *exp[j];
+  });
+  return r;
+});
+  \end{codeblock}
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class V0, class V1>
+  constexpr @\mathcommonsimd@<V0, V1> remquo(const V0& x, const V1& y,
+                                              rebind_simd_t<int, @\mathcommonsimd@<V0, V1>>* quo);
+\end{itemdecl}
+\begin{itemdescr}
+  \pnum
+  Let \textit{math-func-simd} denote:
+  \begin{codeblock}
+template<class... Args>
+pair<Ret, rebind_simd_t<int, @\mathcommonsimd@<V0, V1>>>
+@\textit{math-func-simd}@(Args... args, ptr) {
+  return Ret([&](@\simdsizetype@ i) {
+      int x;
+      @\textit{math-func}@(@\deducedsimd@<Args>(args)[i]..., &x);
+      @\textit{simd-set}@(*ptr, i, x);
+  });
+}
+  \end{codeblock}
+
+  \pnum\effects
+
+  \pnum\returns
+  A value \tcode{ret} of type \tcode{Ret}, that is equal to the result of calling
+  \textit{math-func-simd}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class T, class Abi>
+  constexpr basic_simd<T, Abi> modf(const type_identity_t<basic_simd<T, Abi>>& value,
+                                    basic_simd<T, Abi>* iptr);
+\end{itemdecl}
+\begin{itemdescr}
+  <++>
+\end{itemdescr}
+
+
 
 \rSec1[simd.mask.class]{Class template \tcode{basic_simd_mask}}
 
