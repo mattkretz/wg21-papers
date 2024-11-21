@@ -198,18 +198,6 @@ template<class T> constexpr size_t @\maskelementsize@ = @\seebelow@; // \expos
   \tcode{\maskelementsize<basic_simd_mask<Bytes, Abi>>} has the value \tcode{Bytes}.
 \end{itemdescr}
 
-\INFO{
-  The TS wording and the wording as passed from LEWG to LWG said in [simd.math]:
-  “It is unspecified whether a call to these overloads with arguments that are all convertible to
-  \code{basic_simd<T, Abi>} but are not of type \code{basic_simd<T, Abi>} is well-formed.”
-
-  The \simdfloatingpoint{} concept as defined in P1928R12 was a fairly restrictive implementation
-  of this wording.
-
-  This revision restores the highest quality of implementation of the original implementation
-  freedom.
-}
-
 \begin{itemdecl}
 template<class T> using @\deducedsimd@ = @\seebelow@; // \expos
 \end{itemdecl}
@@ -349,17 +337,6 @@ Where present, \tcode{\deducet<T, N>} names an ABI tag type that satisfies
 %         or to implement an MMX ABI that doesn't get used unless explicitly called for.
 %       Also one can imagine a target with multiple different SIMD execution facilities
 %         where moving between them has a high cost and shouldn't happen without a request.
-%\begin{note}
-  %If multiple ABI tags can satisfy the above conditions, differences in \tcode{Abis...} can lead to different results.
-%\end{note}
-
-\INFO{I removed the paragraph saying “The type of \tcode{\deducet<T, N>} in
-  translation unit 1 differs from the type of \tcode{\deducet<T, N>} in
-  translation unit 2 if and only if the type of \tcode{\nativeabi<T>} in
-  translation unit 1 differs from the type of \tcode{\nativeabi<T>} in
-  translation unit 2.” after consulting Jens.
-  He said I can't reasonably say anything about working around ODR problems in an implementation.
-Implementations thus have to figure this out on their own.}
 
 \pnum
 \tcode{\nativeabi<T>} is an implementation-defined alias for an ABI tag.
@@ -730,12 +707,6 @@ template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelo
 
 \rSec2[simd.flags.overview]{Class template \tcode{simd_flags} overview}
 
-\INFO{
-  On 2024-08-28, in an LWG telecon, the question was raised whether \code{simd_flags} could/should
-  be \expos.
-  Discussed in \sect{simd_flags-expos}.
-}
-
 \begin{codeblock}
 template<class... Flags> struct simd_flags {
   // \ref{simd.flags.oper}, \tcode{simd_flags} operators
@@ -963,7 +934,7 @@ template<class G> constexpr explicit basic_simd(G&& gen) noexcept;
     functions may not be invoked by \tcode{gen}.
     \tcode{gen} is invoked exactly once for each $i$.
 
-  \FIXME{And do we need to specify the order in which \code{gen} is called (increasing $i$)? (same
+  \FIXME{Do we need to specify the order in which \code{gen} is called (increasing $i$)? (same
     change for \code{basic_simd_mask}} \NOTE{P3430R0 asks for striking 'unsequenced'.}
 \end{itemdescr}
 
