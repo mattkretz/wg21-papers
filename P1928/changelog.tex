@@ -256,3 +256,14 @@
 \item Merge improved wording for P3299R2 “Proposal to extend \code{std::simd}
   with range constructors” into this paper.
 \end{revision}
+
+\begin{revision}
+\item Remove diff markup from P3299R3 changes.
+\item Apply changes requested by LEWG:
+  \begin{itemize}
+    \item split \code{load_from} into
+      \code{simd_unchecked_load}/\code{simd_partial_load} (likewise for
+      \code{store_to})
+    \item make \code{basic_simd} constructor from statically sized range implicit
+  \end{itemize}
+\end{revision}
