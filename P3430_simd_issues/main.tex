@@ -1,7 +1,7 @@
 \newcommand\wgTitle{simd issues: explicit, unsequenced, identity-element position, and members of
 disabled simd}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D3430R1}
+\newcommand\wgDocumentNumber{P3430R1}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
@@ -482,6 +482,9 @@ Also, consider that not every \code{reference_wrapper}-like type implements \cod
 rebind.
 Other types with a conversion operator to lvalue-reference might implement it as assign-through.
 (e.g., proxy reference types similar to what we had for \code{simd::operator[]})
+
+After discussing the above in LWG, LWG does not feel a need for changing this.
+But LWG would still like LEWG to sign off on the status quo.
 
 \subsection{Suggested Poll}
 \wgPoll{Turn [simd.cassign] and [simd.mask.cassign] in P1928R12 into members, as implemented in
