@@ -231,8 +231,6 @@
 \end{revision}
 
 \begin{revision}
-\item Turn compound assignment operators into members instead of hidden friends
-  (\ref{sec:simd.cassign}, \ref{sec:simd.mask.cassign}).
 \item List math functions where results are “Equivalent to” element-wise application of the scalar math function. (\ref{sec:simd.math})
 \item Fix syntax errors as noted by LWG.
 \item Use \seebelow in \reductionoperation synopsis.
@@ -248,6 +246,7 @@
 \item Fix \code{rebind_simd} and \code{resize_simd} to set \code{Abi1}
   correctly (\ref{sec:simd.traits}).
 \item Fix missing \code{_v} in \simdfloatingpoint concept.
+\item Make compound assignment operators members rather than hidden friends.
 
   %\todo Reorder \code{simd} and \code{simd_mask} specification in the wording (mask first).
 \end{revision}
@@ -266,4 +265,5 @@
       \code{store_to})
     \item make \code{basic_simd} constructor from statically sized range implicit
   \end{itemize}
+\item Revert compound assignment change.
 \end{revision}
