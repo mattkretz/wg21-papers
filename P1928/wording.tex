@@ -130,11 +130,11 @@ template<class... Ts>
     using @\mathcommonsimd@ = @\seebelow@;                         // \expos
 
 template<class BinaryOperation, class T>
-  concept @\reductionoperation@ = @\seebelow@;                     // \expos
+  concept @\reductionoperation@ = @\seebelow@;                 // \expos
 
 // \ref{simd.expos.abi}, \tcode{simd} ABI tags
 template<class T> using @\nativeabi@ = @\seebelow@;                   // \expos
-template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@;   // \expos
+template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@; // \expos
 
 // \ref{simd.flags}, Load and store flags
 struct @\convertflag@;                                              // \expos
@@ -382,86 +382,87 @@ namespace std {
     constexpr V simd_unchecked_load(R&& r, simd_flags<Flags...> f = {});
   template<class V = @\seebelow@, ranges::contiguous_range R, class... Flags>
     requires ranges::sized_range<R>
-    constexpr V simd_unchecked_load(R&& r, const typename V::mask_type& k, simd_flags<Flags...> f = {});
+    constexpr V simd_unchecked_load(R&& r, const typename V::mask_type& k,
+                                    simd_flags<Flags...> f = {});
   template<class V = @\seebelow@, contiguous_iterator I, class... Flags>
     constexpr V simd_unchecked_load(I first, iter_difference_t<I> n, simd_flags<Flags...> f = {});
   template<class V = @\seebelow@, contiguous_iterator I, class... Flags>
-    constexpr V simd_unchecked_load(I first, iter_difference_t<I> n, const typename V::mask_type& k,
-                          simd_flags<Flags...> f = {});
+    constexpr V simd_unchecked_load(I first, iter_difference_t<I> n,
+                                    const typename V::mask_type& k, simd_flags<Flags...> f = {});
   template<class V = @\seebelow@, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
     constexpr V simd_unchecked_load(I first, S last, simd_flags<Flags...> f = {});
   template<class V = @\seebelow@, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
     constexpr V simd_unchecked_load(I first, S last, const typename V::mask_type& k,
-                          simd_flags<Flags...> f = {});
+                                    simd_flags<Flags...> f = {});
 
   template<class V = @\seebelow@, ranges::contiguous_range R, class... Flags>
     requires ranges::sized_range<R>
     constexpr V simd_partial_load(R&& r, simd_flags<Flags...> f = {});
   template<class V = @\seebelow@, ranges::contiguous_range R, class... Flags>
     requires ranges::sized_range<R>
-    constexpr V simd_partial_load(R&& r, const typename V::mask_type& k, simd_flags<Flags...> f = {});
+    constexpr V simd_partial_load(R&& r, const typename V::mask_type& k,
+                                  simd_flags<Flags...> f = {});
   template<class V = @\seebelow@, contiguous_iterator I, class... Flags>
     constexpr V simd_partial_load(I first, iter_difference_t<I> n, simd_flags<Flags...> f = {});
   template<class V = @\seebelow@, contiguous_iterator I, class... Flags>
-    constexpr V simd_partial_load(I first, iter_difference_t<I> n, const typename V::mask_type& k,
-                          simd_flags<Flags...> f = {});
+    constexpr V simd_partial_load(I first, iter_difference_t<I> n,
+                                  const typename V::mask_type& k, simd_flags<Flags...> f = {});
   template<class V = @\seebelow@, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
     constexpr V simd_partial_load(I first, S last, simd_flags<Flags...> f = {});
   template<class V = @\seebelow@, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
     constexpr V simd_partial_load(I first, S last, const typename V::mask_type& k,
-                          simd_flags<Flags...> f = {});
+                                  simd_flags<Flags...> f = {});
 
-  template<class T, class Abi, ranges::contiguous_range R, class... Flags>
-    requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
-    constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, R&& r, simd_flags<Flags...> f = {});
   template<class T, class Abi, ranges::contiguous_range R, class... Flags>
     requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
     constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, R&& r,
-                            const typename basic_simd<T, Abi>::mask_type& mask,
-                            simd_flags<Flags...> f = {});
+                                        simd_flags<Flags...> f = {});
+  template<class T, class Abi, ranges::contiguous_range R, class... Flags>
+    requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+    constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, R&& r,
+      const typename basic_simd<T, Abi>::mask_type& mask, simd_flags<Flags...> f = {});
   template<class T, class Abi, contiguous_iterator I, class... Flags>
     requires indirectly_writable<I, T>
-    constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, I first, iter_difference_t<I> n,
-                            simd_flags<Flags...> f = {});
+    constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, I first,
+                                        iter_difference_t<I> n, simd_flags<Flags...> f = {});
   template<class T, class Abi, contiguous_iterator I, class... Flags>
     requires indirectly_writable<I, T>
-    constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, I first, iter_difference_t<I> n,
-                            const typename basic_simd<T, Abi>::mask_type& mask,
-                            simd_flags<Flags...> f = {});
-  template<class T, class Abi, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
-    requires indirectly_writable<I, T>
-    constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, I first, S last, simd_flags<Flags...> f = {});
+    constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, I first,
+      iter_difference_t<I> n, const typename basic_simd<T, Abi>::mask_type& mask,
+      simd_flags<Flags...> f = {});
   template<class T, class Abi, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
     requires indirectly_writable<I, T>
     constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, I first, S last,
-                            const typename basic_simd<T, Abi>::mask_type& mask,
-                            simd_flags<Flags...> f = {});
+                                        simd_flags<Flags...> f = {});
+  template<class T, class Abi, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
+    requires indirectly_writable<I, T>
+    constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, I first, S last,
+      const typename basic_simd<T, Abi>::mask_type& mask, simd_flags<Flags...> f = {});
 
   template<class T, class Abi, ranges::contiguous_range R, class... Flags>
     requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
-    constexpr void simd_partial_store(const basic_simd<T, Abi>& v, R&& r, simd_flags<Flags...> f = {});
+    constexpr void simd_partial_store(const basic_simd<T, Abi>& v, R&& r,
+                                      simd_flags<Flags...> f = {});
   template<class T, class Abi, ranges::contiguous_range R, class... Flags>
     requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
     constexpr void simd_partial_store(const basic_simd<T, Abi>& v, R&& r,
-                            const typename basic_simd<T, Abi>::mask_type& mask,
-                            simd_flags<Flags...> f = {});
+      const typename basic_simd<T, Abi>::mask_type& mask, simd_flags<Flags...> f = {});
   template<class T, class Abi, contiguous_iterator I, class... Flags>
     requires indirectly_writable<I, T>
     constexpr void simd_partial_store(const basic_simd<T, Abi>& v, I first, iter_difference_t<I> n,
-                            simd_flags<Flags...> f = {});
+                                      simd_flags<Flags...> f = {});
   template<class T, class Abi, contiguous_iterator I, class... Flags>
     requires indirectly_writable<I, T>
     constexpr void simd_partial_store(const basic_simd<T, Abi>& v, I first, iter_difference_t<I> n,
-                            const typename basic_simd<T, Abi>::mask_type& mask,
-                            simd_flags<Flags...> f = {});
-  template<class T, class Abi, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
-    requires indirectly_writable<I, T>
-    constexpr void simd_partial_store(const basic_simd<T, Abi>& v, I first, S last, simd_flags<Flags...> f = {});
+      const typename basic_simd<T, Abi>::mask_type& mask, simd_flags<Flags...> f = {});
   template<class T, class Abi, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
     requires indirectly_writable<I, T>
     constexpr void simd_partial_store(const basic_simd<T, Abi>& v, I first, S last,
-                            const typename basic_simd<T, Abi>::mask_type& mask,
-                            simd_flags<Flags...> f = {});
+      simd_flags<Flags...> f = {});
+  template<class T, class Abi, contiguous_iterator I, sized_sentinel_for<I> S, class... Flags>
+    requires indirectly_writable<I, T>
+    constexpr void simd_partial_store(const basic_simd<T, Abi>& v, I first, S last,
+      const typename basic_simd<T, Abi>::mask_type& mask, simd_flags<Flags...> f = {});
 
   // \ref{simd.creation}, \tcode{basic_simd} and \tcode{basic_simd_mask} creation
   template<class T, class Abi>
@@ -559,9 +560,11 @@ namespace std {
   template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> exp(const V& x);
   template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> exp2(const V& x);
   template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> expm1(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> frexp(const V& value,
-  rebind_simd_t<int, @\deducedsimd@<V>>* exp);
-  template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, @\deducedsimd@<V>> ilogb(const V& x);
+  template<@\mathfloatingpoint@ V>
+    constexpr @\deducedsimd@<V>
+      frexp(const V& value, rebind_simd_t<int, @\deducedsimd@<V>>* exp);
+  template<@\mathfloatingpoint@ V>
+    constexpr rebind_simd_t<int, @\deducedsimd@<V>> ilogb(const V& x);
   template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> ldexp(const V& x, const
   rebind_simd_t<int, @\deducedsimd@<V>>& exp);
   template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> log(const V& x);
@@ -575,7 +578,8 @@ namespace std {
   template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> scalbn(const V& x, const
   rebind_simd_t<int, @\deducedsimd@<V>>& n);
   template<@\mathfloatingpoint@ V>
-    constexpr @\deducedsimd@<V> scalbln(const V& x, const rebind_simd_t<long int, @\deducedsimd@<V>>& n);
+    constexpr @\deducedsimd@<V> scalbln(
+      const V& x, const rebind_simd_t<long int, @\deducedsimd@<V>>& n);
   template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> cbrt(const V& x);
   template<signed_integral T, class Abi>
     constexpr basic_simd<T, Abi> abs(const basic_simd<T, Abi>& j);
@@ -596,25 +600,29 @@ namespace std {
   template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> floor(const V& x);
   template<@\mathfloatingpoint@ V> @\deducedsimd@<V> nearbyint(const V& x);
   template<@\mathfloatingpoint@ V> @\deducedsimd@<V> rint(const V& x);
-  template<@\mathfloatingpoint@ V> rebind_simd_t<long int, @\deducedsimd@<V>> lrint(const V& x);
-  template<@\mathfloatingpoint@ V> rebind_simd_t<long long int, V> llrint(const @\deducedsimd@<V>& x);
-  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> round(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long int, @\deducedsimd@<V>> lround(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<long long int, @\deducedsimd@<V>> llround(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr @\deducedsimd@<V> trunc(const V& x);
+  template<@\mathfloatingpoint@ V>
+    rebind_simd_t<long int, @\deducedsimd@<V>> lrint(const V& x);
+  template<@\mathfloatingpoint@ V>
+    rebind_simd_t<long long int, V> llrint(const @\deducedsimd@<V>& x);
+  template<@\mathfloatingpoint@ V>
+    constexpr @\deducedsimd@<V> round(const V& x);
+  template<@\mathfloatingpoint@ V>
+    constexpr rebind_simd_t<long int, @\deducedsimd@<V>> lround(const V& x);
+  template<@\mathfloatingpoint@ V>
+    constexpr rebind_simd_t<long long int, @\deducedsimd@<V>> llround(const V& x);
+  template<@\mathfloatingpoint@ V>
+    constexpr @\deducedsimd@<V> trunc(const V& x);
   template<class V0, class V1>
     constexpr @\mathcommonsimd@<V0, V1> fmod(const V0& x, const V1& y);
   template<class V0, class V1>
     constexpr @\mathcommonsimd@<V0, V1> remainder(const V0& x, const V1& y);
   template<class V0, class V1>
-    constexpr @\mathcommonsimd@<V0, V1> remquo(const V0& x, const V1& y,
-                                           rebind_simd_t<int, @\mathcommonsimd@<V0, V1>>* quo);
+    constexpr @\mathcommonsimd@<V0, V1>
+      remquo(const V0& x, const V1& y, rebind_simd_t<int, @\mathcommonsimd@<V0, V1>>* quo);
   template<class V0, class V1>
     constexpr @\mathcommonsimd@<V0, V1> copysign(const V0& x, const V1& y);
   template<class V0, class V1>
     constexpr @\mathcommonsimd@<V0, V1> nextafter(const V0& x, const V1& y);
-    @\textrm{\INFO{\code{nexttoward} is intentionally missing (because it needs a \code{long double}
-    \ argument). We expect \code{nextup} and \code{nextdown} to provide a better replacement.}}@
   template<class V0, class V1>
     constexpr @\mathcommonsimd@<V0, V1> fdim(const V0& x, const V1& y);
   template<class V0, class V1>
@@ -625,24 +633,36 @@ namespace std {
     constexpr @\mathcommonsimd@<V0, V1, V2> fma(const V0& x, const V1& y, const V2& z);
   template<class V0, class V1, class V2>
     constexpr @\mathcommonsimd@<V0, V1, V2> lerp(const V0& a, const V1& b, const V2& t) noexcept;
-  template<@\mathfloatingpoint@ V> constexpr rebind_simd_t<int, @\deducedsimd@<V>> fpclassify(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isfinite(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isinf(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isnan(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type isnormal(const V& x);
-  template<@\mathfloatingpoint@ V> constexpr typename @\deducedsimd@<V>::mask_type signbit(const V& x);
+  template<@\mathfloatingpoint@ V>
+    constexpr rebind_simd_t<int, @\deducedsimd@<V>> fpclassify(const V& x);
+  template<@\mathfloatingpoint@ V>
+    constexpr typename @\deducedsimd@<V>::mask_type isfinite(const V& x);
+  template<@\mathfloatingpoint@ V>
+    constexpr typename @\deducedsimd@<V>::mask_type isinf(const V& x);
+  template<@\mathfloatingpoint@ V>
+    constexpr typename @\deducedsimd@<V>::mask_type isnan(const V& x);
+  template<@\mathfloatingpoint@ V>
+    constexpr typename @\deducedsimd@<V>::mask_type isnormal(const V& x);
+  template<@\mathfloatingpoint@ V>
+    constexpr typename @\deducedsimd@<V>::mask_type signbit(const V& x);
   template<class V0, class V1>
-    constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isgreater(const V0& x, const V1& y);
+    constexpr typename @\mathcommonsimd@<V0, V1>::mask_type
+      isgreater(const V0& x, const V1& y);
   template<class V0, class V1>
-    constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isgreaterequal(const V0& x, const V1& y);
+    constexpr typename @\mathcommonsimd@<V0, V1>::mask_type
+      isgreaterequal(const V0& x, const V1& y);
   template<class V0, class V1>
-    constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isless(const V0& x, const V1& y);
+    constexpr typename @\mathcommonsimd@<V0, V1>::mask_type
+      isless(const V0& x, const V1& y);
   template<class V0, class V1>
-    constexpr typename @\mathcommonsimd@<V0, V1>::mask_type islessequal(const V0& x, const V1& y);
+    constexpr typename @\mathcommonsimd@<V0, V1>::mask_type
+      islessequal(const V0& x, const V1& y);
   template<class V0, class V1>
-    constexpr typename @\mathcommonsimd@<V0, V1>::mask_type islessgreater(const V0& x, const V1& y);
+    constexpr typename @\mathcommonsimd@<V0, V1>::mask_type
+      islessgreater(const V0& x, const V1& y);
   template<class V0, class V1>
-    constexpr typename @\mathcommonsimd@<V0, V1>::mask_type isunordered(const V0& x, const V1& y);
+    constexpr typename @\mathcommonsimd@<V0, V1>::mask_type
+      isunordered(const V0& x, const V1& y);
   template<@\mathfloatingpoint@ V>
     @\deducedsimd@<V> assoc_laguerre(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& n, const
       rebind_simd_t<unsigned, @\deducedsimd@<V>>& m,
@@ -672,21 +692,22 @@ namespace std {
   template<class V0, class V1, class V2>
     @\mathcommonsimd@<V0, V1, V2> ellint_3(const V0& k, const V1& nu, const V2& phi);
   template<@\mathfloatingpoint@ V> @\deducedsimd@<V> expint(const V& x);
-  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> hermite(const rebind_simd_t<unsigned,
-  @\deducedsimd@<V>>& n, const V& x);
-  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> laguerre(const rebind_simd_t<unsigned,
-  @\deducedsimd@<V>>& n, const V& x);
-  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> legendre(const rebind_simd_t<unsigned,
-  @\deducedsimd@<V>>& l, const V& x);
-  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> riemann_zeta(const V& x);
-  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> sph_bessel(const rebind_simd_t<unsigned,
-  @\deducedsimd@<V>>& n, const V& x);
   template<@\mathfloatingpoint@ V>
-    @\deducedsimd@<V> sph_legendre(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& l, const
-      rebind_simd_t<unsigned, @\deducedsimd@<V>>& m,
-                   const V& theta);
-  template<@\mathfloatingpoint@ V> @\deducedsimd@<V> sph_neumann(const rebind_simd_t<unsigned,
-  @\deducedsimd@<V>>& n, const V& x);
+    @\deducedsimd@<V> hermite(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& n, const V& x);
+  template<@\mathfloatingpoint@ V>
+    @\deducedsimd@<V> laguerre(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& n, const V& x);
+  template<@\mathfloatingpoint@ V>
+    @\deducedsimd@<V> legendre(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& l, const V& x);
+  template<@\mathfloatingpoint@ V>
+    @\deducedsimd@<V> riemann_zeta(const V& x);
+  template<@\mathfloatingpoint@ V>
+    @\deducedsimd@<V> sph_bessel(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& n, const V& x);
+  template<@\mathfloatingpoint@ V>
+    @\deducedsimd@<V> sph_legendre(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& l,
+      const rebind_simd_t<unsigned, @\deducedsimd@<V>>& m, const V& theta);
+  template<@\mathfloatingpoint@ V>
+    @\deducedsimd@<V>
+      sph_neumann(const rebind_simd_t<unsigned, @\deducedsimd@<V>>& n, const V& x);
 }
 \end{codeblock}
 
