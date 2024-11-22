@@ -1,7 +1,7 @@
 \newcommand\wgTitle{simd issues: explicit, unsequenced, identity-element position, and members of
 disabled simd}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3430R0}
+\newcommand\wgDocumentNumber{D3430R1}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
@@ -56,6 +56,7 @@ disabled simd}
 \input{changelog}
 \input{strawpolls}
 
+\pagebreak
 \section{Issue 1: \code{explicit}}
 
 \newcommand\statusquo[1]{#1}
@@ -433,61 +434,58 @@ P1928R12.}{&&&&}
 
 \section{Issue 4: Undo removal of members of disabled \simd{}}
 
-LEWG directed me to remove the \code{size} member from \simd and \mask for disabled specializations
-(it was called “not supported” back then):
+(postponed)
 
-\wgPoll{Make \code{simd_size} exposition only and cause \code{simd} to have the size static data member if and only if \code{T} is a vectorizable type and \code{Abi} is an ABI tag.}
-{1&7&4&1&0}
+\pagebreak
+\section{Issue 5: Hidden friend compound assignment operators}
 
-But that change breaks valid uses cases on constexpr if:
-\medskip\begin{lstlisting}[style=Vc]
-if constexpr (std::default_initializable<V>) {
-  constexpr int width = V::size();
-}
+\begin{lstlisting}
+std::simd<int, 4> s1, s2;
+auto r = std::ref(s1); // r is a std::reference_wrapper
+
+r += s2; // modifies s1: apply += to element wise to s1,sw3
+r  = s2; // rebinds r to point to s2
+r += s2; // modifies s2
 \end{lstlisting}
-Because \code{size} is not a member of disabled \simd specializations anymore, the code above is
-still ill-formed even though the user tried to guard against it with the constexpr if branch.
-What we need to consider is that name lookup still isn't allowed to fail inside constexpr if
-branches.
-It is okay if no viable overload exists, as long as there is at least one.\footnote{Well... depends:
-\url{https://compiler-explorer.com/z/xP3PPjezx}}
-The same argument can be made for all the other members of \simd and \mask.
 
-Possible resolutions:
-\begin{itemize}
-  \item Bite the bullet and go all the way: Make disabled \simd and \mask
-    incomplete types.
+This is due to \code{r} being convertible to \code{basic_simd\&} and thus binding to:
+\smallskip\begin{lstlisting}
+template<class T, class Abi> class basic_simd {
+  // …
+  friend constexpr basic_simd& operator+=(basic_simd&, const basic_simd&) noexcept;
+};
+\end{lstlisting}
 
-  \item Walk back the change requested by LEWG in Varna and keep all the members in disabled \simd
-    and \mask specializations. (TS behavior and my preference / suggestion)
-\end{itemize}
+However, if compound assignment is specified as a member then name lookup doesn't find the operator
+(no member function lookup via ADL) and the example above becomes ill-formed:
+\smallskip\begin{lstlisting}
+template<class T, class Abi> class basic_simd {
+  // …
+  constexpr basic_simd& operator+=(const basic_simd&) noexcept;
+};
+\end{lstlisting}
 
-Suggested wording change:
+Note, however, that the following is already well-formed for scalars with the exact same behavior as
+for \code{simd} with hidden friend compound assignment:
+\smallskip\begin{lstlisting}
+int s1, s2;
+auto r = std::ref(s1); // r is a std::reference_wrapper
 
-\begin{wgText}[{[simd.overview]}]
-  \setcounter{Paras}{1}
-\pnum
-Every specialization of \tcode{basic_simd} is a complete type.
-The types \tcode{basic_simd<T, \deducet<T, N>>} for all vectorizable
-\tcode{T} and with \tcode{N} in the range of \crange{1}{64} are enabled.
-It is implementation-defined whether any other \tcode{basic_simd<T, Abi>} specialization
-with vectorizable \tcode{T} is enabled.
-Any other specialization of \tcode{basic_simd} is disabled.
+r += s2; // modifies s1: apply += to element wise to s1,sw3
+r  = s2; // rebinds r to point to s2
+r += s2; // modifies s2
+\end{lstlisting}
 
-If \tcode{basic_simd<T, Abi>} is disabled, the specialization has a
-deleted default constructor, deleted destructor, deleted copy constructor, and
-deleted copy assignment.
-\wgRem{In addition only the \tcode{value_type}, \tcode{abi_type}, and
-\tcode{mask_type} members are present.}
-
-If \tcode{basic_simd<T, Abi>} is enabled, \tcode{basic_simd<T, Abi>} is
-trivially copyable.
-\end{wgText}
-
+Consequently, changing compound assignment for \code{simd} to member operators creates an
+inconsistency between \code{simd<T>} and \code{T}.
+Also, consider that not every \code{reference_wrapper}-like type implements \code{operator=} as
+rebind.
+Other types with a conversion operator to lvalue-reference might implement it as assign-through.
+(e.g., proxy reference types similar to what we had for \code{simd::operator[]})
 
 \subsection{Suggested Poll}
-\wgPoll{Name lookup of members of disabled \code{basic_simd} specializations works if it works for
-enabled \code{basic_simd} specializations. Likewise for \code{basic_simd_mask}.}{&&&&}
+\wgPoll{Turn [simd.cassign] and [simd.mask.cassign] in P1928R12 into members, as implemented in
+P1928R13.}{&&&&}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=100
