@@ -19,9 +19,9 @@
   \constraints \tcode{requires (value_type a, value_type b) \{ a \op{} b; \}} is \tcode{true}.
 }
 
-\newcommand\ConversionsToIntrinsics{
+\newcommand\ConversionsToIntrinsics[1]{
 \recommended
-Implementations should support explicit conversions between specializations of basic_simd_mask and
+Implementations should support explicit conversions between specializations of \tcode{#1} and
 appropriate implementation-defined types.
 \begin{note}
   The appropriate vector types which are available in the implementation.
@@ -123,7 +123,7 @@ template<class V>
 
 template<class... Ts>
   concept @\mathfloatingpoint@ =                                   // \expos
-    = (@\simdfloatingpoint@<@\deducedsimd@<Ts>> or ...);
+    = (@\simdfloatingpoint@<@\deducedsimd@<Ts>> || ...);
 
 template<class... Ts>
   requires @\mathfloatingpoint@<Ts...>
@@ -155,8 +155,8 @@ template<size_t Bytes> using @\integerfrom@ = @\seebelow@; // \expos
 \end{itemdecl}
 \begin{itemdescr}
   \pnum
-  \tcode{\integerfrom<Bytes>} is an alias for a signed integer type \tcode{T} so that
-  \tcode{sizeof(T) == Bytes}.
+  \tcode{\integerfrom<Bytes>} is an alias for a signed integer type \tcode{T} such that
+  \tcode{sizeof(T)} equals \tcode{Bytes}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -167,10 +167,6 @@ template<class T, class Abi>
   \pnum
   \tcode{\simdsizev<T, Abi>} denotes the width of \tcode{basic_simd<T, Abi>} if
   the specialization \tcode{basic_simd<T, Abi>} is enabled, or \tcode{0} otherwise.
-  \begin{note}
-    \tcode{\simdsizev<T, Abi>} does not require instantiation of \tcode{basic_simd<T, Abi>}.
-  \end{note}
-  \FIXME{drop the note?}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -277,14 +273,14 @@ template<class T, @\simdsizetype@ N> using @\deducet@ = @\seebelow@; // \expos
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum\label{wording.ABI.tag}
-An \defn{ABI tag} is a type that indicates a choice of size and binary
+\pnum
+An \defn{ABI tag} is a type that indicates a choice of size and binary\label{wording.ABI.tag}
 representation for objects of data-parallel type.
 \begin{note}
   The intent is for the size and binary representation to depend on the target
   architecture and compiler flags.
+  The ABI tag, together with a given element type, implies the width.
 \end{note}
-The ABI tag, together with a given element type, implies the width.
 
 \pnum
 \begin{note}
@@ -309,10 +305,12 @@ The implementation-defined maximum for \tcode{N} is not smaller than 64
 and can differ depending on \tcode{T}.
 
 \pnum
-Where present, \tcode{\deducet<T, N>} names an ABI tag type that satisfies
+Where present, \tcode{\deducet<T, N>} names an ABI tag type such that
 \begin{itemize}
-  \item \tcode{\simdsizev<T, \deducet<T, N>> == N}, and
-  \item \tcode{basic_simd<T, \deducet<T, N>>} is enabled (see \ref{simd.overview}).
+  \item \tcode{\simdsizev<T, \deducet<T, N>>} equals \tcode{N},
+  \item \tcode{basic_simd<T, \deducet<T, N>>} is enabled (see \ref{simd.overview}), and
+  \item \tcode{basic_simd_mask<sizeof(T), \deducet<\integerfrom<sizeof(T)>, N>>} is enabled (see
+    \ref{simd.overview}).
 \end{itemize}
 
 % TODO: If we really want the Abis... pack back this needs a paper to LEWG.
@@ -323,7 +321,7 @@ Where present, \tcode{\deducet<T, N>} names an ABI tag type that satisfies
 
 \pnum
 \tcode{\nativeabi<T>} is an implementation-defined alias for an ABI tag.
-\tcode{basic_simd<T, \nativeabi<T>} is an enabled specialization.
+\tcode{basic_simd<T, \nativeabi<T>>} is an enabled specialization.
 \begin{note}
 The intent is to use the ABI tag producing the most efficient data-parallel
 execution for the element type \tcode{T} on the currently
@@ -351,7 +349,7 @@ namespace std {
   // \ref{simd.traits}, \tcode{simd} type traits
   template<class T, class U = typename T::value_type> struct simd_alignment;
   template<class T, class U = typename T::value_type>
-    inline constexpr size_t simd_alignment_v = simd_alignment<T, U>::value;
+    constexpr size_t simd_alignment_v = simd_alignment<T, U>::value;
 
   template<class T, class V> struct rebind_simd { using type = @\seebelow@; };
   template<class T, class V> using rebind_simd_t = typename rebind_simd<T, V>::type;
@@ -364,7 +362,7 @@ namespace std {
   inline constexpr simd_flags<@\convertflag@> simd_flag_convert{};
   inline constexpr simd_flags<@\alignedflag@> simd_flag_aligned{};
   template<size_t N> requires (has_single_bit(N))
-    inline constexpr simd_flags<@\overalignedflag<N>@> simd_flag_overaligned{};
+    constexpr simd_flags<@\overalignedflag<N>@> simd_flag_overaligned{};
 
   // \ref{simd.class}, Class template \tcode{basic_simd}
   template<class T, class Abi = @\nativeabi@<T>> class basic_simd;
@@ -414,11 +412,11 @@ namespace std {
                                   simd_flags<Flags...> f = {});
 
   template<class T, class Abi, ranges::contiguous_range R, class... Flags>
-    requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+    requires ranges::sized_range<R> && indirectly_writable<ranges::iterator_t<R>, T>
     constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, R&& r,
                                         simd_flags<Flags...> f = {});
   template<class T, class Abi, ranges::contiguous_range R, class... Flags>
-    requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+    requires ranges::sized_range<R> && indirectly_writable<ranges::iterator_t<R>, T>
     constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, R&& r,
       const typename basic_simd<T, Abi>::mask_type& mask, simd_flags<Flags...> f = {});
   template<class T, class Abi, contiguous_iterator I, class... Flags>
@@ -440,11 +438,11 @@ namespace std {
       const typename basic_simd<T, Abi>::mask_type& mask, simd_flags<Flags...> f = {});
 
   template<class T, class Abi, ranges::contiguous_range R, class... Flags>
-    requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+    requires ranges::sized_range<R> && indirectly_writable<ranges::iterator_t<R>, T>
     constexpr void simd_partial_store(const basic_simd<T, Abi>& v, R&& r,
                                       simd_flags<Flags...> f = {});
   template<class T, class Abi, ranges::contiguous_range R, class... Flags>
-    requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+    requires ranges::sized_range<R> && indirectly_writable<ranges::iterator_t<R>, T>
     constexpr void simd_partial_store(const basic_simd<T, Abi>& v, R&& r,
       const typename basic_simd<T, Abi>::mask_type& mask, simd_flags<Flags...> f = {});
   template<class T, class Abi, contiguous_iterator I, class... Flags>
@@ -475,24 +473,24 @@ namespace std {
   template<class T, class... Abis>
     constexpr basic_simd<T, @\deducet@<T, (basic_simd<T, Abis>::size() + ...)>>
       simd_cat(const basic_simd<T, Abis>&...) noexcept;
-  template<size_t Bs, class... Abis>
-    constexpr basic_simd_mask<Bs, @\deducet@<@\integerfrom@<Bs>,
-                              (basic_simd_mask<Bs, Abis>::size() + ...)>>
-      simd_cat(const basic_simd_mask<Bs, Abis>&...) noexcept;
+  template<size_t Bytes, class... Abis>
+    constexpr basic_simd_mask<Bytes, @\deducet@<@\integerfrom@<Bytes>,
+                              (basic_simd_mask<Bytes, Abis>::size() + ...)>>
+      simd_cat(const basic_simd_mask<Bytes, Abis>&...) noexcept;
 
   // \ref{simd.mask.reductions}, \tcode{basic_simd_mask} reductions
-  template<size_t Bs, class Abi>
-    constexpr bool all_of(const basic_simd_mask<Bs, Abi>&) noexcept;
-  template<size_t Bs, class Abi>
-    constexpr bool any_of(const basic_simd_mask<Bs, Abi>&) noexcept;
-  template<size_t Bs, class Abi>
-    constexpr bool none_of(const basic_simd_mask<Bs, Abi>&) noexcept;
-  template<size_t Bs, class Abi>
-    constexpr @\simdsizetype@ reduce_count(const basic_simd_mask<Bs, Abi>&) noexcept;
-  template<size_t Bs, class Abi>
-    constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bs, Abi>&);
-  template<size_t Bs, class Abi>
-    constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bs, Abi>&);
+  template<size_t Bytes, class Abi>
+    constexpr bool all_of(const basic_simd_mask<Bytes, Abi>&) noexcept;
+  template<size_t Bytes, class Abi>
+    constexpr bool any_of(const basic_simd_mask<Bytes, Abi>&) noexcept;
+  template<size_t Bytes, class Abi>
+    constexpr bool none_of(const basic_simd_mask<Bytes, Abi>&) noexcept;
+  template<size_t Bytes, class Abi>
+    constexpr @\simdsizetype@ reduce_count(const basic_simd_mask<Bytes, Abi>&) noexcept;
+  template<size_t Bytes, class Abi>
+    constexpr @\simdsizetype@ reduce_min_index(const basic_simd_mask<Bytes, Abi>&);
+  template<size_t Bytes, class Abi>
+    constexpr @\simdsizetype@ reduce_max_index(const basic_simd_mask<Bytes, Abi>&);
 
   constexpr bool all_of(same_as<bool> auto) noexcept;
   constexpr bool any_of(same_as<bool> auto) noexcept;
@@ -769,7 +767,7 @@ template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelo
   \pnum Let \tcode{T} denote
   \begin{itemize}
     \item \tcode{typename V::value_type} if \tcode{V} is a specialization of
-      \tcode{basic_simd} or
+      \tcode{basic_simd}, otherwise
     \item \tcode{\integerfrom<\maskelementsize<V>>} if \tcode{V} is a
       specialization of \tcode{basic_simd_mask}.
   \end{itemize}
@@ -777,7 +775,7 @@ template<@\simdsizetype@ N, class V> struct resize_simd { using type = @\seebelo
   \pnum
   The member \tcode{type} is present if and only if
   \begin{itemize}
-    \item \tcode{V} is a data-parallel type,
+    \item \tcode{V} is a data-parallel type, and
     \item \tcode{\deducet<T, N>} has a member type \tcode{type}.
   \end{itemize}
 
@@ -812,7 +810,7 @@ The class template \tcode{simd_flags} acts like an integer bit-flag for types.
 \end{note}
 
 \pnum\constraints
-Every type in \tcode{Flags} is one of \tcode{\convertflag},
+Every type in the parameter pack \tcode{Flags} is one of \tcode{\convertflag},
 \tcode{\alignedflag}, or \tcode{\overalignedflag<N>}.
 
 \rSec2[simd.flags.oper]{\tcode{simd_flags} operators}
@@ -824,10 +822,10 @@ template<class... Other>
 
 \begin{itemdescr}
   \pnum\returns
-  A default-initialized object of type \tcode{simd_flags<Flags2...>} where
-  every type in pack \tcode{Flags2} is present either in pack \tcode{Flags} or
-  pack \tcode{Other} and every type in packs \tcode{Flags} and \tcode{Other} is
-  present in \tcode{Flags2}.
+  A default-initialized object of type \tcode{simd_flags<Flags2...>} for some
+  \tcode{Flags2} where every type in \tcode{Flags2} is present either in template parameter pack
+  \tcode{Flags} or in template parameter pack \tcode{Other}, and every type in template parameter
+  packs \tcode{Flags} and \tcode{Other} is present in \tcode{Flags2}.
   If the packs \tcode{Flags} and \tcode{Other} contain two
   different specializations \tcode{\overalignedflag<N1>} and
   \tcode{\overalignedflag<N2>}, \tcode{Flags2} is not required to contain the
@@ -909,11 +907,11 @@ public:
   friend constexpr mask_type operator<(const basic_simd&, const basic_simd&) noexcept;
 
   // \ref{simd.cond}, \tcode{basic_simd} exposition only conditional operators
-  friend constexpr basic_simd @\simdselect@(
+  friend constexpr basic_simd @\simdselect@( // \expos
     const mask_type&, const basic_simd&, const basic_simd&) noexcept;
 };
 
-template<ranges::contiguous_range R, class... Ts>
+template<class R, class... Ts>
   basic_simd(R&& r, Ts...) -> @\seebelow@;
 \end{codeblock}
 
@@ -936,7 +934,7 @@ In addition only the \tcode{value_type}, \tcode{abi_type}, and
 If \tcode{basic_simd<T, Abi>} is enabled, \tcode{basic_simd<T, Abi>} is
 trivially copyable.
 
-\pnum\ConversionsToIntrinsics
+\pnum\ConversionsToIntrinsics{basic_simd}
 
 \rSec2[simd.ctor]{\tcode{basic_simd} constructors}
 
@@ -1018,8 +1016,8 @@ template<class G> constexpr explicit basic_simd(G&& gen) noexcept;
     functions may not be invoked by \tcode{gen}.
     \tcode{gen} is invoked exactly once for each $i$.
 
-  \FIXME{Do we need to specify the order in which \code{gen} is called (increasing $i$)? (same
-    change for \code{basic_simd_mask}} \NOTE{P3430R0 asks for striking 'unsequenced'.}
+  %\FIXME{Do we need to specify the order in which \code{gen} is called (increasing $i$)? (same
+    %change for \code{basic_simd_mask}} \NOTE{P3430R0 asks for striking 'unsequenced'.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1063,12 +1061,15 @@ template<class R, class... Flags>
 \end{itemdescr}
 
 \begin{itemdecl}
-template<ranges::contiguous_range R, class... Ts>
+template<class R, class... Ts>
   basic_simd(R&& r, Ts...) -> @\seebelow@;
 \end{itemdecl}
 \begin{itemdescr}
   \pnum\constraints
-  \code{ranges::size(r)} is a constant expression.
+  \begin{itemize}
+    \item \tcode{R} models \tcode{ranges::contiguous_range} and \tcode{ranges::sized_range}, and
+    \item \code{ranges::size(r)} is a constant expression.
+  \end{itemize}
 
   \pnum\remarks
   The deduced type is equivalent to \code{simd<ranges::range_value_t<R>, ranges::size(r)>}.
@@ -1468,42 +1469,26 @@ template<class V = @\seebelow@, contiguous_iterator I, sized_sentinel_for<I> S, 
   \pnum
   Let
   \begin{itemize}
-    \item \code{mask} be \code{V::mask_type(true)} for overloads with no \code{mask} parameter;
-    \item \tcode{R} be \tcode{span<const iter_value_t<I>>} for overloads with no template parameter
+    \item \code{mask} be \code{V::mask_type(true)} for the overloads with no \code{mask} parameter;
+    \item \tcode{R} be \tcode{span<const iter_value_t<I>>} for the overloads with no template parameter
       \tcode{R};
-  %Let \code{k} be \code{0} if \code{none_of(mask)} is \code{true}, \code{min(n,
-      %reduce_max_index(mask) + 1} otherwise.
-    \item \tcode{r} be \tcode{R(first, n)} for overloads with \tcode{n} parameter and
-      \tcode{R(first, last)} for overloads with \tcode{last} parameter.
+    \item \tcode{r} be \tcode{R(first, n)} for the overloads with an \tcode{n} parameter and
+      \tcode{R(first, last)} for the overloads with a \tcode{last} parameter.
   \end{itemize}
 
   \pnum\mandates
-  \begin{itemize}
-    \item \tcode{ranges::range_value_t<R>} is a vectorizable type,
-    \item \code{same_as<remove_cvref_t<V>, V>} is \code{true},
-    \item \code{V} is an enabled specialization of \code{basic_simd}, and
-    \item if the template parameter pack \tcode{Flags} does not contain \tcode{\convertflag}, then
-      the conversion from \tcode{ranges::range_value_t<R>} to \tcode{V::value_type} is
-      value-preserving, and
-    \item if \code{ranges::size(r)} is a constant expression then \code{ranges::size(r)} $\ge$
-      \tcode{V::size()}.
-  \end{itemize}
+    If \code{ranges::size(r)} is a constant expression then \code{ranges::size(r)} $\ge$
+    \tcode{V::size()}.
 
   \pnum\expects
   \begin{itemize}
-    \item \range{first}{first + n} is a valid range for overloads with \code{n} parameter.
-    \item \range{first}{last} is a valid range for overloads with \code{last} parameter.
+    \item \range{first}{first + n} is a valid range for the overloads with an \code{n} parameter.
+    \item \range{first}{last} is a valid range for the overloads with a \code{last} parameter.
     \item \code{ranges::size(r)} $\ge$ \tcode{V::size()}
-    \item If the template parameter pack \tcode{Flags} contains \tcode{\alignedflag},
-      \tcode{ranges::data(r)} points to storage aligned by \tcode{simd_alignment_v<basic_simd,
-      ranges::range_value_t<R>>}.
-    \item If the template parameter pack \tcode{Flags} contains \tcode{\overalignedflag<N>},
-      \tcode{ranges::data(r)} points to storage aligned by \tcode{N}.
   \end{itemize}
 
   \pnum\effects
-  Initializes the $i^\text{th}$ element with \tcode{mask[$i$] ? static_cast<T>(ranges::data(r)[$i$])
-  : T()} \foralli[V::].
+  Equivalent to: \code{return simd_partial_load<V>(r, mask, f);}
 
   \pnum\remarks
   The default argument for template parameter \code{V} is
@@ -1532,13 +1517,13 @@ template<class V = @\seebelow@, contiguous_iterator I, sized_sentinel_for<I> S, 
   \pnum
   Let
   \begin{itemize}
-    \item \code{mask} be \code{V::mask_type(true)} for overloads with no \code{mask} parameter;
-    \item \tcode{R} be \tcode{span<const iter_value_t<I>>} for overloads with no template parameter
+    \item \code{mask} be \code{V::mask_type(true)} for the overloads with no \code{mask} parameter;
+    \item \tcode{R} be \tcode{span<const iter_value_t<I>>} for the overloads with no template parameter
       \tcode{R};
   %Let \code{k} be \code{0} if \code{none_of(mask)} is \code{true}, \code{min(n,
       %reduce_max_index(mask) + 1} otherwise.
-    \item \tcode{r} be \tcode{R(first, n)} for overloads with \tcode{n} parameter and
-      \tcode{R(first, last)} for overloads with \tcode{last} parameter.
+    \item \tcode{r} be \tcode{R(first, n)} for the overloads with an \tcode{n} parameter and
+      \tcode{R(first, last)} for the overloads with a \tcode{last} parameter.
   \end{itemize}
 
   \pnum\mandates
@@ -1548,17 +1533,15 @@ template<class V = @\seebelow@, contiguous_iterator I, sized_sentinel_for<I> S, 
     \item \code{V} is an enabled specialization of \code{basic_simd}, and
     \item if the template parameter pack \tcode{Flags} does not contain \tcode{\convertflag}, then
       the conversion from \tcode{ranges::range_value_t<R>} to \tcode{V::value_type} is
-      value-preserving, and
-    \item if \code{ranges::size(r)} is a constant expression then \code{ranges::size(r)} $\ge$
-      \tcode{V::size()}.
+      value-preserving.
   \end{itemize}
 
   \pnum\expects
   \begin{itemize}
-    \item \range{first}{first + n} is a valid range for overloads with \code{n} parameter.
-    \item \range{first}{last} is a valid range for overloads with \code{last} parameter.
+    \item \range{first}{first + n} is a valid range for the overloads with an \code{n} parameter.
+    \item \range{first}{last} is a valid range for the overloads with a \code{last} parameter.
     \item If the template parameter pack \tcode{Flags} contains \tcode{\alignedflag},
-      \tcode{ranges::data(r)} points to storage aligned by \tcode{simd_alignment_v<basic_simd,
+      \tcode{ranges::data(r)} points to storage aligned by \tcode{simd_alignment_v<V,
       ranges::range_value_t<R>>}.
     \item If the template parameter pack \tcode{Flags} contains \tcode{\overalignedflag<N>},
       \tcode{ranges::data(r)} points to storage aligned by \tcode{N}.
@@ -1575,10 +1558,10 @@ template<class V = @\seebelow@, contiguous_iterator I, sized_sentinel_for<I> S, 
 
 \begin{itemdecl}
 template<class T, class Abi, ranges::contiguous_range R, class... Flags>
-  requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+  requires ranges::sized_range<R> && indirectly_writable<ranges::iterator_t<R>, T>
   constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, R&& r, simd_flags<Flags...> f = {});
 template<class T, class Abi, ranges::contiguous_range R, class... Flags>
-  requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+  requires ranges::sized_range<R> && indirectly_writable<ranges::iterator_t<R>, T>
   constexpr void simd_unchecked_store(const basic_simd<T, Abi>& v, R&& r,
                           const typename basic_simd<T, Abi>::mask_type& mask,
                           simd_flags<Flags...> f = {});
@@ -1604,47 +1587,35 @@ template<class T, class Abi, contiguous_iterator I, sized_sentinel_for<I> S, cla
   \pnum
   Let
   \begin{itemize}
-    \item \code{mask} be \code{basic_simd<T, Abi>::mask_type(true)} for overloads with no
+    \item \code{mask} be \code{basic_simd<T, Abi>::mask_type(true)} for the overloads with no
       \code{mask} parameter;
-    \item \tcode{R} be \tcode{span<iter_value_t<I>>} for overloads with no template parameter
+    \item \tcode{R} be \tcode{span<iter_value_t<I>>} for the overloads with no template parameter
       \tcode{R};
-  %Let \code{k} be \code{0} if \code{none_of(mask)} is \code{true}, \code{min(n,
-      %reduce_max_index(mask) + 1} otherwise.
-    \item \tcode{r} be \tcode{R(first, n)} for overloads with \tcode{n} parameter and
-      \tcode{R(first, last)} for overloads with \tcode{last} parameter.
+    \item \tcode{r} be \tcode{R(first, n)} for the overloads with an \tcode{n} parameter and
+      \tcode{R(first, last)} for the overloads with a \tcode{last} parameter.
   \end{itemize}
 
   \pnum\mandates
-  \begin{itemize}
-    \item \tcode{ranges::range_value_t<R>} is a vectorizable type,
-    \item if the template parameter pack \tcode{Flags} does not contain \tcode{\convertflag}, then
-      the conversion from \tcode{T} to \tcode{ranges::range_value_t<R>} is value-preserving, and
-    \item if \code{ranges::size(r)} is a constant expression then \code{ranges::size(r)} $\ge$
-      \tcode{\simdsizev<T, Abi>}.
-  \end{itemize}
+  If \code{ranges::size(r)} is a constant expression then \code{ranges::size(r)} $\ge$
+  \tcode{\simdsizev<T, Abi>}.
 
   \pnum\expects
   \begin{itemize}
-    \item \range{first}{first + n} is a valid range for overloads with \code{n} parameter.
-    \item \range{first}{last} is a valid range for overloads with \code{last} parameter.
+    \item \range{first}{first + n} is a valid range for the overloads with an \code{n} parameter.
+    \item \range{first}{last} is a valid range for the overloads with a \code{last} parameter.
     \item \code{ranges::size(r)} $\ge$ \tcode{\simdsizev<T, Abi>}
-    \item If the template parameter pack \tcode{Flags} contains \tcode{\alignedflag},
-      \tcode{ranges::data(r)} points to storage aligned by \tcode{simd_alignment_v<basic_simd,
-      ranges::range_value_t<R>>}.
-    \item If the template parameter pack \tcode{Flags} contains \tcode{\overalignedflag<N>},
-      \tcode{ranges::data(r)} points to storage aligned by \tcode{N}.
   \end{itemize}
 
   \pnum\effects
-  \Foralli[basic_simd<T, Abi>::], if \tcode{mask[$i$]} is \code{true}, evaluates \code{ranges::data(r)[$i$] = v[$i$]}.
+  Equivalent to: \code{simd_partial_store(v, r, mask, f)}.
 \end{itemdescr}
 
 \begin{itemdecl}
 template<class T, class Abi, ranges::contiguous_range R, class... Flags>
-  requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+  requires ranges::sized_range<R> && indirectly_writable<ranges::iterator_t<R>, T>
   constexpr void simd_partial_store(const basic_simd<T, Abi>& v, R&& r, simd_flags<Flags...> f = {});
 template<class T, class Abi, ranges::contiguous_range R, class... Flags>
-  requires ranges::sized_range<R> and indirectly_writable<ranges::iterator_t<R>, T>
+  requires ranges::sized_range<R> && indirectly_writable<ranges::iterator_t<R>, T>
   constexpr void simd_partial_store(const basic_simd<T, Abi>& v, R&& r,
                           const typename basic_simd<T, Abi>::mask_type& mask,
                           simd_flags<Flags...> f = {});
@@ -1670,30 +1641,30 @@ template<class T, class Abi, contiguous_iterator I, sized_sentinel_for<I> S, cla
   \pnum
   Let
   \begin{itemize}
-    \item \code{mask} be \code{basic_simd<T, Abi>::mask_type(true)} for overloads with no
+    \item \code{mask} be \code{basic_simd<T, Abi>::mask_type(true)} for the overloads with no
       \code{mask} parameter;
-    \item \tcode{R} be \tcode{span<iter_value_t<I>>} for overloads with no template parameter
+    \item \tcode{R} be \tcode{span<iter_value_t<I>>} for the overloads with no template parameter
       \tcode{R};
   %Let \code{k} be \code{0} if \code{none_of(mask)} is \code{true}, \code{min(n,
       %reduce_max_index(mask) + 1} otherwise.
-    \item \tcode{r} be \tcode{R(first, n)} for overloads with \tcode{n} parameter and
-      \tcode{R(first, last)} for overloads with \tcode{last} parameter.
+    \item \tcode{r} be \tcode{R(first, n)} for the overloads with an \tcode{n} parameter and
+      \tcode{R(first, last)} for the overloads with a \tcode{last} parameter.
   \end{itemize}
 
   \pnum\mandates
   \begin{itemize}
-    \item \tcode{ranges::range_value_t<R>} is a vectorizable type,
+    \item \tcode{ranges::range_value_t<R>} is a vectorizable type, and
     \item if the template parameter pack \tcode{Flags} does not contain \tcode{\convertflag}, then
-      the conversion from \tcode{T} to \tcode{ranges::range_value_t<R>} is value-preserving, and
+      the conversion from \tcode{T} to \tcode{ranges::range_value_t<R>} is value-preserving.
   \end{itemize}
 
   \pnum\expects
   \begin{itemize}
-    \item \range{first}{first + n} is a valid range for overloads with \code{n} parameter.
-    \item \range{first}{last} is a valid range for overloads with \code{last} parameter.
+    \item \range{first}{first + n} is a valid range for the overloads with an \code{n} parameter.
+    \item \range{first}{last} is a valid range for the overloads with a \code{last} parameter.
     \item If the template parameter pack \tcode{Flags} contains \tcode{\alignedflag},
-      \tcode{ranges::data(r)} points to storage aligned by \tcode{simd_alignment_v<basic_simd,
-      ranges::range_value_t<R>>}.
+      \tcode{ranges::data(r)} points to storage aligned by \tcode{simd_alignment_v<basic_simd<T,
+        Abi>, ranges::range_value_t<R>>}.
     \item If the template parameter pack \tcode{Flags} contains \tcode{\overalignedflag<N>},
       \tcode{ranges::data(r)} points to storage aligned by \tcode{N}.
   \end{itemize}
@@ -1861,7 +1832,6 @@ return @\simdselect@(c, a, b);
   \end{codeblock}
   where \tcode{\simdselect} is found by argument-dependent lookup \iref{basic.lookup.argdep}
   contrary to \iref{contents}.
-  \FIXME{Should this exception be listed in \iref{contents} instead?}
 \end{itemdescr}
 
 \rSec2[simd.math]{Mathematical functions}
@@ -2213,13 +2183,13 @@ public:
     operator<(const basic_simd_mask&, const basic_simd_mask&) noexcept;
 
   // \ref{simd.mask.cond}, \tcode{basic_simd_mask} exposition only conditional operators
-  friend constexpr basic_simd_mask @\simdselect@(
+  friend constexpr basic_simd_mask @\simdselect@( // \expos
     const basic_simd_mask&, const basic_simd_mask&, const basic_simd_mask&) noexcept;
-  friend constexpr basic_simd_mask @\simdselect@(
+  friend constexpr basic_simd_mask @\simdselect@( // \expos
     const basic_simd_mask&, same_as<bool> auto, same_as<bool> auto) noexcept;
   template<class T0, class T1>
     friend constexpr simd<@\seebelow@, size()>
-      @\simdselect@(const basic_simd_mask&, const T0&, const T1&) noexcept;
+      @\simdselect@(const basic_simd_mask&, const T0&, const T1&) noexcept; // \expos
 };
 \end{codeblock}
 
@@ -2242,7 +2212,7 @@ In addition only the \tcode{value_type} and \tcode{abi_type} members are present
 If \tcode{basic_simd_mask<Bytes, Abi>} is enabled, \tcode{basic_simd_mask<Bytes, Abi>} is
 trivially copyable.
 
-\pnum\ConversionsToIntrinsics
+\pnum\ConversionsToIntrinsics{basic_simd_mask}
 
 \rSec2[simd.mask.ctor]{\tcode{basic_simd_mask} constructors}
 
@@ -2442,7 +2412,7 @@ template<class T0, class T1>
 \begin{itemdescr}
   \pnum\constraints
   \begin{itemize}
-    \item \tcode{same_as<T0, T1>} is \tcode{true}, and
+    \item \tcode{same_as<T0, T1>} is \tcode{true},
     \item \tcode{T0} is a vectorizable type, and
     \item \tcode{sizeof(T0) == Bytes}.
   \end{itemize}
