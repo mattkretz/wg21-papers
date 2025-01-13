@@ -246,7 +246,9 @@
     \addcontentsline{toc}{#1}{%
       \theWGClause{} #2 [#3] (\thesubsection{})%
     }%
+    \let\oexposid\exposid\let\exposid\textit%
     {\noindent\wgOrigSection{#1}\larger[2]\textbf{\arabic{WGClause} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}}\\%
+    \let\exposid\oexposid%
     \noindent%
 }
 \newcommand\wgSubsection[3][subsubsection]{%
@@ -264,7 +266,9 @@
     \addcontentsline{toc}{#1}{%
       \theWGSubSection{} #2 [#3] (\thesubsubsection{})%
     }%
+    \let\oexposid\exposid\let\exposid\textit%
     {\noindent\wgOrigSection{#1}\larger[1]\textbf{\theWGSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}}\\%
+    \let\exposid\oexposid%
     \noindent%
 }
 \newcommand\wgSubsubsection[3][paragraph]{%
@@ -281,7 +285,9 @@
     \addcontentsline{toc}{#1}{%
       \theWGSubSubSection{} #2 [#3] (\theparagraph{})%
     }%
+    \let\oexposid\exposid\let\exposid\textit%
     {\noindent\wgOrigSection{#1}\larger[1]\textbf{\theWGSubSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}}\\%
+    \let\exposid\oexposid%
     \noindent%
 }
 \newcommand\wgSubsubsubsection[3][subparagraph]{%
@@ -297,7 +303,9 @@
     \addcontentsline{toc}{#1}{%
       \theWGSubSubSubSection{} #2 [#3] (\thesubparagraph{})%
     }%
+    \let\oexposid\exposid\let\exposid\textit%
     {\noindent\wgOrigSection{#1}\larger[1]\textbf{\theWGSubSubSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}}\\%
+    \let\exposid\oexposid%
     \noindent%
 }
 \makeatother
@@ -380,7 +388,7 @@
 \newcommand{\CodeStyle}{\ttfamily}
 \newcommand{\CodeStylex}[1]{\texttt{#1}}
 
-\newcommand{\iref}[1]{[#1]}
+\newcommand{\iref}[1]{\nolinebreak[3] ([#1])}
 
 % Code and definitions embedded in text.
 \newcommand{\tcode}[1]{\CodeStylex{#1}}
@@ -391,6 +399,19 @@
 \newcommand{\grammarterm}[1]{\textit{#1}\xspace}
 \newcommand{\placeholder}[1]{\textit{#1}}
 \newcommand{\placeholdernc}[1]{\textit{#1\nocorr}}
+\newcommand{\exposid}[1]{\tcode{\placeholder{#1}}}
+\newcommand{\exposidnc}[1]{\tcode{\placeholdernc{#1}}\itcorr[-1]}
+
+%% Manual insertion of italic corrections, for aligning in the presence
+%% of the above annotations.
+\newlength{\itcorrwidth}
+\newlength{\itletterwidth}
+\newcommand{\itcorr}[1][]{%
+ \settowidth{\itcorrwidth}{\textit{x\/}}%
+ \settowidth{\itletterwidth}{\textit{x\nocorr}}%
+ \addtolength{\itcorrwidth}{-1\itletterwidth}%
+ \makebox[#1\itcorrwidth]{}%
+}
 
 %% allow line break if needed for justification
 \newcommand{\brk}{\discretionary{}{}{}}
@@ -415,6 +436,11 @@
 \newcommand{\UNSP}[1]{\textit{\texttt{#1}}}
 \newcommand{\seebelow}{\UNSP{see below}}
 
+\newcommand{\impldef}[1]{imple\-men\-ta\-tion-defined}
+
+\newcommand{\ecname}[1]{\tcode{\placeholder{#1}}}
+\newcommand{\exposconcept}[1]{\ecname{#1}}
+
 %% Ranges
 \newcommand{\Range}[4]{\ensuremath{#1}\tcode{#3}\ensuremath{,}\,\penalty2000{}\tcode{#4}\ensuremath{#2}}
 \newcommand{\crange}[2]{\Range{[}{]}{#1}{#2}}
@@ -426,3 +452,11 @@
 %% Change descriptions
 \newcommand{\diffhead}[1]{\textbf{#1:}\space}
 \newcommand{\diffdef}[1]{\ifvmode\else\hfill\break\fi\diffhead{#1}}
+
+\def\rSec#1[#2]#3{%
+  \ifcase#1\wgSection[section]{#3}{#2}
+  \or\wgSubsection[subsection]{#3}{#2}
+  \or\wgSubsubsection[subsubsection]{#3}{#2}
+  \or\wgSubsubsubsection[paragraph]{#3}{#2}
+  \or\error
+\fi}
