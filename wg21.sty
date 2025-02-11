@@ -52,6 +52,7 @@
 \RequirePackage[american]{babel}
 \AtBeginDocument{\raggedbottom\frenchspacing}
 \usepackage[natbib=true,backend=biber,maxcitenames=1]{biblatex}
+\newcommand\wgcite[1]{\cite{#1} \citetitle{#1}}
 \addbibresource{wg21.bib}
 \defbibheading{bibliography}[\bibname]{%
   \section{#1}\label{app:bibliography}% %\addcontentsline{toc}{chapter}{\tocEntry{\bibname}}% %\markboth{\spacedlowsmallcaps{\bibname}}{\spacedlowsmallcaps{\bibname}}%
@@ -398,9 +399,9 @@
 }{%
   \RequirePackage{scrtime} % time access
   \RequirePackage{draftwatermark}%
-  \SetWatermarkLightness{0.95}
-  \SetWatermarkScale{.5}
-  \SetWatermarkText{\wgDocumentNumber}
+  \SetWatermarkLightness{0.97}
+  \SetWatermarkScale{13}
+  \SetWatermarkText{\textsf{DRAFT}}
   \PassOptionsToPackage{draft}{prelim2e}
   \RequirePackage{prelim2e}
   \renewcommand{\PrelimWords}{\relax}

@@ -5,7 +5,7 @@ PDFLATEX := TEXINPUTS=$(TEXINPUTS) flock . lualatex --shell-escape --halt-on-err
 BIBER := biber --input-directory .. --output-directory .
 MAKEINDEX := makeindex
 SHELL := /bin/bash
-EXTRA_DEPS := $(wildcard *.sty ../*.sty) ._dummy.tex
+EXTRA_DEPS := $(wildcard *.sty ../*.sty ../*.bib) ._dummy.tex
 CREATEMD5 := md5sum `find . -regex '.*\.\(aux\|bbl\|toc\|tex\|ind\)'` > ._aux-md5sums
 CHECKMD5  := md5sum --quiet -c ._aux-md5sums
 UPLOADNAME := D$(shell echo $(NAME)|cut -c2-5).pdf

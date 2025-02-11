@@ -1,9 +1,9 @@
 \newcommand\wgTitle{Add an iota object for simd (and more)}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3319R2}
-\newcommand\wgGroup{SG9, LEWG}
+\newcommand\wgDocumentNumber{P3319R3}
+\newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
-%\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
+%\newcommand\wgAcknowledgements{}
 
 \usepackage{mymacros}
 \usepackage{wg21}
@@ -37,6 +37,8 @@
 \renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
 \renewcommand{\tabref}[1]{Table~\ref{#1}}
 
+\newcommand\stdsimd{\std\code{simd\MayBreak::\MayBreak}}
+
 \begin{document}
 \selectlanguage{american}
 \begin{wgTitlepage}
@@ -63,6 +65,31 @@ This leads to code that doesn't scale with the vector width anymore.
 Therefore we should provide a simple facility that is concise and
 portable\footnote{in terms of SIMD width}.
 
+\section{Behavior on overflow}\label{sec:overflow}
+Consider \code{simd_iota<simd<char, 512>>} where \code{is_signed_v<char>} is
+\code{true}.
+While the standard only requires support of \simd width up to 64,
+implemenations are still free to enable larger widths.
+Should this be ill-formed (Mandates vs. Constraint) or should it match
+\code{std::iota} and \code{std::ranges::iota} behavior and produce a sawtooth
+wave?
+
+I was using \code{simd_iota} in test code and encountered both cases.
+In one case I had an error in my test code and making it ill-formed helped fixing the problem.
+In another case I was comparing against memory intitialized by \code{std::iota}
+and making \code{simd_iota} ill-formed unnecessarily made my test cases harder
+to write.
+
+Granted, most people won't use \code{simd_iota} in order to compare it against
+\std\code{iota}.
+Instead, the most likely use will be as a sequence of increasing offsets.
+In that case wraparound introduces a bug, and potentially even out-of-bounds
+indexes leading to memory-safety issues.
+Therefore, I prefer making \code{simd_iota} ill-formed if the \simd width is
+larger than the largest representable number.
+In terms of helpful diagnostics, a “Mandates” clause is the better solution.
+The wording below implements it that way.
+
 \section{Proposed polls}
 
 \wgPoll{We want an iota facility for \simd}{&&&&}
@@ -76,64 +103,7 @@ programming)}{&&&&}
 
 \wgPoll{The iota facility should be generalized to allow a different step value}{&&&&}
 
-\section{Wording}\label{sec:wording}
-\def\rSec#1[#2]#3{%
-  \ifcase#1\wgSubsection[subsection]{#3}{#2}
-  \or\wgSubsubsection[subsubsection]{#3}{#2}
-  \or\wgSubsubsubsection[paragraph]{#3}{#2}
-  \or\error
-\fi}
-
-Add the following to \iref{simd.syn}, after the declaration of \code{simd_cat}:
-\begin{wgText}[{[simd.syn]}]
-\begin{codeblock}
-  template<size_t Bs, class... Abis>
-    constexpr basic_simd_mask<Bs, @\deducet@<@\integerfrom@<Bs>,
-                              (basic_simd_mask<Bs, Abis>::size() + ...)>>
-      simd_cat(const basic_simd_mask<Bs, Abis>&...) noexcept;
-
-  @\wgAdd{template<class T> inline constexpr T simd_iota = \mbox{\seebelow};}@
-
-  // [simd.mask.reductions], \tcode{basic_simd_mask} reductions
-\end{codeblock}
-\end{wgText}
-
-Add the following at the end of \iref{simd.creation}:
-\begin{wgText}[{[simd.creation]}]
-  \setcounter{WGClause}{29}
-  \setcounter{WGSubSection}{10}
-  \setcounter{WGSubSubSection}{7}
-  \setcounter{WGSubSubSubSection}{6}
-  \setcounter{Paras}{4}
-\begin{itemdescr}
-  \pnum\returns
-  A data-parallel object initialized with the concatenated values in the \tcode{xs} pack of
-  data-parallel objects: The $i^\text{th}$ \tcode{basic_simd}/\tcode{basic_simd_mask} element of the
-  $j^\text{th}$ parameter in the \tcode{xs} pack is copied to the return value's element with index
-  $i$ + the sum of the width of the first $j$ parameters in the \tcode{xs} pack.
-\end{itemdescr}
-
-\begin{wgBAdd}
-\begin{itemdecl}
-@\wgAdd{template<class T> inline constexpr T simd_iota = \mbox{\seebelow};}@
-\end{itemdecl}
-\begin{itemdescr}
-  \pnum
-  \wgAdd{\constraints \tcode{is_arithmetic_v<T>} is \tcode{true} or \tcode{T}
-  is an enabled specialization of \code{basic_simd}.}
-
-  \pnum
-  \wgAdd{\effects
-    If \tcode{is_arithmetic_v<T>} is \tcode{true} the value of
-    \tcode{simd_iota<T>} is equal to \tcode{T()}.
-    Otherwise, the value of \tcode{simd_iota<T>} is equal to \tcode{T([](typename
-    T::value_type i) \{ return i; \})}.
-  }
-\end{itemdescr}
-\end{wgBAdd}
-
-\wgSubsubsubsection[paragraph]{Algorithms}{simd.alg}
-\end{wgText}
+\input{wording}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=0

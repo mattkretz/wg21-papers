@@ -32,9 +32,8 @@ for (int ii = 0; ii < 1024; ii += simd_size_v<T>) {
 }
 \end{lstlisting}
 
-In addition, what \code{simd(range)} does depends on the outcome of P3299
-“range ctors”.
-In any case we are requiring contiguous_range.
+In addition, with \wgcite{P3299R3} we continue to only enable construction and
+load from contiguous ranges.
 So \code{simd(random_access_range)} needs another paper altogether (while
   convenient, this is rarely what the user wanted; making non-contiguous loads
 ill-formed helps against “performance errors”).
@@ -44,12 +43,13 @@ But that's going to be a closed set, rather than a general concept.
 Why then would \code{simd(std::views:iota(0))} work but
 \code{simd(boost::\MayBreak{}views::\MayBreak{}iota(0))} is ill-formed?
 
-Our desired outcome of P3299 is that \code{simd(range)} requires a statically
+The outcome of \wgcite{P3299R3} is that \code{simd(range)} requires a statically
 sized contiguous range with exactly matching size.
-Thus we would need to call
-\code{std::simd::load<simd<int>>(std::\MayBreak{}views::\MayBreak{}iota(0))} instead.
-This is now even more verbose than the current solution \code{simd<int>([](int
-i) { return i; })}.
+Thus, even the call
+\code{std::simd_unchecked_load<simd<int>>(std::\MayBreak{}views::\MayBreak{}iota(0))} does not work.
+It's also not a solution to the problem posed, since it is now even more
+verbose than the generator constructor solution \code{simd<int>([](int i) {
+return i; })}.
 It completely fails at the goal to make the code more readable.
 
 Then what about \code{std::views::iota(0) | std::ranges::to<basic_simd>()}?

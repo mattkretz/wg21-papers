@@ -1,14 +1,14 @@
 \section{Generalization}
-By defining a variable template \std\code{simd_iota_v<T>} where \code{T} must
+By defining a variable template \std\code{simd_iota<T>} where \code{T} must
 be a \simd type, we're simply initializing a sequence of values at compile time.
 We can create such an object for more types.
 This is especially interesting for the degenerate case in SIMD-generic
 programming, where \code{T} could \eg be an \code{int}.
-An \std\code{iota_v<int>} is nothing other than an object \code{int} with value
+An \std\code{simd_iota<int>} is nothing other than an object \code{int} with value
 \code{0}.
 
-We can easily generalize to \code{iota_v<std::array<T, N>>} and
-\code{iota_v<T[N]>}.
+We can easily generalize to \std\code{iota_v<std::array<T, N>>} and
+\std\code{iota_v<T[N]>}.
 And the next step then is to allow any type that
 \begin{itemize}
   \item has a static extent,

@@ -1,7 +1,7 @@
 \newcommand\wgTitle{std::simd is a range}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3480R2}
-\newcommand\wgGroup{SG9, LEWG}
+\newcommand\wgDocumentNumber{P3480R3}
+\newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{}
 
@@ -37,7 +37,6 @@
 \newcommand\reductionoperation{\UNSP{reduction-binary-operation}}
 \newcommand\simdfloatingpoint{\UNSP{simd-floating-point}}
 \newcommand\multisimdfloatingpoint{\UNSP{multi-arg-simd-floating-point}}
-\newcommand\simditeratorsentinel{default\_sentinel\_t}
 \newcommand\simditerator{\UNSP{simd-iterator}}
 
 \renewcommand{\lst}[1]{Listing~\ref{#1}}
@@ -158,129 +157,313 @@ sential is implemented as a compare against a compile-time constant.
 This makes it easier for the compiler to optimize and reduces the size of the \code{end()} sentinel
 to a single byte (empty type).
 
+
+\section{Open Questions}
+
+\subsection{Make \code{iterator} convertible to \code{const_iterator}}
+After SG9 voted to make \code{basic_simd::const_iterator} and \code{basic_simd::iterator} different
+types, interaction between the two types needs to be considered.
+Since iterators model pointers and non-const pointers convert to const pointers, it seems we need
+conversion from \code{\simditerator<V>} to \code{\simditerator<\brk{}const V>} to be implicit.
+In the wording below, “\code{\#define LEWG_WANTS_CONVERSION 1}” to make
+\lstinline@v.begin() == v.cbegin()@ a valid expression (evaluating to \code{true}).
+
+\subsection{Add tuple interface}
+
+\code{std::array} implements the tuple interface.
+Should \code{std::simd} also implement \code{tuple_size}, \code{tuple_element}, and \code{get}?
+
 \section{Wording}
 
-This is just a sketch derived from my implementation of \simd and \mask iterators.
+\subsection{Feature Test Macro}
+In [version.syn] bump the \code{__cpp_lib_simd} version.
 
-Add the following:
+\subsection{Add [simd.iterator]}
+Add a new subclause before §29.10.6 [simd.class]:
 
-\begin{wgText}[{[simd.iterators]}]
-  \setcounter{Paras}{0}
+\begin{wgText}[{[simd]}]
+  \setcounter{WGClause}{29}
+  \setcounter{WGSubSection}{10}
+  \setcounter{WGSubSubSection}{5}
+  \rSec2[simd.iterator]{Class \exposid{simd-iterator}}
   \begin{codeblock}
-namespace std
-{
+namespace std {
   template <typename V>
-    class @\simditerator@         // \expos
-    {
-      V* data_ = nullptr;       // \expos
-      int offset_ = 0;          // \expos
+  class @\exposidnc{simd-iterator}@ {       // \expos
+    V* @\exposidnc{data_}@ = nullptr;       // \expos
+    @\exposidnc{simd-size-type} \exposidnc{offset_}@ = 0;          // \expos
 
-    public:
-      using value_type = typename V::value_type;
-      using iterator_category = std::random_access_iterator_tag;
-      using difference_type = int;
+  public:
+    using value_type = typename V::value_type;
+    using iterator_category = std::random_access_iterator_tag;
+    using difference_type = @\exposid{simd-size-type}@;
 
-      constexpr @\simditerator@() = default;
+    constexpr @\exposid{simd-iterator}@() = default;
+    constexpr @\exposid{simd-iterator}@(V& d, int off);
 
-      constexpr
-      @\simditerator@(V& d, int x)
-      : data_(&d), offset_(x)
-      {}
+    constexpr @\exposid{simd-iterator}@(const @\exposid{simd-iterator}@&) = default;
+    constexpr @\exposid{simd-iterator}@& operator=(const @\exposid{simd-iterator}@&) = default;
 
-      constexpr
-      @\simditerator@(const @\simditerator@ &) = default;
+#if LEWG_WANTS_CONVERSION
+    constexpr @\exposid{simd-iterator}@(const @\exposid{simd-iterator}@<remove_const_t<V>>&) requires is_const_v<V>;
+#endif
 
-      constexpr @\simditerator@&
-      operator=(const @\simditerator@ &) = default;
+    constexpr value_type operator*() const;
 
-      constexpr value_type
-      operator*() const
-      { return (*data_)[offset_]; }
+    constexpr @\exposid{simd-iterator}@& operator++();
+    constexpr @\exposid{simd-iterator}@ operator++(int);
+    constexpr @\exposid{simd-iterator}@& operator--();
+    constexpr @\exposid{simd-iterator}@ operator--(int);
 
-      constexpr @\simditerator@&
-      operator++()
-      {
-        ++offset_;
-        return *this;
-      }
+    constexpr @\exposid{simd-iterator}@& operator+=(difference_type n);
+    constexpr @\exposid{simd-iterator}@& operator-=(difference_type n);
 
-      constexpr @\simditerator@
-      operator++(int)
-      {
-        @\simditerator@ r = *this;
-        ++offset_;
-        return r;
-      }
+    constexpr value_type operator[](difference_type n) const;
 
-      constexpr @\simditerator@&
-      operator--()
-      {
-        --offset_;
-        return *this;
-      }
+    constexpr friend bool operator==(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b) = default;
+    constexpr friend bool operator==(@\exposid{simd-iterator}@ a, default_sentinel_t);
+    constexpr friend auto operator<=>(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
+    constexpr friend auto operator<=>(@\exposid{simd-iterator}@ a, default_sentinel_t);
 
-      constexpr @\simditerator@
-      operator--(int)
-      {
-        @\simditerator@ r = *this;
-        --offset_;
-        return r;
-      }
+    constexpr friend @\exposid{simd-iterator}@ operator+(const @\exposid{simd-iterator}@& i, difference_type n);
+    constexpr friend @\exposid{simd-iterator}@ operator+(difference_type n, const @\exposid{simd-iterator}@& i);
+    constexpr friend @\exposid{simd-iterator}@ operator-(const @\exposid{simd-iterator}@& i, difference_type n);
 
-      constexpr difference_type
-      operator-(@\simditerator@ rhs) const
-      { return offset_ - rhs.offset_; }
-
-      constexpr friend difference_type
-      operator-(@\simditerator@ it, @\simditeratorsentinel@)
-      { return it.offset_ - difference_type(V::size.value); }
-
-      constexpr friend difference_type
-      operator-(@\simditeratorsentinel@, @\simditerator@ it)
-      { return difference_type(V::size.value) - it.offset_; }
-
-      constexpr friend @\simditerator@
-      operator+(difference_type x, const @\simditerator@& it)
-      { return @\simditerator@(*it.data_, it.offset_ + x); }
-
-      constexpr friend @\simditerator@
-      operator+(const @\simditerator@& it, difference_type x)
-      { return @\simditerator@(*it.data_, it.offset_ + x); }
-
-      constexpr friend @\simditerator@
-      operator-(const @\simditerator@& it, difference_type x)
-      { return @\simditerator@(*it.data_, it.offset_ - x); }
-
-      constexpr @\simditerator@&
-      operator+=(difference_type x)
-      {
-        offset_ += x;
-        return *this;
-      }
-
-      constexpr @\simditerator@&
-      operator-=(difference_type x)
-      {
-        offset_ -= x;
-        return *this;
-      }
-
-      constexpr value_type
-      operator[](difference_type i) const
-      { return (*data_)[offset_ + i]; }
-
-      constexpr friend auto operator<=>(@\simditerator@ a, @\simditerator@ b)
-      { return a.offset_ <=> b.offset_; }
-
-      constexpr friend bool operator==(@\simditerator@ a, @\simditerator@ b) = default;
-
-      constexpr friend bool operator==(@\simditerator@ a, @\simditeratorsentinel@)
-      { return a.offset_ == difference_type(V::size.value); }
-    };
+    constexpr friend difference_type operator-(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
+    constexpr friend difference_type operator-(@\exposid{simd-iterator}@ i, default_sentinel_t);
+    constexpr friend difference_type operator-(default_sentinel_t, @\exposid{simd-iterator}@ i);
+  };
 }
   \end{codeblock}
+
+\begin{itemdecl}
+constexpr @\exposid{simd-iterator}@(V& d, int off);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Initializes \exposid{data_} with \tcode{d} and \exposid{offset_} with \tcode{off}.
+\end{itemdescr}
+
+\begin{itemdecl}
+#if LEWG_WANTS_CONVERSION
+constexpr @\exposid{simd-iterator}@(const @\exposid{simd-iterator}@<remove_const_t<V>>& i) requires is_const_v<V>;
+#endif
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Initializes \exposid{data_} with \tcode{i.\exposid{data_}} and \exposid{offset_} with \tcode{i.\exposid{offset_}}.
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr value_type operator*() const;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\expects
+\begin{itemize}
+  \item \exposid{data_} is a valid pointer, and
+  \item \exposid{offset_} is in the range \range{0}{V::size()}.
+\end{itemize}
+\FIXME{\expects already implied by \effects?}
+
+\pnum
+\effects
+Equivalent to: \tcode{return (*\exposid{data_})[\exposid{offset_}];}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr @\exposid{simd-iterator}@& operator++();
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to:
+\begin{codeblock}
+++@\exposid{offset_}@;
+return *this;
+\end{codeblock}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr @\exposid{simd-iterator}@ operator++(int);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to:
+\begin{codeblock}
+@\exposid{simd-iterator}@ tmp = *this;
+++@\exposid{offset_}@;
+return tmp;
+\end{codeblock}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr @\exposid{simd-iterator}@& operator--();
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to:
+\begin{codeblock}
+--@\exposid{offset_}@;
+return *this;
+\end{codeblock}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr @\exposid{simd-iterator}@ operator--(int);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to:
+\begin{codeblock}
+@\exposid{simd-iterator}@ tmp = *this;
+--@\exposid{offset_}@;
+return tmp;
+\end{codeblock}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr @\exposid{simd-iterator}@& operator+=(difference_type n);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to:
+\begin{codeblock}
+@\exposid{offset_}@ += n;
+return *this;
+\end{codeblock}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr @\exposid{simd-iterator}@& operator-=(difference_type n);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to:
+\begin{codeblock}
+@\exposid{offset_}@ -= n;
+return *this;
+\end{codeblock}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr value_type operator[](difference_type n) const;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to: \tcode{return (*\exposid{data_})[\exposid{offset_} + n];}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr friend bool operator==(@\exposid{simd-iterator}@ i, default_sentinel_t);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to: \tcode{return i.\exposid{offset_} == V::size();}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr friend auto operator<=>(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\expects
+\tcode{a.\exposid{data_} == b.\exposid{data_}} is \tcode{true}.
+
+\pnum
+\effects
+Equivalent to: \tcode{return a.\exposid{offset_} <=> b.\exposid{offset_};}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr friend auto operator<=>(@\exposid{simd-iterator}@ i, default_sentinel_t);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to: \tcode{return i.\exposid{offset_} <=> V::size();}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr friend @\exposid{simd-iterator}@ operator+(const @\exposid{simd-iterator}@& i, difference_type n);
+constexpr friend @\exposid{simd-iterator}@ operator+(difference_type n, const @\exposid{simd-iterator}@& i);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to: \tcode{return \exposid{simd-iterator}(*i.\exposid{data_}, i.\exposid{offset_} + x);}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr friend @\exposid{simd-iterator}@ operator-(const @\exposid{simd-iterator}@& i, difference_type n);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to: \tcode{return \exposid{simd-iterator}(*i.\exposid{data_}, i.\exposid{offset_} - x);}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr friend difference_type operator-(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\expects
+\tcode{a.\exposid{data_} == b.\exposid{data_}} is \tcode{true}.
+
+\pnum
+\effects
+Equivalent to: \tcode{return a.\exposid{offset_} - b.\exposid{offset_};}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr friend difference_type operator-(@\exposid{simd-iterator}@ i, default_sentinel_t);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to: \tcode{return i.\exposid{offset_} - V::size();}
+\end{itemdescr}
+
+
+\begin{itemdecl}
+constexpr friend difference_type operator-(default_sentinel_t, @\exposid{simd-iterator}@ i);
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to: \tcode{return V::size() - i.\exposid{offset_};}
+\end{itemdescr}
 \end{wgText}
 
+\subsection{Modify [simd.overview]}
 \begin{wgText}[{[simd.overview]}]
 \setcounter{Paras}{0}
 \begin{codeblock}
@@ -289,17 +472,18 @@ public:
   using value_type = T;
   using mask_type = basic_simd_mask<sizeof(T), Abi>;
   using abi_type = Abi;
-  @\wgAdd{using iterator = \mbox{\simditerator}<basic_simd>;}@
-  @\wgAdd{using const_iterator = \mbox{\simditerator}<const basic_simd>;}@
+  @\wgAdd{using iterator = \mbox{\exposid{simd-iterator}}<basic_simd>;}@
+  @\wgAdd{using const_iterator = \mbox{\exposid{simd-iterator}}<const basic_simd>;}@
 
   @\wgAdd{constexpr iterator begin();}@
   @\wgAdd{constexpr const_iterator begin() const;}@
   @\wgAdd{constexpr const_iterator cbegin() const;}@
-  @\wgAdd{constexpr \mbox{\simditeratorsentinel} end() const;}@
-  @\wgAdd{constexpr \mbox{\simditeratorsentinel} cend() const;}@
+  @\wgAdd{constexpr default_sentinel_t end() const;}@
+  @\wgAdd{constexpr default_sentinel_t cend() const;}@
 \end{codeblock}
 \end{wgText}
 
+\subsection{Modify [simd.mask.overview]}
 \begin{wgText}[{[simd.mask.overview]}]
 \setcounter{Paras}{0}
 \begin{codeblock}
@@ -307,17 +491,19 @@ template<size_t Bytes, class Abi> class basic_simd_mask {
 public:
   using value_type = bool;
   using abi_type = Abi;
-  @\wgAdd{using iterator = \mbox{\simditerator}<basic_simd_mask>;}@
-  @\wgAdd{using const_iterator = \mbox{\simditerator}<const basic_simd_mask>;}@
+  @\wgAdd{using iterator = \mbox{\exposid{simd-iterator}}<basic_simd_mask>;}@
+  @\wgAdd{using const_iterator = \mbox{\exposid{simd-iterator}}<const basic_simd_mask>;}@
 
   @\wgAdd{constexpr iterator begin();}@
   @\wgAdd{constexpr const_iterator begin() const;}@
   @\wgAdd{constexpr const_iterator cbegin() const;}@
-  @\wgAdd{constexpr \mbox{\simditeratorsentinel} end() const;}@
-  @\wgAdd{constexpr \mbox{\simditeratorsentinel} cend() const;}@
+  @\wgAdd{constexpr default_sentinel_t end() const;}@
+  @\wgAdd{constexpr default_sentinel_t cend() const;}@
 \end{codeblock}
 \end{wgText}
 
+\begin{wgText}[{[simd.tuple]}]
+\end{wgText}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=100
