@@ -1,7 +1,7 @@
 \newcommand\wgTitle{Exploration of namespaces for std::simd}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3287R2}
-\newcommand\wgGroup{LEWG}
+\newcommand\wgDocumentNumber{D3287R3}
+\newcommand\wgGroup{LWG}
 \newcommand\wgTarget{\CC{}26}
 \newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews.}
 
@@ -308,66 +308,161 @@ std::simd<float> f(std::span<float> data)
 \end{lstlisting}
 
 
-\section{Proposed polls}
-
-Any vote would be against the status quo, which so far can be summarized as:
-\begin{itemize}
-  \item types and functions go directly into \code{std}
-
-  \item when naming a function for \code{simd},
-    \begin{itemize}
-      \item if the same function exists / could exist for scalars or a range:
-        no \code{simd_} prefix,
-      \item otherwise the function name needs a \code{simd_} prefix
-    \end{itemize}
-
-  \item traits and types need a \code{simd} in their name
-\end{itemize}
-
-\wgPoll{Adopt wording instructions (\sect{sec:wording}) from \wgDocumentNumber\,
-  \emph{without} renaming (\code{basic_})\code{simd} to (\code{basic_})\code{vec}}
-{&&&&}
-
-\wgPoll{Adopt wording instructions (\sect{sec:wording}) from \wgDocumentNumber\,
-  renaming (\code{basic_})\code{simd} to (\code{basic_})\code{vec}}
-{&&&&}
-
-\wgPoll{Adopt wording instructions (\sect{sec:wording}) from \wgDocumentNumber\,
-  using namespace \code{std::datapar} instead of \code{std::simd}
-  \emph{without} renaming (\code{basic_})\code{simd} to (\code{basic_})\code{vec}}
-{&&&&}
-
 \section{Wording}\label{sec:wording}
 
-This is fairly mechanical work, adding namespaces and adjusting type and
-function names.
+Instructions to the editor:
 
-In general the instructions go like this:
+In 29.10 Data-parallel types [simd],
 \begin{enumerate}
-  \item Move every type and function in “Data-Parallel types [simd]” from
-    namespace \code{std} to namespace \std\code{simd}.
+  \item
+    for every occurrence of “\code{namespace std \{}” add “\code{namespace std\wgAdd{::datapar} \{}”;
 
-  \item Replace all occurences of \code{basic_simd_mask} with
-    \code{basic_mask}.
+  \item
+    rename all functions, types (class and alias templates) except
+    \code{simd_mask}, variables (constants), and variable templates by applying
+    \code{s/\backslash<simd_//} (names starting with \code{simd_} have that
+    \code{simd_} prefix removed, but \code{simd_mask} is \emph{not} renamed to
+  \code{mask});
 
-  \item Replace all occurences of \code{simd_mask} with \code{mask}.
-
-  \item (TBD) Replace all occurences of \code{basic_simd} with \code{basic_vec}.
-
-  \item (TBD) Replace all occurences of \code{simd} with \code{vec}.
-
-  \item Rename all functions and remaining types / class templates: \code{s/\backslash<simd_//}.
-
-  \item \code{s/rebind_simd/rebind/}
-
-  \item \code{s/resize_simd/resize/}
-
-  \item Add using-declarations in namespace \code{std} for the following functions:
-    \begin{itemize}
-      \item all function defined in [simd.math], and
-      \item \code{min}, \code{max}, \code{minmax}, and \code{clamp} in [simd.alg].
-    \end{itemize}
+  \item rename every occurrence of \code{rebind_simd} to \code{rebind};
+  \item rename every occurrence of \code{resize_simd} to \code{resize};
+  \item rename every occurrence of \code{rebind_simd_t} to \code{rebind_t}; and
+  \item rename every occurrence of \code{resize_simd_t} to \code{resize_t}.
 \end{enumerate}
+
+Add to the end of 29.10.3 [simd.syn]
+\begin{wgText}[29.10.3 Header \code{<simd>} synopsis {[simd.syn]}]
+\begin{codeblock}
+  template<@\exposconcept{math-floating-point}@ V>
+    @\exposid{deduced-simd-t}@<V>
+      sph_neumann(const rebind_simd_t<unsigned, @\exposid{deduced-simd-t}@<V>>& n, const V& x);
+}
+
+@\wgAdd{namespace std \{}@
+  @\wgAdd{// [simd.alg]}@
+  @\wgAdd{using datapar::min;}@
+  @\wgAdd{using datapar::max;}@
+  @\wgAdd{using datapar::minmax;}@
+  @\wgAdd{using datapar::clamp;}@
+
+  @\wgAdd{// [simd.math]}@
+  @\wgAdd{using datapar::acos;}@
+  @\wgAdd{using datapar::asin;}@
+  @\wgAdd{using datapar::atan;}@
+  @\wgAdd{using datapar::atan2;}@
+  @\wgAdd{using datapar::cos;}@
+  @\wgAdd{using datapar::sin;}@
+  @\wgAdd{using datapar::tan;}@
+  @\wgAdd{using datapar::acosh;}@
+  @\wgAdd{using datapar::asinh;}@
+  @\wgAdd{using datapar::atanh;}@
+  @\wgAdd{using datapar::cosh;}@
+  @\wgAdd{using datapar::sinh;}@
+  @\wgAdd{using datapar::tanh;}@
+  @\wgAdd{using datapar::exp;}@
+  @\wgAdd{using datapar::exp2;}@
+  @\wgAdd{using datapar::expm1;}@
+  @\wgAdd{using datapar::frexp;}@
+  @\wgAdd{using datapar::ilogb;}@
+  @\wgAdd{using datapar::ldexp;}@
+  @\wgAdd{using datapar::log;}@
+  @\wgAdd{using datapar::log10;}@
+  @\wgAdd{using datapar::log1p;}@
+  @\wgAdd{using datapar::log2;}@
+  @\wgAdd{using datapar::logb;}@
+  @\wgAdd{using datapar::modf;}@
+  @\wgAdd{using datapar::scalbn;}@
+  @\wgAdd{using datapar::scalbln;}@
+  @\wgAdd{using datapar::cbrt;}@
+  @\wgAdd{using datapar::abs;}@
+  @\wgAdd{using datapar::abs;}@
+  @\wgAdd{using datapar::fabs;}@
+  @\wgAdd{using datapar::hypot;}@
+  @\wgAdd{using datapar::pow;}@
+  @\wgAdd{using datapar::sqrt;}@
+  @\wgAdd{using datapar::erf;}@
+  @\wgAdd{using datapar::erfc;}@
+  @\wgAdd{using datapar::lgamma;}@
+  @\wgAdd{using datapar::tgamma;}@
+  @\wgAdd{using datapar::ceil;}@
+  @\wgAdd{using datapar::floor;}@
+  @\wgAdd{using datapar::nearbyint;}@
+  @\wgAdd{using datapar::rint;}@
+  @\wgAdd{using datapar::lrint;}@
+  @\wgAdd{using datapar::llrint;}@
+  @\wgAdd{using datapar::round;}@
+  @\wgAdd{using datapar::lround;}@
+  @\wgAdd{using datapar::llround;}@
+  @\wgAdd{using datapar::trunc;}@
+  @\wgAdd{using datapar::fmod;}@
+  @\wgAdd{using datapar::remainder;}@
+  @\wgAdd{using datapar::remquo;}@
+  @\wgAdd{using datapar::copysign;}@
+  @\wgAdd{using datapar::nextafter;}@
+  @\wgAdd{using datapar::fdim;}@
+  @\wgAdd{using datapar::fmax;}@
+  @\wgAdd{using datapar::fmin;}@
+  @\wgAdd{using datapar::fma;}@
+  @\wgAdd{using datapar::lerp;}@
+  @\wgAdd{using datapar::fpclassify;}@
+  @\wgAdd{using datapar::isfinite;}@
+  @\wgAdd{using datapar::isinf;}@
+  @\wgAdd{using datapar::isnan;}@
+  @\wgAdd{using datapar::isnormal;}@
+  @\wgAdd{using datapar::signbit;}@
+  @\wgAdd{using datapar::isgreater;}@
+  @\wgAdd{using datapar::isgreaterequal;}@
+  @\wgAdd{using datapar::isless;}@
+  @\wgAdd{using datapar::islessequal;}@
+  @\wgAdd{using datapar::islessgreater;}@
+  @\wgAdd{using datapar::isunordered;}@
+  @\wgAdd{using datapar::assoc_laguerre;}@
+  @\wgAdd{using datapar::assoc_legendre;}@
+  @\wgAdd{using datapar::beta;}@
+  @\wgAdd{using datapar::comp_ellint_1;}@
+  @\wgAdd{using datapar::comp_ellint_2;}@
+  @\wgAdd{using datapar::comp_ellint_3;}@
+  @\wgAdd{using datapar::cyl_bessel_i;}@
+  @\wgAdd{using datapar::cyl_bessel_j;}@
+  @\wgAdd{using datapar::cyl_bessel_k;}@
+  @\wgAdd{using datapar::cyl_neumann;}@
+  @\wgAdd{using datapar::ellint_1;}@
+  @\wgAdd{using datapar::ellint_2;}@
+  @\wgAdd{using datapar::ellint_3;}@
+  @\wgAdd{using datapar::expint;}@
+  @\wgAdd{using datapar::hermite;}@
+  @\wgAdd{using datapar::laguerre;}@
+  @\wgAdd{using datapar::legendre;}@
+  @\wgAdd{using datapar::riemann_zeta;}@
+  @\wgAdd{using datapar::sph_bessel;}@
+  @\wgAdd{using datapar::sph_legendre;}@
+  @\wgAdd{using datapar::sph_neumann;}@
+
+  @\wgAdd{// [simd.bit]}@
+  @\wgAdd{using datapar::byteswap;}@
+  @\wgAdd{using datapar::bit_ceil;}@
+  @\wgAdd{using datapar::bit_floor;}@
+  @\wgAdd{using datapar::has_single_bit;}@
+  @\wgAdd{using datapar::rotl;}@
+  @\wgAdd{using datapar::rotr;}@
+  @\wgAdd{using datapar::bit_width;}@
+  @\wgAdd{using datapar::countl_zero;}@
+  @\wgAdd{using datapar::countl_one;}@
+  @\wgAdd{using datapar::countr_zero;}@
+  @\wgAdd{using datapar::countr_one;}@
+  @\wgAdd{using datapar::popcount;}@
+
+  @\wgAdd{// [simd.complex]}@
+  @\wgAdd{using datapar::real;}@
+  @\wgAdd{using datapar::imag;}@
+  @\wgAdd{using datapar::arg;}@
+  @\wgAdd{using datapar::norm;}@
+  @\wgAdd{using datapar::conj;}@
+  @\wgAdd{using datapar::proj;}@
+  @\wgAdd{using datapar::polar;}@
+@\wgAdd{\}}@
+\end{codeblock}
+\end{wgText}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=0
