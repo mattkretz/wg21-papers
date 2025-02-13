@@ -1,8 +1,8 @@
 \newcommand\wgTitle{simd issues: explicit, unsequenced, identity-element position, and members of
 disabled simd}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3430R2}
-\newcommand\wgGroup{LEWG}
+\newcommand\wgDocumentNumber{P3430R3}
+\newcommand\wgGroup{LWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
 
@@ -502,9 +502,9 @@ No poll requested.
 \pagebreak
 \section{Wording}
 
-\subsection{Feature Test Macro}
-In [version.syn] bump the \code{__cpp_lib_simd} version.
-\FIXME{Really?}
+\subsection{Feature test macro}
+
+No feature test macro is added or bumped.
 
 \subsection{Modify [simd.overview] and [simd.ctor]}
 
@@ -554,13 +554,13 @@ Let \tcode{From} denote the type \tcode{remove_cvref_t<U>}.
 \wgAdd{\tcode{value_type} satisfies \tcode{constructible_from<U>}.}
 \wgRem{\tcode{From} satisfies \tcode{convertible_to<value_type>}, and either}
 \begin{itemize}
- \wgItemRem[
+ \wgItemRem[%
    \tcode{From} is an arithmetic type and the conversion from \tcode{From} to
    \tcode{value_type} is value-preserving\mbox{\iref{simd.general}}, or]
- \wgItemRem[
+ \wgItemRem[%
    \tcode{From} is not an arithmetic type and does not satisfy
    \mbox{\exposconcept{constexpr-wrapper-like}}, or]
- \wgItemRem[
+ \wgItemRem[%
    \tcode{From} satisfies \mbox{\exposconcept{constexpr-wrapper-like}},
    \tcode{remove_const_t<decltype(From::value)>} is an arithmetic type, and
    \tcode{From::value} is representable by \tcode{value_type}.]
@@ -574,16 +574,16 @@ Initializes each element to the value of the argument after conversion to
 \pnum
 \wgAdd{%
 \remarks
-The expression inside \tcode{explicit} evaluates to \tcode{false} if and only if 
-\tcode{From} satisfies \tcode{convertible_to<value_type>}, and either}
+The expression inside \tcode{explicit} evaluates to \tcode{false} if and only if
+\tcode{U} satisfies \tcode{convertible_to<value_type>}, and either}
 \begin{itemize}
- \wgItemAdd[
+ \wgItemAdd[%
+   \tcode{From} is not an arithmetic type and does not satisfy
+   \mbox{\exposconcept{constexpr-wrapper-like}},]
+ \wgItemAdd[%
    \tcode{From} is an arithmetic type and the conversion from \tcode{From} to
    \tcode{value_type} is value-preserving\mbox{\iref{simd.general}}, or]
- \wgItemAdd[
-   \tcode{From} is not an arithmetic type and does not satisfy
-   \mbox{\exposconcept{constexpr-wrapper-like}}, or]
- \wgItemAdd[
+ \wgItemAdd[%
    \tcode{From} satisfies \mbox{\exposconcept{constexpr-wrapper-like}},
    \tcode{remove_const_t<decltype(From::value)>} is an arithmetic type, and
    \tcode{From::value} is representable by \tcode{value_type}.]
@@ -651,7 +651,7 @@ i>()))} for all $i$ in the range of \range{0}{size()}.
 \wgRem{The calls to \tcode{gen} are unsequenced with respect to each other.
   Vectorization-unsafe\mbox{\iref{algorithms.parallel.defns}} standard library functions
 may not be invoked by \tcode{gen}.}
-\tcode{gen} is invoked exactly once for each $i$.
+\tcode{gen} is invoked exactly once for each $i$\wgAdd{, in increasing order of $i$}.
 \end{itemdescr}
 \end{wgText}
 
@@ -728,7 +728,7 @@ the range of \range{0}{size()}.
 \wgRem{The calls to \tcode{gen} are unsequenced with respect to each other.
   Vectorization-unsafe\mbox{\iref{algorithms.parallel.defns}} standard library
 functions may not be invoked by \tcode{gen}.}
-\tcode{gen} is invoked exactly once for each $i$.
+\tcode{gen} is invoked exactly once for each $i$\wgAdd{, in increasing order of $i$}.
 \end{itemdescr}
 
 \end{wgText}
