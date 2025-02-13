@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Exploration of namespaces for std::simd}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D3287R3}
+\newcommand\wgDocumentNumber{P3287R3}
 \newcommand\wgGroup{LWG}
 \newcommand\wgTarget{\CC{}26}
 \newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews.}
@@ -310,7 +310,16 @@ std::simd<float> f(std::span<float> data)
 
 \section{Wording}\label{sec:wording}
 
-Instructions to the editor:
+\subsection{Feature test macro}
+
+No feature test macro is added or bumped.
+
+\subsection{Ordering constraints}
+
+Apply P2663 and P2933 before applying this paper.
+P3430 can be applied independently.
+
+\subsection{Instructions to the editor}
 
 In 29.10 Data-parallel types [simd],
 \begin{enumerate}
@@ -332,6 +341,7 @@ In 29.10 Data-parallel types [simd],
 
 Add to the end of 29.10.3 [simd.syn]
 \begin{wgText}[29.10.3 Header \code{<simd>} synopsis {[simd.syn]}]
+  \renewcommand\ref[1]{[#1]}
 \begin{codeblock}
   template<@\exposconcept{math-floating-point}@ V>
     @\exposid{deduced-simd-t}@<V>
@@ -339,13 +349,13 @@ Add to the end of 29.10.3 [simd.syn]
 }
 
 @\wgAdd{namespace std \{}@
-  @\wgAdd{// [simd.alg]}@
+  @\wgAdd{// See [simd.alg], Algorithms}@
   @\wgAdd{using datapar::min;}@
   @\wgAdd{using datapar::max;}@
   @\wgAdd{using datapar::minmax;}@
   @\wgAdd{using datapar::clamp;}@
 
-  @\wgAdd{// [simd.math]}@
+  @\wgAdd{// See [simd.math], Mathematical functions}@
   @\wgAdd{using datapar::acos;}@
   @\wgAdd{using datapar::asin;}@
   @\wgAdd{using datapar::atan;}@
@@ -438,7 +448,7 @@ Add to the end of 29.10.3 [simd.syn]
   @\wgAdd{using datapar::sph_legendre;}@
   @\wgAdd{using datapar::sph_neumann;}@
 
-  @\wgAdd{// [simd.bit]}@
+  @\wgAdd{// See [simd.bit], Bit manipulation}@
   @\wgAdd{using datapar::byteswap;}@
   @\wgAdd{using datapar::bit_ceil;}@
   @\wgAdd{using datapar::bit_floor;}@
@@ -452,7 +462,7 @@ Add to the end of 29.10.3 [simd.syn]
   @\wgAdd{using datapar::countr_one;}@
   @\wgAdd{using datapar::popcount;}@
 
-  @\wgAdd{// [simd.complex]}@
+  @\wgAdd{// See [simd.complex.math], simd complex math}@
   @\wgAdd{using datapar::real;}@
   @\wgAdd{using datapar::imag;}@
   @\wgAdd{using datapar::arg;}@
