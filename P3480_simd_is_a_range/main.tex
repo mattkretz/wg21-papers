@@ -1,6 +1,6 @@
 \newcommand\wgTitle{std::simd is a range}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3480R3}
+\newcommand\wgDocumentNumber{P3480R4}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{}
@@ -92,9 +92,9 @@ matches on the semantic level, not only syntactically.
 
 \subsection{Read-only subscript should imply read-only iteration}
 
-With P1928R12 we can write
+With the latest WD we can write
 \medskip\begin{lstlisting}
-std::simd<int> v = ...;
+std::datapar::simd<int> v = ...;
 for (int i = 0; i < v.size(); ++i) {
   do_something(v[i]);
 }
@@ -126,13 +126,13 @@ This expectation should not get an exception with \simd and \mask.
 In some applications it is more efficient (and simpler) to work with \simd objects internally,
 instead of constantly doing loads and stores.
 Thus a fairly simple container that comes up in applications could be
-\code{std::vector<std::simd<float>>}.
+\code{std::vector<std::datapar::simd<float>>}.
 On I/O such an application typically cannot communicate in \simd objects anymore.
 Instead it needs to present a range of \code{float}s.
 Read-only iterators on \simd do not help with the input side.
 But for output we can easily turn the \code{vector<simd<float>>} into a range of \code{float}:
 \medskip\begin{lstlisting}
-std::vector<std::simd<float>> data;
+std::vector<std::datapar::simd<float>> data;
 auto range_of_float = data | std::views::join;
 \end{lstlisting}
 
@@ -153,7 +153,7 @@ Consequently, a single \simd iterator can always determine whether it points at 
 of the range, it doesn't need to compare against another offset.
 A sentinel type allows asking that question via \code{operator==}.
 Thus, instead of comparing two runtime offset members on \code{operator==}, a compare against a
-sential is implemented as a compare against a compile-time constant.
+sentinel is implemented as a compare against a compile-time constant.
 This makes it easier for the compiler to optimize and reduces the size of the \code{end()} sentinel
 to a single byte (empty type).
 
@@ -187,11 +187,11 @@ Add a new subclause before §29.10.6 [simd.class]:
   \setcounter{WGSubSubSection}{5}
   \rSec2[simd.iterator]{Class \exposid{simd-iterator}}
   \begin{codeblock}
-namespace std {
-  template <typename V>
-  class @\exposidnc{simd-iterator}@ {       // \expos
-    V* @\exposidnc{data_}@ = nullptr;       // \expos
-    @\exposidnc{simd-size-type} \exposidnc{offset_}@ = 0;          // \expos
+namespace std::datapar {
+  template <class V>
+  class @\exposidnc{simd-iterator}@ {         // \expos
+    V* @\exposidnc{data_}@ = nullptr;         // \expos
+    @\exposidnc{simd-size-type} \exposidnc{offset_}@ = 0; // \expos
 
   public:
     using value_type = typename V::value_type;
