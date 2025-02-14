@@ -47,8 +47,9 @@ Add the following at the end of \iref{simd.creation}:
 
 \begin{itemdescr}
 \pnum
-\wgAdd{\constraints \tcode{is_arithmetic_v<T>} is \tcode{true} or \tcode{T}
-is an enabled specialization of \code{basic_simd}.}
+\wgAdd{\constraints
+  Either \tcode{T} is vectorizable and \tcode{is_arithmetic_v<T>} is
+\tcode{true}, or \tcode{T} is an enabled specialization of \code{basic_simd}.}
 
 \pnum
 \wgAdd{\mandates \tcode{is_arithmetic_v<T>} is \tcode{true} or

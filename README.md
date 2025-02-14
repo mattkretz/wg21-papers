@@ -20,7 +20,7 @@ This repository holds the LuaLaTeX sources for my papers to the C++ committee.
 | [P2772](https://wg21.link/p2772) |                                                    | `std::integral_constant` literals do not suffice — `constexpr_t`? | superseded by P2781 |
 | [P3275](https://wg21.link/p3275) | [D3275](https://web-docs.gsi.de/~mkretz/D3275.pdf) | Replace simd operator[] with getter and setter functions --- or not | accepted: applied to P1928R10 |
 | [P3287](https://wg21.link/p3287) | [D3287](https://web-docs.gsi.de/~mkretz/D3287.pdf) | Exploration of namespaces for std::simd   | finished                   |
-| [P3319](https://wg21.link/p3319) | [D3319](https://web-docs.gsi.de/~mkretz/D3319.pdf) | Add an iota object for simd (and more)    | LEWG                       |
+| [P3319](https://wg21.link/p3319) | [D3319](https://web-docs.gsi.de/~mkretz/D3319.pdf) | Add an iota object for simd (and more)    | LWG                        |
 | [P3430](https://wg21.link/p3430) | [D3430](https://web-docs.gsi.de/~mkretz/D3430.pdf) | simd issues: explicit, unsequenced, identity-element position, and members of disabled simd | finished                   |
 | [P3480](https://wg21.link/p3480) | [D3480](https://web-docs.gsi.de/~mkretz/D3480.pdf) | std::simd is a range                      | LEWG                       |
 | [P3488](https://wg21.link/p3488) | [D3488](https://web-docs.gsi.de/~mkretz/D3488.pdf) | Floating-Point Excess Precision           | SG6                        |
