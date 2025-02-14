@@ -11,21 +11,25 @@ However, often it would be easier and more readable to use an “iota”
   generator ctor & iota \\
   \hline
   \begin{lstlisting}
-std::simd<int> a([](int i) { return i; };
+namespace dp = std::datapar;
 
-std::simd<int> b([](int i) { return 2 + 3 * i; };
+dp::simd<int> a([](int i) { return i; };
+
+dp::simd<int> b([](int i) { return 2 + 3 * i; };
   \end{lstlisting}
   &
   \begin{lstlisting}
-auto a = std::simd_iota<std::simd<int>>;
+namespace dp = std::datapar;
 
-auto b = 2 + 3 * std::simd_iota<std::simd<int>>;
+auto a = dp::iota<dp::simd<int>>;
+
+auto b = 2 + 3 * dp::iota<dp::simd<int>>;
   \end{lstlisting}
 \end{tabular}
 \endgroup
 
 \pagebreak
-An example where an \code{simd_iota<simd>} comes up is the calculation of the
+An example where an \code{datapar::iota<simd>} comes up is the calculation of the
 Mandelbrot set.
 The program needs to iterate over all visible pixels and calculate the
 corresponding value in the complex plane.
@@ -36,29 +40,25 @@ for (int x = 0; x < 1024; ++x) {
 \end{lstlisting}
 turns into
 \medskip\begin{lstlisting}[style=Vc]
-using floatv = simd<float>;
-using intv = rebind_simd_t<int, floatv>;
-for (intv x = simd_iota<intv>; any_of(x < 1024); x += intv::size()) {
+using floatv = dp::simd<float>;
+using intv = dp::rebind_t<int, floatv>;
+for (intv x = dp::iota<intv>; any_of(x < 1024); x += intv::size()) {
   floatv real = floatv(x) * scale + offset;
 \end{lstlisting}
 
 The minimal definition proposed can be implemented like this:
 \medskip\begin{lstlisting}[style=Vc]
-namespace std {
+namespace std::datapar {
   template <class T>
     requires is_arithmetic_v<T>
-      or (@\exposconcept{simd-type}<T>@ and is_arithmetic_v<typename T::value_type>)
-    constexpr T simd_iota = T();
+      || (@\exposconcept{simd-type}<T>@ && is_arithmetic_v<typename T::value_type>)
+    constexpr T iota = T();
 
   template <class T, class Abi>
     constexpr basic_simd<T, Abi>
-    simd_iota<basic_simd<T, Abi>>([](T i) {
+    iota<basic_simd<T, Abi>>([](T i) {
       static_assert(basic_simd<T, Abi>::size() - 1 <= numeric_limits<T>::max());
       return i;
     });
 }
 \end{lstlisting}
-
-If \wgcite{P3287R2} is adopted to introduce a \std\code{simd} namespace, it would
-be called \stdsimd\code{iota}.
-

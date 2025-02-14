@@ -3,8 +3,8 @@
 We already have \code{std::iota} and \code{std::ranges::iota}.
 Why isn't that sufficient to create a solution that composes?
 
-One motivation for \code{iota_v<simd<int>>} instead of \code{simd<int>::iota}
-is that \code{iota_v<int>} works while \code{int::iota} cannot work.
+One motivation for \code{iota<simd<int>>} instead of \code{simd<int>::iota}
+is that \code{iota<int>} works while \code{int::iota} cannot work.
 The same is true for \code{simd<int>(views::iota(0))} vs.
 \code{int(views::\MayBreak{}iota(0))}.
 Supporting the degenerate case is very helpful for SIMD-generic programming.
@@ -16,18 +16,18 @@ for (int i = 0; i < 1024; ++i) {
 }
 
 // simd loop:
-for (auto i = iota_v<simd<int>>; all_of(i < 1024); i += simd<int>::size) {
+for (auto i = dp::iota<dp::simd<int>>; all_of(i < 1024); i += dp::simd<int>::size) {
   ...
 }
 
 // simd-generic loop:
-for (auto i = iota_v<T>; all_of(i < 1024); i += simd_size_v<T>) {
+for (auto i = dp::iota<T>; all_of(i < 1024); i += simd_size_v<T>) {
   ...
 }
 
 // alternative:
 for (int ii = 0; ii < 1024; ii += simd_size_v<T>) {
-  T i = ii + iota_v<T>;
+  T i = ii + dp::iota<T>;
   ...
 }
 \end{lstlisting}
