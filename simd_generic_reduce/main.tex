@@ -1,0 +1,134 @@
+\newcommand\wgTitle{Fix: Make std::simd Reductions simd-generic.}
+\newcommand\wgName{Olaf Krzikalla <olaf.krzikalla@dlr.de>}
+\newcommand\wgDocumentNumber{DSRSG}
+\newcommand\wgGroup{LWG}
+\newcommand\wgTarget{\CC{}26}
+\newcommand\wgAcknowledgements{Thanks to Matthias Kretz.}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{basic\_simd#1}\xspace}
+\newcommand\simdT{\type{basic\_simd<T>}\xspace}
+\newcommand\valuetype{\type{value\_type}\xspace}
+\newcommand\referencetype{\type{reference}\xspace}
+\newcommand\simdcast{\code{simd\_cast}\xspace}
+\newcommand\mask[1][]{\type{basic\_simd\_mask#1}\xspace}
+\newcommand\maskT{\type{basic\_simd\_mask<T>}\xspace}
+\newcommand\fixedsizeN{\type{simd\_abi::fixed\_size<N>}\xspace}
+\newcommand\fixedsizescoped{\type{simd\_abi::fixed\_size}\xspace}
+\newcommand\fixedsize{\type{fixed\_size}\xspace}
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+\DeclareRobustCommand\simdabi{\code{simd\_abi\MayBreak::\MayBreak}}
+
+\newcommand\nativeabi{\UNSP{native-abi}}
+\newcommand\deducet{\UNSP{deduce-abi-t}}
+\newcommand\simdsizev{\UNSP{simd-size-v}}
+\newcommand\simdsizetype{\UNSP{simd-size-type}}
+\newcommand\simdselect{\UNSP{simd-select-impl}}
+\newcommand\maskelementsize{\UNSP{mask-element-size}}
+\newcommand\integerfrom{\UNSP{integer-from}}
+\newcommand\constexprwrapperlike{\UNSP{constexpr-wrapper-like}}
+\newcommand\convertflag{\UNSP{convert-flag}}
+\newcommand\alignedflag{\UNSP{aligned-flag}}
+\newcommand\overalignedflag{\UNSP{overaligned-flag}}
+\newcommand\reductionoperation{\UNSP{reduction-binary-operation}}
+\newcommand\simdfloatingpoint{\UNSP{simd-floating-point}}
+\newcommand\deducedsimd{\UNSP{deduced-simd-t}}
+\newcommand\makecompatiblesimdt{\UNSP{make-compatible-simd-t}}
+\newcommand\mathfloatingpoint{\UNSP{math-floating-point}}
+\newcommand\mathcommonsimd{\UNSP{math-common-simd-t}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  One design goal of std::simd is to enable the writing of simd generic code.
+  This is why all arithmetic operators and functions have corresponding overloads.
+  However, arithmetic reductions have been forgotten.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\section{Introduction}
+\cite{P1928R15} introduced \code{std::simd} and related types and functions.
+It enables the programmer to write \emph{simd generic} code, i.e. function templates instantiable
+with scalar types as well as vector types.
+\medskip\begin{lstlisting}[style=Vc]
+template<class T>
+auto f(const T& x, const T& y, const T& z)
+{
+  return x + std::sqrt(y) * std::pow(z);
+}
+\end{lstlisting}
+This function template can be instantiated with scalar floating types, with complex types, or with their
+vectorized counterparts (e.g. \code{std::simd<double>} or \code{std::simd<std::complex<double>>}).
+
+Simd generic code is also possible for boolean reductions.
+\medskip\begin{lstlisting}[style=Vc]
+template<class T>
+bool all_lt(const T& x, const T& y)
+{
+  return std::datapar::all_of(x < y);
+}
+\end{lstlisting}
+Such code is possible because~\cite{P1928R15} explicitly includes overloads for \code{all_of(bool)} aso.
+
+On the other hand, we believe, that~\cite{P1928R15} just forgot to provide scalar overloads for arithmetic reductions.
+\medskip\begin{lstlisting}[style=Vc]
+template<class T>
+auto calc_contribution(const T& x, const T& y)
+{
+  return std::datapar::reduce(x * y);
+}
+\end{lstlisting}
+With just~\cite{P1928R15} this code is not simd generic yet.
+It cannot be called with scalar types, as there is no scalar overload for \code{std::datapar::reduce} yet.
+That makes this part of the simd interface incoherent with the rest that does work.
+
+\section{Proposal}
+
+We propose an introduction of scalar overloads for all arithmetic reduce functions introduced in~\cite{P1928R15}.
+This applies to the functions in 29.10.7.5: \code{reduce}, \code{reduce_min}, and \code{reduce_max}.
+The semantic of the functions is mostly trivial: they just return the passed argument.
+The masked functions take a scalar \code{bool} as mask argument.
+If the value of that argument is \code{false}, then the functions behave like their vectorized counterparts
+if \code{none_of(mask) == true} applies to them.
+
+\section{Discussion}
+
+When the function was still called \code{std::reduce}
+there was some doubt whether such an overload of the name could be too much.
+But now that reduce moved into the subnamespace \code{std::datapar}
+there is no apparent reason to avoid a scalar overload of reduce.
+
+\section{Wording}\label{sec:wording}
+
+The following section presents the wording to be added to the paragraphs introduced in~\cite{P1928R15}.
+
+At the end of §29.10.7.5, add the following entries:
+\begin{wgText}
+  \lstset{%
+    columns=fullflexible,
+    deletedelim=**[is]{|-}{-|},
+    moredelim=[is][\color{white}\fontsize{0.1pt}{0.1pt}\selectfont{}]{|-}{-|}
+  }
+  \input{wording}
+\end{wgText}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=0

@@ -1,0 +1,209 @@
+\def\rSec#1[#2]#3{%
+  \ifcase#1\wgSubsection[subsection]{#3}{#2}
+  \or\wgSubsubsection[subsubsection]{#3}{#2}
+  \or\wgSubsubsubsection[paragraph]{#3}{#2}
+  \or\error
+\fi}
+
+\renewcommand\foralli[1][]{for all $i$ in the range of \range{0}{#1size()}}
+\newcommand\Foralli[1][]{For all $i$ in the range of \range{0}{#1size()}}
+\renewcommand\forallmaskedi{for all selected indices $i$ of \tcode{mask}}
+
+\newcommand\op{\textrm{\textit{op}}}
+
+\newcommand\ConstraintUnaryOperatorWellFormed[2][const ]{%
+  \constraints \tcode{requires (#1value_type a) \{ #2; \}} is \tcode{true}.
+}
+
+\newcommand\ConstraintOperatorTWellFormed{%
+  \constraints \tcode{requires (value_type a, value_type b) \{ a \op{} b; \}} is \tcode{true}.
+}
+
+\newcommand\ConversionsToIntrinsics[1]{
+\recommended
+Implementations should support explicit conversions between specializations of \tcode{#1} and
+appropriate implementation-defined types.
+\begin{note}
+  The appropriate vector types which are available in the implementation.
+\end{note}
+
+%\begin{example}
+  %Consider an implementation that supports the type \tcode{__vec4f} and the function \tcode{__vec4f
+  %_vec4f_addsub(__vec4f, __vec4f)} for the architecture of the execution environment.
+  %A user may require the use of \tcode{_vec4f_addsub} for maximum performance and thus writes:
+  %\begin{codeblock}
+    %using V = basic_simd<float, simd_abi::__simd128>;
+    %V addsub(V a, V b) {
+      %return static_cast<V>(_vec4f_addsub(static_cast<__vec4f>(a), static_cast<__vec4f>(b)));
+    %}
+  %\end{codeblock}
+%\end{example}
+}
+
+
+\rSec1[simd.syn]{Header \texorpdfstring{\tcode{<simd>}}{<simd>} synopsis}
+
+%\indexhdr{simd}
+\begin{codeblock}
+namespace std {
+
+  // \ref{simd.reductions}, \tcode{basic_simd} reductions
+  template<class T, class BinaryOperation = plus<>>
+    constexpr T reduce(const T&, BinaryOperation = {});
+  template<class T, class BinaryOperation = plus<>>
+    constexpr T reduce(
+      const T& x, same_as<bool> mask,
+      BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
+
+  template<class T>
+    constexpr T reduce_min(const T&) noexcept;
+  template<class T>
+    constexpr T reduce_min(const T&,
+                           same_as<bool>) noexcept;
+  template<class T>
+    constexpr T reduce_max(const T&) noexcept;
+  template<class T>
+    constexpr T reduce_max(const T&,
+                           same_as<bool>) noexcept;
+
+}
+\end{codeblock}
+
+\rSec2[simd.reductions]{\tcode{basic_simd} reductions}
+
+\begin{itemdecl}
+template<class T, class BinaryOperation = plus<>>
+  constexpr T reduce(const T& x, BinaryOperation binary_op = {});
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{T} is vectorizable.
+
+    \item \tcode{BinaryOperation} models \tcode{\reductionoperation<T>}.
+  \end{itemize}
+  \pnum\expects
+  \tcode{binary_op} does not modify \tcode{x}.
+
+  \pnum\returns \tcode{x}
+
+  \pnum\throws
+  Any exception thrown from \tcode{binary_op}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class T, class BinaryOperation = plus<>>
+  constexpr T reduce(
+    const T& x, same_as<bool> mask,
+    BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{T} is vectorizable.
+
+    \item \tcode{BinaryOperation} models \tcode{\reductionoperation<T>}.
+
+    \item An argument for \tcode{identity_element} is provided for the invocation, unless
+      \tcode{BinaryOperation} is one of \code{plus<>}, \code{multiplies<>}, \code{bit_and<>},
+      \code{bit_or<>}, or \code{bit_xor<>}.
+  \end{itemize}
+
+  \pnum\expects
+  \begin{itemize}
+    \item \tcode{binary_op} does not modify \tcode{x}.
+
+    \item For all finite values \tcode{y} representable by \tcode{T}, the results of
+      \tcode{y == binary_op(simd<T, 1>(identity_element), simd<T, 1>(y))[0]} and
+      \tcode{y == binary_op(simd<T, 1>(y), simd<T, 1>(identity_element))[0]} are \tcode{true}.
+  \end{itemize}
+
+  \pnum\returns
+  If \tcode{mask} is \tcode{false}, returns \tcode{identity_element}.
+  Otherwise, returns \tcode{x}.
+
+  \pnum\throws
+  Any exception thrown from \tcode{binary_op}.
+
+  \pnum\remarks
+  The default argument for \code{identity_element} is equal to
+  \begin{itemize}
+    \item \tcode{T()} if \code{BinaryOperation} is \code{plus<>},
+    \item \tcode{T(1)} if \code{BinaryOperation} is \code{multiplies<>},
+    \item \tcode{T(\~{}T())} if \code{BinaryOperation} is \code{bit_and<>},
+    \item \tcode{T()} if \code{BinaryOperation} is \code{bit_or<>}, or
+    \item \tcode{T()} if \code{BinaryOperation} is \code{bit_xor<>}.
+  \end{itemize}
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class T> constexpr T reduce_min(const T& x) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{T} is vectorizable.
+
+    \item \tcode{T} models \tcode{totally_ordered}.
+  \end{itemize}
+
+  \pnum\returns \tcode{x}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class T>
+  constexpr T reduce_min(
+    const T& x, same_as<bool> mask) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{T} is vectorizable.
+
+    \item \tcode{T} models \tcode{totally_ordered}.
+  \end{itemize}
+
+  \pnum\returns
+  If \tcode{mask} is \tcode{false}, returns \tcode{numeric_limits<T>::max()}.
+  Otherwise, returns \tcode{x}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class T> constexpr T reduce_max(const T& x) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{T} is vectorizable.
+
+    \item \tcode{T} models \tcode{totally_ordered}.
+  \end{itemize}
+
+  \pnum\returns \tcode{x}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class T>
+  constexpr T reduce_max(
+    const T& x, same_as<bool> mask) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+  \pnum\constraints
+  \begin{itemize}
+    \item \tcode{T} is vectorizable.
+
+    \item \tcode{T} models \tcode{totally_ordered}.
+  \end{itemize}
+
+  \pnum\returns
+  If \tcode{mask} is \tcode{false}, returns \tcode{numeric_limits<T>::lowest()}.
+  Otherwise, returns \tcode{x}.
+\end{itemdescr}
+
+% vim: tw=100 cc=99
