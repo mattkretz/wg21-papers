@@ -1,209 +1,353 @@
+\section{Wording}\label{sec:wording}
+\subsection{Feature test macro}
+
+In [version.syn] bump the \code{__cpp_lib_simd} version.
+
+\subsection{Changes to {[simd]}}
 \def\rSec#1[#2]#3{%
   \ifcase#1\wgSubsection[subsection]{#3}{#2}
+  \or\wgSubsection[subsection]{#3}{#2}
   \or\wgSubsubsection[subsubsection]{#3}{#2}
   \or\wgSubsubsubsection[paragraph]{#3}{#2}
   \or\error
 \fi}
 
-\renewcommand\foralli[1][]{for all $i$ in the range of \range{0}{#1size()}}
-\newcommand\Foralli[1][]{For all $i$ in the range of \range{0}{#1size()}}
-\renewcommand\forallmaskedi{for all selected indices $i$ of \tcode{mask}}
+Add the following to \iref{simd.syn}:
 
-\newcommand\op{\textrm{\textit{op}}}
-
-\newcommand\ConstraintUnaryOperatorWellFormed[2][const ]{%
-  \constraints \tcode{requires (#1value_type a) \{ #2; \}} is \tcode{true}.
-}
-
-\newcommand\ConstraintOperatorTWellFormed{%
-  \constraints \tcode{requires (value_type a, value_type b) \{ a \op{} b; \}} is \tcode{true}.
-}
-
-\newcommand\ConversionsToIntrinsics[1]{
-\recommended
-Implementations should support explicit conversions between specializations of \tcode{#1} and
-appropriate implementation-defined types.
-\begin{note}
-  The appropriate vector types which are available in the implementation.
-\end{note}
-
-%\begin{example}
-  %Consider an implementation that supports the type \tcode{__vec4f} and the function \tcode{__vec4f
-  %_vec4f_addsub(__vec4f, __vec4f)} for the architecture of the execution environment.
-  %A user may require the use of \tcode{_vec4f_addsub} for maximum performance and thus writes:
-  %\begin{codeblock}
-    %using V = basic_simd<float, simd_abi::__simd128>;
-    %V addsub(V a, V b) {
-      %return static_cast<V>(_vec4f_addsub(static_cast<__vec4f>(a), static_cast<__vec4f>(b)));
-    %}
-  %\end{codeblock}
-%\end{example}
-}
-
-
-\rSec1[simd.syn]{Header \texorpdfstring{\tcode{<simd>}}{<simd>} synopsis}
+\begin{wgText}[{[simd.syn]}]
 
 %\indexhdr{simd}
 \begin{codeblock}
-namespace std {
-
-  // \ref{simd.reductions}, \tcode{basic_simd} reductions
-  template<class T, class BinaryOperation = plus<>>
-    constexpr T reduce(const T&, BinaryOperation = {});
-  template<class T, class BinaryOperation = plus<>>
+  // \iref{simd.reductions}, \tcode{basic_simd} reductions
+  template<class T, class Abi, class BinaryOperation = plus<>>
+    constexpr T reduce(const basic_simd<T, Abi>&, BinaryOperation = {});
+  template<class T, class Abi, class BinaryOperation = plus<>>
     constexpr T reduce(
-      const T& x, same_as<bool> mask,
+      const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
       BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
 
-  template<class T>
-    constexpr T reduce_min(const T&) noexcept;
-  template<class T>
-    constexpr T reduce_min(const T&,
-                           same_as<bool>) noexcept;
-  template<class T>
-    constexpr T reduce_max(const T&) noexcept;
-  template<class T>
-    constexpr T reduce_max(const T&,
-                           same_as<bool>) noexcept;
+  @\wgAdd{template<class T, class BinaryOperation = plus<>\mbox{>}}@
+    @\wgAdd{constexpr T reduce(const T\&, BinaryOperation = \{\});}@
+  @\wgAdd{template<class T, class BinaryOperation = plus<>\mbox{>}}@
+    @\wgAdd{constexpr T reduce(const T\& x, same_as<bool> mask, BinaryOperation binary_op = \{\},}@
+                       @\wgAdd{type_identity_t<T> identity_element = \mbox{\seebelow});}@
 
-}
+  template<class T, class Abi>
+    constexpr T reduce_min(const basic_simd<T, Abi>&) noexcept;
+  template<class T, class Abi>
+    constexpr T reduce_min(const basic_simd<T, Abi>&,
+                           const typename basic_simd<T, Abi>::mask_type&) noexcept;
+  template<class T, class Abi>
+    constexpr T reduce_max(const basic_simd<T, Abi>&) noexcept;
+  template<class T, class Abi>
+    constexpr T reduce_max(const basic_simd<T, Abi>&,
+                           const typename basic_simd<T, Abi>::mask_type&) noexcept;
+
+  @\wgAdd{template<class T> constexpr T reduce_min(const T\&) noexcept;}@
+  @\wgAdd{template<class T> constexpr T reduce_min(const T\&, same_as<bool>) noexcept;}@
+  @\wgAdd{template<class T> constexpr T reduce_max(const T\&) noexcept;}@
+  @\wgAdd{template<class T> constexpr T reduce_max(const T\&, same_as<bool>) noexcept;}@
+
+  // \iref{simd.alg}, Algorithms
+  template<class T, class Abi>
+    constexpr basic_simd<T, Abi>
+      min(const basic_simd<T, Abi>& a, const basic_simd<T, Abi>& b) noexcept;
 \end{codeblock}
+\end{wgText}
 
-\rSec2[simd.reductions]{\tcode{basic_simd} reductions}
+Add the following to \iref{simd.reductions}:
+
+\begin{wgText}
+  \setcounter{WGClause}{29}
+  \setcounter{WGSubSection}{10}
+  \setcounter{WGSubSubSection}{7}
+  \setcounter{WGSubSubSubSection}{5}
+  \setcounter{Paras}{4}
+\rSec3[simd.reductions]{\tcode{basic_simd} reductions}
 
 \begin{itemdecl}
-template<class T, class BinaryOperation = plus<>>
-  constexpr T reduce(const T& x, BinaryOperation binary_op = {});
+template<class T, class Abi, class BinaryOperation = plus<>>
+  constexpr T reduce(const basic_simd<T, Abi>& x, BinaryOperation binary_op = {});
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{T} is vectorizable.
+\pnum
+\constraints
+\tcode{BinaryOperation} models
+\tcode{\exposconcept{reduction-binary-operation}<T>}.
 
-    \item \tcode{BinaryOperation} models \tcode{\reductionoperation<T>}.
-  \end{itemize}
-  \pnum\expects
-  \tcode{binary_op} does not modify \tcode{x}.
+\pnum
+\expects
+\tcode{binary_op} does not modify \tcode{x}.
 
-  \pnum\returns \tcode{x}
+\pnum
+\returns
+\tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T, 1>(x[0]), $\ldots$,
+simd<T, 1>(x[x.size() - 1])\brk{})[0]}\iref{numerics.defns}.
 
-  \pnum\throws
-  Any exception thrown from \tcode{binary_op}.
+\pnum
+\throws
+Any exception thrown from \tcode{binary_op}.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T, class BinaryOperation = plus<>>
+template<class T, class Abi, class BinaryOperation = plus<>>
   constexpr T reduce(
-    const T& x, same_as<bool> mask,
+    const basic_simd<T, Abi>& x, const typename basic_simd<T, Abi>::mask_type& mask,
     BinaryOperation binary_op = {}, type_identity_t<T> identity_element = @\seebelow@);
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{T} is vectorizable.
+\pnum
+\constraints
+\begin{itemize}
+\item
+  \tcode{BinaryOperation} models
+  \tcode{\exposconcept{reduction-binary-operation}<T>}.
+\item
+  An argument for \tcode{identity_element} is provided for the invocation,
+  unless \tcode{BinaryOperation} is one of \tcode{plus<>},
+  \tcode{multiplies<>}, \tcode{bit_and<>}, \tcode{bit_or<>}, or
+  \tcode{bit_xor<>}.
+\end{itemize}
 
-    \item \tcode{BinaryOperation} models \tcode{\reductionoperation<T>}.
+\pnum
+\expects
+\begin{itemize}
+ \item
+   \tcode{binary_op} does not modify \tcode{x}.
+ \item
+   For all finite values \tcode{y} representable by \tcode{T}, the results of
+   \tcode{y == binary_op(simd<T, 1>(iden\-ti\-ty\-_\-element), simd<T,
+   1>(y))[0]} and \tcode{y == binary_op(simd<T, 1>(y), simd<T,
+   1>(iden\-ti\-ty\-_\-element))[0]} are \tcode{true}.
+\end{itemize}
 
-    \item An argument for \tcode{identity_element} is provided for the invocation, unless
-      \tcode{BinaryOperation} is one of \code{plus<>}, \code{multiplies<>}, \code{bit_and<>},
-      \code{bit_or<>}, or \code{bit_xor<>}.
-  \end{itemize}
+\pnum
+\returns
+If \tcode{none_of(mask)} is \tcode{true}, returns \tcode{identity_element}.
+Otherwise, returns \tcode{\placeholdernc{GENERALIZED_SUM}(binary_op, simd<T,
+1>(x[$k_0$]), $\ldots$, simd<T, 1>(x[$k_n$]))[0]} where $k_0, \ldots, k_n$ are
+the selected indices of \tcode{mask}.
 
-  \pnum\expects
-  \begin{itemize}
-    \item \tcode{binary_op} does not modify \tcode{x}.
+\pnum
+\throws
+Any exception thrown from \tcode{binary_op}.
 
-    \item For all finite values \tcode{y} representable by \tcode{T}, the results of
-      \tcode{y == binary_op(simd<T, 1>(identity_element), simd<T, 1>(y))[0]} and
-      \tcode{y == binary_op(simd<T, 1>(y), simd<T, 1>(identity_element))[0]} are \tcode{true}.
-  \end{itemize}
-
-  \pnum\returns
-  If \tcode{mask} is \tcode{false}, returns \tcode{identity_element}.
-  Otherwise, returns \tcode{x}.
-
-  \pnum\throws
-  Any exception thrown from \tcode{binary_op}.
-
-  \pnum\remarks
-  The default argument for \code{identity_element} is equal to
-  \begin{itemize}
-    \item \tcode{T()} if \code{BinaryOperation} is \code{plus<>},
-    \item \tcode{T(1)} if \code{BinaryOperation} is \code{multiplies<>},
-    \item \tcode{T(\~{}T())} if \code{BinaryOperation} is \code{bit_and<>},
-    \item \tcode{T()} if \code{BinaryOperation} is \code{bit_or<>}, or
-    \item \tcode{T()} if \code{BinaryOperation} is \code{bit_xor<>}.
-  \end{itemize}
+\pnum
+\remarks
+The default argument for \tcode{identity_element} is equal to
+\begin{itemize}
+\item \tcode{T()} if \tcode{BinaryOperation} is \tcode{plus<>},
+\item \tcode{T(1)} if \tcode{BinaryOperation} is \tcode{multiplies<>},
+\item \tcode{T(\~{}T())} if \tcode{BinaryOperation} is \tcode{bit_and<>},
+\item \tcode{T()} if \tcode{BinaryOperation} is \tcode{bit_or<>}, or
+\item \tcode{T()} if \tcode{BinaryOperation} is \tcode{bit_xor<>}.
+\end{itemize}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T> constexpr T reduce_min(const T& x) noexcept;
+@\wgAdd{template<class T, class BinaryOperation = plus<>\mbox{>}}@
+  @\wgAdd{constexpr T reduce(const T\& x, BinaryOperation binary_op = \{\});}@
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{T} is vectorizable.
+\begin{wgBAdd}
+\pnum
+\wgAdd{\constraints}
+\begin{itemize}
+\wgItemAdd[
+  \tcode{T} is vectorizable.
+]
+\wgItemAdd[
+  \tcode{BinaryOperation} models
+  \mbox{\tcode{\exposconcept{reduction-binary-operation}<T>}}.
+]
+\end{itemize}
+\pnum
+\wgAdd{\expects
+\tcode{binary_op} does not modify \tcode{x}.
+}
 
-    \item \tcode{T} models \tcode{totally_ordered}.
-  \end{itemize}
+\pnum
+\wgAdd{\returns
+\tcode{x}
+}
 
-  \pnum\returns \tcode{x}.
+\pnum
+\wgAdd{\throws
+Any exception thrown from \tcode{binary_op}.}
+\end{wgBAdd}
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T>
+@\wgAdd{template<class T, class BinaryOperation = plus<>\mbox{>}}@
+  @\wgAdd{constexpr T reduce(const T\& x, same_as<bool> mask, BinaryOperation binary_op = \{\},}@
+                     @\wgAdd{type_identity_t<T> identity_element = \mbox{\seebelow});}@
+\end{itemdecl}
+
+\begin{itemdescr}
+\begin{wgBAdd}
+\pnum
+\wgAdd{\constraints}
+\begin{itemize}
+\wgItemAdd[
+  \tcode{T} is vectorizable.
+]
+\wgItemAdd[
+  \tcode{BinaryOperation} models
+  \mbox{\tcode{\exposconcept{reduction-binary-operation}<T>}}.
+]
+\wgItemAdd[
+  An argument for \tcode{identity_element} is provided for the invocation, unless
+  \tcode{BinaryOperation} is one of \code{plus<>}, \code{multiplies<>}, \code{bit_and<>},
+  \code{bit_or<>}, or \code{bit_xor<>}.
+]
+\end{itemize}
+
+\pnum
+\wgAdd{\expects}
+\begin{itemize}
+\wgItemAdd[
+  \tcode{binary_op} does not modify \tcode{x}.
+]
+\wgItemAdd[
+  For all finite values \tcode{y} representable by \tcode{T}, the results of
+  \tcode{y == binary_op(simd<T, 1>(identity_element), simd<T, 1>(y))[0]} and
+  \tcode{y == binary_op(simd<T, 1>(y), simd<T, 1>(identity_element))[0]} are \tcode{true}.
+]
+\end{itemize}
+
+\pnum
+\wgAdd{\returns
+If \tcode{mask} is \tcode{false}, returns \tcode{identity_element}.
+Otherwise, returns \tcode{x}.
+}
+
+\pnum
+\wgAdd{\throws
+Any exception thrown from \tcode{binary_op}.
+}
+
+\pnum
+\wgAdd{\remarks
+The default argument for \code{identity_element} is equal to
+}
+\begin{itemize}
+\wgItemAdd[\tcode{T()} if \code{BinaryOperation} is \code{plus<>},]
+\wgItemAdd[\tcode{T(1)} if \code{BinaryOperation} is \code{multiplies<>},]
+\wgItemAdd[\tcode{T(\~{}T())} if \code{BinaryOperation} is \code{bit_and<>},]
+\wgItemAdd[\tcode{T()} if \code{BinaryOperation} is \code{bit_or<>}, or]
+\wgItemAdd[\tcode{T()} if \code{BinaryOperation} is \code{bit_xor<>}.]
+\end{itemize}
+\end{wgBAdd}
+\end{itemdescr}
+
+
+\begin{itemdecl}
+template<class T, class Abi> constexpr T reduce_min(const basic_simd<T, Abi>& x) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\constraints
+\tcode{T} models \tcode{totally_ordered}.
+
+\pnum
+\returns
+The value of an element \tcode{x[$j$]} for which \tcode{x[$i$] < x[$j$]} is
+\tcode{false} for all $i$ in the range of \range{0}{basic_simd<T, Abi>::size()}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class T, class Abi>
   constexpr T reduce_min(
-    const T& x, same_as<bool> mask) noexcept;
+    const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{T} is vectorizable.
+\pnum
+\constraints
+\tcode{T} models \tcode{totally_ordered}.
 
-    \item \tcode{T} models \tcode{totally_ordered}.
-  \end{itemize}
-
-  \pnum\returns
-  If \tcode{mask} is \tcode{false}, returns \tcode{numeric_limits<T>::max()}.
-  Otherwise, returns \tcode{x}.
+\pnum
+\returns
+If \tcode{none_of(mask)} is \tcode{true}, returns
+\tcode{numeric_limits<T>::max()}.
+Otherwise, returns the value of a selected element \tcode{x[$j$]} for which
+\tcode{x[$i$] < x[$j$]} is \tcode{false} for all selected indices $i$ of
+\tcode{mask}.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T> constexpr T reduce_max(const T& x) noexcept;
+template<class T, class Abi> constexpr T reduce_max(const basic_simd<T, Abi>& x) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{T} is vectorizable.
+\pnum
+\constraints
+\tcode{T} models \tcode{totally_ordered}.
 
-    \item \tcode{T} models \tcode{totally_ordered}.
-  \end{itemize}
-
-  \pnum\returns \tcode{x}.
+\pnum
+\returns
+The value of an element \tcode{x[$j$]} for which \tcode{x[$j$] < x[$i$]} is
+\tcode{false} for all $i$ in the range of \range{0}{basic_simd<T, Abi>::size()}.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<class T>
+template<class T, class Abi>
   constexpr T reduce_max(
-    const T& x, same_as<bool> mask) noexcept;
+    const basic_simd<T, Abi>&, const typename basic_simd<T, Abi>::mask_type&) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-  \pnum\constraints
-  \begin{itemize}
-    \item \tcode{T} is vectorizable.
+\pnum
+\constraints
+\tcode{T} models \tcode{totally_ordered}.
 
-    \item \tcode{T} models \tcode{totally_ordered}.
-  \end{itemize}
-
-  \pnum\returns
-  If \tcode{mask} is \tcode{false}, returns \tcode{numeric_limits<T>::lowest()}.
-  Otherwise, returns \tcode{x}.
+\pnum
+\returns
+If \tcode{none_of(mask)} is \tcode{true}, returns
+\tcode{numeric_limits<V::value_type>::lowest()}.
+Otherwise, returns the value of a selected element \tcode{x[$j$]} for which
+\tcode{x[$j$] < x[$i$]} is \tcode{false} for all selected indices $i$ of
+\tcode{mask}.
 \end{itemdescr}
+
+
+\begin{itemdecl}
+@\wgAdd{template<class T> constexpr T reduce_min(const T\& x) noexcept;}@
+@\wgAdd{template<class T> constexpr T reduce_min(const T\& x, same_as<bool> mask) noexcept;}@
+@\wgAdd{template<class T> constexpr T reduce_max(const T\& x) noexcept;}@
+@\wgAdd{template<class T> constexpr T reduce_max(const T\& x, same_as<bool> mask) noexcept;}@
+\end{itemdecl}
+
+\begin{itemdescr}
+\begin{wgBAdd}
+\pnum
+\wgAdd{Let \tcode{mask} be \tcode{true} for the overloads with no \tcode{mask} parameter.}
+
+\pnum
+\wgAdd{\constraints}
+\begin{itemize}
+\wgItemAdd[
+  \tcode{T} is vectorizable.
+]
+\wgItemAdd[
+  \tcode{T} models \tcode{totally_ordered}.
+]
+\end{itemize}
+
+\pnum
+\wgAdd{\returns
+If \tcode{mask} is \tcode{false}, returns \tcode{numeric_limits<T>::max()} for
+\tcode{reduce_min} and \tcode{numeric_limits<T>::lowest()} for
+\tcode{reduce_max}.
+Otherwise, returns \tcode{x}.
+}
+\end{wgBAdd}
+\end{itemdescr}
+
+\end{wgText}
 
 % vim: tw=100 cc=99

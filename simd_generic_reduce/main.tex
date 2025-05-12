@@ -1,9 +1,10 @@
 \newcommand\wgTitle{Fix: Make std::simd Reductions SIMD-generic.}
-\newcommand\wgName{Olaf Krzikalla <olaf.krzikalla@dlr.de>}
+\newcommand\wgName{Olaf Krzikalla <olaf.krzikalla@dlr.de>,
+Matthias Kretz <m.kretz@gsi.de>}
 \newcommand\wgDocumentNumber{DSRSG}
-\newcommand\wgGroup{LWG}
+\newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
-\newcommand\wgAcknowledgements{Thanks to Matthias Kretz.}
+%\newcommand\wgAcknowledgements{}
 
 \usepackage{mymacros}
 \usepackage{wg21}
@@ -116,19 +117,7 @@ there was some doubt whether such an overload of the name could be too much.
 But now that reduce moved into the subnamespace \code{std::datapar}
 there is no apparent reason to avoid a scalar overload of reduce.
 
-\section{Wording}\label{sec:wording}
-
-The following section presents the wording to be added to the paragraphs introduced in~\cite{P1928R15}.
-
-At the end of §29.10.7.5, add the following entries:
-\begin{wgText}
-  \lstset{%
-    columns=fullflexible,
-    deletedelim=**[is]{|-}{-|},
-    moredelim=[is][\color{white}\fontsize{0.1pt}{0.1pt}\selectfont{}]{|-}{-|}
-  }
-  \input{wording}
-\end{wgText}
+\input{wording}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=0
