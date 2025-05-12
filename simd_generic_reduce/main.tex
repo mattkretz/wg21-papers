@@ -1,4 +1,4 @@
-\newcommand\wgTitle{Fix: Make std::simd Reductions simd-generic.}
+\newcommand\wgTitle{Fix: Make std::simd Reductions SIMD-generic.}
 \newcommand\wgName{Olaf Krzikalla <olaf.krzikalla@dlr.de>}
 \newcommand\wgDocumentNumber{DSRSG}
 \newcommand\wgGroup{LWG}
@@ -54,7 +54,7 @@
 \begin{document}
 \selectlanguage{american}
 \begin{wgTitlepage}
-  One design goal of std::simd is to enable the writing of simd generic code.
+  One design goal of std::simd is to enable the writing of SIMD-generic code.
   This is why all arithmetic operators and functions have corresponding overloads.
   However, arithmetic reductions have been forgotten.
 \end{wgTitlepage}
@@ -66,7 +66,7 @@
 
 \section{Introduction}
 \cite{P1928R15} introduced \code{std::simd} and related types and functions.
-It enables the programmer to write \emph{simd generic} code, i.e. function templates instantiable
+It enables the programmer to write \emph{SIMD-generic} code, i.e. function templates instantiable
 with scalar types as well as vector types.
 \medskip\begin{lstlisting}[style=Vc]
 template<class T>
@@ -78,7 +78,7 @@ auto f(const T& x, const T& y, const T& z)
 This function template can be instantiated with scalar floating types, with complex types, or with their
 vectorized counterparts (e.g. \code{std::simd<double>} or \code{std::simd<std::complex<double>>}).
 
-Simd generic code is also possible for boolean reductions.
+SIMD-generic code is also possible for boolean reductions.
 \medskip\begin{lstlisting}[style=Vc]
 template<class T>
 bool all_lt(const T& x, const T& y)
@@ -96,7 +96,7 @@ auto calc_contribution(const T& x, const T& y)
   return std::datapar::reduce(x * y);
 }
 \end{lstlisting}
-With just~\cite{P1928R15} this code is not simd generic yet.
+With just~\cite{P1928R15} this code is not SIMD-generic yet.
 It cannot be called with scalar types, as there is no scalar overload for \code{std::datapar::reduce} yet.
 That makes this part of the simd interface incoherent with the rest that does work.
 
