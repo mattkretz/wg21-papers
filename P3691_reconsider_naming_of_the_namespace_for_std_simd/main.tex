@@ -1,0 +1,163 @@
+\newcommand\wgTitle{Reconsider naming of the namespace for “std::simd”}
+\newcommand\wgName{
+  Matthias Kretz <m.kretz@gsi.de>,\\
+  Mark Hoemmen <mhoemmen@nvidia.com>,\\
+  Abhilash Majumder <abmajumder@nvidia.com>,\\
+  Bryce Adelstein Lelbach <brycelelbach@gmail.com>,\\
+  Ilya Burylov <iburylov@nvidia.com>
+}
+\newcommand\wgDocumentNumber{D3691R0}
+\newcommand\wgGroup{LEWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+%\usepackage{multirow}
+
+\addbibresource{extra.bib}
+
+\DeclareRobustCommand\stdsimd{\code{std\MayBreak::\MayBreak{}simd\MayBreak::\MayBreak}}
+\newcommand\simd[1][]{\type{ba\-sic\_simd#1}\xspace}
+\newcommand\simdT{\type{ba\-sic\_simd\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\valuetype{\type{val\-ue\_type}\xspace}
+\newcommand\referencetype{\type{ref\-er\-ence}\xspace}
+\newcommand\mask[1][]{\type{ba\-sic\_simd\_mask#1}\xspace}
+\newcommand\maskT{\type{ba\-sic\_simd\_mask\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\newcommand\nativeabi{\UNSP{native-abi}}
+\newcommand\deducet{\UNSP{deduce-t}}
+\newcommand\simdsizev{\UNSP{simd-size-v}}
+\newcommand\simdsizetype{\UNSP{simd-size-type}}
+\newcommand\simdselect{\UNSP{simd-select-impl}}
+\newcommand\maskelementsize{\UNSP{mask-element-size}}
+\newcommand\integerfrom{\UNSP{integer-from}}
+\newcommand\constexprwrapperlike{\UNSP{constexpr-wrapper-like}}
+\newcommand\convertflag{\UNSP{convert-flag}}
+\newcommand\alignedflag{\UNSP{aligned-flag}}
+\newcommand\overalignedflag{\UNSP{overaligned-flag}}
+\newcommand\reductionoperation{\UNSP{reduction-binary-operation}}
+\newcommand\simdfloatingpoint{\UNSP{simd-floating-point}}
+\newcommand\multisimdfloatingpoint{\UNSP{multi-arg-simd-floating-point}}
+\newcommand\simditerator{\UNSP{simd-iterator}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  There has been negative feedback on the names we chose for \stddatapar\simd and \stddatapar\mask.
+  The pushback is against the name of the namespace.
+  This paper does \emph{not reconsider the namespace itself}, it only reconsiders our naming options
+  and arrives at a new recomendation.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\section{A survey of existing SIMD libraries}
+
+\subsection{Agner Fog's C++ vector class library}
+
+The library does not define class templates but classes like \code{Vec4f}, \code{Vec16c},
+\code{Vec2uq}, \ldots
+The corresponding mask types have an additional \code{b} suffix in their name.
+
+\medskip\begin{lstlisting}
+class Vecf4;   // ~simd<float, 4>
+class Vecf4b;  // ~simd_mask<float, 4>
+\end{lstlisting}
+
+
+\subsection{“boost” simd}
+
+\medskip\begin{lstlisting}
+namespace simd
+{
+  template <class T> struct pack; // ~basic_simd
+  template <> struct pack<bool>;  // ~basic_simd_mask
+}
+\end{lstlisting}
+
+\subsection{E.V.E}
+
+\medskip\begin{lstlisting}
+namespace eve
+{
+  template <class T, /*Cardinal*/> struct wide; // ~ basic_simd
+  template <class T> struct logical;            // ~ basic_simd_mask
+}
+\end{lstlisting}
+
+\subsection{Vc}
+
+\medskip\begin{lstlisting}
+namespace Vc
+{
+  template <class T, class Abi> class Vector;  // ~ basic_simd
+  template <class T, class Abi> class Mask;    // ~ basic_simd_mask
+  using double_v = Vector<double>;
+  using double_m = Mask<double>;
+  using int_v = Vector<int>;
+  using int_m = Mask<int>;
+  // ...
+}
+\end{lstlisting}
+
+\subsection{xsimd}
+
+\medskip\begin{lstlisting}
+namespace xsimd
+{
+  template <class T, class A> class batch;       // ~ basic_simd
+  template <class T, class A> class batch_bool;  // ~ basic_simd_mask
+}
+\end{lstlisting}
+
+
+\section{Brainstorming}
+
+The name of the namespace and the name of the class (and alias) templates need to be considered as a
+whole. We believe it is not helpful to consider each name in isolation.
+
+There seems to be a strong desire to have “SIMD” in the name somewhere.
+This seems to be about findability and potentially buzzword compliance.
+(Too harsh: I guess it's about trying not to invent a new name where the industry already
+recognizes an existing name.)
+
+
+\subsection{Options for \simd}
+
+\begingroup
+\smaller
+\def\Name#1#2{\hline\code{std::#1::basic_#2} & \code{std::#1::#2}}
+\begin{tabular}{l|l|l}
+\textbf{class template} & \textbf{alias template} & \textbf{obvious criticism} \\
+  \Name{simd}{simd} & repetitive and human-ambiguous \\
+  \Name{datapar}{simd} & repetitive in a different way \\
+  \Name{dataparallel}{simd} & ditto \\
+  \Name{simd}{batch} & \\
+  \Name{simd}{number} & it's not a number, but set of numbers \\
+  \Name{simd}{pack} & \CC{} already has parameter packs \\
+  \Name{simd}{value} & many variables are named \code{value} \\
+  \Name{simd}{vec} & sounds like a container \\
+  \Name{simd}{vector} & sounds even more like a container \\
+  \Name{simd}{wide} & “simd wide” and “basic wide” don't match\\
+  \Name{simd}{chunk} & this is not a chunk out of a SIMD register \\
+  \Name{datapar}{chunk} & where did the “SIMD” name go? \\
+  \Name{dataparallel}{chunk} & ditto \\
+\end{tabular}
+\endgroup
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=100
