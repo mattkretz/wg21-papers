@@ -1,7 +1,7 @@
 \newcommand\wgTitle{Consistency fix: Make \code{simd} reductions SIMD-generic}
 \newcommand\wgName{Olaf Krzikalla <olaf.krzikalla@dlr.de>,
 Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{DSRSG}
+\newcommand\wgDocumentNumber{D3690R0}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{}
@@ -55,9 +55,10 @@ Matthias Kretz <m.kretz@gsi.de>}
 \begin{document}
 \selectlanguage{american}
 \begin{wgTitlepage}
-  One design goal of std::simd is to enable the writing of SIMD-generic code.
+  One design goal of the \code{simd} interface is to enable SIMD-generic code.
   This is why all arithmetic operators and functions have corresponding overloads.
-  However, arithmetic reductions have been forgotten.
+  However, arithmetic reductions are still missing overloads for
+  non-\code{simd}, vectorizable types.
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}

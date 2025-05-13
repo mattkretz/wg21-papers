@@ -1,4 +1,6 @@
 \section{Wording}\label{sec:wording}
+The proposed changes are relative to the current working draft \cite{N5008}.
+
 \subsection{Feature test macro}
 
 In [version.syn] bump the \code{__cpp_lib_simd} version.
@@ -149,38 +151,6 @@ The default argument for \tcode{identity_element} is equal to
 \begin{itemdecl}
 @\wgAdd{template<class T, class BinaryOperation = plus<>\mbox{>}}@
   @\wgAdd{constexpr T reduce(const T\& x, BinaryOperation binary_op = \{\});}@
-\end{itemdecl}
-
-\begin{itemdescr}
-\begin{wgBAdd}
-\pnum
-\wgAdd{\constraints}
-\begin{itemize}
-\wgItemAdd[
-  \tcode{T} is vectorizable.
-]
-\wgItemAdd[
-  \tcode{BinaryOperation} models
-  \mbox{\tcode{\exposconcept{reduction-binary-operation}<T>}}.
-]
-\end{itemize}
-\pnum
-\wgAdd{\expects
-\tcode{binary_op} does not modify \tcode{x}.
-}
-
-\pnum
-\wgAdd{\returns
-\tcode{x}
-}
-
-\pnum
-\wgAdd{\throws
-Any exception thrown from \tcode{binary_op}.}
-\end{wgBAdd}
-\end{itemdescr}
-
-\begin{itemdecl}
 @\wgAdd{template<class T, class BinaryOperation = plus<>\mbox{>}}@
   @\wgAdd{constexpr T reduce(const T\& x, same_as<bool> mask, BinaryOperation binary_op = \{\},}@
                      @\wgAdd{type_identity_t<T> identity_element = \mbox{\seebelow});}@
@@ -188,6 +158,9 @@ Any exception thrown from \tcode{binary_op}.}
 
 \begin{itemdescr}
 \begin{wgBAdd}
+\pnum
+\wgAdd{Let \tcode{mask} be \tcode{true} for the overload with no \tcode{mask} parameter.}
+
 \pnum
 \wgAdd{\constraints}
 \begin{itemize}
@@ -206,19 +179,6 @@ Any exception thrown from \tcode{binary_op}.}
 \end{itemize}
 
 \pnum
-\wgAdd{\expects}
-\begin{itemize}
-\wgItemAdd[
-  \tcode{binary_op} does not modify \tcode{x}.
-]
-\wgItemAdd[
-  For all finite values \tcode{y} representable by \tcode{T}, the results of
-  \tcode{y == binary_op(simd<T, 1>(identity_element), simd<T, 1>(y))[0]} and
-  \tcode{y == binary_op(simd<T, 1>(y), simd<T, 1>(identity_element))[0]} are \tcode{true}.
-]
-\end{itemize}
-
-\pnum
 \wgAdd{\returns
 If \tcode{mask} is \tcode{false}, returns \tcode{identity_element}.
 Otherwise, returns \tcode{x}.
@@ -226,7 +186,7 @@ Otherwise, returns \tcode{x}.
 
 \pnum
 \wgAdd{\throws
-Any exception thrown from \tcode{binary_op}.
+Nothing.
 }
 
 \pnum
