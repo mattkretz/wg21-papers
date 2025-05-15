@@ -1,10 +1,11 @@
 \newcommand\wgTitle{Reconsider naming of the namespace for “std::simd”}
 \newcommand\wgName{
   Matthias Kretz <m.kretz@gsi.de>,\\
-  Mark Hoemmen <mhoemmen@nvidia.com>,\\
   Abhilash Majumder <abmajumder@nvidia.com>,\\
   Bryce Adelstein Lelbach <brycelelbach@gmail.com>,\\
-  Ilya Burylov <iburylov@nvidia.com>
+  Daniel Towner <daniel.towner@intel.com>,\\
+  Ilya Burylov <iburylov@nvidia.com>,\\
+  Mark Hoemmen <mhoemmen@nvidia.com>
 }
 \newcommand\wgDocumentNumber{D3691R0}
 \newcommand\wgGroup{LEWG}
@@ -13,11 +14,11 @@
 
 \usepackage{mymacros}
 \usepackage{wg21}
-\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\setcounter{tocdepth}{1} % show only sections in TOC
 \hypersetup{bookmarksdepth=5}
 \usepackage{changelog}
 \usepackage{underscore}
-%\usepackage{multirow}
+\usepackage{makecell}
 
 \addbibresource{extra.bib}
 
@@ -57,7 +58,8 @@
   There has been negative feedback on the names we chose for \stddatapar\simd and \stddatapar\mask.
   The pushback is against the name of the namespace.
   This paper does \emph{not reconsider the namespace itself}, it only reconsiders our naming options
-  and arrives at a new recomendation.
+  and recommends to rename the namespace to \code{simd} and subsequently drop the \code{simd_}
+  part from \code{basic_simd_mask} and \code{simd_mask}.
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
@@ -65,7 +67,90 @@
 \input{changelog}
 \input{strawpolls}
 
+\section{Criticism and discussion on the current name}
+It seems that the namespace name \code{datapar} doesn't appeal to some because “datapar” appears
+as a newly \emph{invented name} and that's not a good fit for a namespace in the standard library.
+A namespace name should describe the contents of the namespace without requiring an explanation.
+
+So what if we were to spell it out to \code{dataparallel} or \code{data_parallel}?
+Then the issue is that “data-parallel SIMD” sounds strange because SIMD that is not data-parallel
+doesn't exist.
+But more importantly, the term “data-parallel” is an adjective.
+We only ever used an adjective for “experimental” APIs:\\
+\begin{tabular}{lll}
+  \code{std::chrono} &
+  \code{std::contracts} &
+  \code{std::execution} \\
+  \code{std::experimental} (the exception) &
+  \code{std::filesystem} &
+  \code{std::linalg} \\
+  \code{std::literals} &
+  \code{std::numbers} &
+  \code{std::placeholders} \\
+  \code{std::pmr} &
+  \code{std::ranges} &
+  \code{std::regex_constants} \\
+  \code{std::rel_ops} (deprecated) &
+  \code{std::this_thread} &
+  \code{std::views} \\
+\end{tabular}
+
+However, the intent was for \code{datapar} to be an abbreviation of “Data-parallel types”, the
+subclause heading in the current working draft.
+There is precedent with e.g. the \code{std::pmr} and \code{std::linalg} namespaces of using an
+abbreviation.
+The name “pmr” also needs an explanation.
+Does that make “pmr” a bad name or does it help to justify “datapar”?
+
+Consequently, the argument that \std\code{datapar} has to be spelled out in a longer form as the
+adjective \std\code{data_parallel}, isn't necessarily correct.
+If instead we were to spell it out as \std\code{data_parallel_types}\footnote{
+  Other variations: \code{std::data_parallel_execution}, \code{std::data_parallel_algorithms},
+  \code{std::data_parallel_numerics}, \code{std::data_parallelism}
+}, that argument doesn't hold anymore.
+%If those names are too long then you can argue against them from that position but I don't think you can argue that an adjective is a bad name for a namespace, without considering a non-adjective namespace name as well.
+
+Thus, it appears that any argument for replacing the \code{datapar} status quo with \code{simd} has
+to be that \emph{\code{datapar} is unclear and the clearer alternatives are too long}.
+
+One argument that was used against \stdsimd\code{simd} (and thus the only reason we considered a
+different namespace name) is the ambiguity between namespace and class
+name and whether one is looking at a constructor (\code{T::T()}).
+What had not been mentioned in these discussions is that \code{simd} is actually not a class
+template name but alias template.
+The default constructor, for example, therefore is spelled
+\stdsimd\code{basic_simd::basic_simd()}\footnote{In diagnostic output it is typically spelled
+\stdsimd\code{basic_simd<T, Abi>::basic_simd() [with T = ..., Abi = ...]}}.
+Nevertheless, the repetition of “simd” looks odd and might be confusing to humans and simple tools.
+Examples of libraries that do something similar are Boost.Flyweight and Boost.Histogram:
+\medskip\begin{lstlisting}[style=Vc]
+namespace boost
+{
+  namespace flyweights
+  {
+    template</*...*/> class flyweight;
+  }
+  using flyweights::flyweight;
+
+  namespace histogram
+  {
+    template<typename Axes, typename Storage> class histogram;
+  }
+}
+\end{lstlisting}
+So this has been done before and passed through Boost review.
+We believe the fear, uncertainty, and doubts about repeating the name of the namespace in the alias
+template are possibly no more than that; and in reality the “problem” is little to non-existent.
+
 \section{A survey of existing SIMD libraries}
+
+Interestingly, no \CC{} library uses the term “SIMD” in the name of the (unqualified) type.
+There are\footnote{“were”, \code{boost::simd} doesn't exist anymore} two libraries that used “SIMD”
+in the namespace.
+Rust, however, uses \code{Simd} for the type name and just plain \code{Mask} for the mask type.
+Rust has no need for an additional namespace scope because all operations on \code{Simd} are
+implemented as operators or member functions\footnote{Rust does not enable SIMD-generic
+programming}.
 
 \subsection{Agner Fog's C++ vector class library}
 
@@ -84,8 +169,8 @@ class Vecf4b;  // ~simd_mask<float, 4>
 \medskip\begin{lstlisting}
 namespace simd
 {
-  template <class T> struct pack; // ~basic_simd
-  template <> struct pack<bool>;  // ~basic_simd_mask
+  template <class T> struct pack; // ~simd
+  template <> struct pack<bool>;  // ~simd_mask
 }
 \end{lstlisting}
 
@@ -94,10 +179,22 @@ namespace simd
 \medskip\begin{lstlisting}
 namespace eve
 {
-  template <class T, /*Cardinal*/> struct wide; // ~ basic_simd
-  template <class T> struct logical;            // ~ basic_simd_mask
+  template <class T, /*Cardinal*/> struct wide; // ~ simd
+  template <class T> struct logical;            // ~ simd_mask
 }
 \end{lstlisting}
+
+\subsection{Highway}
+
+\medskip\begin{lstlisting}[style=Vc]
+namespace hwy
+{
+  template <class T, size_t N> class Vec128;  // ~ simd
+  template <class T, size_t N> class Mask128; // ~ simd_mask
+  // ...
+}
+\end{lstlisting}
+
 
 \subsection{Vc}
 
@@ -124,40 +221,157 @@ namespace xsimd
 }
 \end{lstlisting}
 
+\subsection{Rust's experimental std::simd}
 
-\section{Brainstorming}
+\begin{lstlisting}
+pub struct Simd<T, const N: usize> ...; // ~ simd
+pub struct Mask<T, const N: usize> ...; // ~ simd_mask
+\end{lstlisting}
+
+
+\section{Names considered}
 
 The name of the namespace and the name of the class (and alias) templates need to be considered as a
-whole. We believe it is not helpful to consider each name in isolation.
-
-There seems to be a strong desire to have “SIMD” in the name somewhere.
-This seems to be about findability and potentially buzzword compliance.
-(Too harsh: I guess it's about trying not to invent a new name where the industry already
-recognizes an existing name.)
-
+whole.
+It is not helpful to consider a namespace name or class name in isolation.
+The names of the class/alias templates also basically never appear without at least one template
+argument in user code.
+Consequently, the following presentation will include the namespace, class template, and first
+template argument.
 
 \subsection{Options for \simd}
-
-\begingroup
-\smaller
-\def\Name#1#2{\hline\code{std::#1::basic_#2} & \code{std::#1::#2}}
-\begin{tabular}{l|l|l}
-\textbf{class template} & \textbf{alias template} & \textbf{obvious criticism} \\
-  \Name{simd}{simd} & repetitive and human-ambiguous \\
-  \Name{datapar}{simd} & repetitive in a different way \\
-  \Name{dataparallel}{simd} & ditto \\
-  \Name{simd}{batch} & \\
-  \Name{simd}{number} & it's not a number, but set of numbers \\
-  \Name{simd}{pack} & \CC{} already has parameter packs \\
-  \Name{simd}{value} & many variables are named \code{value} \\
-  \Name{simd}{vec} & sounds like a container \\
-  \Name{simd}{vector} & sounds even more like a container \\
-  \Name{simd}{wide} & “simd wide” and “basic wide” don't match\\
-  \Name{simd}{chunk} & this is not a chunk out of a SIMD register \\
-  \Name{datapar}{chunk} & where did the “SIMD” name go? \\
-  \Name{dataparallel}{chunk} & ditto \\
+\begingroup%
+\smaller%
+\newcommand\optionrow[3]{\hline\makecell[cl]{\code{std::#1::basic_#2<int>}\\\code{std::#1::#2<int>}} & \makecell[cl]{#3}\\}%
+\begin{tabular}{l|l}
+  \thead{class template \\ alias template} & \thead{obvious criticism} \\
+  \optionrow{simd}{simd}{repetitive and human-ambiguous}
+  \optionrow{datapar}{simd}{repetitive in a different way}
+  \optionrow{dataparallel}{simd}{ditto}
+  \optionrow{simd}{batch}{}
+  \optionrow{simd}{number}{it's not a number, but set of numbers}
+  \optionrow{simd}{numbers}{we already have \code{std::numbers::*}\\what are “SIMD numbers”?}
+  \optionrow{simd}{pack}{\CC{} already has parameter packs; \\ another existing meaning: packed structs}
+  \optionrow{simd}{value}{too many variables are named \code{value}}
+  \optionrow{simd}{vec}{sounds like a container}
+  \optionrow{simd}{vector}{sounds even more like a container}
+  \optionrow{simd}{wide}{like in \code{wchar_t}?\\“SIMD wide” and “SIMD basic wide” need an explanation}
+  \optionrow{simd}{chunk}{this is not a chunk out of a SIMD register}
+  \optionrow{datapar}{chunk}{where did the “SIMD” name go?}
+  \optionrow{dataparallel}{chunk}{ditto}
+  \optionrow{dataparallel}{numbers}{long; any abbreviation becomes unclear}
 \end{tabular}
 \endgroup
+
+\subsection{Options for \mask}
+\nopagebreak
+\begingroup%
+\smaller%
+\newcommand\optionrow[3]{\hline\makecell[cl]{\code{std::#1::basic_#2<4>}\\\code{std::#1::#2<int>}} & \makecell[cl]{#3}\\}%
+\begin{tabular}{l|l}
+  \thead{class template \\ alias template} & \thead{obvious criticism} \\
+  \optionrow{simd}{mask}{}
+  \optionrow{simd}{simd_mask}{repetitive}
+  \optionrow{datapar}{simd_mask}{repetitive in a different way}
+  \optionrow{dataparallel}{simd_mask}{ditto}
+  \optionrow{simd}{logical}{}
+  \optionrow{simd}{batch_bool}{}
+  \optionrow{simd}{simd_bool}{}
+  \optionrow{simd}{boolean}{}
+\end{tabular}
+\endgroup
+
+\section{Discussion}
+
+There seems to be a strong desire to have “SIMD” in the name somewhere.
+This desire seems to be about findability and about trying not to invent a new name where the
+industry already recognizes an existing name.
+(Potentially also about buzzword compliance and delivering on a name we have been communicating
+before?)
+
+If we were to use a different name for the namespace and class/alias templates then it is probably
+better to use the “SIMD” name for the class/alias name rather than the namespace.
+The class/alias name is the identifier that will always appear in the source code so choosing a
+class name which is ambiguous once the namespace is removed (e.g., with a using statement) obscures
+the codes intent.
+We would end up with variables with types like \code{value<int>}, \code{number<int>},
+\code{pack<int>}, and so on, and all hint of their SIMD behaviour is lost.
+
+The only viable alternative term that could potentially stand on its own (in terms of hinting at
+behavior) is “vector”.
+But that train has left the station decades ago.
+
+On the topic of ambiguity, does anyone feel one of the following functions is problematic?
+Is there any example that can create “visual confusion” to a human reader?
+\medskip\begin{lstlisting}[style=Vc]
+int f1() {
+  std::simd::simd v = std::array {1, 2, 3, 4};
+  return std::simd::reduce(v);
+}
+
+int f2() {
+  namespace simd = std::simd;
+  simd::simd v = std::array {1, 2, 3, 4};
+  return simd::reduce(v);
+}
+
+int f3() {
+  using std::simd::simd;
+  simd v = std::array {1, 2, 3, 4};
+  return std::simd::reduce(v);
+}
+
+int f4() {
+  using std::simd::simd;
+  simd v = std::array {1, 2, 3, 4};
+  return reduce(v);
+}
+
+int f5() {
+  using namespace std;
+  simd::simd v = std::array {1, 2, 3, 4};
+  return simd::reduce(v);
+}
+
+int f6() {
+  using namespace std::simd;
+  simd v = std::array {1, 2, 3, 4};
+  return reduce(v);
+}
+\end{lstlisting}
+On the contrary, naming the namespace of the \code{reduce} function after the type reinforces the
+connection between function and type it operates on, which improves clarity and cohesion.
+Whereas the status-quo of \stddatapar\code{reduce} used in isolation conveys less about its intended
+argument.
+
+\section{Conclusion}
+
+We recommend to go back to the advertised “std::simd” name by naming the namespace
+\code{std::\MayBreak{}simd}.
+In order to avoid the unnecessary duplication in \stdsimd\code{simd_mask} we also recommend to
+then rename \stdsimd\code{basic_simd_mask} to \stdsimd\code{basic_mask} and \stdsimd\code{simd_mask}
+to \stdsimd\code{mask}.
+
+\section{Wording}
+
+\subsection{Feature test macro}
+
+No feature test macro is added or bumped.
+
+\subsection{Ordering constraints on LWG motions}
+
+TBD.
+
+\subsection{Instructions to the editor}
+
+In 29.10 Data-parallel types [simd],
+
+\begin{enumerate}
+  \item change every occurrence of \code{namespace std::\wgChange{datapar}{simd} \{};
+  \item change every occurrence of \code{using \wgChange{datapar}{simd}::};
+  \item rename every occurrence of \code{basic_simd_mask} to \code{basic_mask};
+  \item rename every occurrence of \code{simd_mask} to \code{mask}.
+\end{enumerate}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=100
