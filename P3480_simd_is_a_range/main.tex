@@ -158,17 +158,7 @@ This makes it easier for the compiler to optimize and reduces the size of the \c
 to a single byte (empty type).
 
 
-\section{Open Questions}
-
-\subsection{Make \code{iterator} convertible to \code{const_iterator}}
-After SG9 voted to make \code{basic_simd::const_iterator} and \code{basic_simd::iterator} different
-types, interaction between the two types needs to be considered.
-Since iterators model pointers and non-const pointers convert to const pointers, it seems we need
-conversion from \code{\simditerator<V>} to \code{\simditerator<\brk{}const V>} to be implicit.
-In the wording below, “\code{\#define LEWG_WANTS_CONVERSION 1}” to make
-\lstinline@v.begin() == v.cbegin()@ a valid expression (evaluating to \code{true}).
-
-\subsection{Add tuple interface}
+\section{Open Question: Add tuple interface}
 
 \code{std::array} implements the tuple interface.
 Should \code{std::simd} also implement \code{tuple_size}, \code{tuple_element}, and \code{get}?
