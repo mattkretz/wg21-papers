@@ -1,7 +1,7 @@
 \newcommand\wgTitle{std::simd is a range}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3480R4}
-\newcommand\wgGroup{LEWG}
+\newcommand\wgDocumentNumber{D3480R5}
+\newcommand\wgGroup{LWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{}
 
@@ -195,18 +195,17 @@ namespace std::datapar {
 
   public:
     using value_type = typename V::value_type;
-    using iterator_category = std::random_access_iterator_tag;
+    using iterator_category = std::input_iterator_tag;
+    using iterator_concept = std::random_access_iterator_tag;
     using difference_type = @\exposid{simd-size-type}@;
 
     constexpr @\exposid{simd-iterator}@() = default;
-    constexpr @\exposid{simd-iterator}@(V& d, int off);
+    constexpr @\exposid{simd-iterator}@(V& d, @\exposid{simd-size-type}@ off);
 
     constexpr @\exposid{simd-iterator}@(const @\exposid{simd-iterator}@&) = default;
     constexpr @\exposid{simd-iterator}@& operator=(const @\exposid{simd-iterator}@&) = default;
 
-#if LEWG_WANTS_CONVERSION
     constexpr @\exposid{simd-iterator}@(const @\exposid{simd-iterator}@<remove_const_t<V>>&) requires is_const_v<V>;
-#endif
 
     constexpr value_type operator*() const;
 
@@ -220,24 +219,23 @@ namespace std::datapar {
 
     constexpr value_type operator[](difference_type n) const;
 
-    constexpr friend bool operator==(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b) = default;
-    constexpr friend bool operator==(@\exposid{simd-iterator}@ a, default_sentinel_t);
-    constexpr friend auto operator<=>(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
-    constexpr friend auto operator<=>(@\exposid{simd-iterator}@ a, default_sentinel_t);
+    friend constexpr bool operator==(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b) = default;
+    friend constexpr bool operator==(@\exposid{simd-iterator}@ a, default_sentinel_t);
+    friend constexpr auto operator<=>(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
 
-    constexpr friend @\exposid{simd-iterator}@ operator+(const @\exposid{simd-iterator}@& i, difference_type n);
-    constexpr friend @\exposid{simd-iterator}@ operator+(difference_type n, const @\exposid{simd-iterator}@& i);
-    constexpr friend @\exposid{simd-iterator}@ operator-(const @\exposid{simd-iterator}@& i, difference_type n);
+    friend constexpr @\exposid{simd-iterator}@ operator+(const @\exposid{simd-iterator}@& i, difference_type n);
+    friend constexpr @\exposid{simd-iterator}@ operator+(difference_type n, const @\exposid{simd-iterator}@& i);
+    friend constexpr @\exposid{simd-iterator}@ operator-(const @\exposid{simd-iterator}@& i, difference_type n);
 
-    constexpr friend difference_type operator-(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
-    constexpr friend difference_type operator-(@\exposid{simd-iterator}@ i, default_sentinel_t);
-    constexpr friend difference_type operator-(default_sentinel_t, @\exposid{simd-iterator}@ i);
+    friend constexpr difference_type operator-(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
+    friend constexpr difference_type operator-(@\exposid{simd-iterator}@ i, default_sentinel_t);
+    friend constexpr difference_type operator-(default_sentinel_t, @\exposid{simd-iterator}@ i);
   };
 }
   \end{codeblock}
 
 \begin{itemdecl}
-constexpr @\exposid{simd-iterator}@(V& d, int off);
+constexpr @\exposid{simd-iterator}@(V& d, @\exposid{simd-size-type}@ off);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -247,9 +245,7 @@ Initializes \exposid{data_} with \tcode{d} and \exposid{offset_} with \tcode{off
 \end{itemdescr}
 
 \begin{itemdecl}
-#if LEWG_WANTS_CONVERSION
 constexpr @\exposid{simd-iterator}@(const @\exposid{simd-iterator}@<remove_const_t<V>>& i) requires is_const_v<V>;
-#endif
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -373,7 +369,7 @@ Equivalent to: \tcode{return (*\exposid{data_})[\exposid{offset_} + n];}
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr friend bool operator==(@\exposid{simd-iterator}@ i, default_sentinel_t);
+friend constexpr bool operator==(@\exposid{simd-iterator}@ i, default_sentinel_t);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -383,7 +379,7 @@ Equivalent to: \tcode{return i.\exposid{offset_} == V::size();}
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr friend auto operator<=>(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
+friend constexpr auto operator<=>(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -397,18 +393,8 @@ Equivalent to: \tcode{return a.\exposid{offset_} <=> b.\exposid{offset_};}
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr friend auto operator<=>(@\exposid{simd-iterator}@ i, default_sentinel_t);
-\end{itemdecl}
-
-\begin{itemdescr}
-\pnum
-\effects
-Equivalent to: \tcode{return i.\exposid{offset_} <=> V::size();}
-\end{itemdescr}
-
-\begin{itemdecl}
-constexpr friend @\exposid{simd-iterator}@ operator+(const @\exposid{simd-iterator}@& i, difference_type n);
-constexpr friend @\exposid{simd-iterator}@ operator+(difference_type n, const @\exposid{simd-iterator}@& i);
+friend constexpr @\exposid{simd-iterator}@ operator+(const @\exposid{simd-iterator}@& i, difference_type n);
+friend constexpr @\exposid{simd-iterator}@ operator+(difference_type n, const @\exposid{simd-iterator}@& i);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -418,7 +404,7 @@ Equivalent to: \tcode{return \exposid{simd-iterator}(*i.\exposid{data_}, i.\expo
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr friend @\exposid{simd-iterator}@ operator-(const @\exposid{simd-iterator}@& i, difference_type n);
+friend constexpr @\exposid{simd-iterator}@ operator-(const @\exposid{simd-iterator}@& i, difference_type n);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -428,7 +414,7 @@ Equivalent to: \tcode{return \exposid{simd-iterator}(*i.\exposid{data_}, i.\expo
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr friend difference_type operator-(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
+friend constexpr difference_type operator-(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -442,7 +428,7 @@ Equivalent to: \tcode{return a.\exposid{offset_} - b.\exposid{offset_};}
 \end{itemdescr}
 
 \begin{itemdecl}
-constexpr friend difference_type operator-(@\exposid{simd-iterator}@ i, default_sentinel_t);
+friend constexpr difference_type operator-(@\exposid{simd-iterator}@ i, default_sentinel_t);
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -453,7 +439,7 @@ Equivalent to: \tcode{return i.\exposid{offset_} - V::size();}
 
 
 \begin{itemdecl}
-constexpr friend difference_type operator-(default_sentinel_t, @\exposid{simd-iterator}@ i);
+friend constexpr difference_type operator-(default_sentinel_t, @\exposid{simd-iterator}@ i);
 \end{itemdecl}
 
 \begin{itemdescr}
