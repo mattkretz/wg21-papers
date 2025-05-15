@@ -1,6 +1,6 @@
 \newcommand\wgTitle{std::simd is a range}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D3480R5}
+\newcommand\wgDocumentNumber{P3480R5}
 \newcommand\wgGroup{LWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{}
@@ -261,11 +261,7 @@ constexpr value_type operator*() const;
 \begin{itemdescr}
 \pnum
 \expects
-\begin{itemize}
-  \item \exposid{data_} is a valid pointer, and
-  \item \exposid{offset_} is in the range \range{0}{V::size()}.
-\end{itemize}
-\FIXME{\expects already implied by \effects?}
+\exposid{data_} is a valid pointer.
 
 \pnum
 \effects

@@ -28,8 +28,9 @@
 
 \begin{revision}
 \item Change \code{iterator_category} to \code{input_iterator_tag} and add \code{iterator_concept} as \code{random_access_iterator_tag}.
-\item Change \code{int} to \textit{simd-size-type} in constructor.
+\item Change \code{int} to \textit{\code{simd-size-type}} in constructor.
 \item Swap \code{constexpr} and \code{friend}.
 \item Drop \code{operator<=>} with \code{default_sentinel_t}.
-\item Drop \code{#if LEWG_WANTS_CONVERSION}, keeping the converting constructor.
+\item Drop \code{\#if LEWG_WANTS_CONVERSION}, keeping the converting constructor.
+\item Drop precondition on \textit{\code{offset_}} for \code{operator*}.
 \end{revision}
