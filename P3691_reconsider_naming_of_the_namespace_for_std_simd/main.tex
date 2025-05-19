@@ -8,7 +8,7 @@
   Mark Hoemmen <mhoemmen@nvidia.com>,\\
   Ruslan Arutyunyan <ruslan.arutyunyan@intel.com>
 }
-\newcommand\wgDocumentNumber{D3691R0}
+\newcommand\wgDocumentNumber{P3691R0}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{}
@@ -444,7 +444,12 @@ to \stdsimd\code{mask}.
 Before further discussion or taking that poll, we would prefer a policy-like, general discussion
 about whether name repetition between namespace and enclosed entities should be considered bad
 practice (or outright banned).
-The outcome of that poll should informs where \code{std::simd} can or cannot go.
+The outcome of that poll should inform us where \code{std::simd} can or cannot go.
+
+If LEWG decides to ban name repetition between namespace and enclosed type, then we need to reconsider
+whether \stddatapar\code{simd} / \stddatapar\code{simd_mask} is really still better than
+\stdsimd\code{pack}\footnote{or one of the other alternatives mentioned; to be discussed on the
+reflector} / \stdsimd\code{mask}.
 
 \section{Wording}
 
@@ -463,8 +468,8 @@ In 29.10 Data-parallel types [simd],
 \begin{enumerate}
   \item change every occurrence of \code{namespace std::\wgChange{datapar}{simd} \{};
   \item change every occurrence of \code{using \wgChange{datapar}{simd}::};
-  \item rename every occurrence of \code{basic_simd_mask} to \code{basic_mask};
-  \item rename every occurrence of \code{simd_mask} to \code{mask}.
+  \item change every occurrence of \code{basic_\wgRem{simd_}mask};
+  \item change every occurrence of \code{\wgRem{simd_}mask}.
 \end{enumerate}
 
 \end{document}
