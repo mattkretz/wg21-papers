@@ -344,10 +344,18 @@ class name which is ambiguous once the namespace is removed (e.g., with a using 
 the codes intent.
 We would end up with variables with types like \code{pack<int>}, \code{vec<int>}, \code{batch<int>},
 \code{wide<int>}, and so on, and all hint of their SIMD behaviour is lost.
-
 The only viable alternative term that could potentially stand on its own (in terms of hinting at
 behavior) is “vector”.
 But that train has left the station decades ago.
+
+On the other hand, if we consider the group of types and functions in the “SIMD” namespace to be a
+“SIMD-only” library (i.e., no other data-parallelism abstractions unrelated to the \code{simd}
+type), then shouldn't the namespace have the “SIMD” name?
+If we expect common practice to use fully qualified names or use of a namespace alias
+(\code{namespace simd = std::simd}; there's no other conceivable abbreviation other than maybe
+\code{namespace ss = std::simd}), then \code{simd} is already always part of the name.
+Consequently, we could then choose a name “SIMD <something>” to avoid the perceived ambiguity of
+\code{simd::simd}.
 
 On the topic of ambiguity, does anyone feel one of the following functions is problematic?
 Is there any example that can create “visual confusion” to a human reader?
