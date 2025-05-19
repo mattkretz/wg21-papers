@@ -245,12 +245,31 @@ namespace xsimd
 }
 \end{lstlisting}
 
-\subsection{Rust's experimental std::simd}
+\subsection{Other programming languages}
 
-\begin{lstlisting}
-pub struct Simd<T, const N: usize> ...; // ~ simd
-pub struct Mask<T, const N: usize> ...; // ~ simd_mask
-\end{lstlisting}
+\begin{itemize}
+  \item Rust's experimental std::simd:
+    \medskip\begin{lstlisting}
+    pub struct Simd<T, const N: usize> ...; // ~ simd
+    pub struct Mask<T, const N: usize> ...; // ~ simd_mask
+    \end{lstlisting}
+
+  \item C\#: \code{System.Numerics.Vector<T>}
+
+  \item Java Panama Vector API:\\
+    \code{jdk.incubator.vector.VectorSpecies<Float>}\\
+    \code{jdk.incubator.vector.VectorMask<Float>}
+
+  \item Swift SIMD module:\\
+    \code{protocol SIMD<Scalar>}\\
+    \code{struct SIMD8<Scalar>}\\
+    \code{struct SIMDMask<Storage>}
+
+  \item Julia SIMD.jl: \code{xs = Vec{4,Float64}(1)}
+
+\end{itemize}
+
+
 
 
 \section{Names considered}
