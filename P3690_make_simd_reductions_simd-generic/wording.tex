@@ -31,7 +31,7 @@ Add the following to \iref{simd.syn}:
   @\wgAdd{template<class T, class BinaryOperation = plus<>\mbox{>}}@
     @\wgAdd{constexpr T reduce(const T\&, BinaryOperation = \{\});}@
   @\wgAdd{template<class T, class BinaryOperation = plus<>\mbox{>}}@
-    @\wgAdd{constexpr T reduce(const T\& x, same_as<bool> mask, BinaryOperation binary_op = \{\},}@
+    @\wgAdd{constexpr T reduce(const T\& x, same_as<bool> auto mask, BinaryOperation binary_op = \{\},}@
                        @\wgAdd{type_identity_t<T> identity_element = \mbox{\seebelow});}@
 
   template<class T, class Abi>
@@ -46,9 +46,9 @@ Add the following to \iref{simd.syn}:
                            const typename basic_simd<T, Abi>::mask_type&) noexcept;
 
   @\wgAdd{template<class T> constexpr T reduce_min(const T\&) noexcept;}@
-  @\wgAdd{template<class T> constexpr T reduce_min(const T\&, same_as<bool>) noexcept;}@
+  @\wgAdd{template<class T> constexpr T reduce_min(const T\&, same_as<bool> auto) noexcept;}@
   @\wgAdd{template<class T> constexpr T reduce_max(const T\&) noexcept;}@
-  @\wgAdd{template<class T> constexpr T reduce_max(const T\&, same_as<bool>) noexcept;}@
+  @\wgAdd{template<class T> constexpr T reduce_max(const T\&, same_as<bool> auto) noexcept;}@
 
   // \iref{simd.alg}, Algorithms
   template<class T, class Abi>
@@ -152,7 +152,7 @@ The default argument for \tcode{identity_element} is equal to
 @\wgAdd{template<class T, class BinaryOperation = plus<>\mbox{>}}@
   @\wgAdd{constexpr T reduce(const T\& x, BinaryOperation binary_op = \{\});}@
 @\wgAdd{template<class T, class BinaryOperation = plus<>\mbox{>}}@
-  @\wgAdd{constexpr T reduce(const T\& x, same_as<bool> mask, BinaryOperation binary_op = \{\},}@
+  @\wgAdd{constexpr T reduce(const T\& x, same_as<bool> auto mask, BinaryOperation binary_op = \{\},}@
                      @\wgAdd{type_identity_t<T> identity_element = \mbox{\seebelow});}@
 \end{itemdecl}
 
@@ -277,9 +277,9 @@ Otherwise, returns the value of a selected element \tcode{x[$j$]} for which
 
 \begin{itemdecl}
 @\wgAdd{template<class T> constexpr T reduce_min(const T\& x) noexcept;}@
-@\wgAdd{template<class T> constexpr T reduce_min(const T\& x, same_as<bool> mask) noexcept;}@
+@\wgAdd{template<class T> constexpr T reduce_min(const T\& x, same_as<bool> auto mask) noexcept;}@
 @\wgAdd{template<class T> constexpr T reduce_max(const T\& x) noexcept;}@
-@\wgAdd{template<class T> constexpr T reduce_max(const T\& x, same_as<bool> mask) noexcept;}@
+@\wgAdd{template<class T> constexpr T reduce_max(const T\& x, same_as<bool> auto mask) noexcept;}@
 \end{itemdecl}
 
 \begin{itemdescr}
