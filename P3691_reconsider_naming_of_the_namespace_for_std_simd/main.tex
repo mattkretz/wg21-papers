@@ -8,8 +8,8 @@
   Mark Hoemmen <mhoemmen@nvidia.com>,\\
   Ruslan Arutyunyan <ruslan.arutyunyan@intel.com>
 }
-\newcommand\wgDocumentNumber{P3691R0}
-\newcommand\wgGroup{LEWG}
+\newcommand\wgDocumentNumber{D3691R1}
+\newcommand\wgGroup{LWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{}
 
@@ -435,21 +435,13 @@ Favored outcomes are \stddatapar\code{simd}, \std\code{dpt::simd},
 
 \section{Conclusion}
 
-We recommend to go back to the advertised “std::simd” name by naming the namespace
-\code{std::\MayBreak{}simd}.
-In order to avoid the unnecessary duplication in \stdsimd\code{simd_mask} we also recommend to
-then rename \stdsimd\code{basic_simd_mask} to \stdsimd\code{basic_mask} and \stdsimd\code{simd_mask}
-to \stdsimd\code{mask}.
-
-Before further discussion or taking that poll, we would prefer a policy-like, general discussion
-about whether name repetition between namespace and enclosed entities should be considered bad
-practice (or outright banned).
-The outcome of that poll should inform us where \code{std::simd} can or cannot go.
-
-If LEWG decides to ban name repetition between namespace and enclosed type, then we need to reconsider
-whether \stddatapar\code{simd} / \stddatapar\code{simd_mask} is really still better than
-\stdsimd\code{pack}\footnote{or one of the other alternatives mentioned; to be discussed on the
-reflector} / \stdsimd\code{mask}.
+After LEWG discussion and polls we converged at the following conclusion:
+Go back to the advertised “std::simd” name by naming the namespace \code{std::\MayBreak{}simd}.
+In order to avoid the unnecessary duplication in \stdsimd\code{simd_mask}, rename
+\stdsimd\code{basic_simd_mask} to \stdsimd\code{basic_mask} and \stdsimd\code{simd_mask} to
+\stdsimd\code{mask}.
+To avoid the repetition in \stdsimd\code{simd}, rename \stdsimd\code{basic_simd} to
+\stdsimd\code{basic_vec} and \stdsimd\code{simd} to \stdsimd\code{vec}.
 
 \section{Wording}
 
@@ -459,17 +451,19 @@ No feature test macro is added or bumped.
 
 \subsection{Ordering constraints on LWG motions}
 
-TBD.
+All other motions against [simd] need to be applied first.
 
 \subsection{Instructions to the editor}
 
 In 29.10 Data-parallel types [simd],
 
 \begin{enumerate}
-  \item change every occurrence of \code{namespace std::\wgChange{datapar}{simd} \{};
-  \item change every occurrence of \code{using \wgChange{datapar}{simd}::};
   \item change every occurrence of \code{basic_\wgRem{simd_}mask};
-  \item change every occurrence of \code{\wgRem{simd_}mask}.
+  \item change every occurrence of \code{\wgRem{simd_}mask};
+  \item change every occurrence of \code{basic_\wgChange{simd}{vec}};
+  \item change every occurrence of \code{\wgChange{simd}{vec}};
+  \item change every occurrence of \code{namespace std::\wgChange{datapar}{simd} \{};
+  \item change every occurrence of \code{using \wgChange{datapar}{simd}::}.
 \end{enumerate}
 
 \end{document}
