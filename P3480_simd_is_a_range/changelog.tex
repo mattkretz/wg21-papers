@@ -34,3 +34,18 @@
 \item Drop \code{\#if LEWG_WANTS_CONVERSION}, keeping the converting constructor.
 \item Drop precondition on \textit{\code{offset_}} for \code{operator*}.
 \end{revision}
+
+\begin{revision}
+\item Wording updates after first round of LWG review:
+  \begin{itemize}
+    \item Add preconditions that \code{offset_} stays inside the range of 0 to \code{size()}.
+    \item Make internal constructor exposition-only and private.
+    \item Remove unncessary \std.
+    \item Take the \code{addressof} before initializing \code{data_}.
+    \item Remove unncessary precondition on \code{operator*}.
+    \item Express as many operations as possible in terms of \code{+=} and \code{-=}.
+    \item Add inline implementation for \code{begin} and \code{end} of
+      \code{basic_simd} and \code{basic_simd_mask}.
+    \item Mark \code{begin} and \code{end} as well as the private iterator constructor \code{noexcept}.
+  \end{itemize}
+\end{revision}
