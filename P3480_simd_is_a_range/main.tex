@@ -1,6 +1,6 @@
 \newcommand\wgTitle{std::simd is a range}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D3480R6}
+\newcommand\wgDocumentNumber{P3480R6}
 \newcommand\wgGroup{LWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{}
@@ -211,16 +211,16 @@ namespace std::datapar {
     constexpr value_type operator[](difference_type n) const;
 
     friend constexpr bool operator==(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b) = default;
-    friend constexpr bool operator==(@\exposid{simd-iterator}@ a, default_sentinel_t);
+    friend constexpr bool operator==(@\exposid{simd-iterator}@ a, default_sentinel_t) noexcept;
     friend constexpr auto operator<=>(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
 
-    friend constexpr @\exposid{simd-iterator}@ operator+(const @\exposid{simd-iterator}@& i, difference_type n);
-    friend constexpr @\exposid{simd-iterator}@ operator+(difference_type n, const @\exposid{simd-iterator}@& i);
-    friend constexpr @\exposid{simd-iterator}@ operator-(const @\exposid{simd-iterator}@& i, difference_type n);
+    friend constexpr @\exposid{simd-iterator}@ operator+(@\exposid{simd-iterator}@ i, difference_type n);
+    friend constexpr @\exposid{simd-iterator}@ operator+(difference_type n, @\exposid{simd-iterator}@ i);
+    friend constexpr @\exposid{simd-iterator}@ operator-(@\exposid{simd-iterator}@ i, difference_type n);
 
     friend constexpr difference_type operator-(@\exposid{simd-iterator}@ a, @\exposid{simd-iterator}@ b);
-    friend constexpr difference_type operator-(@\exposid{simd-iterator}@ i, default_sentinel_t);
-    friend constexpr difference_type operator-(default_sentinel_t, @\exposid{simd-iterator}@ i);
+    friend constexpr difference_type operator-(@\exposid{simd-iterator}@ i, default_sentinel_t) noexcept;
+    friend constexpr difference_type operator-(default_sentinel_t, @\exposid{simd-iterator}@ i) noexcept;
   };
 }
   \end{codeblock}
@@ -352,7 +352,7 @@ Equivalent to:
 \end{itemdescr}
 
 \begin{itemdecl}
-  friend constexpr bool operator==(@\exposid{simd-iterator}@ i, default_sentinel_t);
+  friend constexpr bool operator==(@\exposid{simd-iterator}@ i, default_sentinel_t) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -376,32 +376,24 @@ Equivalent to:
 \end{itemdescr}
 
 \begin{itemdecl}
-  friend constexpr @\exposid{simd-iterator}@ operator+(const @\exposid{simd-iterator}@& i, difference_type n);
-  friend constexpr @\exposid{simd-iterator}@ operator+(difference_type n, const @\exposid{simd-iterator}@& i);
+  friend constexpr @\exposid{simd-iterator}@ operator+(@\exposid{simd-iterator}@ i, difference_type n);
+  friend constexpr @\exposid{simd-iterator}@ operator+(difference_type n, @\exposid{simd-iterator}@ i);
 \end{itemdecl}
 
 \begin{itemdescr}
 \pnum
 \effects
-Equivalent to:
-\begin{codeblock}
-  @\exposid{simd-iterator}@ tmp = *this;
-  return tmp += n;
-\end{codeblock}
+Equivalent to: \tcode{return i += n;}
 \end{itemdescr}
 
 \begin{itemdecl}
-friend constexpr @\exposid{simd-iterator}@ operator-(const @\exposid{simd-iterator}@& i, difference_type n);
+friend constexpr @\exposid{simd-iterator}@ operator-(@\exposid{simd-iterator}@ i, difference_type n);
 \end{itemdecl}
 
 \begin{itemdescr}
 \pnum
 \effects
-Equivalent to:
-\begin{codeblock}
-  @\exposid{simd-iterator}@ tmp = *this;
-  return tmp -= n;
-\end{codeblock}
+Equivalent to: \tcode{return i -= n;}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -419,7 +411,7 @@ Equivalent to: \tcode{return a.\exposid{offset_} - b.\exposid{offset_};}
 \end{itemdescr}
 
 \begin{itemdecl}
-friend constexpr difference_type operator-(@\exposid{simd-iterator}@ i, default_sentinel_t);
+friend constexpr difference_type operator-(@\exposid{simd-iterator}@ i, default_sentinel_t) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -430,7 +422,7 @@ Equivalent to: \tcode{return i.\exposid{offset_} - V::size();}
 
 
 \begin{itemdecl}
-friend constexpr difference_type operator-(default_sentinel_t, @\exposid{simd-iterator}@ i);
+friend constexpr difference_type operator-(default_sentinel_t, @\exposid{simd-iterator}@ i) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -460,6 +452,24 @@ public:
 \end{codeblock}
 \end{wgText}
 
+%TODO: add context where exactly this goes
+
+%\begin{wgBAdd}
+%\begin{itemdecl}
+%@\wgAdd{constexpr iterator begin() noexcept;}@
+%@\wgAdd{constexpr const_iterator begin() const noexcept;}@
+%@\wgAdd{constexpr const_iterator cbegin() const noexcept;}@
+%\end{itemdecl}
+
+%\begin{itemdescr}
+%\pnum
+%\wgAdd{
+%\effects
+%Equivalent to: \tcode{return \{*this, 0\};}
+%}
+%\end{itemdescr}
+%\end{wgBAdd}
+
 \subsection{Modify [simd.mask.overview]}
 \begin{wgText}[{[simd.mask.overview]}]
 \setcounter{Paras}{0}
@@ -478,6 +488,22 @@ public:
   @\wgAdd{constexpr default_sentinel_t cend() const noexcept \{ return \{\}; \}}@
 \end{codeblock}
 \end{wgText}
+
+%\begin{wgBAdd}
+%\begin{itemdecl}
+%@\wgAdd{constexpr iterator begin() noexcept;}@
+%@\wgAdd{constexpr const_iterator begin() const noexcept;}@
+%@\wgAdd{constexpr const_iterator cbegin() const noexcept;}@
+%\end{itemdecl}
+
+%\begin{itemdescr}
+%\pnum
+%\wgAdd{
+%\effects
+%Equivalent to: \tcode{return \{*this, 0\};}
+%}
+%\end{itemdescr}
+%\end{wgBAdd}
 
 \end{document}
 % vim: sw=2 sts=2 ai et tw=100
