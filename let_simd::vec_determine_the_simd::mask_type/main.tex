@@ -1,0 +1,247 @@
+\newcommand\wgTitle{Let \code{simd::vec} determine the \code{simd::mask} type}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{DXXXXR0}
+\newcommand\wgGroup{LEWG,LWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+\usepackage{vectorpictures}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{ba\-sic\_vec#1}\xspace}
+\newcommand\simdT{\type{ba\-sic\_vec\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\valuetype{\type{val\-ue\_type}\xspace}
+\newcommand\referencetype{\type{ref\-er\-ence}\xspace}
+\newcommand\mask[1][]{\type{ba\-sic\_mask#1}\xspace}
+\newcommand\maskT{\type{ba\-sic\_mask\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\newcommand\nativeabi{\UNSP{native-abi}}
+\newcommand\deducet{\UNSP{deduce-t}}
+\newcommand\simdsizev{\UNSP{simd-size-v}}
+\newcommand\simdsizetype{\UNSP{simd-size-type}}
+\newcommand\simdselect{\UNSP{simd-select-impl}}
+\newcommand\maskelementsize{\UNSP{mask-element-size}}
+\newcommand\integerfrom{\UNSP{integer-from}}
+\newcommand\constexprwrapperlike{\UNSP{constexpr-wrapper-like}}
+\newcommand\convertflag{\UNSP{convert-flag}}
+\newcommand\alignedflag{\UNSP{aligned-flag}}
+\newcommand\overalignedflag{\UNSP{overaligned-flag}}
+\newcommand\reductionoperation{\UNSP{reduction-binary-operation}}
+\newcommand\simdfloatingpoint{\UNSP{simd-floating-point}}
+\newcommand\multisimdfloatingpoint{\UNSP{multi-arg-simd-floating-point}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  The \stdsimd\code{mask<T, N>} alias template currently determines the \stdsimd\mask[<Bytes, Abi>]
+  specialization using \code{Bytes = sizeof(T)} and a deduction of \code{Abi} using the same
+  expression that \stdsimd\code{vec} uses.
+  This could be simplified to \code{vec<T, N>::mask_type}, which additionally provides more freedom
+  in choosing a value for \code{Bytes}, which is important for a non-interleaved implementation of
+  \code{vec<complex<T>>}.
+  Consequences of such a change are explored in this paper.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\pagebreak
+\section{Motivation}
+
+The CD defines \code{simd::vec} and \code{simd::mask} as follows:
+
+\begin{wgText}[{[simd.syn]}]
+\begin{codeblock}
+// [simd.class], class template basic_vec
+template<class T, class Abi = @\exposid{native-abi}@<T>> class basic_vec;
+template<class T, @\exposid{simd-size-type}@ N = @\exposid{simd-size-v}@<T, @\exposid{native-abi}@<T>>>
+  using vec = basic_vec<T, @\exposid{deduce-abi-t}@<T, N>>;
+
+// [simd.mask.class], class template basic_mask
+template<size_t Bytes, class Abi = @\exposid{native-abi}<\exposid{integer-from}@<Bytes>>> class basic_mask;
+template<class T, @\exposid{simd-size-type}@ N = @\exposid{simd-size-v}@<T, @\exposid{native-abi}@<T>>>
+  using mask = basic_mask<sizeof(T), @\exposid{deduce-abi-t}@<T, N>>;
+\end{codeblock}
+\end{wgText}
+
+In addition, \code{basic_vec} has a type member called \code{mask_type}, which is the type returned
+from comparison and used for masked operations.
+The expectation has always been that \stdsimd\code{vec<T, N>::mask_type} is the same type as
+\stdsimd\code{mask<T, N>}.
+When \std\code{complex<T>} became a vectorizable type this equality became harder to implement and
+for some targets (ABI tags) requires an inefficient implementation.
+But even before \code{complex} was added, the situation for x86 AVX (without AVX2) targets was
+tricky.
+
+\subsection{The AVX without AVX2 challenge}
+(Why this matters:
+  SandyBridge and IvyBridge CPUs are fairly ancient now, so we could ignore the issue.
+  However, the point is that we don't know what future hardware will look like and that we might see
+similar issues with modern hardware.)
+
+A sensible default ABI tag setup for x86 with AVX but without AVX2 follows instruction support.
+AVX supports 256-bit floating-point instructions, but provides basically no 256-bit integer
+instructions.
+The latter was added with AVX2.
+
+Thus, for the libstdc++ implementation \code{vec<float>::size() == 8} and \code{vec<int>::size() ==
+4} with \code{-march=ivybridge}.
+The \code{vec<int, 8>} type is stored, passed, and manipulated as two 128-bit xmm registers.
+The implication for masks, which lose information about the value-type by specializing
+\code{basic_mask} on the \code{sizeof}, is that \code{mask<float>::size()} must be 8 and
+\code{mask<int>::size()} must be 4.
+\code{mask<int, 8>} is thus made up of two 128-bit xmm registers while \code{mask<float, 8>} is a
+single 256-bit ymm register.
+
+The \code{basic_mask} template, however has trouble to do the right thing.
+With \code{sizeof(float) == sizeof(int) == 4}, what should a user expect for \code{basic_mask<4>}?
+Is it 1 ymm, 2 xmm, or 1 xmm register?
+The wording is clear, since the ABI tag is deduced via the \exposid{integer-from} trait, that we need
+to get the equivalent of \code{mask<int>} and \emph{not} \code{mask<float>}.
+
+\medskip
+\begin{tabular}{lll}
+  Type & \code{size()} & stored as \\\hline
+  \code{vec<float>}       & 8 & $1\times$ \code{ymm} \\
+  \code{basic_vec<float>} & 8 & $1\times$ \code{ymm} \\
+  \code{mask<float>}      & 8 & $1\times$ \code{ymm} \\
+  \code{basic_mask<sizeof(float)>} & 4 & $1\times$ \code{xmm} \\
+  \hline
+  \code{vec<int>}       & 4 & $1\times$ \code{xmm} \\
+  \code{basic_vec<int>} & 4 & $1\times$ \code{xmm} \\
+  \code{mask<int>}      & 4 & $1\times$ \code{xmm} \\
+  \code{basic_mask<sizeof(int)>} & 4 & $1\times$ \code{xmm} \\
+  \hline
+  \code{vec<int, 8>}    & 8 & $2\times$ \code{xmm} \\
+  \code{mask<int, 8>}   & 8 & $2\times$ \code{xmm} \\
+\end{tabular}
+
+\subsection{\code{mask<complex<T>>} is surprisingly complex}
+
+The previsouly mentioned \exposid{integer-from} trait is problematic on its own for
+\code{complex<double>} as discussed for
+LWG4238\footnote{\url{https://cplusplus.github.io/LWG/issue4238}\\Discussion:
+\url{https://lists.isocpp.org/lib/2025/04/31171.php}}.
+
+But let's look at vector-masks for \code{complex<T>} first (for simplicity I'll assume
+x86\footnote{Nothing is really simple about x86, though.}):\\
+\code{mask<complex<double>>} is an alias for \code{basic_mask<16,
+\exposid{deduce-abi-t}<complex<double>, N>>}, where \code{N} depends on compiler flags and can be 1,
+2, or 4 (SSE, AVX, or AVX512).
+See \fig{sse.complex} for a graphical representation of the following discussion.
+With AVX, \code{vec<complex<double>>} thus holds two \code{complex<double>} values ($x_0$ and $x_1$;
+(1) in \fig{sse.complex}).
+Interleaved storage stores it as four values of type \code{double} (\code{vec<double>}: $x_0^r$,
+$x_0^i$, $x_1^r$, and $x_1^i$; (2) in \fig{sse.complex}) in one ymm register.
+
+\begin{figure}[htb]
+\centering
+\begin{tikzpicture}
+  \vInit
+  \setlength\vNodeHeight{6ex}
+  \vNode{$x_0$, $x_1$}
+  \setlength\vNodeHeight{3ex}
+  \addtocounter{vectornodeindexinner}{2}\vCaption{(1)}
+  \vNode{$x_0^r$, $x_0^i$, $x_1^r$, $x_1^i$}
+  \vCaption{(2)}
+  \setlength\vNodeHeight{6ex}
+  \vNode{$k_0$, $k_1$}
+  \setlength\vNodeHeight{3ex}
+  \addtocounter{vectornodeindexinner}{2}\vCaption{(3)}
+  \vNode{$k_0^r$, $k_0^i$, $k_1^r$, $k_1^i$}
+  \vCaption{(4)}
+\end{tikzpicture}
+\caption{SSE implementation of interleaved \code{complex}}
+\label{fig:sse.complex}
+\end{figure}
+
+A \code{mask<complex<double>>} object is stored in just the same way, with two 128-bit values
+($k_0$, $k_1$; (3) in \fig{sse.complex}) actually stored as four 64-bit values ($k_0^r$, $k_0^i$,
+$k_1^r$, $k_1^i$; (4) in \fig{sse.complex}).
+Comparing two objects of type \code{vec<complex<double>>} is translated into an AVX compare
+instruction on four \code{double} values, producing four 64-bit results in a vector mask.
+The implementation needs to fix up the result by 
+
+\section{Implications}
+
+A contiguous implementation of \code{basic_vec<complex<T>>} would use \code{basic_vec<sizeof(T),
+SomeAbi>} as its \code{mask_type}.
+An implementation that defaults to interleaved on one target and contiguous on a different target
+would therefore treat \code{-mask<complex<double>>()} as ill-formed for the first target and produce
+a \code{vec<long long>} on the other target.
+\code{convertible_to<mask<complex<double>>, mask<double>>} could be implemented to be
+\code{true}.
+
+\section{Wording}
+
+\subsection{Feature test macro}
+
+Bump.
+
+\subsection{Modify [simd.syn] and [simd.creation]}
+
+In [simd.syn], change:
+\begin{wgText}[{[simd.syn]}]
+\begin{codeblock}
+  template<class T, class Abi>
+    constexpr auto chunk(const basic_simd_mask<@\exposid{mask-element-size}@<T>, Abi>& x) noexcept;
+
+  template<@\wgChange{size_t}{\mbox{\exposid{simd-size-type}}}@ N, class T, class Abi>
+    constexpr auto chunk(const basic_simd<T, Abi>& x) noexcept;
+  template<@\wgChange{size_t}{\mbox{\exposid{simd-size-type}}}@ N, size_t Bytes, class Abi>
+    constexpr auto chunk(const basic_simd_mask<Bytes, Abi>& x) noexcept;
+
+  template<class T, class... Abis>
+    constexpr basic_simd<T, @\exposid{deduce-abi-t}@<T, (basic_simd<T, Abis>::size() + ...)>>
+      cat(const basic_simd<T, Abis>&...) noexcept;
+\end{codeblock}
+\end{wgText}
+
+In [simd.creation], change:
+\begin{wgText}[{[simd.creation]}]
+\setcounter{WGClause}{29}
+\setcounter{WGSubSection}{10}
+\setcounter{WGSubSubSection}{7}
+\setcounter{WGSubSubSubSection}{8}
+\setcounter{Paras}{3}%
+\begin{itemdecl}
+template<@\wgChange{size_t}{\mbox{\exposid{simd-size-type}}}@ N, class T, class Abi>
+  constexpr auto chunk(const basic_simd<T, Abi>& x) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to: \tcode{return chunk<resize_t<N, basic_simd<T, Abi>>>(x);}
+\end{itemdescr}
+
+\begin{itemdecl}
+template<@\wgChange{size_t}{\mbox{\exposid{simd-size-type}}}@ N, size_t Bytes, class Abi>
+  constexpr auto chunk(const basic_simd_mask<Bytes, Abi>& x) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\effects
+Equivalent to: \tcode{return chunk<resize_t<N, basic_simd_mask<Bytes, Abi>>>(\brk{}x);}
+\end{itemdescr}
+\end{wgText}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=100

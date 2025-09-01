@@ -260,7 +260,7 @@ minimum height=\vNodeHeight,minimum width=\vNodeWidth]
 
 \newcommand{\vTextNode}[1]{
 \addtocounter{vectornodeindexouter}{1}%
-\coordinate (myp) at ($(p)+(-1.5\vNodeWidth,-\vNodeHeight)$);
+\coordinate (myp) at ($(p)+(-1.5\vNodeWidth,-.5\vNodeHeight)$);
 \node[text node
   ,outer sep=0
   ,inner sep=2pt
@@ -278,6 +278,7 @@ minimum height=\vNodeHeight,minimum width=\vNodeWidth]
   \setcounter{vectoropcounter}{0}%
   \setcounter{vectornodeindexinner}{0}%
   \edef\v@FirstNodeName{\Alph{vectornodeindexouter}0}%
+  \coordinate (p) at ($(p)+(0,.5\vNodeHeight)$);
   \foreach \name in {#1}{
     \coordinate (p) at ($(p)+(0,-\vNodeHeight)$);
     \global\edef\v@LastNodeName{\Alph{vectornodeindexouter}\arabic{vectornodeindexinner}}%
@@ -286,6 +287,7 @@ minimum height=\vNodeHeight,minimum width=\vNodeWidth]
     \node[vector node text,at=(p)] {\name};%
     \addtocounter{vectornodeindexinner}{1}%
   }
+  \coordinate (p) at ($(p)-(0,.5\vNodeHeight)$);
   %\v@DrawNodeFrame
   \vNodeShadow
   \path let \p1 = (p) in coordinate (p) at (\x1+2\vNodeWidth,\y1+\arabic{vectornodeindexinner}\vNodeHeight);
@@ -311,6 +313,7 @@ minimum height=\vNodeHeight,minimum width=\vNodeWidth]
   \setcounter{vectoropcounter}{0}%
   \setcounter{vectornodeindexinner}{0}%
   \edef\v@FirstNodeName{\Alph{vectornodeindexouter}0}%
+  \coordinate (p) at ($(p)+(0,.5\vNodeHeight)$);
   \foreach \name in {#1}{
     \coordinate (p) at ($(p)+(0,-\vNodeHeight)$);
     \global\edef\v@LastNodeName{\Alph{vectornodeindexouter}\arabic{vectornodeindexinner}}%
@@ -318,6 +321,7 @@ minimum height=\vNodeHeight,minimum width=\vNodeWidth]
     node[name=\v@LastNodeName] {\name};%
     \addtocounter{vectornodeindexinner}{1}%
   }
+  \coordinate (p) at ($(p)-(0,.5\vNodeHeight)$);
   %\v@DrawNodeFrame
   \vNodeShadow
   \path let \p1 = (p) in coordinate (p) at (\x1+2\vNodeWidth,\y1+\arabic{vectornodeindexinner}\vNodeHeight);
@@ -328,6 +332,7 @@ minimum height=\vNodeHeight,minimum width=\vNodeWidth]
   \setcounter{vectoropcounter}{0}%
   \setcounter{vectornodeindexinner}{0}%
   \edef\v@FirstNodeName{\Alph{vectornodeindexouter}0}%
+  \coordinate (p) at ($(p)+(0,.5\vNodeHeight)$);
   \foreach \active/\name in {#1}{
     \coordinate (p) at ($(p)+(0,-\vNodeHeight)$);
     \global\edef\v@LastNodeName{\Alph{vectornodeindexouter}\arabic{vectornodeindexinner}}%
@@ -335,6 +340,7 @@ minimum height=\vNodeHeight,minimum width=\vNodeWidth]
     node[name=\v@LastNodeName] {\name};%
     \addtocounter{vectornodeindexinner}{1}%
   }
+  \coordinate (p) at ($(p)-(0,.5\vNodeHeight)$);
   %\v@DrawNodeFrame
   \vNodeShadow
   \path let \p1 = (p) in coordinate (p) at (\x1+2\vNodeWidth,\y1+\arabic{vectornodeindexinner}\vNodeHeight);
@@ -357,7 +363,7 @@ minimum height=\vNodeHeight,minimum width=\vNodeWidth]
 
 \newcommand{\vOperations}[2][\arabic{vectornodeindexinner}]{
 \foreach \pos in {1,...,#1}{
-\path let \p1 = (p) in coordinate (op) at (\x1-\vNodeWidth,\y1-\pos\vNodeHeight);
+\path let \p1 = (p) in coordinate (op) at (\x1-\vNodeWidth,\y1-\pos\vNodeHeight+.5\vNodeHeight);
 \draw[nodes=vector operations] (op) node[name=\Alph{vectornodeindexouter} Op\arabic{vectoropcounter}] {#2};
 \addtocounter{vectoropcounter}{1}%
 \v@TextShadow{#2}
@@ -371,7 +377,7 @@ minimum height=\vNodeHeight,minimum width=\vNodeWidth]
 }
 \newcommand{\vOperationsX}[2]{
 \foreach \pos in {#1}{
-\path let \p1 = (p) in coordinate (op) at (\x1-\vNodeWidth,\y1-\pos\vNodeHeight);
+\path let \p1 = (p) in coordinate (op) at (\x1-\vNodeWidth,\y1-\pos\vNodeHeight+.5\vNodeHeight);
 \draw[nodes=vector operations] (op) node[name=\Alph{vectornodeindexouter} Op\arabic{vectoropcounter}] {#2};
 \addtocounter{vectoropcounter}{1}%
 \v@TextShadow{#2}
@@ -395,8 +401,8 @@ node[name=\v@LastNodeName,minimum width=#1\vNodeWidth] {};%
   \setcounter{vectornodeindexinner}{#1}%
   \addtocounter{vectornodeindexinner}{1}%
     \path let
-      \p1 = ($(p) + (-0.5\vNodeWidth,-0.5\vNodeHeight)$),
-      \p2 = ($(p) + (0.5\vNodeWidth,-#1\vNodeHeight-1.5\vNodeHeight)$)
+      \p1 = ($(p) + (-0.5\vNodeWidth,0)$),
+      \p2 = ($(p) + (0.5\vNodeWidth,-#1\vNodeHeight-\vNodeHeight)$)
       in
       coordinate (lefttop) at (\p1)
       coordinate (rightbottom) at (\p2);
@@ -450,7 +456,6 @@ node[name=\v@LastNodeName,minimum width=#1\vNodeWidth] {};%
   \coordinate (myp) at ($(p)+(-1.5\vNodeWidth-#1*0.5\vNodeWidth,-\arabic{vectornodeindexinner}\vNodeHeight)$);
 \addtocounter{vectornodeindexinner}{-1}%
 \node[text centered
-  ,anchor=north
   ,text width=#1*\vNodeWidth
   %,fill=red
   ,at=(myp)
