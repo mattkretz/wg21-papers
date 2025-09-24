@@ -25,7 +25,7 @@ This repository holds the LuaLaTeX sources for my papers to the C++ committee.
 | [P3480](https://wg21.link/p3480) | [D3480](https://web-docs.gsi.de/~mkretz/D3480.pdf) | std::simd is a range                      | LEWG                       |
 | [P3488](https://wg21.link/p3488) | [D3488](https://web-docs.gsi.de/~mkretz/D3488.pdf) | Floating-Point Excess Precision           | SG6                        |
 | [P3690](https://wg21.link/p3690) | [D3690](https://web-docs.gsi.de/~mkretz/D3690.pdf) | Consistency fix: Make simd reductions SIMD-generic | LEWG                       |
-
+| [P3844](https://wg21.link/p3844) | [D3844](https://web-docs.gsi.de/~mkretz/D3844.pdf) | Restore simd::vec broadcast from int      | LEWG                       |
 
 To build the papers you need make, LuaLaTeX (only tested with a recent TeXLive distribution), and Biber.
 Simply run
