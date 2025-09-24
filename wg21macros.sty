@@ -78,12 +78,12 @@
 \newenvironment{wgBAdd}{\color{WgAdd}}{\color{black}}
 \newenvironment{wgBRem}{\color{WgRem}}{\color{black}}
 \newcommand\wgTextFonts{\def\ttdefault{wgCodeFont}\rmfamily\smaller[1]}
-\def\wgLabelPrefix{}%
 \newenvironment{wgText}[1][]{%
   \vskip.2\baselineskip plus 1\baselineskip
   \begingroup%
-  \let\wgRealRef=\ref%
-  \renewcommand\ref[1]{\wgRealRef{sec:\wgLabelPrefix##1}}%
+  %\let\wgRealRef=\ref%
+  %\def\ref##1{\wgRealRef{sec:##1}}%
+  %\renewcommand\ref[1]{\wgRealRef{sec:##1}}%
   \lstset{%
     language=C++,
     keywordstyle=,
@@ -155,6 +155,20 @@
 \makeatother
 }
 \useVerboseStablenameRef
+
+\makeatletter
+\def\pnumRem{\par%
+  \stepcounter{Paras}%
+  \noindent\llap{{%
+  \scriptsize\raisebox{.5ex}{\textcolor{WgRem}{\arabic{Paras}}}}\hspace{\@totalleftmargin}\quad}%
+\addtocounter{Paras}{-1}}
+
+\def\pnumAdd{\par%
+  \stepcounter{Paras}%
+  \protected@edef\@currentlabel{[\theWgStableName]~p.\arabic{Paras}}%
+  \noindent\llap{{%
+\scriptsize\raisebox{.5ex}{\textcolor{WgAdd}{\arabic{Paras}}}}\hspace{\@totalleftmargin}\quad}}
+\makeatother
 
 \newenvironment{indented}
 {\list{}{}\item\relax}
@@ -249,7 +263,7 @@
       \theWGClause{} #2 [#3] (\thesubsection{})%
     }%
     \let\oexposid\exposid\let\exposid\textit%
-    {\noindent\wgOrigSection{#1}\larger[2]\textbf{\arabic{WGClause} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}}\\%
+    {\noindent\wgOrigSection{#1}\larger[2]\textbf{\arabic{WGClause} #2\label{sec:#3}\hfill[#3]}}\\%
     \let\exposid\oexposid%
     \noindent%
 }
@@ -269,7 +283,7 @@
       \theWGSubSection{} #2 [#3] (\thesubsubsection{})%
     }%
     \let\oexposid\exposid\let\exposid\textit%
-    {\noindent\wgOrigSection{#1}\larger[1]\textbf{\theWGSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}}\\%
+    {\noindent\wgOrigSection{#1}\larger[1]\textbf{\theWGSubSection{} #2\label{sec:#3}\hfill[#3]}}\\%
     \let\exposid\oexposid%
     \noindent%
 }
@@ -288,7 +302,7 @@
       \theWGSubSubSection{} #2 [#3] (\theparagraph{})%
     }%
     \let\oexposid\exposid\let\exposid\textit%
-    {\noindent\wgOrigSection{#1}\larger[1]\textbf{\theWGSubSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}}\\%
+    {\noindent\wgOrigSection{#1}\larger[1]\textbf{\theWGSubSubSection{} #2\label{sec:#3}\hfill[#3]}}\\%
     \let\exposid\oexposid%
     \noindent%
 }
@@ -306,7 +320,7 @@
       \theWGSubSubSubSection{} #2 [#3] (\thesubparagraph{})%
     }%
     \let\oexposid\exposid\let\exposid\textit%
-    {\noindent\wgOrigSection{#1}\larger[1]\textbf{\theWGSubSubSubSection{} #2\label{sec:\wgLabelPrefix#3}\hfill[#3]}}\\%
+    {\noindent\wgOrigSection{#1}\larger[1]\textbf{\theWGSubSubSubSection{} #2\label{sec:#3}\hfill[#3]}}\\%
     \let\exposid\oexposid%
     \noindent%
 }
@@ -403,6 +417,11 @@
 \newcommand{\placeholdernc}[1]{\textit{#1\nocorr}}
 \newcommand{\exposid}[1]{\tcode{\placeholder{#1}}}
 \newcommand{\exposidnc}[1]{\tcode{\placeholdernc{#1}}\itcorr[-1]}
+\newcommand{\exposconcept}[1]{\exposid{#1}}
+\newcommand{\exposconceptnc}[1]{\exposidnc{#1}}
+\newcommand{\defexposconceptnc}[1]{\exposidnc{#1}}
+
+\newcommand{\libconcept}[1]{#1}
 
 %% Manual insertion of italic corrections, for aligning in the presence
 %% of the above annotations.
@@ -437,11 +456,9 @@
 
 \newcommand{\UNSP}[1]{\textit{\texttt{#1}}}
 \newcommand{\seebelow}{\UNSP{see below}}
+\newcommand{\seebelownc}{\UNSP{see below}\nocorr}
 
 \newcommand{\impldef}[1]{imple\-men\-ta\-tion-defined}
-
-\newcommand{\ecname}[1]{\tcode{\placeholder{#1}}}
-\newcommand{\exposconcept}[1]{\ecname{#1}}
 
 %% Ranges
 \newcommand{\Range}[4]{\ensuremath{#1}\tcode{#3}\ensuremath{,}\,\penalty2000{}\tcode{#4}\ensuremath{#2}}

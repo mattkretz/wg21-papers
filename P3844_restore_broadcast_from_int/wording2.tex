@@ -1,0 +1,147 @@
+\clearpage
+\section{Wording for \sect{sec:consteval}}
+
+\subsection{Feature test macro}
+
+In [version.syn] bump the \code{__cpp_lib_simd} version.
+
+\subsection{Modify [simd.expos]}
+
+In [simd.expos], insert:
+\begin{wgText}[{[simd.expos]}]
+\begin{codeblock}
+template<class V, class T> using @\exposidnc{make-compatible-simd-t} = \seebelownc@; // \expos
+
+@\wgAdd{template<class From, class To>}@
+  @\wgAdd{\mbox{concept \defexposconceptnc{simd-broadcast-arg} = \libconcept{constructible_from}}<To, From>;}@         @\wgAdd{\mbox{\rmfamily\itshape// \expos}}@
+
+@\wgAdd{template<class From, class To>}@
+  @\wgAdd{\mbox{concept \defexposconceptnc{simd-consteval-broadcast-arg} = \seebelownc;}}@                  @\wgAdd{\mbox{\rmfamily\itshape// \expos}}@
+
+template<class V>
+  concept @\defexposconceptnc{simd-vec-type}@ =                                            // \expos
+\end{codeblock}
+\end{wgText}
+
+\subsection{Modify [simd.expos.defn]}
+
+In [simd.expos.defn], insert:
+\begin{wgText}[{[simd.expos.defn]}]
+\begin{itemdecl}
+template<class V, class T> using @\exposid{make-compatible-simd-t}@ = @\seebelow@;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+Let \tcode{x} denote an lvalue of type \tcode{const T}.
+
+\pnum
+\tcode{\exposid{make-compatible-simd-t}<V, T>} is an alias for
+\begin{itemize}
+ \item
+   \tcode{\exposid{deduced-vec-t}<T>}, if that type is not \tcode{void},
+   otherwise
+ \item
+   \tcode{vec<decltype(x + x), V::size()>}.
+\end{itemize}
+\end{itemdescr}
+
+\begin{itemdecl}
+@\wgAdd{template<class From, class To> concept \mbox{\defexposconceptnc{simd-consteval-broadcast-arg} = \seebelownc};}@
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnumAdd
+\wgAdd{%
+\mbox{\exposconcept{simd-consteval-broadcast-arg} subsumes
+\mbox{\exposconcept{simd-broadcast-arg}}.}
+}
+
+\pnumAdd
+\wgAdd{%
+Types \tcode{From} and \tcode{To} satisfy
+\mbox{\exposconcept{simd-consteval-broadcast-arg}} only if
+\mbox{\tcode{\libconcept{convertible_to}<From, To>}} is satisfied,
+\tcode{remove_cvref_t<From>} is an arithmetic type, and the conversion from
+\tcode{remove_cvref_t<From>} to \tcode{To} is not value-preserving.
+}
+\end{itemdescr}
+\end{wgText}
+
+\subsection{Modify [simd.overview]}
+
+In [simd.overview], insert:
+\begin{wgText}[{[simd.overview]}]
+\begin{codeblock}
+    // \iref{simd.ctor}, \tcode{basic_vec} constructors
+    template<@\wgChange{class}{\mbox{\exposconcept{simd-broadcast-arg}}}@ U>
+      constexpr explicit(@\seebelow@) basic_vec(U&& value) noexcept;
+    @\wgAdd{template<\mbox{\exposconcept{simd-consteval-broadcast-arg}} U>}@
+      @\wgAdd{consteval basic_vec(U\&\& x)}@
+    template<class U, class UAbi>
+      constexpr explicit(@\seebelow@) basic_vec(const basic_vec<U, UAbi>&) noexcept;
+\end{codeblock}
+\end{wgText}
+
+\subsection{Modify [simd.ctor]}
+
+\begin{wgText}[{[simd.ctor]}]
+\begin{itemdecl}
+template<@\wgChange{class}{\mbox{\exposconcept{simd-broadcast-arg}}}@ U> constexpr explicit(@\seebelow@) basic_vec(U&& value) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+Let \tcode{From} denote the type \tcode{remove_cvref_t<U>}.
+
+\pnumRem
+\wgRem{\constraints
+\tcode{value_type} satisfies \mbox{\tcode{\libconcept{constructible_from}<U>}}.}
+
+\pnum
+\effects
+Initializes each element to the value of the argument after conversion to
+\tcode{value_type}.
+
+\pnum
+\remarks
+The expression inside \tcode{explicit} evaluates to \tcode{false} if and only if
+\tcode{U} satisfies \tcode{\libconcept{convertible_to}<value_type>}, and either
+\begin{itemize}
+ \item
+   \tcode{From} is not an arithmetic type and does not satisfy
+   \exposconcept{constexpr-wrapper-like},
+ \item
+   \tcode{From} is an arithmetic type and the conversion from \tcode{From} to
+   \tcode{value_type} is value-preserving\iref{simd.general}, or
+ \item
+   \tcode{From} satisfies \exposconcept{constexpr-wrapper-like},
+   \tcode{remove_const_t<decltype(From::value)>} is an arithmetic type, and
+   \tcode{From::value} is representable by \tcode{value_type}.
+\end{itemize}
+\end{itemdescr}
+
+\begin{itemdecl}
+@\wgAdd{template<\mbox{\exposconcept{simd-consteval-broadcast-arg}} U> consteval basic_vec(U\&\& x)}@
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnumAdd
+\wgAdd{%
+\expects
+The value of \tcode{x} is equal to the value of \tcode{x} after conversion to \tcode{value_type}.
+}
+
+\pnumAdd
+\wgAdd{\effects}
+\wgAdd{Initializes each element to the value of the argument after conversion to
+\tcode{value_type}.}
+
+\pnumAdd
+\wgAdd{%
+\remarks
+An expression that violates the precondition in the \mbox{\expects} element is not a core constant
+expression\mbox{\iref{expr.const}}.
+}
+\end{itemdescr}
+\end{wgText}

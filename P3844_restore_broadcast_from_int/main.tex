@@ -1,0 +1,501 @@
+\newcommand\wgTitle{Restore \code{simd::vec} broadcast from \code{int}}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{D3844R0}
+\newcommand\wgGroup{LEWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+\usepackage{vectorpictures}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{ba\-sic\_vec#1}\xspace}
+\newcommand\simdT{\type{ba\-sic\_vec\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\valuetype{\type{val\-ue\_type}\xspace}
+\newcommand\referencetype{\type{ref\-er\-ence}\xspace}
+\newcommand\mask[1][]{\type{ba\-sic\_mask#1}\xspace}
+\newcommand\maskT{\type{ba\-sic\_mask\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\newcommand\nativeabi{\UNSP{native-abi}}
+\newcommand\deducet{\UNSP{deduce-t}}
+\newcommand\simdsizev{\UNSP{simd-size-v}}
+\newcommand\simdsizetype{\UNSP{simd-size-type}}
+\newcommand\simdselect{\UNSP{simd-select-impl}}
+\newcommand\maskelementsize{\UNSP{mask-element-size}}
+\newcommand\integerfrom{\UNSP{integer-from}}
+\newcommand\constexprwrapperlike{\UNSP{constexpr-wrapper-like}}
+\newcommand\convertflag{\UNSP{convert-flag}}
+\newcommand\alignedflag{\UNSP{aligned-flag}}
+\newcommand\overalignedflag{\UNSP{overaligned-flag}}
+\newcommand\reductionoperation{\UNSP{reduction-binary-operation}}
+\newcommand\simdfloatingpoint{\UNSP{simd-floating-point}}
+\newcommand\multisimdfloatingpoint{\UNSP{multi-arg-simd-floating-point}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  The broadcast constructor in the Parallelism 2 TS allowed construction from (\code{unsigned})
+  \code{int}, allowing e.g. \code{vec<float>() + 1}, which is ill-formed in the CD.
+  This breaks existing code that gets ported from the TS to \code{std::simd}.
+  The design intent behind \code{std::simd} was for this to work.
+  However, the understanding in LEWG appeared to be that we can't get this right without constexpr
+  function arguments getting added to the language.
+  This paper shows that a \code{consteval} constructor overload together with \code{constexpr}
+  exceptions can resolve the issue for \CC{}26 and is a better solution than constexpr function
+  arguments would be.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\pagebreak
+\section{Motivation}
+
+It is very common in floating-point code to simply write e.g. \code{* 2} rather than \code{* 2.f}
+when multiplying a \code{float} with a constant:
+\medskip\begin{lstlisting}[style=Vc]
+float f(float x) { return x * 2; } // converts 2 to float (at compile time)
+
+float g(float x) { return x * 2.; } // converts x to double (at run time)
+
+float h(float x) { return x * 2.f; } // no conversions
+\end{lstlisting}
+
+More importantly, using \code{* 2} works reliably in generic code, where the type of \code{x} could
+be any arithmetic type.
+
+Since this is so common, \code{std::experimental::simd<T>} made an exception for \code{int} in the
+broadcast constructor to not require value-preserving conversions.
+Consequently, the TS allows:
+\medskip\begin{lstlisting}[style=Vc]
+using floatv = std::experimental::native_simd<float>;
+
+floatv f(floatv x) { return x * 2; } // converts 2 to float and broadcasts (at compile time)
+
+floatv g(floatv x) { return x * 2.; } // ill-formed
+
+floatv h(floatv x) { return x * 2.f; } // broadcasts 2.f to floatv
+\end{lstlisting}
+
+When porting existing code written against the TS to \CC{}26, the first step is to adjust the types:
+\medskip\begin{lstlisting}
+using floatv = std::@\wgChange{experimental::native_simd}{simd::vec}@<float>;
+\end{lstlisting}
+Except for uses of \code{std::experimental::where}, which need to be refactored to use
+\code{simd::select}, the remaining code should work.
+The one place where it doesn't work is code such as in function \code{f}, where \code{2} needs to be
+replaced:
+\medskip\begin{lstlisting}[style=Vc]
+floatv f(floatv x) { return x * @\wgChange{2}{std::cw<2>}@; }
+\end{lstlisting}
+
+Since we don't have \code{constexpr} function arguments in the language, \code{std::simd} works
+around it by recognizing \exposid{integral-constant-like} / \code{constant-wrapper-like} types, that
+encode a \emph{value} into a type.
+This, however, comes at a compile-time cost.
+Every different value leads to a template specialization of both \code{constant_wrapper} and a
+\code{basic_vec} broadcast constructor (with it's helper types/concepts to determine whether the
+specialization is allowed).
+Consequently, for \code{vec<float>}, I would recommend to always use an \code{f} suffix rather than
+\code{std::cw}.
+
+But that solution is fairly limited, since we don't have literals for 8-bit and 16-bit integers in
+the language.
+A function template like
+\medskip\begin{lstlisting}[style=Vc]
+template <simd_integral V>
+V f(V x) {
+  return x + 1; // ill-formed for V::value_type = (u)int8_t, (un)int16_t, and uint32_t
+}
+\end{lstlisting}
+needs to use \code{x + V(1)}\footnote{explicit conversion to \code{basic_vec} allows conversions
+that are not value-preserving}.
+A clever user might write \lstinline@x + '\1'@ instead.
+But that fails for the \code{char} type with different signedness.
+
+Consequently, users would need to get used to writing explicit conversions for the constants they
+use in \code{std::simd} code.
+That's not only verbose and ugly, it is also error-prone.
+Whenever we coerce our users into writing explicit conversions, then value-changing conversions
+cannot be diagnosed as erroneous anymore.
+An explicit \code{static_cast<uint64_t>(-1)} means \code{0xffff'ffff'ffff'ffff}, whereas
+\code{uint64_t x = -1} could have been intended to mean \code{0x0000'0000'ffff'ffff} or is a result
+of a logic flaw in the code.
+E.g., GCC's \code{-Wsign-conversion} diagnoses the latter, but not the former\footnote{And that's
+useful, because the former says “I'm intentionally doing this conversion, no need to warn.”}.
+
+If, with \CC{}26, our users are starting to explicitly convert their \code{int} constants to
+\code{basic_vec}, then the interface of \code{basic_vec} is at least in part guilty for introducing
+harder to find bugs.
+
+\ttref{tt:add-an-offset} presents an example of the solution\footnote{I got bitten by this in my
+\code{std::simd} unit tests}.
+Note that the code on the left will never warn about the value-changing conversion, even with all
+conversion related warnings enabled.
+This is due to the explicit conversion, which is telling the compiler “I know what I'm doing; no
+need to warn me about it”.
+\begin{tonytable}{Add an offset}\label{tt:add-an-offset}
+  \begin{lstlisting}
+template <simd_floating_point V>
+V f(V x) {
+  return x + V(0x5EAF00D);
+}
+
+f(vec<double>()); // OK
+
+// compiles but
+// adds 99282960 instead of 99282957
+f(vec<float>());
+
+// compiles but
+// adds infinity instead of 99282957
+f(vec<std::float16_t>());
+  \end{lstlisting}
+  &
+  \begin{lstlisting}
+template <simd_floating_point V>
+V f(V x) {
+  return x + 0x5EAF00D;
+}
+
+f(vec<double>()); // OK
+
+// ill-formed: uncaught exception on
+// value-changing conversion
+f(vec<float>());
+
+// ill-formed: uncaught exception on
+// value-changing conversion
+f(vec<std::float16_t>());
+  \end{lstlisting}
+\end{tonytable}%
+
+A safer implementation of the code on the left side of \ttref{tt:add-an-offset} (without this paper)
+would have been to write \code{x + std::cw<0x5EAF00D>} instead.
+Then the value-changing conversion would have resulted in a constraint failure on the broadcast
+constructor.
+However, \code{V(0x5EAF00D)} is shorter and needs fewer template instantations.
+I expect most users (including myself) will/do not use \code{std::cw} all over the place.
+
+\section{Design space}
+In the design review of this issue of the broadcast constructor it was overlooked (and never
+discussed) that a \code{consteval} overload of the broadcast constructor could solve this problem.
+Before \code{constexpr} exceptions, we would have worded it to be ill-formed (by unspecified means)
+if the value changes on conversion to the \code{basic_vec}'s value-type.
+Now that we have \code{constexpr} exceptions, we can specify a \code{consteval} broadcast overload
+that throws on value-changing conversion.
+If the caller cares, the exception can even be handled at compile time.
+(I believe it should not throw in \CC{}26, for a minimal change to the WD.)
+
+Ordering the overloads for overload resolution is tricky, which is another reason why we should
+consider this issue before \CC{}26 ships and potentially take action even if we don't add a
+\code{consteval} overload.
+Overload resolution does not take \code{consteval} into account.
+The process of finding candidate functions%
+\href{https://eel.is/c++draft/over.match#funcs.general-8}{\iref{over.match.funcs.general}}, however,
+does remove explicit constructors from the candidate set if the
+context does not allow the explicit constructor to be called.
+
+\subsection{Status quo}
+The following code shows the properties of the current broadcast constructor.
+
+See Appendix \ref{sec:really-convertible} for the definition of the \code{really_convertible_to}
+concept.
+
+\bigskip
+\begin{lstlisting}[style=Vc]
+using V = simd::vec<float>;
+
+template <typename T> struct X { explicit operator T() const; };
+
+static_assert(not   std::convertible_to<X<float>, V>);
+static_assert(      std::convertible_to<float, V>);
+static_assert(      std::convertible_to<short, V>);
+static_assert(    really_convertible_to<short, V>);
+static_assert(not   std::convertible_to<int, V>);
+static_assert(not really_convertible_to<int, V>);
+
+static_assert(    std::constructible_from<V, X<float>>);
+static_assert(not std::constructible_from<V, X<short>>);
+static_assert(    std::constructible_from<V, float>);
+static_assert(    std::constructible_from<V, short>);
+static_assert(    std::constructible_from<V, int>);
+
+V f(int n, short m, std::reference_wrapper<int> l, std::reference_wrapper<float> f)
+{
+  V x = '\1'; // OK
+  x = 1;      // ill-formed
+  x = 0x5EAF00D; // ill-formed
+  x = V(n);   // OK
+  x = m;      // OK
+  x = l;      // OK (because convertible_to<decltype(l), float> is true)
+  x = f;      // OK
+  x = X<float>(); // ill-formed: no match for operator= (no known conversion […])
+  x = float(X<float>()); // OK (obvious)
+  x = V(X<float>()); // OK
+}
+\end{lstlisting}
+
+\subsection{More constrained \code{constexpr} overload}\label{sec:explicit}
+A possible solution selects the existing (\code{constexpr}) broadcast constructor for
+everything but the cases where the value of the argument needs to be checked.
+Thus, we need the existing constructor to always be \emph{more constrained} \iref{temp.constr.order}
+than the \code{consteval} constructor.
+The \code{consteval} constructor can then only be selected if the other constructor is not part of
+the candidate set at all (via \code{explicit}).
+
+Sketch:
+\medskip\begin{lstlisting}[style=Vc]
+template <class From, class To>
+  concept @\exposconcept{simd-consteval-broadcast-arg}@ = constructible_from<To, From>;
+
+template <class From, class To>
+  concept @\exposconcept{simd-broadcast-arg}@ = @\exposconcept{simd-consteval-broadcast-arg}@<From, To> and true;
+
+template <class T>
+class basic_vec
+{
+public:
+  template <@\exposconcept{simd-broadcast-arg}@<T> U>
+    constexpr explicit(@\seebelow@) basic_vec(U&&); // #1
+  template <@\exposconcept{simd-consteval-broadcast-arg}@<T> U>
+    consteval basic_vec(U&&);                    // #2
+    // Mandates: convertible_to<U, value_type> && is_arithmetic_v<remove_cvref_t<U>>
+};
+\end{lstlisting}
+
+Now every explicit call to the broadcast constructor will always select \code{\#1}.
+Implicit calls to the broadcast constructor will select \code{\#1} if the condition in the
+\code{explicit} specifier is \code{false}.
+Otherwise, \code{\#1} is not part of the candidate set and \code{\#2} is called.
+Thus, the condition on the \code{explicit} specifier determines whether the \code{consteval}
+overload is chosen or not.
+
+\bigskip
+\begin{lstlisting}[style=Vc]
+static_assert(      std::convertible_to<X<float>, V>); // different to status quo
+static_assert(      std::convertible_to<float, V>);
+static_assert(      std::convertible_to<short, V>);
+static_assert(    really_convertible_to<short, V>);
+static_assert(      std::convertible_to<int, V>);      // different to status quo
+static_assert(not really_convertible_to<int, V>);
+
+static_assert(    std::constructible_from<V, X<float>>);
+static_assert(not std::constructible_from<V, X<short>>);
+static_assert(    std::constructible_from<V, float>);
+static_assert(    std::constructible_from<V, short>);
+static_assert(    std::constructible_from<V, int>);
+
+V f(int n, short m, std::reference_wrapper<int> l, std::reference_wrapper<float> f)
+{
+  V x = '\1'; // OK
+  x = 1;      // OK (different to status quo)
+  x = 0x5EAF00D; // ill-formed
+  x = V(n);   // OK
+  x = m;      // OK
+  x = V(l);   // OK
+  x = f;      // OK
+  x = X<float>(); // ill-formed: static_assert failed (different reason to status quo)
+  x = float(X<float>()); // OK (obvious)
+  x = V(X<float>()); // OK
+}
+\end{lstlisting}
+
+\subsection{More constrained \code{consteval} overload}\label{sec:consteval}
+A viable alternative involves the removal of explicit conversions from arithmetic types to
+\code{basic_vec}.
+The \code{consteval} constructor is declared with additional constraints over the existing
+constructor (satisfies \code{convertible_to}, \code{is_arithmetic_v}, and not value-preserving
+conversion).
+This way the \code{consteval} constructor is always chosen if the conversion of the given
+(arithmetic) type to \code{value_type} is not value-preserving.
+Otherwise, the \code{constexpr} overload is used.
+
+Sketch:
+\medskip\begin{lstlisting}[style=Vc]
+template <class From, class To>
+  concept @\exposconcept{simd-broadcast-arg}@ = constructible_from<To, From>;
+
+template <class From, class To>
+  concept @\exposconcept{simd-consteval-broadcast-arg}@
+    = @\exposconcept{simd-broadcast-arg}@<From, To> && convertible_to<From, To>
+        && !@\exposconcept{value-preserving-convertible-to}@<From, To>;
+
+template <class T>
+class basic_vec
+{
+public:
+  template <@\exposconcept{simd-broadcast-arg}@<T> U>
+    constexpr explicit(@\seebelow@) basic_vec(U&&); // #1
+  template <@\exposconcept{simd-consteval-broadcast-arg}@<T> U>
+    consteval basic_vec(U&&); // #2
+};
+\end{lstlisting}
+
+Here, every explicit call to the broadcast constructor with an arithmetic type is equivalent to an
+implicit conversion, since the \code{consteval} overload is viable and more constrained.
+Every type with a value-preserving conversion to \code{T} will select \code{\#1} (because of the
+constraint on \code{\#2}).
+Every non-arithmetic type (notably, user-defined types with conversion operator to some arithmetic
+type) will continue to work as today, since \code{\#2} is not viable.
+
+\bigskip
+\begin{lstlisting}[style=Vc]
+static_assert(not   std::convertible_to<X<float>, V>); // equal to status quo / different to above
+static_assert(      std::convertible_to<float, V>);
+static_assert(      std::convertible_to<short, V>);
+static_assert(    really_convertible_to<short, V>);
+static_assert(      std::convertible_to<int, V>);      // different to status quo / equal to above
+static_assert(not really_convertible_to<int, V>);
+
+static_assert(    std::constructible_from<V, X<float>>);
+static_assert(not std::constructible_from<V, X<short>>);
+static_assert(    std::constructible_from<V, float>);
+static_assert(    std::constructible_from<V, short>);
+static_assert(    std::constructible_from<V, int>);
+
+V f(int n, short m, std::reference_wrapper<int> l, std::reference_wrapper<float> f)
+{
+  V x = '\1'; // OK
+  x = 1;      // OK (different to status quo / equal to above)
+  x = 0x5EAF00D; // ill-formed
+  x = V(n);   // ill-formed (different to both)
+  x = m;      // OK
+  x = V(l);   // OK
+  x = f;      // OK
+  x = X<float>(); // ill-formed: no match for operator= (no known conversion […])
+  x = float(X<float>()); // OK (obvious)
+  x = V(X<float>()); // OK
+}
+\end{lstlisting}
+
+\subsection{How to handle bad value-preserving casts}\label{sec:exceptions}
+
+The \code{consteval} broadcast overload needs to be ill-formed if the argument value cannot be
+converted to the value type without changing the value.
+This can be achieved via the mechanism used in \iref{simd.bit} for \code{bit_ceil}.
+The constructor would spell out a precondition followed by \remarks An expression that violates
+the precondition in the \expects element is not a core constant expression\iref{expr.const}.
+
+The alternative that was mentioned before is to throw an exception (at compile time).
+Since in basically all cases such an exception would not be caught at compile time, the program
+becomes ill-formed.
+The ability to catch the exception allowed me to hack up a \code{really_convertible_to} concept.
+But otherwise, the utility of using an exception here seems fairly limited.
+The main reason for using an exception is better diagnostics on ill-formed programs.
+If we decide to add the \code{consteval} constructor for \CC{}26, then we might want to delay the
+new exception type for \CC{}29, though.
+
+\section{Differences}
+
+\newcommand\good{\color[rgb]{0,.4,.2}\ding{52} }
+\newcommand\bad{\color[rgb]{.5,0,0}\ding{56} }
+
+Differences between the status quo and the two alternatives above:\\
+\begin{tabular}{l|rrr}
+  & status quo & \sect{sec:explicit} & \sect{sec:consteval} \\ \hline
+  \code{convertible_to<X<float>, V>}     & \false & \true & \false \\
+  \code{convertible_to<int, V>}          & \false & \true & \true \\
+  \code{x = 1;}                          & \bad   & \good & \good \\
+  \code{x = V(n);}                       & \good  & \good & \bad \\
+\end{tabular}
+
+\medskip
+Note that \code{X<float>} is never implicitly convertible to \code{vec<float>}, so the solution in
+\sect{sec:explicit} lies about that.
+Also while some values of constant expressions of type \code{int} are convertible to
+\code{vec<float>}, it is not true in general that \code{int} is convertible to \code{vec<float>}.
+
+\section{Recommendation}
+
+My recommendation is to go with the solution presented in \sect{sec:consteval} without a new
+exception type (\sect{sec:exceptions}) for \CC{}26.
+This would roll back a small part of a recent change done by \cite{P3430R3}.
+
+Rationale for my preference:
+\begin{enumerate}
+  \item The explicit conversion from arithmetic types via broadcast constructor is significantly
+    less important after implicit conversion from constant expressions becomes possible.
+  \item The new \code{consteval} overload cannot be fully constrained in the solution presented in
+    \sect{sec:explicit}, leading to incorrect answers on traits or in requires expressions.
+  \item This should be part of \CC{}26 because it helps avoiding bugs in user code.
+  \item A new exception type is not important enough to add it to \CC{}26 and it can easily be added
+    later.
+\end{enumerate}
+
+\section{Implementation experience}
+Both solutions (and a lot more variants that were discarded) have been implemented and tested in my
+implementation.
+
+\section{Proposed polls}
+
+\wgPoll{Something needs to be done for \CC{}26. (If we do nothing, the design space is constrained
+and \sect{sec:consteval} would be a breaking change.)}{&&&&}
+
+\wgPoll{Add a \code{consteval} broadcast overload for value-preserving conversions to
+\CC{}26.}{&&&&}
+
+\noindent If the vote for \CC{}26 failed:\\
+\wgPoll{Add a \code{consteval} broadcast overload for value-preserving conversions to
+\CC{}29.}{&&&&}
+
+\noindent Otherwise \emph{maybe} poll:\\
+\wgPoll{It is better to add a \code{consteval} broadcast overload for \CC{}29 rather than
+\CC{}26.}{&&&&}
+
+\noindent Note: The next poll makes sense for \CC{}26, even if we only intend to add the new
+overload for \CC{}29.\\
+\wgPoll{The new constructor overload should be fully constrained, which requires the removal of
+\code{explicit} (not value-preserving conversions) from the existing broadcast constructor.}{&&&&}
+
+\wgPoll{Add a new exception type to \CC{}26 that is thrown from the new \code{consteval} broadcast
+constructor.}{&&&&}
+
+\wgPoll{Encourage a paper targeting \CC{}29 on a new exception type that is thrown from the new
+\code{consteval} broadcast constructor.}{&&&&}
+
+\input{wording1}
+
+\input{wording2}
+
+\appendix
+\let\appendix=\relax
+\section{\code{really_convertible_to} definition}\label{sec:really-convertible}
+\medskip\begin{lstlisting}[style=Vc]
+template <typename To, typename From>
+  consteval bool converting_limits_throws()
+  {
+    try {
+      using L = std::numeric_limits<From>;
+      [[maybe_unused]] To x = L::max();
+      x = L::min();
+      x = L::lowest();
+    } catch(...) {
+      return true;
+    }
+    return false;
+  }
+
+template <typename From, typename To>
+  concept really_convertible_to = std::convertible_to<From, To>
+                                    and not converting_limits_throws<To, From>();
+\end{lstlisting}
+
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=100
