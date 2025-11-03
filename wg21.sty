@@ -221,7 +221,7 @@
     %\setheadsepline{0.3pt}
     \renewcommand{\sectionmark}[1]{\markright{\color{Headings}\spacedsmallcaps{\thesection\enspace{}#1}}}
     \rohead{\mbox{\hfil{\headmark}}}
-    \lohead{\mbox{\color{halfgray}\spacedallcaps{\wgDocumentNumber}}}
+    \lohead{\mbox{\color{halfgray}\spacedallcaps{\wgDocumentNumber}\wgPrelimText}}
     \lofoot{\hfill\thepage\hfill}
     \renewcommand{\headfont}{\normalsize}
     % hack to get the content headlines right (thanks, Lorenzo!)
@@ -396,16 +396,14 @@
 \newcommand{\finalVersionString}{}
 \IfBeginWith{\wgDocumentNumber}{P}{%
   \renewcommand{\finalVersionString}{\emph{Final Version} as of \today.}
+  \newcommand{\wgPrelimText}{}
 }{%
   \RequirePackage{scrtime} % time access
   \RequirePackage{draftwatermark}%
   \SetWatermarkLightness{0.97}
   \SetWatermarkScale{13}
   \SetWatermarkText{\textsf{DRAFT}}
-  \PassOptionsToPackage{draft}{prelim2e}
-  \RequirePackage{prelim2e}
-  \renewcommand{\PrelimWords}{\relax}
-  \renewcommand{\PrelimText}{{\normalfont\footnotesize--- \today\ at \thistime\ ---}}
+  \newcommand{\wgPrelimText}{{\normalfont\footnotesize\ --- \today\ at \thistime\ ---}}
 }
 
 % Caption numbering now w/o chapter number
