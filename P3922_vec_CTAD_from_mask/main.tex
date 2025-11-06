@@ -1,0 +1,177 @@
+\newcommand\wgTitle{Missing deduction guide from \code{simd::mask} to \code{simd::vec}}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{P3922R0}
+\newcommand\wgGroup{LEWG, LWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+\usepackage{vectorpictures}
+
+\addbibresource{extra.bib}
+
+\newcommand\simd[1][]{\type{ba\-sic\_vec#1}\xspace}
+\newcommand\simdT{\type{ba\-sic\_vec\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\valuetype{\type{val\-ue\_type}\xspace}
+\newcommand\referencetype{\type{ref\-er\-ence}\xspace}
+\newcommand\mask[1][]{\type{ba\-sic\_mask#1}\xspace}
+\newcommand\maskT{\type{ba\-sic\_mask\MayBreak<\MayBreak{}T>}\xspace}
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\newcommand\nativeabi{\UNSP{native-abi}}
+\newcommand\deducet{\UNSP{deduce-t}}
+\newcommand\simdsizev{\UNSP{simd-size-v}}
+\newcommand\simdsizetype{\UNSP{simd-size-type}}
+\newcommand\simdselect{\UNSP{simd-select-impl}}
+\newcommand\maskelementsize{\UNSP{mask-element-size}}
+\newcommand\integerfrom{\UNSP{integer-from}}
+\newcommand\constexprwrapperlike{\UNSP{constexpr-wrapper-like}}
+\newcommand\convertflag{\UNSP{convert-flag}}
+\newcommand\alignedflag{\UNSP{aligned-flag}}
+\newcommand\overalignedflag{\UNSP{overaligned-flag}}
+\newcommand\reductionoperation{\UNSP{reduction-binary-operation}}
+\newcommand\simdfloatingpoint{\UNSP{simd-floating-point}}
+\newcommand\multisimdfloatingpoint{\UNSP{multi-arg-simd-floating-point}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  After a fix to the return type of the unary operators of \code{basic_mask}, the natural
+  corresponding integral \code{basic_vec} cannot be determined from the specification anymore.
+  The implementation has some freedom to choose an integer type and an ABI tag, that the user can
+  only determine via \code{decltype} on the result of a unary operator.
+  To match the intended analogous usage in scalar code, it would be helpful if CTAD from
+  \code{basic_mask} to \code{basic_vec} just works.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\pagebreak
+\section{Motivation}
+
+In scalar code we sometimes convert booleans into integers (typically to implement branch-less
+algorithms). E.g.
+\medskip\begin{lstlisting}[style=Vc]
+template <typename T>
+void f(T x, T y) {
+  int b = x < y;
+  // ...
+}
+\end{lstlisting}
+The equivalent is possible with std::simd:
+\medskip\begin{lstlisting}[style=Vc]
+template <simd_vec_type V>
+void f(V x, V y) {
+  vec<int> b = x < y;
+  // ...
+}
+\end{lstlisting}
+Except that the type of \code{b} is probably wrong and so the code is ill-formed.
+But what is the correct type?
+\medskip\begin{lstlisting}[style=Vc]
+template <simd_vec_type V>
+void f(V x, V y) {
+  auto b = x < y;
+  // ...
+}
+\end{lstlisting}
+This doesn't do the conversion to integral \code{basic_vec}, but rather keeps \code{b} of type
+\code{basic_mask}.
+What we can do is:
+\medskip\begin{lstlisting}[style=Vc]
+template <simd_vec_type V>
+void f(V x, V y) {
+  auto b = +(x < y);
+  // ...
+}
+\end{lstlisting}
+The unary plus operator will convert the mask to an integral \code{basic_vec}, analogous to unary
+plus on \code{bool}.
+But it would be less cryptic if the user could write instead:
+\medskip\begin{lstlisting}[style=Vc]
+template <simd_vec_type V>
+void f(V x, V y) {
+  basic_vec b = x < y;
+  // ...
+}
+\end{lstlisting}
+However, this CTAD requires a deduction guide, which has long been part of my implementation but
+somehow didn't make it into the wording.
+
+\section{Proposed Poll}
+\wgPoll{Add the deduction guide from \code{basic_mask} to \code{basic_vec} from
+\wgDocumentNumber{} to \CC{}26, resolving DE-287}{&&&&}
+
+\section{Wording}
+\subsection{Feature test macro}
+
+In [version.syn] bump the \code{__cpp_lib_simd} version.
+
+\subsection{Modify [simd.syn] and [simd.expos]}
+
+In [simd.overview], insert:
+\begin{wgText}[{[simd.syn]}]
+\begin{codeblock}
+  template<class R, class... Ts>
+    basic_vec(R&& r, Ts...) -> @\seebelow@;
+
+  @\wgAdd{template<size_t Bytes, class Abi>}@
+    @\wgAdd{basic_vec(basic_mask<Bytes, Abi>) -> \mbox{\seebelow};}@
+\end{codeblock}
+\end{wgText}
+
+In [simd.ctor], insert:
+\begin{wgText}[{[simd.ctor]}]
+\begin{itemdecl}
+template<class R, class... Ts>
+  basic_vec(R&& r, Ts...) -> @\seebelow@;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\constraints
+\begin{itemize}
+\item \tcode{R} models \tcode{ranges::\libconcept{contiguous_range}} and
+  \tcode{ranges::\libconcept{sized_range}}, and
+\item \tcode{ranges::size(r)} is a constant expression.
+\end{itemize}
+
+\pnum
+\remarks
+The deduced type is equivalent to \tcode{vec<ranges::range_value_t<R>,
+ranges::size(r)>}.
+\end{itemdescr}
+
+\begin{itemdecl}
+@\wgAdd{template<size_t Bytes, class Abi>}@
+  @\wgAdd{basic_vec(basic_mask<Bytes, Abi>) -> \mbox{\seebelow};}@
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnumAdd
+\wgAdd{\constraints
+\tcode{basic_mask<Bytes, Abi>} is an enabled specialization of \tcode{basic_mask}.}
+
+\pnumAdd
+\wgAdd{\remarks
+The deduced type is equivalent to the return type of \tcode{basic_mask::operator-()}.}
+\end{itemdescr}
+\end{wgText}
+
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=100
