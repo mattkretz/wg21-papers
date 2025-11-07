@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Missing deduction guide from \code{simd::mask} to \code{simd::vec}}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3922R0}
+\newcommand\wgDocumentNumber{P3922R1}
 \newcommand\wgGroup{LEWG, LWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
@@ -158,17 +158,18 @@ ranges::size(r)>}.
 
 \begin{itemdecl}
 @\wgAdd{template<size_t Bytes, class Abi>}@
-  @\wgAdd{basic_vec(basic_mask<Bytes, Abi>) -> \mbox{\seebelow};}@
+  @\wgAdd{basic_vec(basic_mask<Bytes, Abi> k) -> \mbox{\seebelow};}@
 \end{itemdecl}
 
 \begin{itemdescr}
 \pnumAdd
 \wgAdd{\constraints
-\tcode{basic_mask<Bytes, Abi>} is an enabled specialization of \tcode{basic_mask}.}
+\tcode{basic_mask<Bytes, Abi>} is an enabled specialization of \tcode{basic_mask} and
+\tcode{decltype(+k)} is a valid type.}
 
 \pnumAdd
 \wgAdd{\remarks
-The deduced type is equivalent to the return type of \tcode{basic_mask::operator-()}.}
+The deduced type is equivalent to \tcode{decltype(+k)}.}
 \end{itemdescr}
 \end{wgText}
 
