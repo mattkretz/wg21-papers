@@ -13,7 +13,7 @@ In [simd.expos], insert:
 template<class V, class T> using @\exposidnc{make-compatible-simd-t} = \seebelownc@; // \expos
 
 @\wgAdd{template<class From, class To>}@
-  @\wgAdd{\mbox{concept \defexposconceptnc{simd-consteval-broadcast-arg} = \libconcept{constructible_from}}<To, From>; \mbox{\rmfamily\itshape// \expos}}@
+  @\wgAdd{\mbox{concept \defexposconceptnc{simd-consteval-broadcast-arg} = \exposconcept{explicitly-convertible-to}}<From, To>; \mbox{\rmfamily\itshape// \expos}}@
 
 @\wgAdd{template<class From, class To>}@
   @\wgAdd{\mbox{concept \defexposconceptnc{simd-broadcast-arg} =}}@                                       @\wgAdd{\mbox{\rmfamily\itshape// \expos}}@
@@ -85,8 +85,15 @@ The expression inside \tcode{explicit} evaluates to \tcode{false} if and only if
 \pnumAdd
 \wgAdd{\mandates}
 \begin{itemize}
-\wgItemAdd\wgAdd{\tcode{U} satisfies \tcode{\mbox{\libconcept{convertible_to}}<value_type>}, and}
-\wgItemAdd\wgAdd{\tcode{is_arithmetic_v<U>} is \tcode{true},}
+  \wgItemAdd\wgAdd{\tcode{remove_cvref_t<U>} is an arithmetic type,}
+  \wgItemAdd\wgAdd{\tcode{U} satisfies \mbox{\tcode{\libconcept{convertible_to}<value_type>}},}
+  \wgItemAdd\wgAdd{the conversion from \tcode{remove_cvref_t<U>} to \tcode{value_type} is not value-preserving, and}
+  \wgItemAdd\wgAdd{either}
+  \begin{itemize}
+    \wgItemAdd\wgAdd{\tcode{common_type_t<U, value_type>} is \tcode{value_type},}
+    \wgItemAdd\wgAdd{\tcode{value_type} is integral and \tcode{remove_cvref_t<U>} is \tcode{int}, or}
+    \wgItemAdd\wgAdd{\tcode{value_type} satisfies \tcode{unsigned_integral} and \tcode{remove_cvref_t<U>} is \tcode{unsigned int}.}
+  \end{itemize}
 \end{itemize}
 
 \pnumAdd

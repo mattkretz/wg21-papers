@@ -1,2 +1,9 @@
 \section{Changelog}
-(placeholder)
+\begin{revision}
+\item Constrain the \code{consteval} ctor to arithmetic types that naturally
+  convert to the \code{basic_vec}'s value-type (checked via \code{common_type}).
+\item Discuss consequence on \code{common_type} (besides \code{convertible_to}).
+\item Discuss consequence on [simd.math].
+\item Discuss \code{consteval} ctor as immediate-escalating expression.
+\item Discuss potential consequences for [simd.math].
+\end{revision}
