@@ -1,5 +1,5 @@
 \clearpage
-\section{Wording for \sect{sec:consteval}}
+\section{Wording}
 
 \subsection{Feature test macro}
 
@@ -10,10 +10,7 @@ In [version.syn] bump the \code{__cpp_lib_simd} version.
 In [simd.expos], insert:
 \begin{wgText}[{[simd.expos]}]
 \begin{codeblock}
-template<class V, class T> using @\exposidnc{make-compatible-simd-t} = \seebelownc@; // \expos
-
-@\wgAdd{template<class From, class To>}@
-  @\wgAdd{\mbox{concept \defexposconceptnc{simd-broadcast-arg} = \exposconcept{explicitly-convertible-to}}<From, To>;}@  @\wgAdd{\mbox{\rmfamily\itshape// \expos}}@
+@\wgRem{template<class V, class T> using \mbox{\exposid{make-compatible-simd-t} = \seebelow}; \mbox{\rmfamily\itshape// \expos}}@
 
 @\wgAdd{template<class From, class To>}@
   @\wgAdd{\mbox{concept \defexposconceptnc{simd-consteval-broadcast-arg} = \seebelownc;}}@                  @\wgAdd{\mbox{\rmfamily\itshape// \expos}}@
@@ -25,10 +22,10 @@ template<class V>
 
 \subsection{Modify [simd.expos.defn]}
 
-In [simd.expos.defn], insert:
+In [simd.expos.defn], change:
 \begin{wgText}[{[simd.expos.defn]}]
 \begin{itemdecl}
-template<class V, class T> using @\exposid{make-compatible-simd-t}@ = @\seebelow@;
+template<class T> using @\exposid{deduced-vec-t}@ = @\seebelow@;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -36,13 +33,31 @@ template<class V, class T> using @\exposid{make-compatible-simd-t}@ = @\seebelow
 Let \tcode{x} denote an lvalue of type \tcode{const T}.
 
 \pnum
-\tcode{\exposid{make-compatible-simd-t}<V, T>} is an alias for
+\tcode{\exposid{deduced-vec-t}<T>} is an alias for
 \begin{itemize}
- \item
-   \tcode{\exposid{deduced-vec-t}<T>}, if that type is not \tcode{void},
-   otherwise
- \item
-   \tcode{vec<decltype(x + x), V::size()>}.
+  \wgItemRem\color{black}
+   \tcode{decltype(x + x)}, if the type of \tcode{x + x} is an enabled
+   specialization of \tcode{basic_vec}\wgRem{; otherwise}
+  \wgItemRem[\tcode{void}]\color{black}.
+\end{itemize}
+\end{itemdescr}
+
+\begin{itemdecl}
+@\wgRem{template<class V, class T> using \mbox{\exposid{make-compatible-simd-t} = \seebelow};}@
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnumRem
+\wgRem{Let \tcode{x} denote an lvalue of type \tcode{const T}.}
+
+\pnumRem
+\wgRem{\mbox{\tcode{\exposid{make-compatible-simd-t}<V, T>}} is an alias for}
+\begin{itemize}
+ \wgItemRem[
+   \mbox{\tcode{\exposid{deduced-vec-t}<T>}}, if that type is not \tcode{void},
+ otherwise]
+ \wgItemRem[
+ \tcode{vec<decltype(x + x), V::size()>}.]
 \end{itemize}
 \end{itemdescr}
 
@@ -54,7 +69,7 @@ Let \tcode{x} denote an lvalue of type \tcode{const T}.
 \pnumAdd
 \wgAdd{%
 \mbox{\exposconcept{simd-consteval-broadcast-arg} subsumes
-\mbox{\exposconcept{simd-broadcast-arg}}.}
+\mbox{\exposconcept{explicitly-convertible-to}}.}
 }
 
 \pnumAdd
@@ -81,9 +96,9 @@ In [simd.overview], insert:
 \begin{wgText}[{[simd.overview]}]
 \begin{codeblock}
     // \iref{simd.ctor}, \tcode{basic_vec} constructors
-    template<@\wgChange{class}{\mbox{\exposconcept{simd-broadcast-arg}}}@ U>
+    template<@\wgChange{class}{\mbox{\exposconcept{explicitly-convertible-to}<value_type>}}@ U>
       constexpr explicit(@\seebelow@) basic_vec(U&& value) noexcept;
-    @\wgAdd{template<\mbox{\exposconcept{simd-consteval-broadcast-arg}} U>}@
+    @\wgAdd{template<\mbox{\exposconcept{simd-consteval-broadcast-arg}<value_type>} U>}@
       @\wgAdd{consteval basic_vec(U\&\& x)}@
     template<class U, class UAbi>
       constexpr explicit(@\seebelow@) basic_vec(const basic_vec<U, UAbi>&) noexcept;
@@ -94,7 +109,8 @@ In [simd.overview], insert:
 
 \begin{wgText}[{[simd.ctor]}]
 \begin{itemdecl}
-template<@\wgChange{class}{\mbox{\exposconcept{simd-broadcast-arg}}}@ U> constexpr explicit(@\seebelow@) basic_vec(U&& value) noexcept;
+template<@\wgChange{class}{\mbox{\exposconcept{explicitly-convertible-to}<value_type>}}@ U>
+  constexpr explicit(@\seebelow@) basic_vec(U&& value) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -129,7 +145,7 @@ The expression inside \tcode{explicit} evaluates to \tcode{false} if and only if
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{template<\mbox{\exposconcept{simd-consteval-broadcast-arg}} U> consteval basic_vec(U\&\& x)}@
+@\wgAdd{template<\mbox{\exposconcept{simd-consteval-broadcast-arg}<value_type>} U> consteval basic_vec(U\&\& x)}@
 \end{itemdecl}
 
 \begin{itemdescr}

@@ -1,7 +1,7 @@
 \newcommand\wgTitle{Restore \code{simd::vec} broadcast from \code{int}}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3844R1}
-\newcommand\wgGroup{LEWG}
+\newcommand\wgDocumentNumber{D3844R2}
+\newcommand\wgGroup{LWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
 
@@ -691,48 +691,7 @@ If LEWG is uncomfortable with adding the \code{consteval} overload now I recomme
   \item simplify [simd.math] to \code{template<class T> T fun(T, T)} for \CC{}26.
 \end{itemize}
 
-\section{Proposed polls}
-
-\wgPoll{Something needs to be done for \CC{}26. (If we do nothing, the design space is constrained
-and \sect{sec:consteval} would be a breaking change.)}{&&&&}
-
-\wgPoll{Add a \code{consteval} broadcast overload for value-preserving conversions to
-\CC{}26.}{&&&&}
-
-\noindent If the vote for \CC{}26 failed:\\
-\wgPoll{Add a \code{consteval} broadcast overload for value-preserving conversions to
-\CC{}29.}{&&&&}
-
-\noindent Otherwise \emph{maybe} poll:\\
-\wgPoll{It is better to add a \code{consteval} broadcast overload for \CC{}29 rather than
-\CC{}26.}{&&&&}
-
-\noindent Note: The next poll makes sense for \CC{}26, even if we only intend to add the new
-overload for \CC{}29.\\
-\wgPoll{The new constructor overload should be fully constrained, which requires the removal of
-\code{explicit} (not value-preserving conversions) from the existing broadcast constructor.}{&&&&}
-
-\wgPoll{Add a new exception type to \CC{}26 that is thrown for value-changing conversions from the
-new \code{consteval} broadcast constructor.}{&&&&}
-
-\wgPoll{Encourage a paper targeting \CC{}29 on a new exception type that is thrown from the new
-\code{consteval} broadcast constructor.}{&&&&}
-
-\wgPoll{Modify [simd.math] functions to allow conversion in the caller on function arguments (as
-presented in \sect{sec:math2}) for \CC{}26.}{&&&&}
-
-\wgPoll{Simplify [simd.math] functions to use \code{template<\exposid{simd-floating-point} T> T
-fun(T, T)} signatures (for now/\CC{}26), hoping we can restore \code{<cmath>}-like behavior for
-\CC{}29.}{&&&&}
-
-%\input{wording1}
-
 \input{wording2}
-
-\section{Wording changes for [simd.math]}
-
-A set of fairly mechanical changes.
-TBD.
 
 \appendix
 \let\appendix=\relax
