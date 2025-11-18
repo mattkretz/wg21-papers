@@ -11,5 +11,12 @@
 \begin{revision}
 \item Remove proposed polls.
 \item Update wording to remove unnecessary \exposid{simd-broadcast-arg}.
-\item Add [simd.math] wording changes.
+\item Add [simd.math] wording changes to match original design intent (as if it
+  were an explicit overload set).
+\item Drive-by wording fixes/improvements to [simd.math]:
+  \begin{itemize}
+    \item \exposid{math-common-simd-t<V0, V1>} did not work for non-default ABI
+      tag combinations with scalars.
+    \item Spell out precondition on integral \code{abs}.
+  \end{itemize}
 \end{revision}
