@@ -176,15 +176,104 @@ A \code{mask<complex<double>>} object is stored in just the same way, with two 1
 $k_1^r$, $k_1^i$; (4) in \fig{sse.complex}).
 Comparing two objects of type \code{vec<complex<double>>} is translated into an AVX compare
 instruction on four \code{double} values, producing four 64-bit results in a vector mask.
-The implementation needs to fix up the result by 
+The implementation needs to fix up the result by apply \code{and}/\code{or} on neighboring mask
+elements.
+
+The important point is that \code{vec<double>::mask_type} is implemented using a vector-mask with
+64-bit elements, whereas \code{vec<complex<float>::mask_type} is implemented using a vector-mask
+with 32-bit elements, even though both use \code{8} as first template argument to \code{basic_mask}.
+For vector-masks, this isn't a huge deal because in terms of bit representation these masks are
+exactly the same thing (and can thus be bit-casted back and forth).
+For bit-masks, however, the \code{sizeof} and bit representation is different and bit-casting would
+lead to incorrect results (AVX512 \code{vec<double>::mask_type} is an 8-bit integer;
+\code{vec<complex<float>>::mask_type} is a 16-bit integer).
+
+\section{Related issue with \exposid{integer-from}}
+
+%\subsection{\code{basic_mask<complex<double>>} and \exposid{integer-from} is broken}
+
+In the discussion of \href{https://cplusplus.github.io/LWG/issue4238}{LWG4238}, Tim noted that
+\code{\exposid{integer-from}<Bytes>} does not work as intended because \code{Bytes} can be 16 after
+\code{complex<double>} became a vectorizable type.\footnote{It was not intended to require
+conforming implementations to now provide a 128-bit signed integer type.}
+This is again a question about how we define masks and their ABIs.
+LEWG might want to check off on matching design intent.
+However, this is mostly a question of wording.
+I sketched a potential solution in \url{https://lists.isocpp.org/lib/2025/04/31251.php}.
+As Tim noted, we have several issues.
+
+The constraints on \code{\exposid{deduce-abi-t}<complex<double>, 2>} are ill-formed:
+
+\begin{wgText}[{[simd.expos.abi]}]\setcounter{Paras}{4}
+\pnum
+Where present, \tcode{\exposid{deduce-abi-t}<T, N>} names an ABI tag type such
+that
+\begin{itemize}
+ \item
+   \tcode{\exposid{simd-size-v}<T, \exposid{deduce-abi-t}<T, N>>} equals
+   \tcode{N}, \item \tcode{basic_vec<T, \exposid{deduce-abi-t}<T, N>>} is
+   enabled\iref{simd.overview}, and
+ \item
+   \tcode{basic_mask<sizeof(T),
+   \exposid{deduce-abi-t}<\exposid{integer-from}<sizeof(T)>, N>>} is enabled.
+\end{itemize}
+\end{wgText}
+
+The default ABI tag for \code{basic_mask<complex<double>>} does not work:
+
+\begin{wgText}[{[simd.syn]}]
+\begin{codeblock}
+  template<size_t Bytes, class Abi = @\exposid{native-abi}@<@\exposid{integer-from}@<Bytes>>> class basic_mask;
+\end{codeblock}
+\end{wgText}
+
+The return type of \code{cat(k, k)}, where \code{k} is \code{mask<complex<double>>}, is ill-formed:
+
+\begin{wgText}[{[simd.syn]}]
+\begin{codeblock}
+  template<size_t Bytes, class... Abis>
+    constexpr basic_mask<Bytes, @\exposid{deduce-abi-t}@<@\exposid{integer-from}@<Bytes>,
+                              (basic_mask<Bytes, Abis>::size() + ...)>>
+      cat(const basic_mask<Bytes, Abis>&...) noexcept;
+\end{codeblock}
+\end{wgText}
+
+The helper type \code{T} in the specification of \code{resize<N, mask<complex<double>, M>>} is
+ill-formed:
+
+\begin{wgText}[{[simd.traits]}]\setcounter{Paras}{6}
+\begin{itemdecl}
+template<@\exposid{simd-size-type}@ N, class V> struct resize { using type = @\seebelow@; };
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+Let \tcode{T} denote
+\begin{itemize}
+ \item
+   \tcode{typename V::value_type} if \tcode{V} is a specialization of
+   \tcode{basic_vec},
+ \item
+   otherwise \tcode{\exposid{integer-from}<\exposid{mask-element-size}<V>>} if
+   \tcode{V} is a specialization of \tcode{basic_mask}.
+\end{itemize}
+\end{itemdescr}
+\end{wgText}
 
 \section{Implications}
 
-A contiguous implementation of \code{basic_vec<complex<T>>} would use \code{basic_vec<sizeof(T),
-SomeAbi>} as its \code{mask_type}.
+The change to the \code{mask} alias gives implementations significantly more freedom in matching
+mask types to vector types.
+
+Consider a contiguous implementation of \code{basic_vec<complex<T>>}.
+Its natural mask type would use \code{sizeof(T)} instead of \code{sizeof(complex<T>)} for the
+\code{Bytes} template argument of \code{basic_mask}.
+(This is due to \code{vec<complex<T>>} consisting of two \code{vec<T>} data members, which store the
+real and imaginary parts.)
+
 An implementation that defaults to interleaved on one target and contiguous on a different target
-would therefore treat \code{-mask<complex<double>>()} as ill-formed for the first target and produce
-a \code{vec<long long>} on the other target.
+would therefore treat \code{-mask<complex<double>>()}\footnote{unary minus} as ill-formed for the
+first target and produce a \code{vec<long long>} on the other target.
 \code{convertible_to<mask<complex<double>>, mask<double>>} could be implemented to be
 \code{true}.
 
@@ -194,52 +283,57 @@ a \code{vec<long long>} on the other target.
 
 Bump.
 
-\subsection{Modify [simd.syn] and [simd.creation]}
+\subsection{Modify [simd.syn]}
 
 In [simd.syn], change:
 \begin{wgText}[{[simd.syn]}]
 \begin{codeblock}
-  template<class T, class Abi>
-    constexpr auto chunk(const basic_simd_mask<@\exposid{mask-element-size}@<T>, Abi>& x) noexcept;
-
-  template<@\wgChange{size_t}{\mbox{\exposid{simd-size-type}}}@ N, class T, class Abi>
-    constexpr auto chunk(const basic_simd<T, Abi>& x) noexcept;
-  template<@\wgChange{size_t}{\mbox{\exposid{simd-size-type}}}@ N, size_t Bytes, class Abi>
-    constexpr auto chunk(const basic_simd_mask<Bytes, Abi>& x) noexcept;
-
-  template<class T, class... Abis>
-    constexpr basic_simd<T, @\exposid{deduce-abi-t}@<T, (basic_simd<T, Abis>::size() + ...)>>
-      cat(const basic_simd<T, Abis>&...) noexcept;
+  // [simd.mask.class], class template \tcode{basic_mask}
+  template<size_t Bytes, class Abi@\wgRem{ = \mbox{\exposid{native-abi}}<\mbox{\exposid{integer-from}}<Bytes>\mbox{}>}@> class basic_mask;
+  template<class T, @\exposid{simd-size-type}@ N = @\exposid{simd-size-v}@<T, @\exposid{native-abi}@<T>>>
+    using mask = @\wgChange{basic_mask<sizeof(T), \mbox{\exposid{deduce-abi-t}}<T, N>\mbox{}>}{typename vec<T, N>::mask_type}@;
 \end{codeblock}
 \end{wgText}
 
-In [simd.creation], change:
-\begin{wgText}[{[simd.creation]}]
-\setcounter{WGClause}{29}
-\setcounter{WGSubSection}{10}
-\setcounter{WGSubSubSection}{7}
-\setcounter{WGSubSubSubSection}{8}
-\setcounter{Paras}{3}%
+\subsection{Modify [simd.traits]}
+
+\begin{wgText}[{[simd.traits]}]\setcounter{Paras}{6}
 \begin{itemdecl}
-template<@\wgChange{size_t}{\mbox{\exposid{simd-size-type}}}@ N, class T, class Abi>
-  constexpr auto chunk(const basic_simd<T, Abi>& x) noexcept;
+template<@\exposid{simd-size-type}@ N, class V> struct resize { using type = @\seebelow@; };
 \end{itemdecl}
 
 \begin{itemdescr}
 \pnum
-\effects
-Equivalent to: \tcode{return chunk<resize_t<N, basic_simd<T, Abi>>>(x);}
-\end{itemdescr}
+Let \tcode{\wgChange{T}{Abi1}} denote\wgAdd{ an ABI tag}
+\begin{itemize}
+ \item
+   \wgChange{\tcode{typename V::value_type}}{such that \tcode{basic_vec<T, Abi1>::size()} equals \tcode{N}} if
+   \tcode{V} is a specialization of \tcode{basic_vec},
+ \item
+   otherwise \wgChange{\tcode{\mbox{\exposid{integer-from}<\exposid{mask-element-size}}<V>>}}
+   {such that \tcode{basic_mask<\mbox{\exposid{mask-element-size}}<V>, Abi1>::size()} equals
+   \tcode{N}} if \tcode{V} is a specialization of \tcode{basic_mask}.
+\end{itemize}
 
-\begin{itemdecl}
-template<@\wgChange{size_t}{\mbox{\exposid{simd-size-type}}}@ N, size_t Bytes, class Abi>
-  constexpr auto chunk(const basic_simd_mask<Bytes, Abi>& x) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
 \pnum
-\effects
-Equivalent to: \tcode{return chunk<resize_t<N, basic_simd_mask<Bytes, Abi>>>(\brk{}x);}
+The member \tcode{type} is present if and only if
+\begin{itemize}
+\item \tcode{V} is a data-parallel type, and
+\item \wgChange{\tcode{\mbox{\exposid{deduce-abi-t}}<T, N>} has a member type \tcode{type}}
+  {there exists at least one ABI tag that satisfies the above constraints for \tcode{Abi1}}.
+\end{itemize}
+
+\pnumRem
+\wgRem{If \tcode V is a specialization of \tcode{basic_vec}, let \tcode{Abi1} denote an
+ABI tag such that \tcode{basic_vec<T, Abi1>::\brk{}size()} equals \tcode{N}.
+If \tcode V is a specialization of \tcode{basic_mask}, let \tcode{Abi1}
+denote an ABI tag such that \tcode{basic_mask<sizeof(T), Abi1>::size()} equals \tcode{N}.}
+
+\pnum
+Where present, the member typedef \tcode{type} names \tcode{basic_vec<T, Abi1>}
+if \tcode V is a specialization of \tcode{basic_vec} or
+\tcode{basic_mask<\wgChange{sizeof(T)}{\mbox{\exposid{mask-element-size}<V>}}, Abi1>} if \tcode V is a specialization of
+\tcode{basic_mask}.
 \end{itemdescr}
 \end{wgText}
 
