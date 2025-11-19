@@ -17,6 +17,39 @@ In [simd.expos], insert:
 
 template<class V>
   concept @\defexposconceptnc{simd-vec-type}@ =                                            // \expos
+    @\libconcept{same_as}@<V, basic_vec<typename V::value_type, typename V::abi_type>> &&
+    is_default_constructible_v<V>;
+
+template<class V>
+  concept @\defexposconceptnc{simd-mask-type}@ =                                           // \expos
+    @\libconcept{same_as}@<V, basic_mask<@\exposid{mask-element-size}@<V>, typename V::abi_type>> &&
+    is_default_constructible_v<V>;
+
+template<class V>
+  concept @\defexposconceptnc{simd-floating-point}@ =                                      // \expos
+    @\exposconcept{simd-vec-type}@<V> && @\libconcept{floating_point}@<typename V::value_type>;
+
+template<class V>
+  concept @\defexposconceptnc{simd-integral}@ =                                            // \expos
+    @\exposconcept{simd-vec-type}@<V> && @\libconcept{integral}@<typename V::value_type>;
+
+template<class V>
+  using @\exposidnc{simd-complex-value-type}@ = V::value_type::value_type; // \expos
+
+template<class V>
+  concept @\defexposconceptnc{simd-complex}@ =                                             // \expos
+    @\exposconcept{simd-vec-type}@<V> && @\libconcept{same_as}@<typename V::value_type, complex<@\exposid{simd-complex-value-type}@<V>>>;
+
+@\wgRem{template<class... Ts>}@
+  @\wgRem{concept \defexposconceptnc{math-floating-point} =}@                                      @\wgRem{\rmfamily\itshape// \expos}@
+    @\wgRem{(\exposconceptnc{simd-floating-point}<\exposidnc{deduced-vec-t}<Ts>> || ...);}@
+
+@\wgRem{template<class... Ts>}@
+  @\wgRem{requires \exposconceptnc{math-floating-point}<Ts...>}@
+    @\wgRem{using \exposidnc{math-common-simd-t} = \seebelownc;}@                            @\wgRem{\rmfamily\itshape// \expos}@
+
+template<class BinaryOperation, class T>
+  concept @\exposconceptnc{reduction-binary-operation} = \seebelownc@;                    // \expos
 \end{codeblock}
 \end{wgText}
 
@@ -63,6 +96,49 @@ Let \tcode{x} denote an lvalue of type \tcode{const T}.
 \end{itemdescr}
 
 \begin{itemdecl}
+@\wgRem{template<class... Ts>}@
+  @\wgRem{requires \exposconcept{math-floating-point}<Ts...>}@
+    @\wgRem{using \exposid{math-common-simd-t} = \seebelow;}@
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnumRem
+\wgRem{
+Let \tcode{T0} denote \tcode{Ts...[0]}.
+Let \tcode{T1} denote \tcode{Ts...[1]}.
+Let \tcode{TRest} denote a pack such that \tcode{T0, T1, TRest...} is equivalent
+to \tcode{Ts...}.}
+
+\pnumRem
+\wgRem{
+Let \tcode{\exposid{math-common-simd-t}<Ts...>} be an alias for}
+\begin{itemize}
+ \wgItemRem[
+   \tcode{\exposid{deduced-vec-t}<T0>}, if \tcode{sizeof...(Ts)} equals $1$;
+ otherwise]
+ \wgItemRem[
+   \tcode{common_type_t<\exposid{deduced-vec-t}<T0>,
+   \exposid{deduced-vec-t}<T1>>}, if \tcode{sizeof...(Ts)} equals $2$ and
+   \tcode{\exposconcept{math-floating-point}<T0> \&\&
+ \exposconcept{math-floating-point}<T1>} is \tcode{true}; otherwise]
+ \wgItemRem[
+   \tcode{common_type_t<\exposid{deduced-vec-t}<T0>, T1>}, if
+   \tcode{sizeof...(Ts)} equals $2$ and
+   \tcode{\exposconcept{math-floating-point}<\brk{}T0>}
+ is \tcode{true}; otherwise]
+ \wgItemRem[
+   \tcode{common_type_t<T0, \exposid{deduced-vec-t}<T1>>}, if
+ \tcode{sizeof...(Ts)} equals $2$; otherwise]
+ \wgItemRem[
+   \tcode{common_type_t<\exposid{math-common-simd-t}<T0, T1>, TRest...>}, if
+   \tcode{\exposid{math-common-simd-t}<T0, T1>} is valid and denotes a type;
+ otherwise]
+ \wgItemRem[
+ \tcode{common_type_t<\exposid{math-common-simd-t}<TRest...>, T0, T1>}.]
+\end{itemize}
+\end{itemdescr}
+
+\begin{itemdecl}
 @\wgAdd{template<class From, class To> concept \defexposconceptnc{simd-consteval-broadcast-arg} = \seebelownc;}@
 \end{itemdecl}
 
@@ -89,6 +165,11 @@ Let \tcode{x} denote an lvalue of type \tcode{const T}.
   \end{itemize}
 \end{itemize}
 \end{itemdescr}
+
+\begin{itemdecl}
+template<class BinaryOperation, class T>
+  concept @\defexposconceptnc{reduction-binary-operation}@ =
+\end{itemdecl}
 \end{wgText}
 
 \subsection{Modify [simd.syn]}
@@ -324,37 +405,37 @@ In [simd.syn], change:
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
     @\wgAdd{constexpr \exposid{deduced-vec-t}<V> pow(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> beta(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> beta(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> beta(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> beta(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> comp_ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> comp_ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> comp_ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> comp_ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_bessel_i(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_i(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_bessel_i(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_i(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_bessel_j(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_j(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_bessel_j(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_j(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_bessel_k(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_k(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_bessel_k(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_k(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_neumann(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_neumann(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_neumann(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_neumann(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_1(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_1(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_1(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_1(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_2(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_2(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_2(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_2(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
     @\wgAdd{constexpr \exposid{deduced-vec-t}<V>}@
       @\wgAdd{remquo(const \exposid{deduced-vec-t}<V>\& x, const V\& y, rebind_t<int, \exposid{deduced-vec-t}<V>>* quo);}@
@@ -407,20 +488,17 @@ In [simd.syn], change:
     @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const \exposid{deduced-vec-t}<V>\& y}@
                                     @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_3(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y,}@
-                                        @\wgAdd{const V\& z);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y,}@
-                                        @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
   @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y,}@
-                                        @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
 
   // \iref{simd.bit}, bit manipulation
   template<@\exposconcept{simd-vec-type}@ V> constexpr V byteswap(const V& v) noexcept;
@@ -1009,37 +1087,37 @@ Sets \tcode{*iptr} to \tcode{ret.second}.
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
   @\wgAdd{constexpr \exposid{deduced-vec-t}<V> pow(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> beta(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> beta(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> beta(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> beta(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> comp_ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> comp_ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> comp_ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> comp_ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_bessel_i(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_i(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_bessel_i(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_i(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_bessel_j(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_j(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_bessel_j(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_j(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_bessel_k(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_k(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_bessel_k(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_k(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_neumann(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_neumann(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> cyl_neumann(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_neumann(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_1(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_1(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_1(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_1(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_2(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_2(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_2(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_2(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
   @\wgAdd{constexpr \exposid{deduced-vec-t}<V>}@
     @\wgAdd{remquo(const \exposid{deduced-vec-t}<V>\& x, const V\& y, rebind_t<int, \exposid{deduced-vec-t}<V>>* quo);}@
@@ -1083,20 +1161,17 @@ Sets \tcode{*iptr} to \tcode{ret.second}.
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
   @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_3(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y,}@
-                                      @\wgAdd{const V\& z);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y,}@
-                                      @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
 @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y,}@
-                                      @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1113,3 +1188,5 @@ Sets \tcode{*iptr} to \tcode{ret.second}.
 \wgAdd{Equivalent to: \tcode{\placeholder{math-func}(static_cast<const \exposid{deduced-vec-t}<V>\&>(args)..., rest...)}}
 \end{itemdescr}
 \end{wgText}
+
+\pagebreak

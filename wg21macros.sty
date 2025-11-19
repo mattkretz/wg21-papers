@@ -28,8 +28,8 @@
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{wg21macros}[2014/10/27 v0.1 Macros for WG21 documents markup]
 
-%\RequirePackage[normalem]{ulem}
 \RequirePackage{soul}
+\RequirePackage[normalem]{ulem}
 \RequirePackage{xcolor}
 \RequirePackage{relsize}
 \RequirePackage{listings}
@@ -71,7 +71,9 @@
 \soulregister{\tcode}{1}
 \soulregister{\iref}{1}
 \soulregister{\exposid}{1}
+\soulregister{\exposidnc}{1}
 \soulregister{\exposconcept}{1}
+\soulregister{\exposconceptnc}{1}
 \soulregister{\libconcept}{1}
 \soulregister{\defexposconceptnc}{1}
 \soulregister{\placeholder}{1}
@@ -167,14 +169,14 @@
 \def\pnumRem{\par%
   \stepcounter{Paras}%
   \noindent\llap{{%
-  \scriptsize\raisebox{.5ex}{\textcolor{WgRem}{\arabic{Paras}}}}\hspace{\@totalleftmargin}\quad}%
-\addtocounter{Paras}{-1}}
+  \scriptsize\raisebox{.5ex}{\textcolor{WgRem}{\sout{\arabic{Paras}}}}}\hspace{\@totalleftmargin}\quad}%
+}
 
 \def\pnumAdd{\par%
-  \stepcounter{Paras}%
-  \protected@edef\@currentlabel{[\theWgStableName]~p.\arabic{Paras}}%
+  %\stepcounter{Paras}%
+  %\protected@edef\@currentlabel{[\theWgStableName]~p.\arabic{Paras}}%
   \noindent\llap{{%
-\scriptsize\raisebox{.5ex}{\textcolor{WgAdd}{\arabic{Paras}}}}\hspace{\@totalleftmargin}\quad}}
+\scriptsize\raisebox{.5ex}{\textcolor{WgAdd}{-?-}}}\hspace{\@totalleftmargin}\quad}}
 \makeatother
 
 \newenvironment{indented}
