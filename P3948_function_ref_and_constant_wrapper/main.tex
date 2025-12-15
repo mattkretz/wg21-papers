@@ -1,0 +1,566 @@
+\newcommand\wgTitle{\code{constant\_wrapper} is the only tool needed for passing constant expressions
+  via function arguments}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{P3948R0}
+\newcommand\wgGroup{LEWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+
+\addbibresource{extra.bib}
+
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  We added \code{std::constant_wrapper<value>} to \CC{}26 to enable “passing constant expressions as
+  function arguments”.
+  This is especially important for constructors where we cannot give explicit template arguments.
+  However, \code{constant_wrapper} also overloads all operators in such a way that values stay in
+  the “type space”.
+  This was initially motivated by user-defined literals, which require a unary minus operator.
+  For consistency, LEWG voted to overload all operators.
+  The existence of \code{constant_wrapper::operator()} lead to fear, uncertainty, and
+  doubt\footnote{not intentional FUD, though}, whether wrapping a callable with
+  \code{constant_wrapper} leads to inconsistent semantics.
+  This paper shows that there is no real problem, and provides a simple solution to resolve the
+  contrived problems that can be constructed.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+%\pagebreak
+\section{Motivation}
+
+The primary design intent of \std\code{constant_wrapper<x>} is the ability to pass \code{x} as a
+template argument via a function (esp. constructor) argument.
+The presence of a second type \std\code{constant_arg} that has the same design intent but with extra
+semantics and a narrow focus on \std\code{function_ref} is just inconsistent and hard to teach.
+After reviewing the reasons why LEWG decided to not use \std\code{constant_wrapper} I got only more
+convinced that we should use \std\code{constant_wrapper} for \std\code{function_ref}.
+
+The status quo of \CC{}26 can be understood with this
+example:\footnote{\url{https://compiler-explorer.com/z/8z7M6q7PM}}
+\medskip\begin{lstlisting}
+#include <functional>
+#include <type_traits>
+
+int nullary();
+int unary(int);
+int binary(int, int);
+
+int f0(std::function_ref<int()>);
+int f1(std::function_ref<int(int)>);
+int f2(std::function_ref<int(int, int)>);
+int g0(std::move_only_function<int()>);
+int g1(std::move_only_function<int(int)>);
+int g2(std::move_only_function<int(int, int)>);
+
+void test()
+{
+  f0(nullary);          // @\ref{en:nullary}@
+  f0(std::cw<nullary>); // @\ref{en:cw:nullary}@
+  f1(std::cw<unary>);   // @\ref{en:cw:unary}@
+  f2(std::cw<binary>);  // @\ref{en:cw:binary}@
+  f0(std::cw<[]() { return 1; }>); // @\ref{en:cw:lambda}@
+  g0(nullary);          // @\ref{en:g}@
+  g0(std::cw<nullary>); // @\ref{en:g}@
+  g1(std::cw<unary>);   // @\ref{en:g}@
+  g2(std::cw<binary>);  // @\ref{en:g}@
+  g0(std::cw<[]() { return 1; }>); // @\ref{en:g}@
+
+  // these can't work because of a language limitation:
+  //f1(std::cw<[](int) { return 1; }>);
+  //f2(std::cw<[](int, int) { return 1; }>);
+  //g1(std::cw<[](int) { return 1; }>);
+  //g2(std::cw<[](int, int) { return 1; }>);
+}
+\end{lstlisting}
+
+The commented calls are ill-formed because of a language inconsistency:
+A call expression on an object that is implicitly convertible to a function pointer is valid
+(calling through the function pointer).
+However, if such an object is implicitly convertible to a type implementing a call operator, that
+call is not considered.
+This is similar to operator lookup for fundamental types vs. user-defined types: the former requires
+only a conversion operator, the latter is required to be in an associated namespace (which
+\code{constant_wrapper} does) and the operator needs to be defined as a hidden friend (which the
+language doesn't allow for call operators).
+
+This is unfortunate, but not really important for this discussion.
+This discussion wants to focus on what \code{cw<fun>} already means \emph{right now} without adopting any
+other paper.
+
+\begin{enumerate}
+
+  \item\label{en:nullary}
+    \code{f0(nullary)} is a simple type-erased call through a function pointer into \code{nullary}.
+
+  \item\label{en:cw:nullary}
+    \code{f0(cw<nullary>)} is translated into a \emph{direct} jump to \code{nullary}; i.e., this
+    doesn't need an indirect call.\footnote{This assumes enabled optimizations; with \code{-O0} both
+    \code{cw<nullary>} and \code{constant_arg<nullary>} are compiled into an indirect call.}
+    This is possible because the function pointer is passed as a template argument into the place
+    where the \code{function_ref} implementation constructs the call.
+    (Note that \code{constant_wrapper::operator()} is not invoked, because this operator is not
+    viable in a constant expression.)
+    Also, note that \code{f0(constant_arg<nullary>)} is equivalent.
+    The only difference is that with \code{cw} a non-null value is stored for the function pointer,
+    even though that value is never needed.
+
+  \item\label{en:cw:unary}\label{en:cw:binary}
+    \code{f1(cw<unary>)} and \code{f2(cw<binary>)} are the same as \code{f0(cw<nullary>)} with one
+    or two function arguments.
+    Both also result in a direct jump when invoking the \code{function_ref}.
+
+  \item\label{en:cw:lambda}
+    \code{f0(cw<[]() \{ return 1; \})} shows that a nullary lambda also works (using
+    \code{-fno-inline}: \url{https://compiler-explorer.com/z/vP5YMea8v}).
+    In this case the expression \code{cw<[]() \{ re\-turn 1; \}>()} returns \code{cw<1>} because it is
+    a valid constant expression invoking \code{constant_wrapper::\MayBreak{}operator()}.
+    Contrary to \code{nullary}, the lambda is \code{constexpr} and can thus be used to initialize
+    the \code{cw} template argument.
+    \code{cw<1>} is subsequently converted to \code{int(1)} when the \code{function_ref} is invoked.
+    This is functionally equivalent to \code{f0(constant_arg<[]() \{ return 1; \}>)}, which also
+    returns constant \code{int(1)}, except that the implementation doesn't need to go through
+    \textit{INVOKE}.
+
+    Important here is the observation that if \code{constant_wrapper::operator()} is well-formed,
+    then its \emph{semantics are equivalent} to unwrapping the \code{constant_wrapper} and then
+    calling the function.
+    The difference is equivalent to whether \code{function_ref::operator()} is implemented as
+    \medskip\begin{lstlisting}[style=Vc]
+    int operator()() { constexpr int tmp = wrapped(); return tmp; }
+    \end{lstlisting}
+    or
+    \medskip\begin{lstlisting}[style=Vc]
+    int operator()() { return wrapped(); }
+    \end{lstlisting}
+
+  \item\label{en:g}
+    All of these conversions from \code{cw<…>} to \code{function_ref} also work for
+    \code{move_only_function} (and also \code{copyable_function} and \code{function}).
+    Consider the difference of \code{g0(nullary)} vs. \code{g0(cw<nullary>)}
+    (\url{https://compiler-explorer.com/z/8nYhYP7G5}):
+    \medskip\begin{lstlisting}[language=asm]
+"int std::__polyfunc::_Base_invoker<false, int>::_S_call_storage< …"
+    jmp     [QWORD PTR [rdi]]
+    \end{lstlisting}
+    \medskip\begin{lstlisting}[language=asm]
+"int std::__polyfunc::_Base_invoker<false, int>::_S_call_storage< …"
+    mov     eax, 2
+    ret
+    \end{lstlisting}
+    Using \code{constant_wrapper}, the indirect call/jump is replaced by an inlined call to
+    \code{nullary()}.
+    \code{constant_wrapper} thus already enables an optimization similar to the \code{constant_arg}
+    overload in \code{function_ref}.
+    The same code-gen difference exists for \code{copyable_function} and \code{function}.
+    (If \code{nullary()} cannot be inlined, then the \code{cw<nullary>} case turns into a direct
+    call/jump to \code{nullary()}.)
+
+\end{enumerate}
+
+In short: \textbf{\code{cw<func>} already works like \code{constant_arg} for all function wrappers.}
+Special casing \code{constant_arg} for the non-bind constructor is thus only a minor optimization
+for non-optimized builds.
+
+There was a concern that the function pointer to \code{nullary} would be dangling when
+\code{cw<nullary>} is used.
+I do not know where this concern stems from.
+To the contrary, \code{constant_wrapper} is carefully designed in such a way that its
+\code{value} member is a “never dangling” object, since it is a const-ref to a template parameter
+object.
+Thus, indirect calls with \code{-O0} are also valid.
+
+At this point we should be able to agree that using \code{std::cw} to wrap functions works correctly
+and can have a run-time performance benefit (at a compile-time cost).
+Except \ldots{} what about the failure that was presented in \cite{P3792R0}?
+
+\subsection{Constructing an inconsistency}
+
+Consider the following code\footnote{\url{https://compiler-explorer.com/z/59EMracKT}} as introduced
+by \cite{P3792R0}, but with a minor adjustment to the assertion.
+The assertion is modified because \cite{P3792R0} argues about broken consistency between the
+different function wrappers and the assertion used in this paper actually shows the issue:
+\medskip\begin{lstlisting}
+#include <functional>
+#include <type_traits>
+#include <cassert>
+
+static constexpr struct foo_t final
+{
+  constexpr auto operator()(auto &&...args) const -> int // #1
+      requires(std::integral<std::remove_cvref_t<decltype(args)>> && ...)
+  {
+    return (0 + ... + args);
+  }
+
+  constexpr auto operator()(auto &&...args) const -> int // #2
+    requires(std::integral<decltype(std::remove_cvref_t<decltype(args)>::value)> && ...)
+  {
+    return sizeof...(args);
+  }
+
+} foo = {};
+
+static constexpr struct baz_t final
+{
+  static constexpr int value = 42;
+} baz = {};
+
+auto main() -> int
+{
+  std::function_ref<int(baz_t)> f0(std::cw<foo>);
+  std::move_only_function<int(baz_t)> f1(std::cw<foo>);
+  assert(f0(baz) == f1(baz));
+}
+\end{lstlisting}
+
+This is currently (\CC{}26 status quo) consistent in that both \code{f0} and \code{f1} return
+\code{42}.
+Since it isn't obvious how the above code works, note that \code{\#2} is an unnecessary overload at
+this point.
+What \code{cw<callable>} requires in order to work in this context is a \code{callable} that is
+either a function pointer/reference or an object with call operator whose arguments can be unwrapped
+(\code{value} member), passed to the call operator, and the result can be wrapped in
+\code{constant_wrapper} again.
+(\code{con\-stant_wrapper<f>::operator()(Args...)} returns
+\code{constant_wrapper<f(Args::value...)>})
+So it must be a constant expression; and currently the language requires all types to be structural.
+Therefore, \code{std::cw<foo>(baz)} is \code{std::cw<0 + 42>}.
+In other words, the code \code{function_ref<int(baz_t)>(cw<foo>)} is what I would call a useless
+obfuscation for saying \code{42}.
+%The combination of \code{foo} and the function signature imply that the result is \code{42}.
+
+This is more apparent in a simpler example such as:
+\medskip\begin{lstlisting}[style=Vc]
+int f(std::function_ref<int(std::constant_wrapper<3.f>)>; // #1
+int func(std::constant_wrapper<3.f>); // could also use 'auto' as function parameter type
+                                      // if we were still able to name it
+int test1() { return f(std::cw<func>); }
+\end{lstlisting}
+This is pointless.
+The point of passing a callable with function parameters is to call it with *unknown values* for
+those parameters.
+But here we had to define the value that it gets called with as \emph{part of the type}.
+In line \code{\#1} we could have just used a nullary \code{int()} signature.
+
+Nevertheless, let us consider the possibility of a type with a data member that also derives from a
+trait with a \code{static constexpr} \code{value} member (this is the closest I can imagine to such
+an issue turning up in real code).
+Now, if we change \code{function_ref} to unwrap \code{constant_wrapper}, thereby replacing
+\code{nontype}/\code{constant_arg}, then the assertion in the above example fails.
+That's because if \code{constant_wrapper} is unconditionally unwrapped by \code{function_ref} it now
+calls \code{foo(baz)} rather than \code{cw<foo>(baz)}.
+And since the overload set of \code{foo_t} is constructed such that this works and returns something
+different (\code{\#2}), it returns \code{1}.
+However, since \code{move_only_function} does not unwrap \code{constant_wrapper} the assertion comes
+down to \code{1 == 42} and fails.
+
+\section{Resolving the inconsistency}
+
+The actual problem in the \cite{P3792R0} example is an ambiguity/dual semantics: Did the user mean
+to call \code{cw<foo>(baz)} or \code{foo(baz)}.
+It is fairly simply to detect this potential mismatch in \code{function_ref} and reject the program.
+Rejecting is consistent with overload resolution where ambiguities are rejected.
+
+I implemented \code{function_ref} unwrapping \code{constant_wrapper} with such a detection in a
+libstdc++ fork.\footnote{%
+\url{https://forge.sourceware.org/mkretz/gcc/commit/3277bbbc4e4aaad60294a6cda491ff5cf41c62d8}}
+The relevant code for rejecting the ambiguous case is straightforward:
+\medskip\begin{lstlisting}[style=Vc]
+template <auto __fn, typename... _Args>
+  concept __constant_wrapped_invocable
+    = sizeof...(_Args) >= 1 && requires(_Args... __args) {
+      { cw<__fn>(__args...) } -> _ConstantWrapped;
+    };
+
+template<_ConstantWrapped __fn>
+  requires __is_invocable_using<const typename __fn::value_type&>
+  constexpr
+  function_ref(__fn) noexcept
+  {
+    static_assert(!__constant_wrapped_invocable<__fn::value, _ArgTypes...>,
+                  "The given cw<fn> object has ambiguous call semantics.");
+    // […]
+\end{lstlisting}
+
+The corresponding wording change for this constructor overload looks like this:
+
+\begin{wgText}
+  \setcounter{Paras}{7}
+\begin{itemdecl}
+@template<\wgChange{auto f}{class F0}> constexpr function_ref(\wgChange{nontype_t<f>}{F0 f0})@ noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\wgAdd{Let \tcode{f} be \tcode{f0.value}.}
+Let \tcode{F} be \tcode{decltype(f)}.
+
+\pnum
+\constraints
+\begin{itemize}
+  \item \tcode{\exposid{is-invocable-using}<F>} is \tcode{true}\wgAdd{, and}
+  \wgItemAdd[\tcode{F0} is a specialization of \code{constant_wrapper}].
+\end{itemize}
+
+\pnum
+\mandates
+\begin{itemize}
+  \item If \tcode{is_pointer_v<F> || is_member_pointer_v<F>} is \tcode{true},
+    then \tcode{f != nullptr} is \tcode{true}.
+
+  \wgItemAdd[\tcode{sizeof...(ArgTypes)} is $0$ or
+    the expression \tcode{f0(declval<ArgTypes>()...)} is either not well-formed or its type is not a
+  specialization of \tcode{constant_wrapper}.]
+\end{itemize}
+
+\pnum
+\effects
+Initializes
+\exposid{bound-entity} with a pointer to an unspecified object or
+null pointer value, and
+\exposid{thunk-ptr} with the address of a function \tcode{\placeholder{thunk}}
+such that
+\tcode{\placeholder{thunk}(\exposid{bound-entity}, \placeholder{call-args}...)}
+is expression-equivalent\iref{defns.expression.equivalent} to
+\tcode{invoke_r<R>(f, \placeholder{call-args}...)}.
+\end{itemdescr}
+\end{wgText}
+
+With this change one cannot construct inconsistent \emph{behavior} anymore.
+If it would be inconsistent it rather does not compile.
+This resolves the concern raised in §3.5 of \cite{P3792R0}:
+\begin{quote}{}
+  “
+  \begin{itemize}
+    \item if nontype was replaced by \code{constant_wrapper} as a construction parameter to
+      \code{function_ref} and
+    \item a user performed a (seemingly) simple refactoring by swapping a standard function wrapper
+      with another standard function wrapper (e.g. to benefit from the low cost of
+      \code{function_ref} or to use the data storage in other wrappers) where the constructor
+        happens to rely on \code{constant_wrapper}
+  \end{itemize}
+… any of the following might happen:
+  \begin{itemize}
+    \item the program will continue to work as designed
+    \item the program will fail to compile
+    \item \st{the program will continue to compile and “work”, but with subtly changed behaviour}
+  \end{itemize}
+  ”
+\end{quote}
+
+\section{Summary}
+Status quo inconsistencies:
+\begin{itemize}
+  \item \code{constant_arg<fun>} works with \code{function_ref} but not with any other function wrapper.
+
+  \item \code{cw<fun>} works with all function wrappers to an equivalent effect of
+    \code{constant_arg<fun>} in \code{function_ref}, duplicating the \code{function_ref} constructor.
+
+  \item \code{constant_wrapper} and \code{constant_arg} are tools (a.k.a. workarounds) for passing a
+    “constexpr value” via a function/constructor argument.
+    Why are there two?
+    How do their names tell me when to use one or the other?
+\end{itemize}
+
+\section{Proposal}
+\begin{itemize}
+  \item Reword \code{function_ref} from \code{nontype}/\code{constant_arg} to
+    \code{constant_wrapper} (disallowing ambiguous \code{constant_wrapper} use).
+
+  \item Drop \code{nontype}/\code{constant_arg}.
+
+  \item Optional: Mandate no \code{constant_wrapper} arguments to the other function wrappers for
+    concern of future breaking changes. (not recommended: so far I am convinced potential changes
+    can be non-breaking)
+\end{itemize}
+
+\section{Further/related work}
+The current inconsistencies for “transparent” wrappers due to the language rules are not helpful.
+However, changes in this area can easily be breaking changes for existing code.
+Still, it should be possible to opt in to defining a truly transparent wrapper type (where
+operator lookup of the wrapped type is fully transparent).
+This needs more exploratory work.
+An initial patch to GCC to call \code{operator()} for wrappers like \code{constant_wrapper} already
+feels more consistent (to me).
+
+\section{Wording}
+
+\begin{wgText}
+  \setcounter{Paras}{4}
+\begin{itemdecl}
+template<class F> constexpr function_ref(F&& f) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+Let \tcode{T} be \tcode{remove_reference_t<F>}.
+
+\pnum
+\constraints
+\begin{itemize}
+\item \tcode{remove_cvref_t<F>} is not the same type as \tcode{function_ref},
+\item \tcode{is_member_pointer_v<T>} is \tcode{false},\wgRem{ and}
+\item \tcode{\exposid{is-invocable-using}<\cv{} T\&>} is \tcode{true}\wgAdd{, and}
+\wgItemAdd[\tcode{remove_cvref_t<F>} is not a specialization of \tcode{constant_wrapper}].
+\end{itemize}
+
+\pnum
+\effects
+Initializes
+\exposid{bound-entity} with \tcode{addressof(f)}, and
+\exposid{thunk-ptr} with the address of a function \tcode{\placeholder{thunk}}
+such that
+\tcode{\placeholder{thunk}(\exposid{bound-entity}, \placeholder{call-args}...)}
+is expression-equivalent\iref{defns.expression.equivalent} to
+\tcode{invoke_r<R>(static_cast<\cv{} T\&>(f), \placeholder{call-args}...)}.
+\end{itemdescr}
+
+\begin{itemdecl}
+@template<\wgChange{auto f}{class F0}> constexpr function_ref(\wgChange{nontype_t<f>}{F0 f0})@ noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\wgAdd{Let \tcode{f} be \tcode{f0.value} and}
+\wgRem{Let} \tcode{F} be \tcode{decltype(f)}.
+
+\pnum
+\constraints
+\begin{itemize}
+  \item \tcode{\exposid{is-invocable-using}<F>} is \tcode{true}\wgAdd{, and}
+  \wgItemAdd[\tcode{F0} is a specialization of \code{constant_wrapper}].
+\end{itemize}
+
+\pnum
+\mandates
+\begin{itemize}
+  \item If \tcode{is_pointer_v<F> || is_member_pointer_v<F>} is \tcode{true},
+    then \tcode{f != nullptr} is \tcode{true}.
+
+  \wgItemAdd[\tcode{sizeof...(ArgTypes)} is $0$ or
+    the expression \tcode{f0(declval<ArgTypes>()...)} is either not well-formed or its type is not a
+  specialization of \tcode{constant_wrapper}.]
+\end{itemize}
+
+\pnum
+\effects
+Initializes
+\exposid{bound-entity} with a pointer to an unspecified object or
+null pointer value, and
+\exposid{thunk-ptr} with the address of a function \tcode{\placeholder{thunk}}
+such that
+\tcode{\placeholder{thunk}(\exposid{bound-entity}, \placeholder{call-args}...)}
+is expression-equivalent\iref{defns.expression.equivalent} to
+\tcode{invoke_r<R>(f, \placeholder{call-args}...)}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<@\wgChange{auto f}{class F0}@, class U>
+  constexpr function_ref(@\wgChange{nontype_t<f>}{F0 f0}@, U&& obj) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+Let \tcode{T} be \tcode{remove_reference_t<U>}\wgAdd{,
+\tcode{f} be \tcode{f0.value},} and
+\tcode{F} be \tcode{decltype(f)}.
+
+\pnum
+\constraints
+\begin{itemize}
+\item \tcode{is_rvalue_reference_v<U\&\&>} is \tcode{false},\wgRem{ and}
+\item \tcode{\exposid{is-invocable-using}<F, \cv{} T\&>} is \tcode{true}\wgAdd{, and}
+\wgItemAdd[\tcode{F0} is a specialization of \code{constant_wrapper}].
+\end{itemize}
+
+\pnum
+\mandates
+If \tcode{is_pointer_v<F> || is_member_pointer_v<F>} is \tcode{true},
+then \tcode{f != nullptr} is \tcode{true}.
+
+\pnum
+\effects
+Initializes
+\exposid{bound-entity} with \tcode{addressof(obj)}, and
+\exposid{thunk-ptr} with the address of a function \tcode{\placeholder{thunk}}
+such that
+\tcode{\placeholder{thunk}(\exposid{bound-entity}, \placeholder{call-args}...)}
+is expression-equivalent\iref{defns.expression.equivalent} to
+\tcode{invoke_r<R>(f, static_cast<\cv{} T\&>(obj), \placeholder{call-args}...)}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<@\wgChange{auto f}{class F0}@, class T>
+  constexpr function_ref(@\wgChange{nontype_t<f>}{F0 f0}@, @\cv{}@ T* obj) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\wgAdd{Let \tcode{f} be \tcode{f0.value} and}
+\wgRem{Let} \tcode{F} be \tcode{decltype(f)}.
+
+\pnum
+\constraints
+\begin{itemize}
+\item \tcode{\exposid{is-invocable-using}<F, \cv{} T*>} is \tcode{true}\wgAdd{, and}
+\wgItemAdd[\tcode{F0} is a specialization of \code{constant_wrapper}].
+\end{itemize}
+
+\pnum
+\mandates
+If \tcode{is_pointer_v<F> || is_member_pointer_v<F>} is \tcode{true},
+then \tcode{f != nullptr} is \tcode{true}.
+
+\pnum
+\expects
+If \tcode{is_member_pointer_v<F>} is \tcode{true},
+\tcode{obj} is not a null pointer.
+
+\pnum
+\effects
+Initializes
+\exposid{bound-entity} with \tcode{obj}, and
+\exposid{thunk-ptr} with the address of a function \tcode{\placeholder{thunk}}
+such that
+\tcode{\placeholder{thunk}(\exposid{bound-entity}, \placeholder{call-args}...)}
+is expression-equivalent\iref{defns.expression.equivalent} to
+\tcode{invoke_r<R>(f, obj, \placeholder{call-args}...)}.
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class T> function_ref& operator=(T) = delete;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\constraints
+\begin{itemize}
+\item \tcode{T} is not the same type as \tcode{function_ref},
+\item \tcode{is_pointer_v<T>} is \tcode{false}, and
+\item \tcode{T} is not a specialization of \wgChange{\tcode{nontype_t}}{\tcode{constant_wrapper}}.
+\end{itemize}
+\end{itemdescr}
+\end{wgText}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=100
