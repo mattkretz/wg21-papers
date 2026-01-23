@@ -1,0 +1,216 @@
+\newcommand\wgTitle{\code{constant\_wrapper} should unwrap on call and subscript}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{D3978R0}
+\newcommand\wgGroup{LEWG}
+\newcommand\wgTarget{DR against \CC{}26, \CC{}29}
+%\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+
+\addbibresource{extra.bib}
+
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper proposes unwrapping overloads of \code{operator()} and \code{operator[]} to
+  \code{constant_wrapper}.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\section{Motivation}
+
+As discussed in~\cite{P3948R0}, because of language inconsistencies, \std\code{constant_wrapper}
+is inconsistently not unwrapping for call and subscript operators whereas all other operators can
+be found via ADL and the conversion operator implemented in \code{constant_wrapper}.
+Looking at \std\code{reference_wrapper} we see that this same issue has been resolved via an
+\code{operator()} overload that unwraps and applies \code{INVOKE}.
+
+I always had these unwrapping overloads in my implementation of \code{constant_wrapper} shipping in
+the vir-simd library\footnote{https://github.com/mattkretz/vir-simd}
+(\code{vir::constexpr_wrapper}).
+While replacing my implementation with \std\code{constant_wrapper} I noticed the mismatch.
+
+\subsection{Examples}
+
+\medskip
+\begin{lstlisting}
+auto test1()
+{
+  constexpr int iota[4] = {0, 1, 2, 3};
+  auto x = std::cw<iota>;
+  return x[1]; // #1 OK
+}
+
+auto test2()
+{
+  auto x = std::cw<std::array<int, 4> {0, 1, 2, 3}>;
+  return x[1]; // #2 ill-formed
+}
+\end{lstlisting}
+
+The subscript in \code{\#1} is fine because \code{x} is convertible to \code{int[4]} and because
+operator lookup is different for built-in types, the built-in subscript operator is found and
+\code{int(1)} is returned.
+The subscript in \code{\#2} does not work because, even though \code{array<int, 4>} is an associated
+namespace and \code{x} is convertible to \code{array<int, 4>}, the \code{array::operator[]} member
+function is not found.
+This is because only hidden friend operators are considered via ADL.
+Note how ADL makes the following work for \code{operator+}:
+\medskip
+\begin{lstlisting}
+struct X { friend int operator+(X, int a) { return a + 1; } };
+
+auto test3()
+{
+  auto x = std::cw<X{}>;
+  return x + 1; // #3 OK
+}
+\end{lstlisting}
+The expression \code{x + 1} in line \code{\#3} finds \code{X::operator+} via ADL and thus converts
+the left operand to \code{operator+} to \code{X}, returning \code{int(2)}.
+
+The situation for \code{operator()} is equivalent:
+\medskip
+\begin{lstlisting}
+int fun(int x) { return x + 1; }
+
+auto test1()
+{
+  auto x = std::cw<fun>;
+  return x(1); // #4 OK
+}
+
+auto test2()
+{
+  auto x = std::cw<[](int x) { return x + 1; }>;
+  return x(1); // #5 ill-formed
+}
+\end{lstlisting}
+The call expression in \code{\#4} relies on special core wording that looks through the conversion
+operator to find the function pointer and then call the function.
+The expression in \code{\#5}, however, cannot find the \code{operator()} member of the lambda,
+because the operator is a member, not a hidden friend.
+
+\section{Discussion}
+The most glaring question on this issue is why would we do this for \code{operator()} and
+\code{operator[]} but for none of the other operators.
+This seems inconsistent.
+However, we need to realize that the inconsistency is in the language, forcing the inconsistent
+definition of operators in the library.
+This makes the \emph{behavior} of the API, where operators unwrap transparently, more consistent.
+After all, the conversion operator and the additional type template argument in
+\code{constant_wrapper} exist exactly because \code{constant_wrapper} is supposed to transparently
+unwrap.
+
+Wouldn't it then be better to fix the language?\\
+For what it's worth, I think it would be a hugely helpful change to make the behavior of all
+operators as consistent as possible.
+Currently, every operator has its own set of restrictions and extras.
+If I could, I'd make \emph{every} operator overloadable as non-member (and thus hidden friend) and
+implement all operators of standard library types as hidden friends.
+But the amount of code we would break \ldots{}
+The only possibility that is not a breaking change is to add syntax that opts into new behavior,
+which has a high acceptance barrier.
+
+In terms of consistency we also have \std\code{reference_wrapper} to consider.
+The similar naming is not accidental.
+Consequently, the unwrapping behavior should also be consistent.
+
+\section{Wording}
+(rough draft wording)
+
+Bump \code{__cpp_lib_constant_wrapper}.
+
+\begin{wgText}[{[const.wrap.class]}]
+
+\begin{codeblock}
+    // call and index
+    template<@\exposconcept{constexpr-param}@ T, @\exposconcept{constexpr-param}@... Args>
+      constexpr auto operator()(this T, Args...) noexcept
+        requires requires { constant_wrapper<T::value(Args::value...)>(); }
+          { return constant_wrapper<T::value(Args::value...)>{}; }
+    @\wgAdd{template<\exposconcept{constexpr-param} T, class... Args>}@
+      @\wgAdd{constexpr \seebelow{} operator()(this T, Args\&\&...) noexcept(\seebelow);}@
+    template<@\exposconcept{constexpr-param}@ T, @\exposconcept{constexpr-param}@... Args>
+      constexpr auto operator[](this T, Args...) noexcept
+        -> constant_wrapper<(T::value[Args::value...])>
+          { return {}; }
+    @\wgAdd{template<\exposconcept{constexpr-param} T, class... Args>}@
+      @\wgAdd{constexpr \seebelow{} operator[](this T, Args\&\&...) noexcept(\seebelow);}@
+\end{codeblock}
+
+\begin{itemdecl}
+constexpr @\exposid{cw-fixed-value}@(T (&arr)[Extent]) noexcept;
+\end{itemdecl}
+
+\setcounter{Paras}{3}
+
+\begin{itemdescr}
+\pnum
+\effects
+Initialize elements of \exposid{data} with corresponding elements of \tcode{arr}.
+\end{itemdescr}
+
+\begin{itemdecl}
+@\wgAdd{template<\exposconcept{constexpr-param} T, class... Args>}@
+  @\wgAdd{constexpr invoke_result_t<decltype(T::value), Args...> operator()(this T, Args\&\&...)}@
+    @\wgAdd{noexcept(is_nothrow_invocable_v<decltype(T::value), Args...>);}@
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnumAdd
+\wgAdd{%
+\constraints
+The type of \tcode{T::value} is not a fundamental type and no type in
+\tcode{remove_cvref_t<Args>...} models \exposconcept{constexpr-param}.
+}
+
+\pnumAdd
+\wgAdd{%
+\returns
+\tcode{\mbox{\placeholdernc{INVOKE}(T::value, std::forward<Args>(args)...)}}\iref{func.require}.
+}
+\end{itemdescr}
+
+\begin{itemdecl}
+@\wgAdd{template<\exposconcept{constexpr-param} T, class... Args>}@
+  @\wgAdd{constexpr \seebelow{} operator[](this T, Args\&\&...) noexcept(\seebelow);}@
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnumAdd
+\wgAdd{%
+\constraints
+The type of \tcode{T::value} is not a fundamental type and no type in
+\tcode{remove_cvref_t<Args>...} models \exposconcept{constexpr-param}.
+}
+
+\pnumAdd
+\wgAdd{%
+\returns
+\tcode{T::value[std::forward<Args>(args)...]}.
+}
+\end{itemdescr}
+
+\end{wgText}
+
+%\pagebreak
+\end{document}
+% vim: sw=2 sts=2 ai et tw=100
