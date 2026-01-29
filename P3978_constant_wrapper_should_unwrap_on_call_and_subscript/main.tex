@@ -1,9 +1,10 @@
 \newcommand\wgTitle{\code{constant\_wrapper} should unwrap on call and subscript}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D3978R0}
+\newcommand\wgDocumentNumber{P3978R0}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{DR against \CC{}26, \CC{}29}
-%\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
+\newcommand\wgAcknowledgements{Thanks to Barry Revzin for helpful feedback on the first draft of
+this paper.}
 
 \usepackage{mymacros}
 \usepackage{wg21}
@@ -34,6 +35,8 @@
 \input{changelog}
 \input{strawpolls}
 
+\pagebreak
+
 \section{Motivation}
 
 As discussed in~\cite{P3948R0}, because of language inconsistencies, \std\code{constant_wrapper}
@@ -47,7 +50,46 @@ the vir-simd library\footnote{https://github.com/mattkretz/vir-simd}
 (\code{vir::constexpr_wrapper}).
 While replacing my implementation with \std\code{constant_wrapper} I noticed the mismatch.
 
-\subsection{Examples}
+\subsection{Design Principle}
+
+The following has always been my thinking on what \code{constant_wrapper} is / needs to be, which
+informed all my opinions on its API\@:
+\code{constant_wrapper} exists to be able to \emph{use function arguments in place of template
+arguments}.
+\begin{itemize}
+  \item As a template argument passing a \code{1} the function sees an \code{int}.
+  \item As a function argument passing a \code{cw<1>} the function does not see an \code{int} but a
+    \code{constant_wrapper<1, int>}; I actually wanted an \code{int}.
+\end{itemize}
+Therefore, \code{constant_wrapper<X>} should transparently unwrap into \code{X} whenever possible
+(similar to \code{reference_wrapper} unwrapping to the reference it holds), except if it \emph{can}
+stay in the type space, in which case it unwraps all operands/arguments and wraps the result.
+
+\begin{center}
+\fcolorbox{RoyalBlue}{White!90!RoyalBlue}{\larger%
+it's the thing it holds, unless it can stay wrapped
+}
+\end{center}
+
+This leads to the following expectations:
+\smallskip\begin{lstlisting}
+constexpr int iota[4] = {0, 1, 2, 3};
+\end{lstlisting}
+\begin{tabular}{rcll}
+  \code{cw<1> + 1} & $\rightarrow$ & \code{2} & the thing it holds \\
+  \code{cw<1> + cw<1>} & $\rightarrow$ & \code{cw<2>} & can stay wrapped \\
+  \code{cw<iota>[1]} & $\rightarrow$ & \code{1} & the thing it holds \\
+  \code{cw<iota>[cw<1>]} & $\rightarrow$ & \code{cw<1>} & can stay wrapped \\
+  \code{cw<fun>(1, 2)} & $\rightarrow$ & \code{fun(1, 2)} & the thing it holds \\
+  \code{cw<fun>(cw<1>, cw<2>)} & $\rightarrow$ & \code{cw<fun(1, 2)>} & can stay wrapped$^*$ \\
+  \code{cw<fun>(cw<1>, 2)} & $\rightarrow$ & \code{fun(cw<1>, 2)} & the thing it holds \\
+  \code{cw<unary>()} & $\rightarrow$ & \code{cw<unary()>} & can stay wrapped$^*$
+\end{tabular}
+
+\medskip
+$^*$ \code{fun(1, 2)} and \code{unary()} need to be constant expressions, otherwise unwrap.
+
+\subsection{Status Quo Examples}
 
 \medskip
 \begin{lstlisting}
@@ -71,7 +113,7 @@ operator lookup is different for built-in types, the built-in subscript operator
 The subscript in \code{\#2} does not work because, even though \code{array<int, 4>} is an associated
 namespace and \code{x} is convertible to \code{array<int, 4>}, the \code{array::operator[]} member
 function is not found.
-This is because only hidden friend operators are considered via ADL.
+This is because only hidden friend operators are considered via ADL\@.
 Note how ADL makes the following work for \code{operator+}:
 \medskip
 \begin{lstlisting}
@@ -134,12 +176,15 @@ The similar naming is not accidental.
 Consequently, the unwrapping behavior should also be consistent.
 
 \section{Wording}
-(rough draft wording)
+\subsection{Feature test macro}
 
-Bump \code{__cpp_lib_constant_wrapper}.
+In [version.syn] bump the \code{__cpp_lib_constant_wrapper} version.
+
+\subsection{Modify [const.wrap.class]}
+
+In [const.wrap.class], insert:
 
 \begin{wgText}[{[const.wrap.class]}]
-
 \begin{codeblock}
     // call and index
     template<@\exposconcept{constexpr-param}@ T, @\exposconcept{constexpr-param}@... Args>
@@ -154,7 +199,14 @@ Bump \code{__cpp_lib_constant_wrapper}.
           { return {}; }
     @\wgAdd{template<\exposconcept{constexpr-param} T, class... Args>}@
       @\wgAdd{constexpr \seebelow{} operator[](this T, Args\&\&...) noexcept(\seebelow);}@
+
+    // pseudo-mutators
+    template<@\exposconcept{constexpr-param}@ T>
+      constexpr auto operator++(this T) noexcept
+        -> constant_wrapper<++Y> { return {}; }
 \end{codeblock}
+
+[\ldots]
 
 \begin{itemdecl}
 constexpr @\exposid{cw-fixed-value}@(T (&arr)[Extent]) noexcept;
