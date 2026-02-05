@@ -1,4 +1,3 @@
-\clearpage
 \section{Wording}
 
 \subsection{Feature test macro}
@@ -40,9 +39,9 @@ template<class V>
   concept @\defexposconceptnc{simd-complex}@ =                                             // \expos
     @\exposconcept{simd-vec-type}@<V> && @\libconcept{same_as}@<typename V::value_type, complex<@\exposid{simd-complex-value-type}@<V>>>;
 
-@\wgRem{template<class... Ts>}@
-  @\wgRem{concept \defexposconceptnc{math-floating-point} =}@                                      @\wgRem{\rmfamily\itshape// \expos}@
-    @\wgRem{(\exposconceptnc{simd-floating-point}<\exposidnc{deduced-vec-t}<Ts>> || ...);}@
+template<class@\wgChange{... Ts}{ T}@>
+  concept @\defexposconceptnc{math-floating-point}@ =                                      // \expos
+    @\wgRem{(}\exposconceptnc{simd-floating-point}<\exposidnc{deduced-vec-t}<T\wgRem{s}>>\wgRem{ || ...)};@
 
 @\wgRem{template<class... Ts>}@
   @\wgRem{requires \exposconceptnc{math-floating-point}<Ts...>}@
