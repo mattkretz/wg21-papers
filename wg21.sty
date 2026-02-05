@@ -240,6 +240,7 @@
 
 \renewcommand{\sectionlinesformat}[4]{%
   %\@hangfrom{\hskip #2#3}{\hfill \Ifstr{#1}{section}{\MakeUppercase{#4}}{\MakeLowercase{#4}}}\nopagebreak%
+  \vspace{0pt plus 4\baselineskip}%
   \sbox\@wgtmpbox{\hskip #2#3}%
   \makebox[\textwidth][s]{%
     \parbox[b]{\wd\@wgtmpbox}{\usebox\@wgtmpbox}\hfill%

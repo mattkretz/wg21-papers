@@ -1,8 +1,9 @@
 \newcommand\wgTitle{\code{constant\_wrapper} should unwrap on call and subscript}
-\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3978R0}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>\\
+  Tomasz Kamiński <tomaszkam@gmail.com>}
+\newcommand\wgDocumentNumber{P3978R1}
 \newcommand\wgGroup{LEWG}
-\newcommand\wgTarget{DR against \CC{}26, \CC{}29}
+\newcommand\wgTarget{\CC{}26}
 \newcommand\wgAcknowledgements{Thanks to Barry Revzin for helpful feedback on the first draft of
 this paper.}
 
@@ -27,7 +28,7 @@ this paper.}
 \selectlanguage{american}
 \begin{wgTitlepage}
   This paper proposes unwrapping overloads of \code{operator()} and \code{operator[]} to
-  \code{constant_wrapper}.
+  \code{constant_wrapper} while making them all \code{static}.
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
@@ -57,13 +58,13 @@ informed all my opinions on its API\@:
 \code{constant_wrapper} exists to be able to \emph{use function arguments in place of template
 arguments}.
 \begin{itemize}
-  \item As a template argument passing a \code{1} the function sees an \code{int}.
-  \item As a function argument passing a \code{cw<1>} the function does not see an \code{int} but a
+  \item Passing a \code{1} as a template argument, the function sees an \code{int}.
+  \item Passing a \code{cw<1>} as a function argument, the function does not see an \code{int} but a
     \code{constant_wrapper<1, int>}; I actually wanted an \code{int}.
 \end{itemize}
 Therefore, \code{constant_wrapper<X>} should transparently unwrap into \code{X} whenever possible
 (similar to \code{reference_wrapper} unwrapping to the reference it holds), except if it \emph{can}
-stay in the type space, in which case it unwraps all operands/arguments and wraps the result.
+stay in the type space, in which case it unwraps all operands/arguments and re-wraps the result.
 
 \begin{center}
 \fcolorbox{RoyalBlue}{White!90!RoyalBlue}{\larger%
@@ -89,8 +90,8 @@ constexpr int iota[4] = {0, 1, 2, 3};
 \medskip
 $^*$ \code{fun(1, 2)} and \code{unary()} need to be constant expressions, otherwise unwrap.
 
+%\vspace{0pt plus 2em}
 \subsection{Status Quo Examples}
-
 \medskip
 \begin{lstlisting}
 auto test1()
@@ -151,12 +152,14 @@ The expression in \code{\#5}, however, cannot find the \code{operator()} member 
 because the operator is a member, not a hidden friend.
 
 \section{Discussion}
+
 The most glaring question on this issue is why would we do this for \code{operator()} and
 \code{operator[]} but for none of the other operators.
 This seems inconsistent.
 However, we need to realize that the inconsistency is in the language, forcing the inconsistent
 definition of operators in the library.
-This makes the \emph{behavior} of the API, where operators unwrap transparently, more consistent.
+This makes the \emph{behavior} of the API, where operators unwrap the value of the
+\code{constant_wrapper} transparently, more consistent.
 After all, the conversion operator and the additional type template argument in
 \code{constant_wrapper} exist exactly because \code{constant_wrapper} is supposed to transparently
 unwrap.
@@ -175,6 +178,245 @@ In terms of consistency we also have \std\code{reference_wrapper} to consider.
 The similar naming is not accidental.
 Consequently, the unwrapping behavior should also be consistent.
 
+\subsection{Exploration of potential ambiguities}
+
+Consider the examples discussed in \textcite{P3792R0}, which overload on \code{constant_wrapper} and
+the type it is convertible to.
+We can construct a similar case with the existing \code{constant_wrapper} operator overloads:
+\medskip\begin{lstlisting}
+struct V {
+  int data;
+
+  constexpr V(int x) : data(x) {}
+
+  template <auto N>
+  constexpr V(std::constant_wrapper<N, int> x) : data(x + 1) {}
+
+  friend constexpr V operator+(const V& a, const V& b) {
+    return a.data + b.data;
+  }
+};
+
+auto a = cw<V(1)> + 2;            //    V(3)
+auto b = cw<V(1)> + cw<2>;        // cw<V(3)>
+auto c = cw<V(1)> + cw<V(2)>;     // cw<V(3)>
+auto d = cw<V(1)> + cw<cw<2>>;    // cw<V(4)>
+auto e = cw<V(1)> + cw<cw<V(2)>>; // cw<V(3)>
+\end{lstlisting}
+
+\code{V} is structural, convertible from \code{int} and from \code{cw<N>} (where \code{N} is of type
+\code{int}).
+\begin{enumerate}
+  \item[\code{a}.] ADL finds \code{V::operator+} and \code{constant_wrapper::operator+}, but only
+    the former is viable.
+    The result is \code{V(3)} (“it's the thing it holds”).
+
+  \item[\code{b}.] ADL again finds both operators, but now \code{constant_wrapper::operator+} is
+    viable and requires no conversions.
+    The \code{constant_wrapper} operator evaluates \code{V(1) + 2}, which is \code{V(3)}.
+    The result is thus \code{cw<V(3)>} (“it can stay wrapped”).
+
+  \item[\code{c}.] See \code{b}.
+
+  \item[\code{d}.] ADL still finds both operators, but now \code{V::operator+} isn't even viable
+    anymore.
+    \code{constant_wrapper::operator+} evaluates \code{V(1) + cw<2>}, which calls
+    \code{V::operator+} and requires a conversion from \code{cw<2>} to \code{V}.
+    The conversion constructor adds \code{1} and \code{V(1) + cw<2>} thus equals \code{V(4)}.
+    It is then wrapped into \code{constant_wrapper} again, making the result \code{cw<V(4)>} (“it
+    can stay wrapped” and the inner evaluation is “the thing it holds”).
+
+  \item[\code{e}.] See \code{d}, except that we don't need a conversion from \code{cw<2>} to
+    \code{V} and thus the result is \code{cw<V(3)>}.
+\end{enumerate}
+
+We observe that the \code{constant_wrapper} “it can stay wrapped” operator takes precedence over the
+\code{V} “it's the thing it holds” operator.
+The same behavior is now proposed for call and subscript.
+Consider:
+
+\medskip\begin{lstlisting}
+struct Callable
+{
+  static constexpr int operator()(int) {
+    return 1;
+  }
+
+  template <auto N>
+  static constexpr int operator()(std::constant_wrapper<N, int>) {
+    return 2;
+  }
+};
+
+auto a = Callable{}(0);             // 1
+auto b = Callable{}(cw<0>);         // 2
+auto c = cw<Callable{}>(0);         // 1
+auto d = cw<Callable{}>(cw<0>);     // cw<1>
+auto e = cw<Callable{}>(cw<cw<0>>); // cw<2>
+\end{lstlisting}
+
+\code{a} and \code{b} are obvious.
+\code{c} is new with this paper and also fairly obvious (“it's the thing it holds”).
+\code{d} is the case one might consider ambiguous.
+Do we expect \code{cw<Callable{}>} to unwrap and then call the \code{constant_wrapper} overload?
+Or do we expect both to unwrap, call the \code{int} overload and wrap it again?
+Above, we observed that “it can stay wrapped” takes precedence over “it's the thing it holds”.
+\code{d} being deduced as \code{cw<1>} is consistent and follows this one simple rule.
+\code{e}, finally uses the \code{constant_wrapper} call operator to call \code{Callable{}(cw<0>)},
+which is \code{2}, wraps it again and thus is deduced as \code{cw<2>}.
+
+If we construct a 2-argument call operator, then all operands need to be \code{constant_wrapper}
+objects for “it can stay wrapped” to take precedence.
+A call like \code{cw<Callable2arg{}>(cw<1>, 2)} cannot produce a \code{constant_wrapper} (because
+\code{2} is a function argument and therefore not a constant expression in the operator body) and
+thus the expression evaluates as \code{Callable2arg(cw<1>, 2)}.
+
+\subsection{Example: Interaction with \code{bind_front} / \code{bind_back}}
+
+With this paper \std\code{bind_front(\std{}cw<\&T::memfun>, obj)} becomes useful.
+Without it, \std\code{bind_front(\std{}cw<\&T::memfun>, obj)} itself is well-formed, but calling
+\code{operator()} on it isn't.
+
+Consider:\medskip
+\begin{lstlisting}
+struct X {
+  int fun(int x);
+};
+
+int blackhole = 0;
+
+void eval(auto&& b) { blackhole = b(1); }
+
+void test1(X& t) {
+  eval(std::bind_front(&X::fun, t)); // indirect call in eval
+}
+
+void test2(X& t) {
+  eval(std::bind_front<&X::fun>(t)); // direct call in eval
+}
+
+void test3(X& t) {
+  eval(std::bind_front(std::cw<&X::fun>, t)); // direct call in eval
+}
+\end{lstlisting}
+
+All three are equivalent.
+However, \code{test3} compiles to the same code as \code{test2}\footnote{tested on GCC trunk with
+libstdc++} while \code{test1} is less efficient since it uses an indirect call in \code{eval}.
+
+Finally, let's consider a realistic example where \code{bind_back<fn>(...)} vs.
+\code{bind_back(cw<fn>, ...)} makes an observable difference.
+We use \std\code{bind_back} to create a unary transformation that returns a fifth for a given input.
+The \code{Scaler} implementation uses a \code{constant_wrapper} overload to optimize division for
+statically known divisors.
+
+\medskip\begin{lstlisting}
+template<typename T>
+  struct Scaler {
+    static constexpr T operator()(T v, T d) // #1
+    { return v / d; }
+
+    // optimization of the above: division by known constant doesn't need
+    // slow DIV instruction
+    template<auto D>
+    static constexpr T operator()(T v, std::constant_wrapper<D, T> d) // #2
+    { return v / d; }
+  };
+
+template<template<typename ...> class Tuple, typename... Args, typename S>
+constexpr auto transform_tuple(Tuple<Args...> t, S&& s) {
+  auto [... elems] = std::move(t);
+  return Tuple{ s(elems)... }; // CTAD
+}
+
+constexpr std::strided_slice slice {15, std::cw<20>, std::cw<5>};
+auto sl1 = transform_tuple(slice, std::bind_back<Scaler<int>{}>(std::cw<5>));
+auto sl2 = transform_tuple(slice, std::bind_back(std::cw<Scaler<int>{}>, std::cw<5>));
+\end{lstlisting}
+
+\begin{itemize}
+  \item [\code{sl1}:] \lstinline@std::strided_slice {3, 4, 1}@\\
+    The calls to \code{s(elems)...} in \code{transform_tuple} all invoke overload \code{\#2}.
+    For \code{s(elems...[0])} overload \code{\#2} is a perfect match.
+    \code{s(elems...[1])} calls \code{Scaler<int>{}(cw<20>, cw<5>)} for which overload \code{\#2} is
+    a better match (only one conversion).
+    Same for \code{s(elems...[2])}.
+
+  \item [\code{sl2}:] \lstinline@std::strided_slice {3, std::cw<4>, std::cw<1>}@\\
+    \code{s(elems...[0])} in \code{transform_tuple} calls \code{cw<Scaler<int>\{\}>(15, cw<5>)}
+    which invokes overload \code{\#2}.
+    \code{s(elems...[1])} calls \code{cw<Scaler<int>\{\}>(cw<20>, cw<5>)}.
+    Here all operands to the expression are \code{constant_wrapper}s and \code{operator() \#1} is
+    declared \code{constexpr}, which allows the “it can stay wrapped” behavior.
+    The result of \code{s(elems...[1])} therefore is \code{cw<4>}.
+    Likewise, \code{s(elems...[2])} evaluates to \code{cw<1>}.
+\end{itemize}
+
+In this example, a change from \code{bind_back<Callable>(cw<5>)} to \code{bind_back(cw<Callable>,
+cw<5>)} leads to a \emph{different} result.
+This is not necessarily wrong or bad.
+It can certainly be argued that the \code{sl2} result is better.
+It can also be argued that the \code{sl2} result is surprising.
+However, it still follows the simple rule of “it's the thing it holds, unless it can stay wrapped”.
+
+\section{Header for \code{constant_wrapper}}
+
+We should reconsider the placement of \code{constant_wrapper} in \code{<type_traits>}.
+\begin{enumerate}
+  \item With this change we use \emph{INVOKE}, which typically isn't available already in
+    \code{<type_traits>}.
+
+  \item \code{constant_wrapper} is not a trait.
+    \code{integral_constant} is not a trait either, but it is the type of many traits.
+    \code{constant_wrapper} is a utility (\code{<utility>}).
+
+  \item \code{<functional>}? Too heavy, in my opinion.
+\end{enumerate}
+
+For reference in libstdc++ we have the following dependencies:
+\medskip\begin{lstlisting}
+> grep include type_traits
+# include <bits/c++0x_warning.h>
+#include <bits/c++config.h>
+
+> grep include utility
+#include <bits/c++config.h>
+#include <bits/stl_relops.h>
+#include <bits/stl_pair.h>
+#include <type_traits>
+#include <bits/move.h>
+#include <initializer_list>
+#include <ext/numeric_traits.h>
+
+> grep include functional
+#include <bits/c++config.h>
+#include <bits/stl_function.h>
+#include <new>
+#include <tuple>
+#include <type_traits>
+#include <bits/functional_hash.h>
+#include <bits/invoke.h>
+#include <bits/refwrap.h>       // std::reference_wrapper and _Mem_fn_traits
+#include <bits/std_function.h>  // std::function
+# include <unordered_map>
+# include <vector>
+# include <array>
+# include <utility>
+# include <bits/stl_algo.h>
+# include <bits/ranges_cmp.h>
+# include <compare>
+\end{lstlisting}
+
+\section{Future Work?}
+
+With this paper, \code{constant_wrapper} almost achieves parity with what was proposed for
+\code{fn_t} / \code{function_wrapper} by \textcite{P3774R0} and \textcite{P3843R2}.
+The one feature still missing is the conversion to a different function pointer type via implicit
+creation of a thunk.
+This could be added as a member function (\code{to_func()}), which returns a different type that
+implements the conversion operator as shown in Section 4.2 of \cite{P3774R0}.
+
+
 \section{Wording}
 \subsection{Feature test macro}
 
@@ -186,24 +428,49 @@ In [const.wrap.class], insert:
 
 \begin{wgText}[{[const.wrap.class]}]
 \begin{codeblock}
-    // call and index
-    template<@\exposconcept{constexpr-param}@ T, @\exposconcept{constexpr-param}@... Args>
-      constexpr auto operator()(this T, Args...) noexcept
-        requires requires { constant_wrapper<T::value(Args::value...)>(); }
-          { return constant_wrapper<T::value(Args::value...)>{}; }
-    @\wgAdd{template<\exposconcept{constexpr-param} T, class... Args>}@
-      @\wgAdd{constexpr \seebelow{} operator()(this T, Args\&\&...) noexcept(\seebelow);}@
-    template<@\exposconcept{constexpr-param}@ T, @\exposconcept{constexpr-param}@... Args>
-      constexpr auto operator[](this T, Args...) noexcept
-        -> constant_wrapper<(T::value[Args::value...])>
-          { return {}; }
-    @\wgAdd{template<\exposconcept{constexpr-param} T, class... Args>}@
-      @\wgAdd{constexpr \seebelow{} operator[](this T, Args\&\&...) noexcept(\seebelow);}@
+    template<@\exposconcept{constexpr-param}@ L, @\exposconcept{constexpr-param}@ R>
+      friend constexpr auto operator->*(L, R) noexcept -> constant_wrapper<L::value->*(R::value)>
+        { return {}; }
+
+    @\wgRem{\rmfamily\itshape// call and index}@
+    @\wgRem{template<\exposconcept{constexpr-param} T, \exposconcept{constexpr-param}... Args>}@
+      @\wgRem{constexpr auto operator()(this T, Args...) noexcept}@
+        @\wgRem{requires requires \{ constant_wrapper<T::value(Args::value...)>(); \}}@
+          @\wgRem{\{ return constant_wrapper<T::value(Args::value...)>\{\}; \}}@
+    @\wgRem{template<\exposconcept{constexpr-param} T, \exposconcept{constexpr-param}... Args>}@
+      @\wgRem{constexpr auto operator[](this T, Args...) noexcept}@
+        @\wgRem{-> constant_wrapper<(T::value[Args::value...])>}@
+          @\wgRem{\{ return \{\}; \}}@
 
     // pseudo-mutators
     template<@\exposconcept{constexpr-param}@ T>
       constexpr auto operator++(this T) noexcept
         -> constant_wrapper<++Y> { return {}; }
+\end{codeblock}
+
+[\dots]
+
+\begin{codeblock}
+  };
+
+  template<@\exposid{cw-fixed-value}@ X, class>
+  struct constant_wrapper : @\exposid{cw-operators}@ {
+    static constexpr const auto & value = X.@\exposid{data}@;
+    using type = constant_wrapper;
+    using value_type = decltype(X)::@\exposid{type}@;
+
+    template<@\exposconcept{constexpr-param}@ R>
+      constexpr auto operator=(R) const noexcept
+        -> constant_wrapper<X = R::value> { return {}; }
+
+    constexpr operator decltype(auto)() const noexcept { return value; }
+
+    @\wgAdd{template<class... Args>}@
+      @\wgAdd{static constexpr decltype(auto) operator()(Args\&\&... args) noexcept(\seebelow)}@
+    @\wgAdd{template<class... Args>}@
+      @\wgAdd{static constexpr decltype(auto) operator[](Args\&\&... args) noexcept(\seebelow)}@
+  };
+}
 \end{codeblock}
 
 [\ldots]
@@ -221,48 +488,74 @@ Initialize elements of \exposid{data} with corresponding elements of \tcode{arr}
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{template<\exposconcept{constexpr-param} T, class... Args>}@
-  @\wgAdd{constexpr invoke_result_t<decltype(T::value), Args...> operator()(this T, Args\&\&...)}@
-    @\wgAdd{noexcept(is_nothrow_invocable_v<decltype(T::value), Args...>);}@
+@\wgAdd{template<class... Args>}@
+  @\wgAdd{static constexpr decltype(auto) operator()(Args\&\&... args) noexcept(\seebelow)}@
 \end{itemdecl}
 
 \begin{itemdescr}
 \pnumAdd
 \wgAdd{%
-\constraints
-The type of \tcode{T::value} is not a fundamental type and no type in
-\tcode{remove_cvref_t<Args>...} models \exposconcept{constexpr-param}.
+  Let \placeholder{call-expr} be
+  \tcode{constant_wrapper<value(remove_reference_t<Args>::value...)>\{\}} if all types in
+  \tcode{remove_reference_t<Args>...} satisfy \exposconcept{constexpr-param} and
+  \tcode{constant_wrapper<value(remove_reference_t<Args>::value...)>} is a valid type, otherwise
+  let \placeholder{call-expr} be \tcode{\mbox{\placeholder{INVOKE}}(value, std::forward<Args>(args)...)}.
 }
 
 \pnumAdd
 \wgAdd{%
-\returns
-\tcode{\mbox{\placeholdernc{INVOKE}(T::value, std::forward<Args>(args)...)}}\iref{func.require}.
+\constraints
+\placeholder{call-expr} is a valid expression.
+}
+
+\pnumAdd
+\wgAdd{%
+\effects
+Equivalent to: \tcode{return \placeholder{call-expr};}
+}
+
+\pnumAdd
+\wgAdd{%
+\remarks
+The expression inside \tcode{noexcept} is \tcode{noexcept(\placeholder{call-expr})}.
 }
 \end{itemdescr}
 
 \begin{itemdecl}
-@\wgAdd{template<\exposconcept{constexpr-param} T, class... Args>}@
-  @\wgAdd{constexpr \seebelow{} operator[](this T, Args\&\&...) noexcept(\seebelow);}@
+@\wgAdd{template<class... Args>}@
+  @\wgAdd{static constexpr decltype(auto) operator[](Args\&\&... args) noexcept(\seebelow)}@
 \end{itemdecl}
 
 \begin{itemdescr}
 \pnumAdd
 \wgAdd{%
-\constraints
-The type of \tcode{T::value} is not a fundamental type and no type in
-\tcode{remove_cvref_t<Args>...} models \exposconcept{constexpr-param}.
+  Let \placeholder{subscr-expr} be
+  \tcode{constant_wrapper<value[remove_reference_t<Args>::value...]>\{\}} if all types in
+  \tcode{remove_reference_t<Args>...} satisfy \exposconcept{constexpr-param} and
+  \tcode{constant_wrapper<value[remove_reference_t<Args>::value...]>} is a valid type, otherwise
+  let \placeholder{subscr-expr} be \tcode{value[std::forward<Args>(args)...]}.
 }
 
 \pnumAdd
 \wgAdd{%
-\returns
-\tcode{T::value[std::forward<Args>(args)...]}.
+\constraints
+\placeholder{subscr-expr} is a valid expression.
+}
+
+\pnumAdd
+\wgAdd{%
+\effects
+Equivalent to: \code{return \placeholder{subscr-expr};}
+}
+
+\pnumAdd
+\wgAdd{%
+\remarks
+The expression inside \tcode{noexcept} is \tcode{noexcept(\placeholder{subscr-expr})}.
 }
 \end{itemdescr}
 
 \end{wgText}
 
-%\pagebreak
 \end{document}
 % vim: sw=2 sts=2 ai et tw=100
