@@ -1,11 +1,10 @@
 \newcommand\wgTitle{\code{constant\_wrapper} should unwrap on call and subscript}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>\\
   Tomasz Kamiński <tomaszkam@gmail.com>}
-\newcommand\wgDocumentNumber{P3978R1}
+\newcommand\wgDocumentNumber{P3978R2}
 \newcommand\wgGroup{LEWG}
 \newcommand\wgTarget{\CC{}26}
-\newcommand\wgAcknowledgements{Thanks to Barry Revzin for helpful feedback on the first draft of
-this paper.}
+\newcommand\wgAcknowledgements{Thanks to Barry Revzin for helpful feedback.}
 
 \usepackage{mymacros}
 \usepackage{wg21}
@@ -29,6 +28,7 @@ this paper.}
 \begin{wgTitlepage}
   This paper proposes unwrapping overloads of \code{operator()} and \code{operator[]} to
   \code{constant_wrapper} while making them all \code{static}.
+  We also change the call operator to always use \placeholder{INVOKE}.
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
@@ -359,6 +359,52 @@ It can certainly be argued that the \code{sl2} result is better.
 It can also be argued that the \code{sl2} result is surprising.
 However, it still follows the simple rule of “it's the thing it holds, unless it can stay wrapped”.
 
+\subsection{\placeholder{INVOKE} should be used (or not used) consistently}
+
+\cite{P3978R1} proposed to use \placeholder{INVOKE} for the unwrapping call operator and otherwise
+apply \code{operator()} directly on \code{value}.
+This is inconsistent and not proposed anymore.
+Instead this paper proposes to use \placeholder{INVOKE} in both cases.
+Relative to \cite{P3978R1}, this paper's wording has the following change:
+\begin{wgText}\setcounter{Paras}{4}
+\begin{itemdescr}
+\pnum
+  Let \placeholder{call-expr} be
+  \tcode{constant_wrapper<\wgChange{value(}{\placeholder{INVOKE}(value, }remove_reference_t<Args>::value...)>\{\}} if all types in
+  \tcode{remove_reference_t<Args>...} satisfy \exposconcept{constexpr-param} and
+  \tcode{constant_wrapper<\wgChange{value(}{\placeholder{INVOKE}(value, }remove_reference_t<Args>::value...)>} is a valid type, otherwise
+  let \placeholder{call-expr} be \tcode{\placeholder{INVOKE}(value, std::forward<Args>(args)...)}.
+\end{itemdescr}
+\end{wgText}
+Example:
+\medskip\begin{lstlisting}[style=Vc]
+struct T {
+  int v;
+  constexpr int add(int x) { return v + x; }
+};
+
+auto a = cw<&T::add>(cw<T{1}>, cw<2>) // -> cw<3>
+\end{lstlisting}
+
+This seems to be the right choice for consistency.
+However, we did not use \placeholder{INVOKE} initially for \code{constant_wrapper} because the
+intent was to model the exact interface of the underlying type.
+Using \placeholder{INVOKE}, we are deviating from that choice, giving the call operator more
+functionality than the type it wraps.
+This is also true for the “it's the thing it holds” case.
+The other choice for resolving the inconsistency is the removal of \placeholder{INVOKE} from the
+\code{constant_wrapper} wording altogether:
+\begin{wgText}\setcounter{Paras}{4}
+\begin{itemdescr}
+\pnum
+  Let \placeholder{call-expr} be
+  \tcode{constant_wrapper<\wgChange{\placeholder{INVOKE}(value, }{value(}remove_reference_t<Args>::value...)>\{\}} if all types in
+  \tcode{remove_reference_t<Args>...} satisfy \exposconcept{constexpr-param} and
+  \tcode{constant_wrapper<\wgChange{\placeholder{INVOKE}(value, }{value(}remove_reference_t<Args>::value...)>} is a valid type, otherwise
+  let \placeholder{call-expr} be \tcode{\wgChange{\placeholder{INVOKE}(value, }{value(}std::forward<Args>(args)...)}.
+\end{itemdescr}
+\end{wgText}
+
 \section{Header for \code{constant_wrapper}}
 
 We should reconsider the placement of \code{constant_wrapper} in \code{<type_traits>}.
@@ -424,7 +470,7 @@ In [version.syn] bump the \code{__cpp_lib_constant_wrapper} version.
 
 \subsection{Modify [const.wrap.class]}
 
-In [const.wrap.class], insert:
+In [const.wrap.class], change:
 
 \begin{wgText}[{[const.wrap.class]}]
 \begin{codeblock}
@@ -496,9 +542,9 @@ Initialize elements of \exposid{data} with corresponding elements of \tcode{arr}
 \pnumAdd
 \wgAdd{%
   Let \placeholder{call-expr} be
-  \tcode{constant_wrapper<value(remove_reference_t<Args>::value...)>\{\}} if all types in
+  \tcode{constant_wrapper<\placeholder{INVOKE}(value, remove_reference_t<Args>::value...)>\{\}} if all types in
   \tcode{remove_reference_t<Args>...} satisfy \exposconcept{constexpr-param} and
-  \tcode{constant_wrapper<value(remove_reference_t<Args>::value...)>} is a valid type, otherwise
+  \tcode{constant_wrapper<\placeholder{INVOKE}(value, remove_reference_t<Args>::value...)>} is a valid type, otherwise
   let \placeholder{call-expr} be \tcode{\mbox{\placeholder{INVOKE}}(value, std::forward<Args>(args)...)}.
 }
 
