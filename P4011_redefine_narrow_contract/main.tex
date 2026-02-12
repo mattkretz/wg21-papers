@@ -1,0 +1,128 @@
+\newcommand\wgTitle{Redefining \emph{narrow contract}}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{P4011R0}
+\newcommand\wgGroup{EWG}
+%\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{Thanks to Barry Revzin for helpful feedback.}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+
+\addbibresource{extra.bib}
+
+\newcommand\wglink[1]{\href{https://wg21.link/#1}{#1}}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper provides a simple revised definition of narrow and wide contracts.
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+\input{strawpolls}
+
+\section{The Problem}
+
+\textcite{N3248} defined the terms \emph{narrow} and \emph{wide contract} in terms of
+\emph{undefined behavior}:
+
+\begin{quote}
+  \textbf{Wide Contracts}
+
+  A wide contract for a function or operation does not specify any undefined behavior.
+  Such a contract has no preconditions: A function with a wide contract places no additional
+  constraints on its arguments, on any object state, nor on any external global state.
+  Examples of functions having wide contracts would be \code{vector<T>::begin()} and
+  \code{vector<T>::at(size_type)}.
+  Examples of functions not having a wide contract would be \code{vector<T>::front()} and
+  \code{vector<T>::operator[](size_type)}.
+
+  \textbf{Narrow Contracts}
+
+  A narrow contract is a contract which is not wide.
+  Narrow contracts for a functions or operations result in undefined behavior when called in a
+  manner that violates the documented contract.
+  Such a contract specifies at least one precondition involving its arguments, object state, or
+  some external global state, such as the initialization of a static object.
+  Good examples of standard functions with narrow contracts are \code{vector<T>::front()} and
+  \code{vector<T>::operator[](size_type)}.
+\end{quote}
+
+Let's consider a trivial function \code{f} that results in UB when its argument is negative:
+\medskip\begin{lstlisting}
+void f(int x) {
+  if (x < 0) std::unreachable();
+}
+\end{lstlisting}
+Clearly, according to the definition above, this function has a precondition: \code{x >= 0}.
+If we now encode that precondition using P2900 syntax we get:
+\medskip\begin{lstlisting}[style=Vc]
+void f(int x) pre(x >= 0) {
+  if (x < 0) std::unreachable();
+}
+\end{lstlisting}
+The trouble only begins when we introduce syntax that not only encodes the precondition, but at the
+same time unconditionally removes the undefined behavior:
+\medskip\begin{lstlisting}[style=Vc]
+void f(int x) pre!(x >= 0) {
+  if (x < 0) std::unreachable();
+}
+\end{lstlisting}
+Since calling \code{f} can never lead to UB, the function now has a \emph{wide contract} according
+to the above definition.
+This is the reason why some say an unconditionally enforced precondition check is not a contract
+check anymore.
+
+I believe we need to revise the definition of narrow and wide contract, and thus the implied
+definition of a \emph{contract check}.
+
+\section{A new Definition}
+
+\textbf{Definition:}
+A function has a \emph{narrow contract} if there exists at least one input (this includes
+indirect/global state that affects the function) for which the call is erroneous.
+Otherwise, the function has a \emph{wide contract}.
+
+\bigskip
+
+\noindent\textbf{Consequence:}
+A human — and potentially also a tool — can tell whether a specific call to a function is a bug in
+the program or not.
+
+\bigskip
+
+Here “erroneous” does not have to imply erroneous behavior (but see below).
+This definition aims to decouple the discussion from \emph{behavior} of the function.
+For some of us this new definition makes no difference, for some it hopefully does.
+The goal is to help us speak a common language.
+
+\section{A connection to erroneous behavior?}
+
+Consider:
+\medskip\begin{lstlisting}[style=Vc]
+int g(int x) pre(x >= 0) {
+  if (x < 0) return 0;
+  else return x + INT_MIN;
+}
+\end{lstlisting}
+
+Here, the function has a precondition but also a certain behavior in case the precondition is not
+met.
+This is what we expect of EB\@: it is still detectable as a bug in the program, but the program can
+continue without invoking UB\@.
+
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=100
