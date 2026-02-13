@@ -26,3 +26,14 @@
 \item Fix incorrect constraint in \code{hypot} expample.
 \item Split wording section into the \code{consteval} ctor part and the [simd.math] part.
 \end{revision}
+
+\begin{revision}
+\item Move \code{consteval} constructor discussion and wording into a separate paper \parencite{P4012R0}.
+\item In [simd.math] wording, move all functions with the same name together.
+\item Fix return type of additional overloads of \code{isgreater},
+  \code{islessequal}, \code{islessgreater}, and \code{isunordered}.
+\item Add missing overloads for \code{isgreaterequal}, \code{isless}.
+\item Simplify placeholder functions to \code{static_cast} to prvalue rather than const-ref.
+  Since \code{basic_vec} types are trivially copyable a copy can be elided by
+  the implementation as-if.
+\end{revision}

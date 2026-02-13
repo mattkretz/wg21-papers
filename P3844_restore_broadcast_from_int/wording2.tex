@@ -1,140 +1,3 @@
-\section{Wording for consteval broadcast}
-
-\subsection{Feature test macro}
-
-In [version.syn] bump the \code{__cpp_lib_simd} version.
-
-\subsection{Modify [simd.expos]}
-
-In [simd.expos], insert:
-\begin{wgText}[{[simd.expos]}]
-\begin{codeblock}
-@\wgAdd{template<class From, class To>}@
-  @\wgAdd{concept \defexposconceptnc{simd-consteval-broadcast-arg} = \seebelownc;}@                  @\wgAdd{\rmfamily\itshape// \expos}@
-
-template<class V, class T> using @\exposid{make-compatible-simd-t}@ = @\seebelow@; // \expos
-
-template<class V>
-  concept @\defexposconceptnc{simd-vec-type}@ =                                            // \expos
-    @\libconcept{same_as}@<V, basic_vec<typename V::value_type, typename V::abi_type>> &&
-    is_default_constructible_v<V>;
-\end{codeblock}
-\end{wgText}
-
-\subsection{Modify [simd.expos.defn]}
-
-In [simd.expos.defn], insert:
-\begin{wgText}[{[simd.expos.defn]}]
-\begin{itemdecl}
-@\wgAdd{template<class From, class To> concept \defexposconceptnc{simd-consteval-broadcast-arg} = \seebelownc;}@
-\end{itemdecl}
-
-\begin{itemdescr}
-\pnumAdd
-\wgAdd{%
-\exposconcept{simd-consteval-broadcast-arg} subsumes
-\exposconcept{explicitly-convertible-to}.
-}
-
-\pnumAdd
-\wgAdd{%
-\tcode{From} satisfies
-\tcode{\exposconcept{simd-consteval-broadcast-arg}<To>} only if}
-\begin{itemize}
-  \wgItemAdd\wgAdd{\tcode{remove_cvref_t<From>} is an arithmetic type,}
-  \wgItemAdd\wgAdd{\tcode{From} satisfies \tcode{\libconcept{convertible_to}<To>},}
-  \wgItemAdd\wgAdd{the conversion from \tcode{remove_cvref_t<From>} to \tcode{To} is not value-preserving, and}
-  \wgItemAdd\wgAdd{either}
-  \begin{itemize}
-    \wgItemAdd\wgAdd{\tcode{common_type_t<From, To>} is \tcode{To},}
-    \wgItemAdd\wgAdd{\tcode{To} is integral and \tcode{remove_cvref_t<From>} is \tcode{int}, or}
-    \wgItemAdd\wgAdd{\tcode{To} satisfies \tcode{unsigned_integral} and \tcode{remove_cvref_t<From>} is \tcode{unsigned int}.}
-  \end{itemize}
-\end{itemize}
-\end{itemdescr}
-\end{wgText}
-
-\subsection{Modify [simd.overview]}
-
-In [simd.overview], change:
-\begin{wgText}[{[simd.overview]}]
-\begin{codeblock}
-    // \iref{simd.ctor}, \tcode{basic_vec} constructors
-    template<@\wgChange{class}{\exposconcept{explicitly-convertible-to}<value_type>}@ U>
-      constexpr explicit(@\seebelow@) basic_vec(U&& value) noexcept;
-    @\wgAdd{template<\exposconcept{simd-consteval-broadcast-arg}<value_type> U>}@
-      @\wgAdd{consteval basic_vec(U\&\& x)}@
-    template<class U, class UAbi>
-      constexpr explicit(@\seebelow@) basic_vec(const basic_vec<U, UAbi>&) noexcept;
-\end{codeblock}
-\end{wgText}
-
-\subsection{Modify [simd.ctor]}
-
-In [simd.ctore], change:
-\begin{wgText}[{[simd.ctor]}]
-\begin{itemdecl}
-template<@\wgChange{class}{\exposconcept{explicitly-convertible-to}<value_type>}@ U>
-  constexpr explicit(@\seebelow@) basic_vec(U&& value) noexcept;
-\end{itemdecl}
-
-\begin{itemdescr}
-\pnum
-Let \tcode{From} denote the type \tcode{remove_cvref_t<U>}.
-
-\pnumRem
-\wgRem{\constraints
-\tcode{value_type} satisfies \tcode{\libconcept{constructible_from}<U>}.}
-
-\pnum
-\effects
-Initializes each element to the value of the argument after conversion to
-\tcode{value_type}.
-
-\pnum
-\remarks
-The expression inside \tcode{explicit} evaluates to \tcode{false} if and only if
-\tcode{U} satisfies \tcode{\libconcept{convertible_to}<value_type>}, and either
-\begin{itemize}
- \item
-   \tcode{From} is not an arithmetic type and does not satisfy
-   \exposconcept{constexpr-wrapper-like},
- \item
-   \tcode{From} is an arithmetic type and the conversion from \tcode{From} to
-   \tcode{value_type} is value-preserving\iref{simd.general}, or
- \item
-   \tcode{From} satisfies \exposconcept{constexpr-wrapper-like},
-   \tcode{remove_const_t<decltype(From::value)>} is an arithmetic type, and
-   \tcode{From::value} is representable by \tcode{value_type}.
-\end{itemize}
-\end{itemdescr}
-
-\begin{itemdecl}
-@\wgAdd{template<\exposconcept{simd-consteval-broadcast-arg}<value_type> U> consteval basic_vec(U\&\& x)}@
-\end{itemdecl}
-
-\begin{itemdescr}
-\pnumAdd
-\wgAdd{%
-\expects
-The value of \tcode{x} is equal to the value of \tcode{x} after conversion to \tcode{value_type}.
-}
-
-\pnumAdd
-\wgAdd{\effects}
-\wgAdd{Initializes each element to the value of the argument after conversion to
-\tcode{value_type}.}
-
-\pnumAdd
-\wgAdd{%
-\remarks
-An expression that violates the precondition in the \expects element is not a core constant
-expression\iref{expr.const}.
-}
-\end{itemdescr}
-\end{wgText}
-
-
 \section{Wording for [simd.math]}
 
 \subsection{Modify [simd.expos]}
@@ -198,8 +61,8 @@ Let \tcode{x} denote an lvalue of type \tcode{const T}.
 \tcode{\exposid{deduced-vec-t}<T>} is an alias for
 \begin{itemize}
   \wgItemRem\color{black}
-   \tcode{decltype(x + x)}, if the type of \tcode{x + x} is an enabled
-   specialization of \tcode{basic_vec}\wgRem{; otherwise}
+   \tcode{decltype(x + x)}\wgRem{, if the type of \tcode{x + x} is an enabled
+   specialization of \tcode{basic_vec}; otherwise}
    %TODO: convertible_to<const T&, const decltype(x + x)&> ?
   \wgItemRem[\tcode{void}]\color{black}.
 \end{itemize}
@@ -283,6 +146,10 @@ In [simd.syn], change:
   template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> atan(const V& x);
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ atan2(const V@\wgRem{0}@& y, const V@\wgRem{1}@& x);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> atan2(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> atan2(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> cos(const V& x);
   template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> sin(const V& x);
   template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> tan(const V& x);
@@ -322,10 +189,33 @@ In [simd.syn], change:
   template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> fabs(const V& x);
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ hypot(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1, class V2}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1, V2>}{\exposid{deduced-vec-t}<V>}@ hypot(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y, const V@\wgRem{2}@& z);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y}@
+                                     @\wgAdd{const V\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const V\& y}@
+                                     @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const \exposid{deduced-vec-t}<V>\& y}@
+                                     @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ pow(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> pow(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> pow(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> sqrt(const V& x);
   template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> erf(const V& x);
   template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> erfc(const V& x);
@@ -349,26 +239,90 @@ In [simd.syn], change:
     constexpr @\exposid{deduced-vec-t}@<V> trunc(const V& x);
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ fmod(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmod(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmod(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ remainder(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> remainder(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> remainder(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@
       remquo(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y, rebind_t<int, @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@>* quo);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V>}@
+      @\wgAdd{remquo(const \exposid{deduced-vec-t}<V>\& x, const V\& y, rebind_t<int, \exposid{deduced-vec-t}<V>>* quo);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V>}@
+      @\wgAdd{remquo(const V\& x, const \exposid{deduced-vec-t}<V>\& y, rebind_t<int, \exposid{deduced-vec-t}<V>>* quo);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ copysign(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> copysign(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> copysign(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ nextafter(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> nextafter(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> nextafter(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ fdim(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fdim(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fdim(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ fmax(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmax(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmax(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ fmin(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmin(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmin(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1, class V2}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1, V2>}{\exposid{deduced-vec-t}<V>}@ fma(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y, const V@\wgRem{2}@& z);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y}@
+                                   @\wgAdd{const V\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const \exposid{deduced-vec-t}<V>\& x, const V\& y}@
+                                   @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const V\& x, const \exposid{deduced-vec-t}<V>\& y}@
+                                   @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
   template<@\wgChange{class V0, class V1, class V2}{\exposid{math-floating-point} V}@>
     constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1, V2>}{\exposid{deduced-vec-t}<V>}@
       lerp(const V@\wgRem{0}@& a, const V@\wgRem{1}@& b, const V@\wgRem{2}@& t) noexcept;
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y}@
+                                    @\wgAdd{const V\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const \exposid{deduced-vec-t}<V>\& x, const V\& y}@
+                                    @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const \exposid{deduced-vec-t}<V>\& y}@
+                                    @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
   template<@\exposconcept{math-floating-point}@ V>
     constexpr rebind_t<int, @\exposid{deduced-vec-t}@<V>> fpclassify(const V& x);
   template<@\exposconcept{math-floating-point}@ V>
@@ -384,21 +338,53 @@ In [simd.syn], change:
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr typename @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@::mask_type
       isgreater(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type isgreater(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type isgreater(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr typename @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@::mask_type
       isgreaterequal(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type}@
+      @\wgAdd{isgreaterequal(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type}@
+      @\wgAdd{isgreaterequal(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr typename @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@::mask_type
       isless(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type isless(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type isless(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr typename @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@::mask_type
       islessequal(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type}@
+      @\wgAdd{islessequal(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type}@
+      @\wgAdd{islessequal(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr typename @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@::mask_type
       islessgreater(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type}@
+      @\wgAdd{islessgreater(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type}@
+      @\wgAdd{islessgreater(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     constexpr typename @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@::mask_type
       isunordered(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type}@
+      @\wgAdd{isunordered(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type}@
+      @\wgAdd{isunordered(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\exposconcept{math-floating-point}@ V>
     @\exposid{deduced-vec-t}@<V> assoc_laguerre(const rebind_t<unsigned, @\exposid{deduced-vec-t}@<V>>& n,
                                     const rebind_t<unsigned, @\exposid{deduced-vec-t}@<V>>& m, const V& x);
@@ -407,24 +393,68 @@ In [simd.syn], change:
                                     const rebind_t<unsigned, @\exposid{deduced-vec-t}@<V>>& m, const V& x);
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ beta(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> beta(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> beta(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\exposconcept{math-floating-point}@ V> @\exposid{deduced-vec-t}@<V> comp_ellint_1(const V& k);
   template<@\exposconcept{math-floating-point}@ V> @\exposid{deduced-vec-t}@<V> comp_ellint_2(const V& k);
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ comp_ellint_3(const V@\wgRem{0}@& k, const V@\wgRem{1}@& nu);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> comp_ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> comp_ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ cyl_bessel_i(const V@\wgRem{0}@& nu, const V@\wgRem{1}@& x);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_i(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_i(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ cyl_bessel_j(const V@\wgRem{0}@& nu, const V@\wgRem{1}@& x);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_j(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_j(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ cyl_bessel_k(const V@\wgRem{0}@& nu, const V@\wgRem{1}@& x);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_k(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_k(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ cyl_neumann(const V@\wgRem{0}@& nu, const V@\wgRem{1}@& x);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_neumann(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_neumann(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ ellint_1(const V@\wgRem{0}@& k, const V@\wgRem{1}@& phi);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_1(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_1(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
     @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ ellint_2(const V@\wgRem{0}@& k, const V@\wgRem{1}@& phi);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_2(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_2(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
   template<@\wgChange{class V0, class V1, class V2}{\exposid{math-floating-point} V}@>
     @\wgChange{\exposid{math-common-simd-t}<V0, V1, V2>}{\exposid{deduced-vec-t}<V>}@ ellint_3(const V@\wgRem{0}@& k, const V@\wgRem{1}@& nu, const V@\wgRem{2}@& phi);
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
+    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
   template<@\exposconcept{math-floating-point}@ V> @\exposid{deduced-vec-t}@<V> expint(const V& x);
   template<@\exposconcept{math-floating-point}@ V>
     @\exposid{deduced-vec-t}@<V> hermite(const rebind_t<unsigned, @\exposid{deduced-vec-t}@<V>>& n, const V& x);
@@ -443,158 +473,6 @@ In [simd.syn], change:
   template<@\exposconcept{math-floating-point}@ V>
     @\exposid{deduced-vec-t}@<V>
       sph_neumann(const rebind_t<unsigned, @\exposid{deduced-vec-t}@<V>>& n, const V& x);
-
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmod(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmod(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> remainder(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> remainder(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> copysign(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> copysign(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> nextafter(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> nextafter(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fdim(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fdim(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmax(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmax(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmin(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmin(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> isgreater(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> isgreater(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> islessequal(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> islessequal(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> islessgreater(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> islessgreater(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> isunordered(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> isunordered(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> atan2(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> atan2(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> pow(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> pow(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> beta(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> beta(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> comp_ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> comp_ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_i(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_i(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_j(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_j(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_k(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_k(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_neumann(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> cyl_neumann(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_1(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_1(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_2(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_2(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V>}@
-      @\wgAdd{remquo(const \exposid{deduced-vec-t}<V>\& x, const V\& y, rebind_t<int, \exposid{deduced-vec-t}<V>>* quo);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V>}@
-      @\wgAdd{remquo(const V\& x, const \exposid{deduced-vec-t}<V>\& y, rebind_t<int, \exposid{deduced-vec-t}<V>>* quo);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y}@
-                                   @\wgAdd{const V\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const \exposid{deduced-vec-t}<V>\& x, const V\& y}@
-                                   @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const V\& x, const \exposid{deduced-vec-t}<V>\& y}@
-                                   @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y}@
-                                     @\wgAdd{const V\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const V\& y}@
-                                     @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const \exposid{deduced-vec-t}<V>\& y}@
-                                     @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y}@
-                                    @\wgAdd{const V\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const \exposid{deduced-vec-t}<V>\& x, const V\& y}@
-                                    @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const \exposid{deduced-vec-t}<V>\& y}@
-                                    @\wgAdd{const \exposid{deduced-vec-t}<V>\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-  @\wgAdd{template<\exposconcept{math-floating-point} V>}@
-    @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
 
   // \iref{simd.bit}, bit manipulation
   template<@\exposconcept{simd-vec-type}@ V> constexpr V byteswap(const V& v) noexcept;
@@ -641,22 +519,62 @@ template<@\exposconcept{math-floating-point}@ V>
   constexpr rebind_t<long long int, @\exposid{deduced-vec-t}@<V>> llround(const V& x);
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ fmod(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmod(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmod(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\exposconcept{math-floating-point}@ V>
   constexpr @\exposid{deduced-vec-t}@<V> trunc(const V& x);
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ remainder(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> remainder(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> remainder(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ copysign(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> copysign(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> copysign(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ nextafter(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> nextafter(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> nextafter(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ fdim(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fdim(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fdim(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ fmax(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmax(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmax(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ fmin(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmin(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmin(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1, class V2}{\exposconcept{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1, V2>}{\exposid{deduced-vec-t}<V>}@ fma(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y, const V@\wgRem{2}@& z);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
 template<@\exposconcept{math-floating-point}@ V>
   constexpr rebind_t<int, @\exposid{deduced-vec-t}@<V>> fpclassify(const V& x);
 template<@\exposconcept{math-floating-point}@ V>
@@ -671,17 +589,43 @@ template<@\exposconcept{math-floating-point}@ V>
   constexpr typename @\exposid{deduced-vec-t}@<V>::mask_type signbit(const V& x);
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr typename @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@::mask_type isgreater(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type isgreater(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type isgreater(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr typename @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@::mask_type
     isgreaterequal(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type}@
+    @\wgAdd{isgreaterequal(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type}@
+    @\wgAdd{isgreaterequal(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr typename @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@::mask_type isless(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type isless(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type isless(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr typename @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@::mask_type islessequal(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type islessequal(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type islessequal(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr typename @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@::mask_type islessgreater(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type islessgreater(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type islessgreater(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr typename @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@::mask_type isunordered(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type isunordered(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr typename \exposid{deduced-vec-t}<V>::mask_type isunordered(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -691,9 +635,9 @@ template with the name \tcode{\placeholder{math-func}}.
 Let \tcode{\placeholder{math-func-vec}} denote:
 \begin{codeblock}
 template<class... Args>
-Ret @\placeholder{math-func-vec}@(Args... args) {
+Ret @\placeholder{math-func-vec}@(@\wgAdd{const }@Args@\wgAdd{\&}@... args) {
   return Ret([&](@\exposid{simd-size-type}@ i) {
-    return @\placeholder{math-func}(\wgChange{\exposid{make-compatible-simd-t}<Ret, Args>}{static_cast<const \exposid{deduced-vec-t}<V>\&>}@(args)[i]...);
+    return @\placeholder{math-func}(\wgChange{\exposid{make-compatible-simd-t}<Ret, Args>}{\exposid{deduced-vec-t}<V>}@(args)[i]...);
   });
 }
 \end{codeblock}
@@ -777,6 +721,10 @@ template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec
 template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> atan(const V& x);
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ atan2(const V@\wgRem{0}@& y, const V@\wgRem{1}@& x);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> atan2(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> atan2(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> cos(const V& x);
 template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> sin(const V& x);
 template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> tan(const V& x);
@@ -797,10 +745,30 @@ template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec
 template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> cbrt(const V& x);
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ hypot(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1, class V2}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1, V2>}{\exposid{deduced-vec-t}<V>}@ hypot(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y, const V@\wgRem{2}@& z);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ pow(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> pow(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> pow(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> sqrt(const V& x);
 template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> erf(const V& x);
 template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> erfc(const V& x);
@@ -808,6 +776,18 @@ template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec
 template<@\exposconcept{math-floating-point}@ V> constexpr @\exposid{deduced-vec-t}@<V> tgamma(const V& x);
 template<@\wgChange{class V0, class V1, class V2}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1, V2>}{\exposid{deduced-vec-t}<V>}@ lerp(const V@\wgRem{0}@& a, const V@\wgRem{1}@& b, const V@\wgRem{2}@& t) noexcept;
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
 @\wgRem{template<\exposconcept{math-floating-point} V>}@
   @\wgRem{\exposid{deduced-vec-t}<V> assoc_laguerre(const rebind_t<unsigned, \exposid{deduced-vec-t}<V>>\& n, const}@
     @\wgRem{rebind_t<unsigned, \exposid{deduced-vec-t}<V>>\& m, const V\& x);}@
@@ -816,24 +796,68 @@ template<@\wgChange{class V0, class V1, class V2}{\exposid{math-floating-point} 
     @\wgRem{rebind_t<unsigned, \exposid{deduced-vec-t}<V>>\& m, const V\& x);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ beta(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> beta(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> beta(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\exposconcept{math-floating-point}@ V> @\exposid{deduced-vec-t}@<V> comp_ellint_1(const V& k);
 template<@\exposconcept{math-floating-point}@ V> @\exposid{deduced-vec-t}@<V> comp_ellint_2(const V& k);
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ comp_ellint_3(const V@\wgRem{0}@& k, const V@\wgRem{1}@& nu);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> comp_ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> comp_ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ cyl_bessel_i(const V@\wgRem{0}@& nu, const V@\wgRem{1}@& x);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_i(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_i(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ cyl_bessel_j(const V@\wgRem{0}@& nu, const V@\wgRem{1}@& x);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_j(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_j(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ cyl_bessel_k(const V@\wgRem{0}@& nu, const V@\wgRem{1}@& x);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_k(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_k(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ cyl_neumann(const V@\wgRem{0}@& nu, const V@\wgRem{1}@& x);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_neumann(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_neumann(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ ellint_1(const V@\wgRem{0}@& k, const V@\wgRem{1}@& phi);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_1(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_1(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ ellint_2(const V@\wgRem{0}@& k, const V@\wgRem{1}@& phi);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_2(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_2(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
 template<@\wgChange{class V0, class V1, class V2}{\exposid{math-floating-point} V}@>
   @\wgChange{\exposid{math-common-simd-t}<V0, V1, V2>}{\exposid{deduced-vec-t}<V>}@ ellint_3(const V@\wgRem{0}@& k, const V@\wgRem{1}@& nu, const V@\wgRem{2}@& phi);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
 template<@\exposconcept{math-floating-point}@ V> @\exposid{deduced-vec-t}@<V> expint(const V& x);
 @\wgRem{template<\exposconcept{math-floating-point} V> \exposid{deduced-vec-t}<V> hermite(const rebind_t<unsigned,}@
 @\wgRem{\exposid{deduced-vec-t}<V>>\& n, const V\& x);}@
@@ -861,7 +885,7 @@ Let \tcode{\placeholder{math-func-vec}} denote:
 template<class... Args>
 Ret @\placeholder{math-func-vec}(\wgAdd{const }Args\wgAdd{\&}@... args) {
   return Ret([&](@\exposid{simd-size-type}@ i) {
-    return @\placeholder{math-func}(\wgChange{\exposid{make-compatible-simd-t}<Ret, Args>}{static_cast<const \exposid{deduced-vec-t}<V>\&>}@(args)[i]...);
+    return @\placeholder{math-func}(\wgChange{\exposid{make-compatible-simd-t}<Ret, Args>}{\exposid{deduced-vec-t}<V>}@(args)[i]...);
   });
 }
 \end{codeblock}
@@ -979,6 +1003,12 @@ Sets \tcode{*exp} to \tcode{ret.second}.
 template<@\wgChange{class V0, class V1}{\exposid{math-floating-point} V}@>
   constexpr @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@ remquo(const V@\wgRem{0}@& x, const V@\wgRem{1}@& y,
                           rebind_t<int, @\wgChange{\exposid{math-common-simd-t}<V0, V1>}{\exposid{deduced-vec-t}<V>}@>* quo);
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V>}@
+    @\wgAdd{remquo(const \exposid{deduced-vec-t}<V>\& x, const V\& y, rebind_t<int, \exposid{deduced-vec-t}<V>>* quo);}@
+@\wgAdd{template<\exposconcept{math-floating-point} V>}@
+  @\wgAdd{constexpr \exposid{deduced-vec-t}<V>}@
+    @\wgAdd{remquo(const V\& x, const \exposid{deduced-vec-t}<V>\& y, rebind_t<int, \exposid{deduced-vec-t}<V>>* quo);}@
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -1046,165 +1076,8 @@ Sets \tcode{*iptr} to \tcode{ret.second}.
 \returns
 \tcode{ret.first}.
 \end{itemdescr}
-
-\begin{itemdecl}
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmod(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmod(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> remainder(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> remainder(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> copysign(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> copysign(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> nextafter(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> nextafter(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fdim(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fdim(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmax(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmax(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmin(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fmin(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> isgreater(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> isgreater(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> islessequal(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> islessequal(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> islessgreater(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> islessgreater(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> isunordered(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> isunordered(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> atan2(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> atan2(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> pow(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> pow(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> beta(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> beta(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> comp_ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> comp_ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_i(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_i(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_j(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_j(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_k(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_bessel_k(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_neumann(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> cyl_neumann(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_1(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_1(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_2(const \exposid{deduced-vec-t}<V>\& x, const V\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_2(const V\& x, const \exposid{deduced-vec-t}<V>\& y);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V>}@
-    @\wgAdd{remquo(const \exposid{deduced-vec-t}<V>\& x, const V\& y, rebind_t<int, \exposid{deduced-vec-t}<V>>* quo);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V>}@
-    @\wgAdd{remquo(const V\& x, const \exposid{deduced-vec-t}<V>\& y, rebind_t<int, \exposid{deduced-vec-t}<V>>* quo);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> fma(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> hypot(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{constexpr \exposid{deduced-vec-t}<V> lerp(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const V\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const \exposid{deduced-vec-t}<V>\& y, const V\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const \exposid{deduced-vec-t}<V>\& x, const V\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-@\wgAdd{template<\exposconcept{math-floating-point} V>}@
-  @\wgAdd{\exposid{deduced-vec-t}<V> ellint_3(const V\& x, const \exposid{deduced-vec-t}<V>\& y, const \exposid{deduced-vec-t}<V>\& z);}@
-\end{itemdecl}
-
-\begin{itemdescr}
-\pnumAdd
-\wgAdd{Let}
-\begin{itemize}
-  \wgItemAdd[\placeholder{math-func} denote the name of the function template;]
-  \wgItemAdd[\tcode{args...} be \tcode{x} and \tcode{y}, or \tcode{x}, \tcode{y}, and \tcode{z};]
-  \wgItemAdd[\tcode{rest...} be all remaining arguments besides \tcode{x}, \tcode{y}, and \tcode{z}.]
-\end{itemize}
-
-\pnumAdd
-\wgAdd{\effects}
-\wgAdd{Equivalent to: \tcode{\placeholder{math-func}(static_cast<const \exposid{deduced-vec-t}<V>\&>(args)..., rest...)}}
-\end{itemdescr}
 \end{wgText}
 
 \pagebreak
+
+%TODO: move last block up
