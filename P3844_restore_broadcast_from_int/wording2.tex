@@ -645,7 +645,7 @@ Ret @\placeholder{math-func-vec}@(@\wgAdd{const }@Args@\wgAdd{\&}@... args) {
 \pnum
 \returns
 A value \tcode{ret} of type \tcode{Ret}, that is element-wise equal to the
-result of calling \tcode{\placeholder{math-func-vec}} with the arguments of the above
+result of calling \tcode{\placeholder{math-func-vec}} with the \wgChange{arguments}{parameters} of the above
 functions.
 If in an invocation of a scalar overload of \tcode{\placeholder{math-func}} for index
 \tcode{i} in \tcode{\placeholder{math-func-vec}} a domain, pole, or range error would
@@ -684,7 +684,7 @@ Let \tcode{\placeholder{math-func-vec}} denote:}
 \wgAdd{%
 \returns
 A value \tcode{ret} of type \tcode{Ret}, that is element-wise equal to the
-result of calling \tcode{\placeholder{math-func-vec}} with the arguments of the above
+result of calling \tcode{\placeholder{math-func-vec}} with the parameters of the above
 functions.
 If in an invocation of a scalar overload of \tcode{\placeholder{math-func}} for index
 \tcode{i} in \tcode{\placeholder{math-func-vec}} a domain, pole, or range error would
@@ -893,7 +893,7 @@ Ret @\placeholder{math-func-vec}(\wgAdd{const }Args\wgAdd{\&}@... args) {
 \pnum
 \returns
 A value \tcode{ret} of type \tcode{Ret}, that is element-wise approximately
-equal to the result of calling \tcode{\placeholder{math-func-vec}} with the arguments
+equal to the result of calling \tcode{\placeholder{math-func-vec}} with the \wgChange{arguments}{parameters}
 of the above functions.
 If in an invocation of a scalar overload of \tcode{\placeholder{math-func}} for index
 \tcode{i} in \tcode{\placeholder{math-func-vec}} a domain, pole, or range error would
@@ -922,7 +922,7 @@ It is unspecified whether \tcode{errno}\iref{errno} is accessed.
 Let \tcode{\placeholder{math-func}} denote the name of the function template.
 Let \tcode{\placeholder{math-func-vec}} denote:}
 \begin{codeblock}
-@\wgAdd{auto \placeholder{math-func-vec}(const auto\& a, const auto\&b, const \exposid{deduced-vec-t}<V>\& c) \{}@
+@\wgAdd{auto \placeholder{math-func-vec}(const auto\& a, const auto\& b, const \exposid{deduced-vec-t}<V>\& c) \{}@
   @\wgAdd{return \exposid{deduced-vec-t}<V>([\&](\exposid{simd-size-type} i) \{}@
     @\wgAdd{return std::\placeholder{math-func}(a[i], b[i], c[i]);}@
   @\wgAdd{\});}@
@@ -933,7 +933,7 @@ Let \tcode{\placeholder{math-func-vec}} denote:}
 \wgAdd{%
 \returns
 An object that is element-wise approximately equal to the result of calling
-\tcode{\placeholder{math-func-vec}} with the arguments of the above functions.}
+\tcode{\placeholder{math-func-vec}} with the parameters of the above functions.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -964,7 +964,7 @@ Let \tcode{\placeholder{math-func-vec}} denote:}
 \wgAdd{%
 \returns
 An object that is element-wise approximately equal to the result of calling
-\tcode{\placeholder{math-func-vec}} with the arguments of the above functions.}
+\tcode{\placeholder{math-func-vec}} with the parameters of the above functions.}
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -1026,7 +1026,7 @@ pair<@\wgChange{Ret}{V0}, rebind_t<int, \wgChange{Ret}{V0}>> \placeholder{remquo
   return {r0, rebind_t<int, @\wgChange{Ret}{V0}@>(r1)};
 }
 \end{codeblock}
-Let \tcode{ret} be a value of type \wgChange{\tcode{pair<Ret, rebind_t<int, Ret>>}}{\tcode{pair<V0, rebind_t<int, V0>>}}
+Let \tcode{ret} be a value of type \wgChange{\tcode{pair<Ret, rebind_t<int, Ret>}\tcode{>}}{\tcode{pair<V0, rebind_t<int, V0>}\tcode{>}}
 that is the same value as the result of calling
 \tcode{\placeholder{remquo-vec}(x, y)}.
 If in an invocation of a scalar overload of \tcode{remquo} for index \tcode{i}
