@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Fix LWG4470: Fix integer-from in [simd]}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D3932R0}
+\newcommand\wgDocumentNumber{P3932R0}
 \newcommand\wgGroup{LWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
@@ -234,7 +234,7 @@ In [simd.syn], change:
   // [simd.mask.class], class template \tcode{basic_mask}
   template<size_t Bytes, class Abi@\wgRem{ = \mbox{\exposid{native-abi}}<\mbox{\exposid{integer-from}}<Bytes>\mbox{}>}@> class basic_mask;
   template<class T, @\exposid{simd-size-type}@ N = @\exposid{simd-size-v}@<T, @\exposid{native-abi}@<T>>>
-    using mask = @\wgChange{basic_mask<sizeof(T), \mbox{\exposid{deduce-abi-t}}<T, N>\mbox{}>}{typename vec<T, N>::mask_type}@;
+    using mask = @\wgChange{basic_mask<sizeof(T), \mbox{\exposid{deduce-abi-t}}<T, N>\mbox{}>}{vec<T, N>::mask_type}@;
 \end{codeblock}
 \end{wgText}
 
@@ -302,7 +302,8 @@ If \tcode V is a specialization of \tcode{basic_mask}, let \tcode{Abi1}
 denote an ABI tag such that \tcode{basic_mask<sizeof(T), Abi1>::size()} equals \tcode{N}.}
 
 \pnum
-Where present, the member typedef \tcode{type} names \tcode{basic_vec<T, Abi1>}
+Where present, the member typedef \tcode{type} names \tcode{basic_vec<\wgChange{T}{typename
+V::value_type}, Abi1>}
 if \tcode V is a specialization of \tcode{basic_vec} or
 \tcode{basic_mask<\wgChange{sizeof(T)}{\mbox{\exposid{mask-element-size}<V>}}, Abi1>} if \tcode V is a specialization of
 \tcode{basic_mask}.
@@ -318,8 +319,8 @@ The specialization of \tcode{basic_vec<T, Abi>} is
 \begin{itemize}
  \item
     enabled, if \tcode{T} is a vectorizable type, and there exists value
-    \tcode{N} in the range \crange{1}{64}, such that \tcode{Abi} is
-    \tcode{\exposid{deduce-abi-t}<T, N>},
+    \tcode{N} in the range \crange{1}{64}, such that \tcode{Abi} \wgChange{is}{names the ABI tag
+    type denoted by} \tcode{\exposid{deduce-abi-t}<T, N>},
  \item
    otherwise, disabled, if \tcode{T} is not a vectorizable type,
  \item
@@ -341,7 +342,7 @@ If \tcode{basic_vec<T, Abi>} is enabled, then
   \wgItemAdd value-initialization value-initializes all elements\iref{dcl.init.general}\wgAdd{,}
   \wgItemAdd[\tcode{basic_vec<T, Abi>::mask_type} is an alias for an enabled specialization of
   \code{basic_mask}, and]
-  \wgItemAdd[\tcode{basic_vec<T, Abi>::size()} equals \tcode{basic_vec<T, Abi>::mask_type::size()}].
+  \wgItemAdd[\tcode{basic_vec<T, Abi>::size()} is equal to \tcode{basic_vec<T, Abi>::mask_type::size()}].
 \end{itemize}
 
 \end{wgText}
@@ -396,6 +397,36 @@ pack.
 
     constexpr basic_mask() noexcept = default;
 \end{codeblock}
+
+[\ldots]
+
+\pnum
+Every specialization of \tcode{basic_mask} is a complete type.
+The specialization of \tcode{basic_mask<Bytes, Abi>} is:
+\begin{itemize}
+ \item
+   disabled, if there is no vectorizable type \tcode{T} such that \tcode{Bytes}
+   is equal to \tcode{sizeof(T)},
+ \item
+   otherwise, enabled, if there exists a vectorizable type \tcode{T} and a
+   value \tcode{N} in the range \crange{1}{64} such that \tcode{Bytes} is equal
+   to \tcode{sizeof(T)} and \tcode{Abi} \wgChange{is}{names the ABI tag type denoted by}
+   \tcode{\exposid{deduce-abi-t}<T, N>},
+ \item
+   otherwise, it is \impldef{set of enabled \tcode{basic_mask<Bytes, Abi>}
+   specializations} if such a specialization is enabled.
+\end{itemize}
+
+If \tcode{basic_mask<Bytes, Abi>} is disabled, the specialization has a
+deleted default constructor, deleted destructor, deleted copy constructor, and
+deleted copy assignment.
+In addition only the \tcode{value_type} and \tcode{abi_type} members are
+present.
+
+If \tcode{basic_mask<Bytes, Abi>} is enabled,
+\tcode{basic_mask<Bytes, Abi>} is trivially copyable.
+
+
 \end{wgText}
 
 \end{document}
