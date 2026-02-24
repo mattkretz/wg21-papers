@@ -1,0 +1,18 @@
+\section{Changelog}
+This paper was originally published as \parencite{P3844R2}, which additionally
+contained a re-specification of [simd.math].
+\parencite{P3844R4}, which was voted to plenary by LWG, only contains the [simd.math]
+changes that make conversion behavior more compatible with the \code{<cmath>}
+function overloads.
+Since there was strong concern over the \code{consteval} broadcast constructor
+change in LWG, this part was split into its own paper, separating the
+controversial and uncontroversial parts.
+
+Changes since LEWG saw this paper as~\cite{P3844R1}:
+\begin{itemize}
+  \item Remove [simd.math] discussion and wording changes.
+  \item Add discussion of concerns raised in LWG\@.
+  \item Shorten the discussion of the design space, discussing only what was
+    accepted by LEWG in Kona.
+  \item Move content around to arrive quickly at the change and its consequences.
+\end{itemize}
