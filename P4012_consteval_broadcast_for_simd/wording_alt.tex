@@ -1,0 +1,74 @@
+\section{Wording for removing explicit conversion on broadcast}
+
+\subsection{Feature test macro}
+
+In [version.syn] bump the \code{__cpp_lib_simd} version.
+
+\subsection{Modify [simd.overview]}
+
+In [simd.overview], change:
+\begin{wgText}[{[simd.overview]}]
+\begin{codeblock}
+    // \iref{simd.ctor}, \tcode{basic_vec} constructors
+    template<class U>
+      constexpr @\wgRem{explicit(\seebelow) }@basic_vec(U&& value) noexcept;
+    template<class U, class UAbi>
+      constexpr explicit(@\seebelow@) basic_vec(const basic_vec<U, UAbi>&) noexcept;
+\end{codeblock}
+\end{wgText}
+
+\subsection{Modify [simd.ctor]}
+
+In [simd.ctore], change:
+\begin{wgText}[{[simd.ctor]}]
+\begin{itemdecl}
+template<class U>
+  constexpr @\wgRem{explicit(\seebelow) }@basic_vec(U&& value) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+Let \tcode{From} denote the type \tcode{remove_cvref_t<U>}.
+
+\pnum
+\constraints
+\tcode{U} satisfies \wgRem{\tcode{\exposconcept{explicitly-convertible-to}<value_type>}.}
+\wgAdd{\tcode{\libconcept{convertible_to}<value_type>}, and either}
+\begin{itemize}
+ \wgItemAdd[%
+   \tcode{From} is not an arithmetic type and does not satisfy
+ \exposconcept{constexpr-wrapper-like},]
+ \wgItemAdd[%
+   \tcode{From} is an arithmetic type and the conversion from \tcode{From} to
+ \tcode{value_type} is value-preserving\iref{simd.general}, or]
+ \wgItemAdd[%
+   \tcode{From} satisfies \exposconcept{constexpr-wrapper-like},
+   \tcode{remove_cvref_t<decltype(From::value)>} is an arithmetic type, and
+ \tcode{From::value} is representable by \tcode{value_type}.]
+\end{itemize}
+
+\pnum
+\effects
+Initializes each element to the value of the argument after conversion to
+\tcode{value_type}.
+
+\pnumRem
+\wgRem{\remarks
+The expression inside \tcode{explicit} evaluates to \tcode{false} if and only if
+\tcode{U} satisfies \tcode{\libconcept{convertible_to}<value_type>}, and either}
+\begin{itemize}
+ \wgItemRem[%
+   \tcode{From} is not an arithmetic type and does not satisfy
+ \exposconcept{constexpr-wrapper-like},]
+ \wgItemRem[%
+   \tcode{From} is an arithmetic type and the conversion from \tcode{From} to
+ \tcode{value_type} is value-preserving\iref{simd.general}, or]
+ \wgItemRem[%
+   \tcode{From} satisfies \exposconcept{constexpr-wrapper-like},
+   \tcode{remove_cvref_t<decltype(From::value)>} is an arithmetic type, and
+ \tcode{From::value} is representable by \tcode{value_type}.]
+\end{itemize}
+\end{itemdescr}
+\end{wgText}
+
+
