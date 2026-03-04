@@ -44,7 +44,7 @@ In [simd.overview] add:
     template<class U, class UAbi>
       constexpr explicit(@\seebelow@) basic_vec(const basic_vec<U, UAbi>&) noexcept;
     @\wgAdd{template<class U, class UAbi>}@
-      @\wgAdd{constexpr basic_vec(const basic_vec<U, UAbi>\&) = delete;}@
+      @\wgAdd{constexpr explicit(\seebelow) basic_vec(const basic_vec<U, UAbi>\&) noexcept = delete;}@
     template<class G>
       constexpr explicit basic_vec(G&& gen);
 \end{codeblock}
@@ -90,7 +90,7 @@ The expression inside \tcode{explicit} evaluates to \tcode{true} if either
 
 \begin{itemdecl}
 @\wgAdd{template<class U, class UAbi>}@
-  @\wgAdd{constexpr basic_vec(const basic_vec<U, UAbi>\&) = delete;}@
+  @\wgAdd{constexpr explicit(\seebelow) basic_vec(const basic_vec<U, UAbi>\&) noexcept = delete;}@
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -100,6 +100,12 @@ The expression inside \tcode{explicit} evaluates to \tcode{true} if either
 \wgItemAdd[\tcode{\exposid{simd-size-v}<U, UAbi> == size()} is \tcode{false}, or]
 \wgItemAdd[\tcode{U} does not satisfy \tcode{\exposconcept{explicitly-convertible-to}<T>}.]
 \end{itemize}
+
+\pnumAdd\wgAdd{%
+\remarks
+The expression inside \tcode{explicit} evaluates to \tcode{\exposid{simd-size-v}<U, UAbi> ==
+size()}.
+}
 \end{itemdescr}
 \end{wgText}
 
@@ -110,9 +116,9 @@ In [simd.mask.overview] modify:
     template<size_t UBytes, class UAbi>
       constexpr explicit basic_mask(const basic_mask<UBytes, UAbi>&) noexcept;
     @\wgAdd{template<size_t UBytes, class UAbi>}@
-      @\wgAdd{constexpr basic_mask(const basic_mask<UBytes, UAbi>\&) = delete;}@
+      @\wgAdd{constexpr explicit basic_mask(const basic_mask<UBytes, UAbi>\&) noexcept = delete;}@
     @\wgAdd{template<class U, class UAbi>}@
-      @\wgAdd{constexpr basic_mask(const basic_vec<U, UAbi>\&) = delete;}@
+      @\wgAdd{constexpr explicit basic_mask(const basic_vec<U, UAbi>\&) noexcept = delete;}@
     template<class G>
       constexpr explicit basic_mask(G&& gen);
     template<@\libconcept{same_as}@<bitset<size()>> T>
@@ -136,7 +142,7 @@ In [simd.mask.overview] modify:
     template<class U, class @\wgChange{A}{UAbi}@>
       constexpr explicit(sizeof(U) != Bytes) operator basic_vec<U, @\wgChange{A}{UAbi}@>() const noexcept;
     @\wgAdd{template<class U, class UAbi>}@
-      @\wgAdd{constexpr operator basic_vec<U, UAbi>() const = delete;}@
+      @\wgAdd{constexpr operator basic_vec<U, UAbi>() const noexcept = delete;}@
     constexpr bitset<size()> to_bitset() const noexcept;
     constexpr unsigned long long to_ullong() const;
 \end{codeblock}
@@ -163,7 +169,7 @@ range of \range{0}{size()}.
 
 \begin{itemdecl}
 @\wgAdd{template<size_t UBytes, class UAbi>}@
-  @\wgAdd{constexpr basic_mask(const basic_mask<UBytes, UAbi>\& x) = delete;}@
+  @\wgAdd{constexpr explicit basic_mask(const basic_mask<UBytes, UAbi>\& x) noexcept = delete;}@
 \end{itemdecl}
 
 \begin{itemdescr}
@@ -198,7 +204,7 @@ A data-parallel object where the $i^\text{th}$ element is initialized to
 
 \begin{itemdecl}
 @\wgAdd{template<class U, class UAbi>}@
-  @\wgAdd{constexpr operator basic_vec<U, UAbi>() const = delete;}@
+  @\wgAdd{constexpr operator basic_vec<U, UAbi>() const noexcept = delete;}@
 \end{itemdecl}
 
 \begin{itemdescr}
