@@ -1,0 +1,216 @@
+\newcommand\wgTitle{Fix LWG????: incorrect cast between \code{simd::vec} and \code{simd::mask} via conversion to and from impl-defined vector types}
+\newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
+\newcommand\wgDocumentNumber{D4042R0}
+\newcommand\wgGroup{LWG}
+\newcommand\wgTarget{\CC{}26}
+%\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
+
+\usepackage{mymacros}
+\usepackage{wg21}
+\setcounter{tocdepth}{2} % show sections and subsections in TOC
+\hypersetup{bookmarksdepth=5}
+\usepackage{changelog}
+\usepackage{underscore}
+\usepackage{multirow}
+\usepackage{vectorpictures}
+
+\addbibresource{extra.bib}
+
+\renewcommand{\lst}[1]{Listing~\ref{#1}}
+\renewcommand{\sect}[1]{Section~\ref{#1}}
+\renewcommand{\ttref}[1]{Tony~Table~\ref{#1}}
+\renewcommand{\tabref}[1]{Table~\ref{#1}}
+
+\newcommand\lwg[1]{\href{https://cplusplus.github.io/LWG/issue#1}{LWG#1}}
+
+\begin{document}
+\selectlanguage{american}
+\begin{wgTitlepage}
+  This paper resolves \lwg{????} and includes a drive-by fix to [simd.mask.conv].
+\end{wgTitlepage}
+
+\pagestyle{scrheadings}
+
+\input{changelog}
+%\input{strawpolls}
+
+\section{Wording}
+
+In [simd.overview] add:
+\begin{wgText}[{[simd.overview]}]\setcounter{Paras}{0}
+\begin{codeblock}
+    template<class U>
+      constexpr explicit(@\seebelow@) basic_vec(U&& value) noexcept;
+    template<class U, class UAbi>
+      constexpr explicit(@\seebelow@) basic_vec(const basic_vec<U, UAbi>&) noexcept;
+    @\wgAdd{template<class U, class UAbi>}@
+      @\wgAdd{constexpr basic_vec(const basic_vec<U, UAbi>\&) = delete;}@
+    template<class G>
+      constexpr explicit basic_vec(G&& gen);
+\end{codeblock}
+\end{wgText}
+
+In [simd.ctor] add:
+\begin{wgText}[{[simd.ctor]}]\setcounter{Paras}{4}
+\begin{itemdecl}
+template<class U, class UAbi>
+  constexpr explicit(@\seebelow@) basic_vec(const basic_vec<U, UAbi>& x) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\constraints
+\begin{itemize}
+\item \tcode{\exposid{simd-size-v}<U, UAbi> == size()} is \tcode{true}, and
+\item \tcode{U} satisfies \tcode{\exposconcept{explicitly-convertible-to}<T>}.
+\end{itemize}
+
+\pnum
+\effects
+Initializes the $i^\text{th}$ element with \tcode{static_cast<T>(x[$i$])} for
+all $i$ in the range of \range{0}{size()}.
+
+\pnum
+\remarks
+The expression inside \tcode{explicit} evaluates to \tcode{true} if either
+\begin{itemize}
+ \item
+   the conversion from \tcode{U} to \tcode{value_type} is not value-preserving,
+   or
+ \item
+   both \tcode{U} and \tcode{value_type} are integral types and the integer
+   conversion rank\iref{conv.rank} of \tcode{U} is greater than the integer
+   conversion rank of \tcode{value_type}, or
+ \item
+   both \tcode{U} and \tcode{value_type} are floating-point types and the
+   floating-point conversion rank\iref{conv.rank} of \tcode{U} is greater than
+   the floating-point conversion rank of \tcode{value_type}.
+\end{itemize}
+\end{itemdescr}
+
+\begin{itemdecl}
+@\wgAdd{template<class U, class UAbi>}@
+  @\wgAdd{constexpr basic_vec(const basic_vec<U, UAbi>\&) = delete;}@
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnumAdd\wgAdd{%
+\constraints}
+\begin{itemize}
+\wgItemAdd[\tcode{\exposid{simd-size-v}<U, UAbi> == size()} is \tcode{false}, or]
+\wgItemAdd[\tcode{U} does not satisfy \tcode{\exposconcept{explicitly-convertible-to}<T>}.]
+\end{itemize}
+\end{itemdescr}
+\end{wgText}
+
+In [simd.mask.overview] modify:
+\begin{wgText}[{[simd.mask.overview]}]\setcounter{Paras}{0}
+\begin{codeblock}
+    constexpr explicit basic_mask(@\libconcept{same_as}@<value_type> auto) noexcept;
+    template<size_t UBytes, class UAbi>
+      constexpr explicit basic_mask(const basic_mask<UBytes, UAbi>&) noexcept;
+    @\wgAdd{template<size_t UBytes, class UAbi>}@
+      @\wgAdd{constexpr basic_mask(const basic_mask<UBytes, UAbi>\&) = delete;}@
+    @\wgAdd{template<class U, class UAbi>}@
+      @\wgAdd{constexpr basic_mask(const basic_vec<U, UAbi>\&) = delete;}@
+    template<class G>
+      constexpr explicit basic_mask(G&& gen);
+    template<@\libconcept{same_as}@<bitset<size()>> T>
+      constexpr basic_mask(const T& b) noexcept;
+    template<@\libconcept{unsigned_integral}@ T>
+      requires (!@\libconcept{same_as}@<T, value_type>)
+      constexpr explicit basic_mask(T val) noexcept;
+
+    // \iref{simd.mask.subscr}, \tcode{basic_mask} subscript operators
+    constexpr value_type operator[](@\exposid{simd-size-type}@) const;
+    template<@\exposconcept{simd-integral}@ I>
+      constexpr resize_t<I::size(), basic_mask> operator[](const I& indices) const;
+
+    // \iref{simd.mask.unary}, \tcode{basic_mask} unary operators
+    constexpr basic_mask operator!() const noexcept;
+    constexpr @\seebelow@ operator+() const noexcept;
+    constexpr @\seebelow@ operator-() const noexcept;
+    constexpr @\seebelow@ operator~() const noexcept;
+
+    // \iref{simd.mask.conv}, \tcode{basic_mask} conversions
+    template<class U, class @\wgChange{A}{UAbi}@>
+      constexpr explicit(sizeof(U) != Bytes) operator basic_vec<U, @\wgChange{A}{UAbi}@>() const noexcept;
+    @\wgAdd{template<class U, class UAbi>}@
+      @\wgAdd{constexpr operator basic_vec<U, UAbi>() const = delete;}@
+    constexpr bitset<size()> to_bitset() const noexcept;
+    constexpr unsigned long long to_ullong() const;
+\end{codeblock}
+\end{wgText}
+
+In [simd.mask.ctor] add:
+\begin{wgText}[{[simd.mask.ctor]}]\setcounter{Paras}{1}
+\begin{itemdecl}
+template<size_t UBytes, class UAbi>
+  constexpr explicit basic_mask(const basic_mask<UBytes, UAbi>& x) noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\constraints
+\tcode{basic_mask<UBytes, UAbi>::size() == size()} is
+\tcode{true}.
+
+\pnum
+\effects
+Initializes the $i^\text{th}$ element with \tcode{x[$i$]} for all $i$ in the
+range of \range{0}{size()}.
+\end{itemdescr}
+
+\begin{itemdecl}
+@\wgAdd{template<size_t UBytes, class UAbi>}@
+  @\wgAdd{constexpr basic_mask(const basic_mask<UBytes, UAbi>\& x) = delete;}@
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnumAdd\wgAdd{%
+\constraints
+\tcode{basic_mask<UBytes, UAbi>::size() == size()} is \tcode{false}.}
+\end{itemdescr}
+
+\begin{itemdecl}
+template<class G> constexpr explicit basic_mask(G&& gen);
+\end{itemdecl}
+\end{wgText}
+
+In [simd.mask.conv] add:
+\begin{wgText}[{[simd.mask.conv]}]\setcounter{Paras}{0}
+\begin{itemdecl}
+  template<class U, class @\wgChange{A}{UAbi}@>
+  constexpr explicit(sizeof(U) != Bytes) operator basic_vec<U, @\wgChange{A}{UAbi}@>() const noexcept;
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnum
+\constraints
+\tcode{\exposid{simd-size-v}<U, \wgChange{A}{UAbi}> == \wgChange{\exposid{mask-size-v}<Bytes,
+Abi>}{size()}}\wgAdd{ is \tcode{true}}.
+
+\pnum
+\returns
+A data-parallel object where the $i^\text{th}$ element is initialized to
+\tcode{static_cast<U>(operator[]($i$))}.
+\end{itemdescr}
+
+\begin{itemdecl}
+@\wgAdd{template<class U, class UAbi>}@
+  @\wgAdd{constexpr operator basic_vec<U, UAbi>() const = delete;}@
+\end{itemdecl}
+
+\begin{itemdescr}
+\pnumAdd\wgAdd{%
+\constraints
+\tcode{\exposid{simd-size-v}<U, UAbi> == size()} is \tcode{false}.}
+\end{itemdescr}
+
+\begin{itemdecl}
+constexpr bitset<size()> to_bitset() const noexcept;
+\end{itemdecl}
+\end{wgText}
+
+\end{document}
+% vim: sw=2 sts=2 ai et tw=100
