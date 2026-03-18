@@ -1,6 +1,6 @@
-\newcommand\wgTitle{Fix LWG????: incorrect cast between \code{simd::vec} and \code{simd::mask} via conversion to and from impl-defined vector types}
+\newcommand\wgTitle{Fix LWG4543: incorrect cast between \code{simd::vec} and \code{simd::mask} via conversion to and from impl-defined vector types}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D4042R0}
+\newcommand\wgDocumentNumber{P4042R0}
 \newcommand\wgGroup{LWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
@@ -26,13 +26,17 @@
 \begin{document}
 \selectlanguage{american}
 \begin{wgTitlepage}
-  This paper resolves \lwg{????} and includes a drive-by fix to [simd.mask.conv].
+  This paper resolves \lwg{4543} and includes a drive-by fix to [simd.mask.conv].
 \end{wgTitlepage}
 
 \pagestyle{scrheadings}
 
 \input{changelog}
 %\input{strawpolls}
+
+\section{Implementation Experience}
+
+This has been implemented and tested in the patch that's currently in review for libstdc++.
 
 \section{Wording}
 
