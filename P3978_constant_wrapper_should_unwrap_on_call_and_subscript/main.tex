@@ -1,8 +1,8 @@
 \newcommand\wgTitle{\code{constant\_wrapper} should unwrap on call and subscript}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>\\
   Tomasz Kamiński <tomaszkam@gmail.com>}
-\newcommand\wgDocumentNumber{P3978R2}
-\newcommand\wgGroup{LEWG}
+\newcommand\wgDocumentNumber{P3978R3}
+\newcommand\wgGroup{LWG}
 \newcommand\wgTarget{\CC{}26}
 \newcommand\wgAcknowledgements{Thanks to Barry Revzin for helpful feedback.}
 
@@ -464,9 +464,17 @@ implements the conversion operator as shown in Section 4.2 of \cite{P3774R0}.
 
 
 \section{Wording}
+\subsection{Instructions to the editor}
+
+Move \code{constant_wrapper}, \code{cw}, \exposid{cw-fixed-value}, \exposid{constexpr-param},
+\exposid{cw-operators} before \code{integer_sequence}.
+Move the declarations of those from [meta.type.synop] to [utility.syn].
+
 \subsection{Feature test macro}
 
-In [version.syn] bump the \code{__cpp_lib_constant_wrapper} version.
+In [version.syn] bump the \code{__cpp_lib_constant_wrapper} version. Change the comment after
+\code{__cpp_lib_constant_wrapper} from \code{// freestanding, also in <type_traits>} to
+\code{// freestanding, also in <utility>}.
 
 \subsection{Modify [const.wrap.class]}
 
@@ -512,9 +520,9 @@ In [const.wrap.class], change:
     constexpr operator decltype(auto)() const noexcept { return value; }
 
     @\wgAdd{template<class... Args>}@
-      @\wgAdd{static constexpr decltype(auto) operator()(Args\&\&... args) noexcept(\seebelow)}@
+      @\wgAdd{static constexpr decltype(auto) operator()(Args\&\&... args) noexcept(\seebelow);}@
     @\wgAdd{template<class... Args>}@
-      @\wgAdd{static constexpr decltype(auto) operator[](Args\&\&... args) noexcept(\seebelow)}@
+      @\wgAdd{static constexpr decltype(auto) operator[](Args\&\&... args) noexcept(\seebelow);}@
   };
 }
 \end{codeblock}
@@ -535,16 +543,16 @@ Initialize elements of \exposid{data} with corresponding elements of \tcode{arr}
 
 \begin{itemdecl}
 @\wgAdd{template<class... Args>}@
-  @\wgAdd{static constexpr decltype(auto) operator()(Args\&\&... args) noexcept(\seebelow)}@
+  @\wgAdd{static constexpr decltype(auto) operator()(Args\&\&... args) noexcept(\seebelow);}@
 \end{itemdecl}
 
 \begin{itemdescr}
 \pnumAdd
 \wgAdd{%
   Let \placeholder{call-expr} be
-  \tcode{constant_wrapper<\placeholder{INVOKE}(value, remove_reference_t<Args>::value...)>\{\}} if all types in
-  \tcode{remove_reference_t<Args>...} satisfy \exposconcept{constexpr-param} and
-  \tcode{constant_wrapper<\placeholder{INVOKE}(value, remove_reference_t<Args>::value...)>} is a valid type, otherwise
+  \tcode{constant_wrapper<\placeholder{INVOKE}(value, remove_cvref_t<Args>::value...)>\{\}} if all types in
+  \tcode{remove_cvref_t<Args>...} satisfy \exposconcept{constexpr-param} and
+  \tcode{constant_wrapper<\placeholder{INVOKE}(value, remove_cvref_t<Args>::value...)>} is a valid type, otherwise
   let \placeholder{call-expr} be \tcode{\mbox{\placeholder{INVOKE}}(value, std::forward<Args>(args)...)}.
 }
 
@@ -563,22 +571,22 @@ Equivalent to: \tcode{return \placeholder{call-expr};}
 \pnumAdd
 \wgAdd{%
 \remarks
-The expression inside \tcode{noexcept} is \tcode{noexcept(\placeholder{call-expr})}.
+The exception specification is equivalent to \tcode{noexcept(noexcept(\placeholder{call-expr}))}.
 }
 \end{itemdescr}
 
 \begin{itemdecl}
 @\wgAdd{template<class... Args>}@
-  @\wgAdd{static constexpr decltype(auto) operator[](Args\&\&... args) noexcept(\seebelow)}@
+  @\wgAdd{static constexpr decltype(auto) operator[](Args\&\&... args) noexcept(\seebelow);}@
 \end{itemdecl}
 
 \begin{itemdescr}
 \pnumAdd
 \wgAdd{%
   Let \placeholder{subscr-expr} be
-  \tcode{constant_wrapper<value[remove_reference_t<Args>::value...]>\{\}} if all types in
-  \tcode{remove_reference_t<Args>...} satisfy \exposconcept{constexpr-param} and
-  \tcode{constant_wrapper<value[remove_reference_t<Args>::value...]>} is a valid type, otherwise
+  \tcode{constant_wrapper<value[remove_cvref_t<Args>::value...]>\{\}} if all types in
+  \tcode{remove_cvref_t<Args>...} satisfy \exposconcept{constexpr-param} and
+  \tcode{constant_wrapper<value[remove_cvref_t<Args>::value...]>} is a valid type, otherwise
   let \placeholder{subscr-expr} be \tcode{value[std::forward<Args>(args)...]}.
 }
 
@@ -597,7 +605,7 @@ Equivalent to: \code{return \placeholder{subscr-expr};}
 \pnumAdd
 \wgAdd{%
 \remarks
-The expression inside \tcode{noexcept} is \tcode{noexcept(\placeholder{subscr-expr})}.
+The exception specification is equivalent to \tcode{noexcept(noexcept(\placeholder{subscr-expr}))}.
 }
 \end{itemdescr}
 
