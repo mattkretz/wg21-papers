@@ -1,8 +1,8 @@
 \newcommand\wgTitle{\code{constant\_wrapper} is the only tool needed for passing constant expressions
   via function arguments}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{P3948R0}
-\newcommand\wgGroup{LEWG}
+\newcommand\wgDocumentNumber{P3948R1}
+\newcommand\wgGroup{LWG}
 \newcommand\wgTarget{\CC{}26}
 %\newcommand\wgAcknowledgements{Daniel Towner and Ruslan Arutyunyan contributed to this paper via discussions / reviews. Thanks also to Jeff Garland for reviewing.}
 
@@ -328,7 +328,7 @@ Let \tcode{F} be \tcode{decltype(f)}.
   \item If \tcode{is_pointer_v<F> || is_member_pointer_v<F>} is \tcode{true},
     then \tcode{f != nullptr} is \tcode{true}.
 
-  \wgItemAdd[\tcode{sizeof...(ArgTypes)} is $0$ or
+  \wgItemAdd[\tcode{ArgTypes} is an empty pack or
     the expression \tcode{f0(declval<ArgTypes>()...)} is either not well-formed or its type is not a
   specialization of \tcode{constant_wrapper}.]
 \end{itemize}
@@ -405,7 +405,58 @@ feels more consistent (to me).
 
 \section{Wording}
 
-\begin{wgText}
+\subsection{Bump feature test macro}
+
+In [version.syn] bump the \code{__cpp_lib_function_ref} version.
+
+\subsection{Modify [utility.syn]}
+
+In [utility.syn] remove:
+
+\begin{wgText}[{[utility.syn]}]
+\begin{codeblock}
+  template<size_t I>
+    struct in_place_index_t {
+      explicit in_place_index_t() = default;
+    };
+  template<size_t I> constexpr in_place_index_t<I> in_place_index{};
+
+  @\wgRem{// \tcode{constant_arg} argument tag}@
+  @\wgRem{template<auto V>}@
+    @\wgRem{struct constant_arg_t \{}@
+      @\wgRem{explicit constant_arg_t() = default;}@
+    @\wgRem{\};}@
+  @\wgRem{template<auto V> constexpr constant_arg_t<V> constant_arg\{\};}@
+
+  // \iref{variant.monostate}, class \tcode{monostate}
+  struct monostate;
+\end{codeblock}
+\end{wgText}
+
+\subsection{Modify [func.wrap.ref.class]}
+
+Modify [func.wrap.ref.class]:
+\begin{wgText}[{[func.wrap.ref.class]}]
+\begin{codeblock}
+    // \iref{func.wrap.ref.ctor}, constructors and assignment operators
+    template<class F> function_ref(F*) noexcept;
+    template<class F> constexpr function_ref(F&&) noexcept;
+    template<auto @\wgChange{f}{c, class F}@>
+      constexpr function_ref(@\wgChange{constant_arg_t<f>}{constant_wrapper<c, F>}@) noexcept;
+    template<auto @\wgChange{f}{c, class F}@, class U>
+      constexpr function_ref(@\wgChange{constant_arg_t<f>}{constant_wrapper<c, F>}@, U&&) noexcept;
+    template<auto @\wgChange{f}{c, class F}@, class T>
+      constexpr function_ref(@\wgChange{constant_arg_t<f>}{constant_wrapper<c, F>}@, @\cv{}@ T*) noexcept;
+
+    constexpr function_ref(const function_ref&) noexcept = default;
+    constexpr function_ref& operator=(const function_ref&) noexcept = default;
+    template<class T> function_ref& operator=(T) = delete;
+\end{codeblock}
+\end{wgText}
+
+Modify [func.wrap.ref.ctor]:
+
+\begin{wgText}[{[func.wrap.ref.ctor]}]
   \setcounter{Paras}{4}
 \begin{itemdecl}
 template<class F> constexpr function_ref(F&& f) noexcept;
@@ -419,9 +470,8 @@ Let \tcode{T} be \tcode{remove_reference_t<F>}.
 \constraints
 \begin{itemize}
 \item \tcode{remove_cvref_t<F>} is not the same type as \tcode{function_ref},
-\item \tcode{is_member_pointer_v<T>} is \tcode{false},\wgRem{ and}
-\item \tcode{\exposid{is-invocable-using}<\cv{} T\&>} is \tcode{true}\wgAdd{, and}
-\wgItemAdd[\tcode{remove_cvref_t<F>} is not a specialization of \tcode{constant_wrapper}].
+\item \tcode{is_member_pointer_v<T>} is \tcode{false}, and
+\item \tcode{\exposid{is-invocable-using}<\cv{} T\&>} is \tcode{true}.
 \end{itemize}
 
 \pnum
@@ -436,30 +486,26 @@ is expression-equivalent\iref{defns.expression.equivalent} to
 \end{itemdescr}
 
 \begin{itemdecl}
-@template<\wgChange{auto f}{class F0}> constexpr function_ref(\wgChange{nontype_t<f>}{F0 f0})@ noexcept;
+template<auto @\wgChange{f}{c, class F}@> constexpr function_ref(@\wgChange{constant_arg_t<f>}{constant_wrapper<c, F> f}@) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum
-\wgAdd{Let \tcode{f} be \tcode{f0.value} and}
-\wgRem{Let} \tcode{F} be \tcode{decltype(f)}.
+\pnumRem
+\wgRem{Let \tcode{F} be \tcode{decltype(f)}.}
 
 \pnum
 \constraints
-\begin{itemize}
-  \item \tcode{\exposid{is-invocable-using}<F>} is \tcode{true}\wgAdd{, and}
-  \wgItemAdd[\tcode{F0} is a specialization of \code{constant_wrapper}].
-\end{itemize}
+\tcode{\exposid{is-invocable-using}<const F\&>} is \tcode{true}.
 
 \pnum
 \mandates
 \begin{itemize}
-  \item If \tcode{is_pointer_v<F> || is_member_pointer_v<F>} is \tcode{true},
-    then \tcode{f != nullptr} is \tcode{true}.
-
-  \wgItemAdd[\tcode{sizeof...(ArgTypes)} is $0$ or
-    the expression \tcode{f0(declval<ArgTypes>()...)} is either not well-formed or its type is not a
-  specialization of \tcode{constant_wrapper}.]
+\wgItemAdd If \tcode{is_pointer_v<F> || is_member_pointer_v<F>} is \tcode{true},
+then \tcode{f\wgAdd{.value} != nullptr} is \tcode{true}\wgAdd{, and}
+  \wgItemAdd[if \tcode{ArgTypes} is not an empty pack and
+all types in \tcode{remove_cvref_t<ArgTypes>...} satisfy \exposconcept{constexpr-param}
+then \tcode{constant_wrapper<\placeholder{INVOKE}(f.value, remove_cvref_t<ArgTypes>::value...)>} is not a
+valid type].
 \end{itemize}
 
 \pnum
@@ -471,32 +517,30 @@ null pointer value, and
 such that
 \tcode{\placeholder{thunk}(\exposid{bound-entity}, \placeholder{call-args}...)}
 is expression-equivalent\iref{defns.expression.equivalent} to
-\tcode{invoke_r<R>(f, \placeholder{call-args}...)}.
+\tcode{invoke_r<R>(f\wgAdd{.value}, \placeholder{call-args}...)}.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<@\wgChange{auto f}{class F0}@, class U>
-  constexpr function_ref(@\wgChange{nontype_t<f>}{F0 f0}@, U&& obj) noexcept;
+template<auto @\wgChange{f}{c, class F}@, class U>
+  constexpr function_ref(@\wgChange{constant_arg_t<f>}{constant_wrapper<c, F> f}@, U&& obj) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
 \pnum
-Let \tcode{T} be \tcode{remove_reference_t<U>}\wgAdd{,
-\tcode{f} be \tcode{f0.value},} and
-\tcode{F} be \tcode{decltype(f)}.
+Let \tcode{T} be \tcode{remove_reference_t<U>}\wgRem{ and
+\tcode{F} be \tcode{decltype(f)}}.
 
 \pnum
 \constraints
 \begin{itemize}
-\item \tcode{is_rvalue_reference_v<U\&\&>} is \tcode{false},\wgRem{ and}
-\item \tcode{\exposid{is-invocable-using}<F, \cv{} T\&>} is \tcode{true}\wgAdd{, and}
-\wgItemAdd[\tcode{F0} is a specialization of \code{constant_wrapper}].
+\item \tcode{is_rvalue_reference_v<U\&\&>} is \tcode{false}, and
+\item \tcode{\exposid{is-invocable-using}<const F\&, \cv{} T\&>} is \tcode{true}.
 \end{itemize}
 
 \pnum
 \mandates
 If \tcode{is_pointer_v<F> || is_member_pointer_v<F>} is \tcode{true},
-then \tcode{f != nullptr} is \tcode{true}.
+then \tcode{f\wgAdd{.value} != nullptr} is \tcode{true}.
 
 \pnum
 \effects
@@ -506,30 +550,26 @@ Initializes
 such that
 \tcode{\placeholder{thunk}(\exposid{bound-entity}, \placeholder{call-args}...)}
 is expression-equivalent\iref{defns.expression.equivalent} to
-\tcode{invoke_r<R>(f, static_cast<\cv{} T\&>(obj), \placeholder{call-args}...)}.
+\tcode{invoke_r<R>(f\wgAdd{.value}, static_cast<\cv{} T\&>(obj), \placeholder{call-args}...)}.
 \end{itemdescr}
 
 \begin{itemdecl}
-template<@\wgChange{auto f}{class F0}@, class T>
-  constexpr function_ref(@\wgChange{nontype_t<f>}{F0 f0}@, @\cv{}@ T* obj) noexcept;
+template<auto @\wgChange{f}{c, class F}@, class T>
+  constexpr function_ref(@\wgChange{constant_arg_t<f>}{constant_wrapper<c, F> f}@, @\cv{}@ T* obj) noexcept;
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum
-\wgAdd{Let \tcode{f} be \tcode{f0.value} and}
-\wgRem{Let} \tcode{F} be \tcode{decltype(f)}.
+\pnumRem
+\wgRem{Let \tcode{F} be \tcode{decltype(f)}.}
 
 \pnum
 \constraints
-\begin{itemize}
-\item \tcode{\exposid{is-invocable-using}<F, \cv{} T*>} is \tcode{true}\wgAdd{, and}
-\wgItemAdd[\tcode{F0} is a specialization of \code{constant_wrapper}].
-\end{itemize}
+\tcode{\exposid{is-invocable-using}<const F\&, \cv{} T*>} is \tcode{true}.
 
 \pnum
 \mandates
 If \tcode{is_pointer_v<F> || is_member_pointer_v<F>} is \tcode{true},
-then \tcode{f != nullptr} is \tcode{true}.
+then \tcode{f\wgAdd{.value} != nullptr} is \tcode{true}.
 
 \pnum
 \expects
@@ -544,7 +584,7 @@ Initializes
 such that
 \tcode{\placeholder{thunk}(\exposid{bound-entity}, \placeholder{call-args}...)}
 is expression-equivalent\iref{defns.expression.equivalent} to
-\tcode{invoke_r<R>(f, obj, \placeholder{call-args}...)}.
+\tcode{invoke_r<R>(f\wgAdd{.value}, obj, \placeholder{call-args}...)}.
 \end{itemdescr}
 
 \begin{itemdecl}
@@ -557,7 +597,7 @@ template<class T> function_ref& operator=(T) = delete;
 \begin{itemize}
 \item \tcode{T} is not the same type as \tcode{function_ref},
 \item \tcode{is_pointer_v<T>} is \tcode{false}, and
-\item \tcode{T} is not a specialization of \wgChange{\tcode{nontype_t}}{\tcode{constant_wrapper}}.
+\item \tcode{T} is not a specialization of \wgChange{\tcode{constant_arg_t}}{\tcode{constant_wrapper}}.
 \end{itemize}
 \end{itemdescr}
 \end{wgText}
