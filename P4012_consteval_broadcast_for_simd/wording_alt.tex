@@ -19,7 +19,7 @@ In [simd.overview], change:
 
 \subsection{Modify [simd.ctor]}
 
-In [simd.ctore], change:
+In [simd.ctor], change:
 \begin{wgText}[{[simd.ctor]}]
 \begin{itemdecl}
 template<class U>
@@ -32,12 +32,11 @@ Let \tcode{From} denote the type \tcode{remove_cvref_t<U>}.
 
 \pnum
 \constraints
-\tcode{U} satisfies \wgRem{\tcode{\exposconcept{explicitly-convertible-to}<value_type>}.}
-\wgAdd{\tcode{\libconcept{convertible_to}<value_type>}, and either}
+\wgRem{\tcode{U} satisfies \tcode{\exposconcept{explicitly-convertible-to}<value_type>}.}
 \begin{itemize}
  \wgItemAdd[%
-   \tcode{From} is not an arithmetic type and does not satisfy
- \exposconcept{constexpr-wrapper-like},]
+   \tcode{U} satisfies \tcode{\libconcept{convertible_to}<value_type>} and
+   \tcode{From} is not an arithmetic type and does not satisfy \exposconcept{constexpr-wrapper-like},]
  \wgItemAdd[%
    \tcode{From} is an arithmetic type and the conversion from \tcode{From} to
  \tcode{value_type} is value-preserving\iref{simd.general}, or]
