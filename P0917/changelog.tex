@@ -22,6 +22,13 @@
 \end{revision}
 
 \begin{revision}
+  \todo Taking the address of \code{operator?:} and using function call syntax works just like for \code{operator==}:
+  \begin{enumerate}
+    \item the reversed call doesn't exist automatically
+    \item it's an actual function call and thus no lazy eval
+  \end{enumerate}
+  A design option would be to make the function call syntax and taking the address ill-formed. (not recommended: inconsistent with \code{operator==})
+
   \todo Explore: \code{operator?:} for contextual-bool automatically uses \code{common_type} and cannot be overloaded otherwise.
         It does deferred evaluation.
         Non-boolean conditions (i.e. the type of the first argument is not contextually convertible to \bool) can be overloaded and are therefore a normal function call without deferred evaluation.
