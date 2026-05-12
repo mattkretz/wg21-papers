@@ -30,7 +30,13 @@
       fpatan,fprem,fprem1,fptan,frndint,frstor,fsave,fscale,fsetpm,%
       fsin,fsincos,fsqrt,fst,fstcw,fstenv,fstsw,fsub,fsubr,ftst,fucom,%
       fwait,fxam,fxch,fxtract,fyl2x,fyl2xp1,f2xm1,%
-      vmovdqu32,vpmulld,vaddss,vaddps},%
+      movaps,vmovaps,movups,vmovups,movapd,vmovapd,movupd,vmovupd,%
+      movaps,vmovaps,movups,vmovups,movapd,vmovapd,movupd,vmovupd,%
+      mulss,movss,mulps,addss,addps,%
+      vmulss,vmovss,vmulps,vaddss,vaddps,%
+      mulsd,movsd,mulpd,addsd,addpd,%
+      vmulsd,vmovsd,vmulpd,vaddsd,vaddpd,%
+      vmovdqu32,vpmulld},%
    morekeywords=[5]{%
       al,ah,ax,eax,bl,bh,bx,ebx,cl,ch,cx,ecx,dl,dh,dx,edx,%
       si,esi,di,edi,bp,ebp,sp,esp,cs,ds,es,ss,fs,gs,cr0,cr1,cr2,cr3,%
@@ -88,15 +94,13 @@ keywords=[5]{array,deque,vector,map,unordered_map,common_type,common_type_t,
   reference_wrapper,Incomplete,Holder,Iterator,IteratorImpl,Data,Ptr,Testable,Unused,Wrap,
   type,
   constant_wrapper,cw,strided_slice,
-  simd,simd_mask,native_simd,fixed_size_simd,native_simd_mask,fixed_size_simd_mask,
-  basic_simd,basic_simd_mask,
+  vec,mask,basic_vec,basic_mask,
   duration,time_point,integer,fractional,fixed_point,is_bounded_integer,rational,
   A,B,C,D,E,F,G,I,R,T,U,V,X,Y,Z,
   It,Flags,
   A0,B0,C0,XRef,
   Point,Abi,
   memory_alignment,element_aligned_tag,vector_aligned_tag,overaligned_tag,deduce,deduce_t,
-  is_simd,is_simd_mask,is_abi_tag,is_simd_flag_type,
   shared_ptr,unique_ptr,weak_ptr,default_delete,
   size_t,ssize_t,off_t,
   ptrdiff_t,sig_atomic_t,fpos_t,
@@ -117,23 +121,20 @@ keywords=[7]{static,register,auto,volatile,extern,const,constexpr,consteval,virt
   explicit,export,inline,restrict,__restrict__,mutable},
 %constants
 keywords=[8]{M_PI,true,false,nullptr,memory_alignment_v,max_fixed_size,
-  is_same_v,value,
-  is_simd_v,is_simd_mask_v,is_abi_tag_v,is_simd_flag_type_v,
-  element_aligned,vector_aligned,overaligned,simd_size_v},
+  is_same_v,value,N,M,K,
+  flag_aligned,flag_overaligned,flag_convert},
 %access
-keywords=[9]{public,protected,private,adl},
+keywords=[9]{public,protected,private},
 %exceptions
 keywords=[10]{throw,try,catch},
 %casts
 keywords=[11]{const_cast,static_cast,dynamic_cast,reinterpret_cast,static_pointer_cast,
-  const_pointer_cast,dynamic_pointer_cast,simd_cast,static_simd_cast},
+  const_pointer_cast,dynamic_pointer_cast},
 moredelim=**[s][\color{directives}\bfseries]{[[}{]]},
 moredelim=**[s][\color{directives}\bfseries]{__attribute__((}{))},
 moredelim=**[s][\color{namespacequal}]{std:}{:},
-moredelim=**[s][\color{namespacequal}]{xstd:}{:},
+moredelim=**[s][\color{namespacequal}]{execution:}{:},
 moredelim=**[s][\color{namespacequal}]{stdx:}{:},
-moredelim=**[s][\color{namespacequal}]{dp:}{:},
-moredelim=**[s][\color{namespacequal}]{datapar:}{:},
 moredelim=**[s][\color{namespacequal}]{views:}{:},
 moredelim=**[s][\color{namespacequal}]{ranges:}{:},
 moredelim=**[s][\color{namespacequal}]{bounded:}{:},
@@ -169,6 +170,7 @@ include,pragma,undef,warning}
 \@ifclassloaded{beamer}{%
 \mode<handout>{
 \definecolor{identifier}{rgb}{0, 0, 0}
+\definecolor{namespacequal}{rgb}{0.5, 0.5, 0.5}
 \definecolor{constants}{rgb}{0.3, 0, 0}
 \definecolor{types}{rgb}{0, 0.1, 0}
 \definecolor{storageclass}{rgb}{0, 0.2, 0}
@@ -235,6 +237,8 @@ showstringspaces=false
 \newcommand{\lstalert}[1]{\alert{\underbar{\lstinline[style=alert]#1}}}
 
 \lstdefinestyle{Vc}{}
+
+\lstdefinestyle{simd}{}
 
 \lstdefinestyle{VcHighlight}
 {

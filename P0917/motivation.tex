@@ -1,0 +1,230 @@
+\section{Motivation}
+\subsection{Design Principles}
+\begin{description}
+  \item[Be General] “Don’t restrict what is inherent.
+    Don’t arbitrarily restrict a complete set of uses.
+    Avoid special cases and partial features.” \cite{P0745R0}
+
+    \CC{} allows operator overloading for almost all operators.
+    That \code{operator?:} cannot be overloaded is an arbitrary restriction (esp. in the face of \code{operator\&\&} and \code{operator||}).
+    More importantly, the conditional operator expresses a numerical operation, implementing piecewise functions (and the simple case of step functions).
+    We allow user-defined numeric types to define all their operators, except for piecewise functions.
+    That works out fine as long as no mixed types are involved.
+    However, there are very important cases for numeric types (which are not interconvertible), which have a common type that is neither of the two types and thus fail to work with this one operator.
+    That's inconsistent.
+    Also, the conditional operator naturally generalizes to a blend operation when applied element-wise (i.e. multiple booleans as condition).
+    This paper proposes a complete set of uses:
+    \begin{itemize}
+      \item by not restricting the type of the condition (allow any user-defined type);
+      \item by not restricting to only allow deferred evaluation (this is \emph{necessary} for blend operations).
+    \end{itemize}
+
+  \item[Be Consistent] “Don’t make similar things different, including in spelling, behavior, or capability.
+    Don’t make different things appear similar when they have different behavior or capability.”
+
+    Currently, user-defined types that are interconvertible cannot be used with the conditional operator and require a function instead.
+    Interconvertible types are often a bad idea, but are required, for example, when the goal is to model built-in integer types.
+    I.e. without an overloadable \code{operator?:} it is impossible to write user-defined types that are a drop-in replacement for built-in types.
+
+    A consistency argument for defaulting \code{operator?:} can be made:
+    We allow defaulting default constructors and comparison operators because in the majority cases, the behavior of these functions can be inferred.
+    In addition defaulted default constructors enable trivial construction, which a default constructor that implements the same behavior explicitly does not enable.
+    Implementing \code{operator ?:}, as proposed in this paper, aligns with this approach.
+
+    Section \ref{sec:blend} is another consistency argument.
+
+  \item[Be orthogonal] “Avoid arbitrary coupling.
+    Let features be used freely in combination.”
+
+    The built-in conditional operator only evaluates the expression chosen by the predicate.
+    User-defined functions/operators evaluate all expressions in their arguments before calling the function.
+    There are situations where such functions/operators would benefit from lazy evaluation.
+    Lazy evaluation for user-defined functions is an orthogonal problem to solve.
+    It should not be a show-stopper for overloadable \code{operator?:} if it---by itself---does not implement function calls with deferred evaluation.
+    Such a facility is needed just as much for \code{operator\&\&} and \code{operator||} as it would be needed for \code{operator?:}.
+    There has been concern about adding the ability to overload \code{operator?:} before/without a general mechanism for lazy evaluation.
+    However, since the two features are orthogonal, this is a concern about trusting/hand-holding our users\footnote{Which is what coding guidelines are used for. With great power comes great responsibility.}.
+\end{description}
+
+\subsection{Piecewise Functions / User-defined numeric types}\label{sec:piecewise}
+
+Piecewise functions, such as $f(x)$ in (\ref{eq:1}), benefit from the conditional operator.
+\begin{equation}
+  f(x) = \begin{cases}
+    \text{formula}_1 & \text{if } \text{condition}_1 \\
+    \text{formula}_2 & \text{if } \text{condition}_2 \\
+    \vdots & \vdots \\
+    \text{formula}_n & \text{if } \text{condition}_n
+  \end{cases}
+  \label{eq:1}
+\end{equation}
+However, if the type of the expressions in each branch are different, the conditional operator requires that one of the participating types is the common type (both are implicitly convertible to it, but not the other).
+An example where this can occur is Quantity and Units:
+\smallskip\begin{lstlisting}
+quantity<isq::speed[km / h]> speed_1 = 42 * isq::speed[m / s];
+quantity<isq::speed[m / s]> speed_2 = 42 * isq::speed[km / h];
+quantity_of<isq::speed> auto speed_3 = speed_1 + speed_2; // OK
+quantity_of<isq::speed> auto speed_4 = cond ? speed_1 : speed_2; // ill-formed
+
+// however, a common type exists:
+using ct = std::common_type_t<decltype(speed_1), decltype(speed_2)>;
+static_assert(std::is_same_v<ct, decltype(speed_3)>);
+\end{lstlisting}
+
+A similar problem arises for integer types that only make value-preserving conversions implicit.
+In this case a common type between an unsigned and signed integer type can be a signed integer type that is neither of the two input types.
+It is therefore awkward to introduce a type where conversions are “safe”, because the conditional operator fails to support it.
+
+Any library-based numeric type may have a need for overloading \code{operator?:} if the type carries information about the value or even modifies the value (e.g. for \code{std::chrono::du\-ra\-tion}).
+Most of those types specialize \type{std::common_type}\footnote{cf. \url{https://codesearch.isocpp.org/cgi-bin/cgi_ppsearch?q=struct+common_type\%3C&search=Search
+}}.
+Examples:
+\begin{itemize}
+  \item \code{std::chrono::duration<Rep, Period>}
+  \item \code{std::chrono::time_point<Clock, Duration>}
+  \item \code{rational} from \textcite{P1438R1} (does not specialize common_type)
+  \item \code{fractional<Numerator, Denominator>} from \textcite{P1050R0}
+  \item \code{fixed_point<Rep, Exponent, Radix>} from \textcite{P0037R5}
+  \item \code{bounded::integer<minimum, maximum>} from \textcite{site.bounded-integer}
+\end{itemize}
+
+Consider the \code{bounded::integer} example (cf. \cite{site.bounded-integer}):
+\smallskip\begin{lstlisting}[style=Vc,escapeinside={/*!}{*/},numbers=left]
+bounded::integer<1, 100> const a = f();
+bounded::integer<-3, 7> const b = g();
+bounded::integer<-2, 107> c = a + b;  /*!\label{lst:ok}*/
+bounded::integer<-3, 100> d = some_condition ? a : b; // ill-formed /*!\label{lst:notok}*/
+\end{lstlisting}
+
+Line \ref{lst:ok} is what the \code{bounded::integer} library can currently do for you.
+However, line \ref{lst:notok} is currently not possible since it would require more control by the library over the types involved (arguments and result) with the conditional operator.
+
+Any design that wants to allow different types on the second and third argument (without implicit conversions), and determine a return type from them, requires an overloadable conditional operator.
+Note that user-defined numeric types want a signature such as \code{operator?:(contextual_boolean auto, UDT1, UDT2)} in most cases.
+I.e. the idea to only allow non-boolean conditions (because of missing implicit deferred evaluation) on \code{operator?:} overloads breaks this use case.
+(I mentioned the idea in the previous revisions and it was also suggested in EWG-I discussion).
+
+\begin{tonytable}
+{bounded::integer now and with overloadable \code{operator?:}}
+\begin{lstlisting}[style=Vc]
+bounded::integer<1, 100> const a = f();
+bounded::integer<-3, 7> const b = g();
+auto c = BOUNDED_CONDITIONAL(
+           some_condition, a, b);
+\end{lstlisting}
+&
+\begin{lstlisting}[style=Vc]
+bounded::integer<1, 100> const a = f();
+bounded::integer<-3, 7> const b = g();
+auto c = some_condition ? a : b;
+\end{lstlisting}
+\end{tonytable}
+
+\begin{tonytable}
+{supporting bounded::integer in a generic function}
+\begin{lstlisting}[style=Vc]
+template<class T, class U>
+  void f(bool cond, T a, U b)
+{
+  if constexpr (
+      is_bounded_integer<T>::value ||
+      is_bounded_integer<U>::value)
+    g(BOUNDED_CONDITIONAL(
+      some_condition, a, b));
+  else
+    g(cond ? a : b);
+}
+\end{lstlisting}
+&
+\begin{lstlisting}[style=Vc]
+template<class T, class U>
+  void f(bool cond, T a, U b)
+{
+
+
+
+
+
+
+  g(cond ? a : b);
+}
+\end{lstlisting}
+\end{tonytable}
+
+\subsection{Blend Operations}\label{sec:blend}
+Besides its use for numeric types, the conditional operator is also a perfect match for simd-generic programming.
+The \code{std::simd::select} function was introduced as a poor-mans \code{operator?:} overload.
+The conditional operator is a perfect match for expressing the \code{select} operation, which is an element-wise implementation of piecewise functions.
+To illustrate what I mean, consider the simple case of a generic absolute value function:
+\smallskip\begin{lstlisting}
+template <class T> T abs(T x) {
+  return x < 0 ? -x : x;
+}
+\end{lstlisting}
+For arithmetic types, the conditional operator chooses to either evaluate \code{-x} or \code{x}.
+For a \code{simd::vec<T>}, which stores multiple values of type \code{T} and implements all its operators to act element-wise, \code{x < 0} yields multiple (different) booleans, which choose the corresponding element from \code{-x} or \code{x}.
+Consequently, both right-hand side expressions must be evaluated for the blend operation (i.e. there is no need for implicit lazy evaluation in SIMD code).
+
+The alternative to overloading \code{operator?:} for \code{std::sim} is to keep using \code{simd::select}:
+\smallskip\begin{lstlisting}[style=Vc]
+template <class T> T abs(T x) {
+  return select(x < 0, -x, x);
+}
+\end{lstlisting}
+This function is \ldots (cf. \ttref{blending})
+\begin{itemize}
+  \item less intuitive, since the function introduces an additional spelling to what \code{?:} provides.
+  \item even less intuitive, since the arguments appear to be arbitrarily ordered (comma doesn't convey semantics such as \code ? and \code : do)\footnote{To make things worse x86 intrinsics/instructions for blend operations use all possible argument permutations.}.
+  \item harder to use in generic code:
+    If \type T is a built-in type, the \code{select} function will not be found via ADL; consequently, user code must spell out \code{return \stdsimd::select(x < 0, -x, x)} and include the \code{<simd>} header.
+    This is annoying and the namespace qualification is easily forgotten since ADL works fine for \type{simd} arguments.
+    Also, it makes refactoring code from built-in arithmetic types to \code{std::simd} unnecessarily harder.
+  \item a bad choice for boolean conditions, because it cannot support lazy evaluation.
+\end{itemize}
+
+It is not possible (and not a good idea to extend the language in such a way, in my opinion) to overload \code{if} statements and iteration statements for non-boolean conditions.
+Thus, to support any “collection of \bool{}”-like type in conditional expressions using built-in syntax, the conditional operator is the only reasonable candidate.
+
+\begin{tonytable}
+{Supporting \code{simd} and deferred evaluation for boolean \code{x < 0}}
+\label{tt:blending}
+\begin{lstlisting}
+#include <simd>
+
+template <class T> void f(T x)
+{
+  if constexpr (my_is_simd_vec_concept<T>)
+    return select(x < 0, g(x), x);
+  else
+    return x < 0 ? g(x) : x;
+}
+\end{lstlisting}
+&
+\begin{lstlisting}
+
+
+template <class T> void f(T x)
+{
+
+
+
+  return x < 0 ? g(x) : x;
+}
+\end{lstlisting}
+\end{tonytable}
+
+\subsection{Expression Templates and Embedded Domain Specific Languages}
+Embedded domain specific languages in \CC{} often redefine operators for user-defined types to create a new language embedded into \CC{}.
+Having the conditional operator available makes \CC{} more versatile for such uses.
+%Most sensible uses of the conditional operator will likely be similar to the “blend operations” case discussed for \type{simd} types, though.
+%The motivation is not as strong as in the above case, since in most cases substitutability of the code to fundamental types is not a goal.
+
+As existing practice consider Boost.YAP:
+“The main objective of Boost.YAP is to be an easy-to-use and easy-to-understand library for using the expression template programming technique.”\footnote{\url{https://boostorg.github.io/yap/doc/html/boost_yap/rationale.html}}
+YAP “defines a 3-parameter function \code{if_else()} that acts as an analogue to the ternary operator (\code{?:}), since the ternary operator is not user-overloadable.”\footnote{\url{https://boostorg.github.io/yap/doc/html/BOOST_YAP_USER_EX_idm15635.html}}
+
+\subsection{Existing Practice}
+GCC supports the conditional operator with vector built-ins\footnote{\url{https://gcc.gnu.org/onlinedocs/gcc/Vector-Extensions.html}}, implementing a blend operation as discussed in Section \ref{sec:blend}.
+OpenCL uses the conditional operator for blending operations \cite{spec.opencl1.1}.
+Allowing overloads of \code{operator?:} in \CC{} would enable users and \type{std::simd} to implement blend semantics with the same syntax and semantics as provided by GCC and OpenCL.
+

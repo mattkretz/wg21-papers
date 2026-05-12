@@ -1,0 +1,9 @@
+\section{Introduction}
+Most operators in \CC{} can be overloaded.
+The few exceptions are: \code{?:}, \code{::}, \code{.}, and \code{.*}.
+For the conditional operator, \textcite{StrFaq} writes:
+“There is no fundamental reason to disallow overloading of \code{?:}.
+I just didn't see the need to introduce the special case of overloading a ternary operator.
+Note that a function overloading \code{expr1?expr2:expr3} would not be able to guarantee that only one of \code{expr2} and \code{expr3} was executed.”
+
+In this paper I want to show important use-cases for overloading the conditional operator, how it makes the language more consistent, and how lazy evaluation is possible even without a generic language extension for lazy evaluation.
