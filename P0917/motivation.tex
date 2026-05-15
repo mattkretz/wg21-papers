@@ -228,3 +228,21 @@ GCC supports the conditional operator with vector built-ins\footnote{\url{https:
 OpenCL uses the conditional operator for blending operations \cite{spec.opencl1.1}.
 Allowing overloads of \code{operator?:} in \CC{} would enable users and \type{std::simd} to implement blend semantics with the same syntax and semantics as provided by GCC and OpenCL.
 
+\subsection{We are adding workarounds (P2655R3)}
+
+\textcite{P2655R3} specializes \code{common_reference_t} for \code{reference_wrapper} and reference types.
+This is clearly a workaround for \code{operator?:} not working where obviously a common reference type can be defined.
+In my prototype implementation I can simply define:
+\medskip\begin{lstlisting}
+namespace std
+{
+  template <typename T>
+    T& operator?:(bool, reference_wrapper<T>, T&) = default;
+}
+\end{lstlisting}
+and that makes
+\medskip\begin{lstlisting}
+static_assert(std::is_same_v<decltype(true ? std::ref(a) : a), int&>);
+static_assert(std::is_same_v<decltype(true ? a : std::ref(a)), int&>);
+\end{lstlisting}
+pass.

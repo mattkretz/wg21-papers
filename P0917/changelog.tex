@@ -23,6 +23,7 @@
 
 \begin{revision}
 \item Add an example from quantity and units.
+\item Add motivation example from P2655R3 "\code{common_reference_t} of \code{reference_wrapper} should be a reference type".
   \todo Taking the address of \code{operator?:} and using function call syntax works just like for \code{operator==}:
   \begin{enumerate}
     \item the reversed call doesn't exist automatically
@@ -36,8 +37,6 @@
   \todo \code{auto operator?:(T, U) = default} could mean \code{common_type_t<T, U> operator?:(...)}, i.e. synthesize a builtin operator using \code{common_tpye} for the return type.
   \todo Explore: Definition of \code{operator?:(Cond, A, B)} automatically synthesizes \code{operator?:(Cond, B, A)} calling the former.
         (Note, there are no compatibility issues like for defaulted compares.)
-  \todo More motivation: P2655R1 "\code{common_reference_t} of \code{reference_wrapper} should be a reference type".
-        P2655R1 resolves the problem via another template specialization. Instead making \code{operator?:} do the right thing would be more generic and an obvious fix for the type's semantics.
 \end{revision}
 
   %\todo Discuss implications for “contextually convertible to \bool” implementations.
