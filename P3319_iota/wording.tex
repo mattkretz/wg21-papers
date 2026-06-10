@@ -14,14 +14,13 @@ In [version.syn] bump the \code{__cpp_lib_simd} version.
 Add the following to \iref{simd.syn}, after the declaration of \code{cat}:
 \begin{wgText}[{[simd.syn]}]
 \begin{codeblock}
-  template<size_t Bs, class... Abis>
-    constexpr basic_simd_mask<Bs, @\deducet@<@\integerfrom@<Bs>,
-                              (basic_simd_mask<Bs, Abis>::size() + ...)>>
-      cat(const basic_simd_mask<Bs, Abis>&...) noexcept;
+  template<size_t Bytes, class... Abis>
+    constexpr resize_t<(basic_mask<Bytes, Abis>::size() + ...),
+      basic_mask<Bytes, Abis...[0]>> cat(const basic_mask<Bytes, Abis>&...) noexcept;
 
-  @\wgAdd{template<class T> inline constexpr T iota = \mbox{\seebelow};}@
+  @\wgAdd{template<class T> constexpr T iota = \mbox{\seebelow};}@
 
-  // [simd.mask.reductions], \tcode{basic_simd_mask} reductions
+  // [simd.alg], algorithms
 \end{codeblock}
 \end{wgText}
 
@@ -31,39 +30,40 @@ Add the following at the end of \iref{simd.creation}:
   \setcounter{WGSubSection}{10}
   \setcounter{WGSubSubSection}{7}
   \setcounter{WGSubSubSubSection}{6}
-  \setcounter{Paras}{4}
+  \setcounter{Paras}{5}
 \begin{itemdescr}
   \pnum\returns
   A data-parallel object initialized with the concatenated values in the \tcode{xs} pack of
-  data-parallel objects: The $i^\text{th}$ \tcode{basic_simd}/\tcode{basic_simd_mask} element of the
+  data-parallel objects: The $i^\text{th}$ \tcode{basic_vec}/\tcode{basic_mask} element of the
   $j^\text{th}$ parameter in the \tcode{xs} pack is copied to the return value's element with index
   $i$ + the sum of the width of the first $j$ parameters in the \tcode{xs} pack.
 \end{itemdescr}
 
-\begin{wgBAdd}
 \begin{itemdecl}
-@\wgAdd{template<class T> inline constexpr T iota = \mbox{\seebelow};}@
+@\wgAdd{template<class T> constexpr T iota = \mbox{\seebelow};}@
 \end{itemdecl}
 
 \begin{itemdescr}
-\pnum
-\wgAdd{\constraints
-  Either \tcode{T} is vectorizable and \tcode{is_arithmetic_v<T>} is
-\tcode{true}, or \tcode{T} is an enabled specialization of \code{basic_simd}.}
+\pnumAdd
+\wgAdd{%
+\mandates
+Either \tcode{T} is vectorizable and \tcode{is_arithmetic_v<T>} is
+\tcode{true}, or}
+\begin{itemize}
+\wgItemAdd[\tcode{T} is an enabled specialization of \tcode{basic_vec},]
+\wgItemAdd[\tcode{is_arithmetic_v<typename T::value_type>} is \tcode{true}, and]
+\wgItemAdd[\tcode{T::size() - 1} $\le$ \tcode{numeric_limits<typename T::value_type>::max()}.]
+\end{itemize}
 
-\pnum
-\wgAdd{\mandates \tcode{is_arithmetic_v<T>} is \tcode{true} or
-\tcode{T::size() - 1} $\le$ \tcode{numeric_limits<typename T::value_type>:: max()}.}
-
-  \pnum
-  \wgAdd{\effects
-    If \tcode{is_arithmetic_v<T>} is \tcode{true} the value of
-    \tcode{iota<T>} is equal to \tcode{T()}.
-    Otherwise, the value of \tcode{iota<T>} is equal to \tcode{T([](typename
-    T::value_type i) \{ return i; \})}.
-  }
+\pnumAdd
+\wgAdd{%
+\remarks
+If \tcode{is_arithmetic_v<T>} is \tcode{true} the value of
+\tcode{iota<T>} is equal to \tcode{T()}.
+Otherwise, the value of \tcode{iota<T>} is equal to \tcode{T([](typename
+T::value_type i) \{ return i; \})}.
+}
 \end{itemdescr}
-\end{wgBAdd}
 
 \wgSubsubsubsection[paragraph]{Algorithms}{simd.alg}
 \end{wgText}
