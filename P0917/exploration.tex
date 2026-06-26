@@ -44,7 +44,7 @@ However, for consistency with all other operators, we might want to allow it nev
 
 The conditional operator already works in many situations where user-defined types are used.
 A few examples:
-\smallskip\begin{lstlisting}
+\medskip\begin{lstlisting}
 // most common & trivial usage of ?: with UDTs:
 struct Point { float x, y, z; };
 static_assert(is_same_v<Point, decltype(bool() ? Point() : Point())>);
@@ -55,21 +55,26 @@ struct B { operator float(); };
 struct C { operator float(); };
 using X = decltype(A() ? B() : C());  // X = float (GCC, Clang), double (EDG),
                                       //     ill-formed (MSVC)
+
+// implicit conversion in one direction:
 struct D {
   operator B();
   operator float();
 };
 using Y = decltype(A() ? B() : D());  // Y = B
+\end{lstlisting}
 
+It does not work for interconvertible UDTs:
+\medskip\begin{lstlisting}
 struct E;
 struct F { operator E(); };
 struct E { operator F(); };
-using Z = decltype(A() ? F() : E());  // Z = F (MSVC), ill-formed (GCC, Clang, EDG)
+using Z = decltype(A() ? F() : E());  // ill-formed
 \end{lstlisting}
 
 Should the user be able to define a conditional operator that takes precedence over the built-in operator?
-Of course, to be consistent with all other operator overloads, \code{operator?:} overloads will require at least one user-defined type in their signature.
-%The examples in \lst{udt-cond-examples} seem to motivate maximal freedom in overloading \code{operator?:}; but let's not use implementation divergence for motivation.
+In any case, \code{operator?:} overloads would require at least one user-defined type in their signature.
+But can and should we require that an \code{operator?:} overload does not override a built-in \code{operator?:}?
 
 If we allow user-defined \code{operator?:} to be a better match than built-in \code{operator?:}, we open the door to situations where the return type (and value) of the same conditional operator is different at different places in the TU (such as in \url{https://godbolt.org/z/xMMbaE}), as is the case for all other operators already.
 However, note that of course \type{common_type} can only be specialized once (on first use).
@@ -78,7 +83,7 @@ Consequently, if a user-defined conditional operator were allowed to overload co
 Note that such pitfalls are not novel.
 All operator (and function) overloads can already be used to construct such inconsistencies.
 Example:
-\smallskip\begin{lstlisting}
+\medskip\begin{lstlisting}
 struct A { operator int() const; };
 struct B { operator float() const; };
 template <class A, class B> struct CT { using type = decltype(A() + B()); };
@@ -87,27 +92,8 @@ short operator+(A, B);
 static_assert(std::is_same_v<CT<A, B>::type, decltype(A() + B())>);  // fails
 \end{lstlisting}
 
-%Nevertheless, because of the connection between \type{common_type} and the conditional operator, I believe we should consider the possibility of disregarding user-defined operators whenever the built-in operator is a candidate.
-%It would be nicer to make the declaration of such operator overloads ill-formed.
-%But I believe this is impossible since it appears to be a similar problem as definition checking for concepts (cf. \lst{greedy overload}).
-%We could, however, consider to make such operator overload declarations ill-formed NDR.
-%\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:greedy overload,caption={
-%Overload that can match cases that the built-in operator can handle
-%}]
-%template <std::integral T> struct A { T x; };
-%template <std::integral T, std::integral U>
-%A<std::common_type_t<T, U>> operator?:(bool cond, A<T> a, A<U> b) {
-%  if (cond) return {a.x}; else return {b.x};
-%}
-%
-%auto f(bool cond, A<int> a, A<int> b) {
-%  return cond ? a : b;  // this could use the built-in op or the overload above
-%}
-%\end{lstlisting}
-
-Without strong motivation, overloads of the conditional operator should not behave differently with regard to overriding built-in candidates than all other overloadable operators.
-Consequently, consider the examples in:
-\smallskip\begin{lstlisting}
+Consider the examples in:
+\medskip\begin{lstlisting}
 struct A {};
 struct B { operator int(); };
 struct C { operator int(); };
@@ -128,44 +114,82 @@ void g() {
   B() + C(); // operator+(B, int)
 }
 \end{lstlisting}
-A user-defined conditional operator would be able to override any expression that involves a user-defined type in the second and/or third operand.
-For the type of the first operand there can be a simple distinction early in the overload resolution process:
-\begin{itemize}
-\item Either the first operand is contextually convertible to \bool and built-in candidates are relevant,
-\item or otherwise only user-defined overloads need to be considered.
-\end{itemize}
-In \code{f()} the built-in conditional operator works in all three combinations (\code{(A, A)}, \code{(B, B)}, and \code{(B, C)}\footnote{except MSVC}).
-The return type is \type A, \type B, and \intt, respectively.
+Is this something we also want for \code{operator?:}.
 
-The current specification of the conditional operator [expr.cond] mentions the use of overload resolution in paragraph 6:
-\begin{wgText}[{[expr.cond]}]
-\setcounter{Paras}{5}\pnum
-Otherwise, the result is a prvalue.
-If the second and third operands do not have the same type, and either has (possibly cv-qualified) class type, overload resolution is used to determine the conversions (if any) to be applied to the operands (12.4.1.2, 12.7).
-If the overload resolution fails, the program is ill-formed.
-Otherwise, the conversions thus determined are applied, and the converted operands are used in place of the original operands for the remainder of this subclause.
-\end{wgText}
-This paragraph is responsible for the more obscure situations, such as
-\medskip\begin{lstlisting}[style=Vc]
-struct A { operator int(); };
-struct B { operator int(); };
-int a(bool cond, A a, B b) {
-  return cond ? a : b;
-}
+We also need to consider backwards compatibility.
+Right now the following code is well-formed:
+\medskip\begin{lstlisting}
+struct Incomplete;
+template <typename T> struct Wrap { T t; };
+
+template <typename>
+struct Testable
+{ explicit operator bool () const { return true; } };
+
+int f(Testable<Wrap<Incomplete>> c, int a, int b)
+{ return c ? a : b; } // OK
 \end{lstlisting}
 
+But when an overloadable operator is involved, the use of \code{c} is ill-formed:
+\medskip\begin{lstlisting}
+bool g(Testable<Wrap<Incomplete>> c)
+{ return c && c; } // ill-formed because of operator&& lookup in Wrap<Incomplete>
+\end{lstlisting}
 
-I believe a requirement on \code{operator?:} overloads to not cover cases that could be handled with the built-in operator is complicating the language for little gain and might even inhibit valid use cases.
-For example should \lst{greedy overload} be ill-formed, because line 8 can be handled either by the built-in or by the overloaded operator?
-Do we want to require users to add a constraint \lstinline[style=Vc]@!same_as<T, U>@?
-Can we diagnose the issue when the overload is declared, or only when the “bad” specialization is instantiated?
-The latter could mean both operators are equally viable and thus the expression is ambiguous.
-If it should not be ill-formed, should line 8 use the built-in operator or the overload?
+If we make every conditional operator go through name lookup, then we risk a breaking change.
+In addition, changing every use of the conditional operator to now do name lookup and (more) overload resolution makes compile times slower.
 
-I would prefer to make \code{operator?:} just as useful and dangerous as all other overloads.
-I.e. stay consistent with the overload resolution rules of the other operators.
-Note however, that there are built-in candidates for all user-defined types 
-Consequently, if the operator overload involves a user-defined type, it is preferred over the built-in operator.
+This paper proposes to make the declaration of \code{operator?:} overloads that would replace a built-in operator ill-formed.
+(For \code{operator?:} templates, this check on declaration / instantiation is not needed, since templates would only be considered after no built-in conditional operator is viable.)
+
+This approach, while inconsistent with existing operators, preserves full backwards compatibility (also with regards to compile-time performance) and eliminates the potential for inconsistent answers to the common type.
+
+%The current specification of the conditional operator [expr.cond] mentions the use of overload resolution in paragraph 6:
+%\begin{wgText}[{[expr.cond]}]
+%\setcounter{Paras}{5}\pnum
+%Otherwise, the result is a prvalue.
+%If the second and third operands do not have the same type, and either has (possibly cv-qualified) class type, overload resolution is used to determine the conversions (if any) to be applied to the operands (12.4.1.2, 12.7).
+%If the overload resolution fails, the program is ill-formed.
+%Otherwise, the conversions thus determined are applied, and the converted operands are used in place of the original operands for the remainder of this subclause.
+%\end{wgText}
+%This paragraph is responsible for the more obscure situations, such as
+%\medskip\begin{lstlisting}[style=Vc]
+%struct A { operator int(); };
+%struct B { operator int(); };
+%int a(bool cond, A a, B b) {
+%  return cond ? a : b;
+%}
+%\end{lstlisting}
+
+%Nevertheless, because of the connection between \type{common_type} and the conditional operator, I believe we should consider the possibility of disregarding user-defined operators whenever the built-in operator is a candidate.
+%It would be nicer to make the declaration of such operator overloads ill-formed.
+%But I believe this is impossible since it appears to be a similar problem as definition checking for concepts (cf. \lst{greedy overload}).
+%We could, however, consider to make such operator overload declarations ill-formed NDR.
+%\begin{lstlisting}[style=Vc,numbers=left,float,label=lst:greedy overload,caption={
+%Overload that can match cases that the built-in operator can handle
+%}]
+%template <std::integral T> struct A { T x; };
+%template <std::integral T, std::integral U>
+%A<std::common_type_t<T, U>> operator?:(bool cond, A<T> a, A<U> b) {
+%  if (cond) return {a.x}; else return {b.x};
+%}
+%
+%auto f(bool cond, A<int> a, A<int> b) {
+%  return cond ? a : b;  // this could use the built-in op or the overload above
+%}
+%\end{lstlisting}
+
+%I believe a requirement on \code{operator?:} overloads to not cover cases that could be handled with the built-in operator is complicating the language for little gain and might even inhibit valid use cases.
+%For example should \lst{greedy overload} be ill-formed, because line 8 can be handled either by the built-in or by the overloaded operator?
+%Do we want to require users to add a constraint \lstinline[style=Vc]@!same_as<T, U>@?
+%Can we diagnose the issue when the overload is declared, or only when the “bad” specialization is instantiated?
+%The latter could mean both operators are equally viable and thus the expression is ambiguous.
+%If it should not be ill-formed, should line 8 use the built-in operator or the overload?
+
+%I would prefer to make \code{operator?:} just as useful and dangerous as all other overloads.
+%I.e. stay consistent with the overload resolution rules of the other operators.
+%Note however, that there are built-in candidates for all user-defined types 
+%Consequently, if the operator overload involves a user-defined type, it is preferred over the built-in operator.
 
 \subsection{Defaulted conditional operator overload}
 In most scalar cases (boolean condition), the implementation of the conditional operator is trivial (i.e. return either \code{b} or \code{c}, depending on \code{bool(a)} for \code{a ? b : c}).
@@ -398,11 +422,11 @@ DRY                &\good      &\undecided &\undecided &\good      \\
 
 Noting that the built-in conditional operator accepts arguments that are “contextually convertible to \bool”, we see that using \bool in the \code{operator?:} defintion above is not the perfect choice.
 We would need to use a concept such as instead of \bool:
-\smallskip\begin{lstlisting}[style=Vc]
+\medskip\begin{lstlisting}[style=Vc]
 template<class B>
 \end{lstlisting}
 Alternatively, a defaulted \code{operator?:} could omit the first argument if it should accept anything contextually convertible to \bool:
-\smallskip\begin{lstlisting}[style=Vc]
+\medskip\begin{lstlisting}[style=Vc]
 R operator?:(B b, C c) = default;
 ...
 R x = a ? b : c;

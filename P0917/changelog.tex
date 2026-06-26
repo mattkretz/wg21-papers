@@ -37,6 +37,13 @@
   \todo \code{auto operator?:(T, U) = default} could mean \code{common_type_t<T, U> operator?:(...)}, i.e. synthesize a builtin operator using \code{common_tpye} for the return type.
   \todo Explore: Definition of \code{operator?:(Cond, A, B)} automatically synthesizes \code{operator?:(Cond, B, A)} calling the former.
         (Note, there are no compatibility issues like for defaulted compares.)
+
+  \todo https://github.com/PeterSommerlad/PSsimplesafeint
+
+\todo List follow-up library changes:
+\begin{itemize}
+  \item Add hidden friend, defaulted \code{operator?:} to \code{reference_wrapper}.
+\end{itemize}
 \end{revision}
 
   %\todo Discuss implications for “contextually convertible to \bool” implementations.
