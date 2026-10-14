@@ -1,0 +1,62 @@
+\section{Proposal}
+
+In this part I'll introduce and explain my proposal.
+In the following section, I'll discuss the complete design space exploration
+and why I settled on this proposal.
+
+\subsection{Declaration and Definition of \code{operator?:}}
+\begin{enumerate}
+  \item \code{operator?:} must have exactly three arguments, none of them
+    defaulted.
+
+  \item If the type of the first argument is \code{bool}, \code{operator?:} can
+    be defaulted (\code{= default}), otherwise defaulting the operator is
+    ill-formed.
+
+  \item At least one of the three argument types must be a user-defined type.
+
+  \item Given a declaration \code{operator?:(C c, T x, U y)} the expression
+    \code{c ? x : y} must not match a built-in conditional operator.
+
+  \item Explicitly deleting an \code{operator?:} overload \code{= delete} is
+    possible (as for all other function overload sets), but it is ill-formed to
+    delete an existing built-in conditional operator.
+\end{enumerate}
+
+\subsection{Calling the Conditional Operator --- Overload Resolution}
+\begin{enumerate}
+  \item If a built-in conditional operator is valid, that operator is used and
+    \emph{no name lookup} for user-defined \code{operator?:} is performed.
+
+  \item Otherwise, perform the usual name lookup.
+
+  \item Add reversed candidates if the types of \code{arg2} and \code{arg3}
+    differ and if applying unary \code{!} to \code{arg1} is well-formed.
+    The reverse candidates use the type of \code{!arg1} rather than \code{arg1}.
+
+  \item Perform overload resolution
+\end{enumerate}
+
+The first rule makes this proposal a non-breaking change.
+If the \CC{}26 conditional operator applies, existing code continues to work
+with the exact same semantics.
+If it does not apply, existing code would be ill-formed and so there is nothing
+to break.
+Importantly, avoiding name lookup avoids ADL, which in turn avoids template
+instantiation, which can hit the corner case that could otherwise lead to
+well-formed code becoming ill-formed (see \cite{P2600R0}).
+
+\subsection{Synthesizing a Defaulted Conditional Operator}
+\begin{enumerate}
+  \item 
+\end{enumerate}
+
+\subsection{Semantic Requirement on User-Defined \code{operator?:}}
+For a not-defaulted \code{operator?:(c, a, b)} function, the implementation can
+assume that the result of \code{c ? a : b} and \code{!c ? b : a} are
+equivalent.
+A definition like
+\medskip\begin{lstlisting}[style=Vc]
+R operator?:(C c, A a, B b) { return a; }
+\end{lstlisting}
+breaks the semantic contract of a conditional operator.

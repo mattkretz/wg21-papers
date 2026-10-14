@@ -9,7 +9,7 @@
     That \code{operator?:} cannot be overloaded is an arbitrary restriction (esp. in the face of \code{operator\&\&} and \code{operator||}).
     More importantly, the conditional operator expresses a numerical operation, implementing piecewise functions (and the simple case of step functions).
     We allow user-defined numeric types to define all their operators, except for piecewise functions.
-    That works out fine as long as no mixed types are involved.
+    That works out fine as long as no mixed types are involved, because \code{operator?:} is essentially auto-generated for the simple cases.
     However, there are very important cases for numeric types (which are not interconvertible), which have a common type that is neither of the two types and thus fail to work with this one operator.
     That's inconsistent.
     Also, the conditional operator naturally generalizes to a blend operation when applied element-wise (i.e. multiple booleans as condition).
@@ -165,7 +165,7 @@ For arithmetic types, the conditional operator chooses to either evaluate \code{
 For a \code{simd::vec<T>}, which stores multiple values of type \code{T} and implements all its operators to act element-wise, \code{x < 0} yields multiple (different) booleans, which choose the corresponding element from \code{-x} or \code{x}.
 Consequently, both right-hand side expressions must be evaluated for the blend operation (i.e. there is no need for implicit lazy evaluation in SIMD code).
 
-The alternative to overloading \code{operator?:} for \code{std::sim} is to keep using \code{simd::select}:
+The alternative to overloading \code{operator?:} for \code{std::simd} is to keep using \code{simd::select}:
 \smallskip\begin{lstlisting}[style=Vc]
 template <class T> T abs(T x) {
   return select(x < 0, -x, x);
