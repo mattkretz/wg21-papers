@@ -7,20 +7,32 @@ and why I settled on this proposal.
 \subsection{Declaration and Definition of \code{operator?:}}
 \begin{enumerate}
   \item \code{operator?:} must have exactly three arguments, none of them
-    defaulted.
+    defaulted, and no variadic arguments.
+
+  \item \code{operator?:} must be a non-member function (hidden friends are
+    okay).
+
+  \item At least one of the three argument types must be a user-defined type.
+
+  \item Given a \code{operator?:(C c, T x, U y)} declaration, the expression
+    \code{c ? x : y} must not match a built-in conditional operator.
+
+  \item Given a template \code{operator?:(auto, auto, auto)} declaration, a
+    specialization that matches an existing built-in conditional operator is a
+    substitution failure.
 
   \item If the type of the first argument is \code{bool}, \code{operator?:} can
     be defaulted (\code{= default}), otherwise defaulting the operator is
     ill-formed.
 
-  \item At least one of the three argument types must be a user-defined type.
+  \item For a defaulted conditional operator, \code{static_cast} to the
+    declared return type of both arguments (as declared) must be well-formed.
+    For example, \code{int\& operator?:(bool, A\&, int\&) = default} requires that
+    \code{static_cast<int\&>(declval<A\&>())} is well-formed.
 
-  \item Given a declaration \code{operator?:(C c, T x, U y)} the expression
-    \code{c ? x : y} must not match a built-in conditional operator.
-
-  \item Explicitly deleting an \code{operator?:} overload \code{= delete} is
-    possible (as for all other function overload sets), but it is ill-formed to
-    delete an existing built-in conditional operator.
+  \item Explicitly deleting an \code{operator?:} overload via \code{= delete}
+    is possible (as for all other function overload sets), but it is ill-formed
+    to delete an existing built-in conditional operator.
 \end{enumerate}
 
 \subsection{Calling the Conditional Operator --- Overload Resolution}
@@ -28,35 +40,141 @@ and why I settled on this proposal.
   \item If a built-in conditional operator is valid, that operator is used and
     \emph{no name lookup} for user-defined \code{operator?:} is performed.
 
-  \item Otherwise, perform the usual name lookup.
+  \item Otherwise, perform the usual name lookup (including ADL).
 
   \item Add reversed candidates if the types of \code{arg2} and \code{arg3}
     differ and if applying unary \code{!} to \code{arg1} is well-formed.
     The reverse candidates use the type of \code{!arg1} rather than \code{arg1}.
 
-  \item Perform overload resolution
+  \item Perform overload resolution.
+    An additional tie-break is needed if the remaining two candidates are the
+    normal and reversed forms of the same \code{operator?:} and are tied under
+    partial ordering.
+    In that case the normal (not-reversed) form wins.
+
+  \item If the winner is reversed the \code{c ? a : b} expression is rewritten
+    to \code{!c ? b : a}.
 \end{enumerate}
 
 The first rule makes this proposal a non-breaking change.
 If the \CC{}26 conditional operator applies, existing code continues to work
 with the exact same semantics.
-If it does not apply, existing code would be ill-formed and so there is nothing
-to break.
+This is a reasonable approach because the existing conditional operator has
+always been providing auto-generated defaulted \code{operator?:} overloads,
+which we don't want to compete with:
+There is a single reasonable semantic for \code{?:} and that is already
+correctly implemented by the existing machinery.
+
+If the built-in conditional operator does not apply, existing code would be
+ill-formed and so there is nothing to break.
 Importantly, avoiding name lookup avoids ADL, which in turn avoids template
 instantiation, which can hit the corner case that could otherwise lead to
 well-formed code becoming ill-formed (see \cite{P2600R0}).
 
 \subsection{Synthesizing a Defaulted Conditional Operator}
-\begin{enumerate}
-  \item 
-\end{enumerate}
+If the expression \code{c ? <arg2-expression> : <arg3-expression>} is not a
+valid built-in conditional operator expression, and lookup with subsequent
+overload resolution finds a defaulted \code{operator?:} declaration with the
+declared return type \type R and the declared argument types \type{bool}, \type
+A, and \type B, then the expression is equivalent to:
+\medskip\begin{lstlisting}
+c ? [](A a) -> R { return static_cast<R>(a); }(<arg2-expression>)
+  : [](B b) -> R { return static_cast<R>(b); }(<arg3-expression>)
+\end{lstlisting}
+which rewrites the expression to use the existing built-in conditional
+operator.
+Consequently, a defaulted conditional operator still implements lazy
+evaluation.
 
 \subsection{Semantic Requirement on User-Defined \code{operator?:}}
 For a not-defaulted \code{operator?:(c, a, b)} function, the implementation can
 assume that the result of \code{c ? a : b} and \code{!c ? b : a} are
-equivalent.
+equivalent (if the expression \code{!c} is well-formed).
 A definition like
-\medskip\begin{lstlisting}[style=Vc]
+\medskip\begin{lstlisting}
 R operator?:(C c, A a, B b) { return a; }
 \end{lstlisting}
 breaks the semantic contract of a conditional operator.
+This assumption is important to enable reversed candidates.
+
+\subsection{Calling a User-Defined Conditional Operator}
+If the selected user-defined conditional operator is not defaulted, then a
+normal function call is emitted.
+(This implies non-lazy evaluation.)
+
+\subsection{Taking the address of a conditional operator}
+A user-defined conditional operator is still an entity like all other
+user-defined operators, which can be spelled out as \code{operator?:}.
+It is thus possible to take the address of a conditional operator.
+Example:
+\medskip\begin{lstlisting}
+R operator?:(bool, T, U) = default;
+
+void f(T t, U u) {
+  R (*p1)(bool, T, U) = &operator?:; // OK
+  R x = p1(true, t, u); // x = static_cast<R>(t); no lazy eval!
+  R (*p2)(bool, U, T) = &operator?:; // ERROR
+}
+\end{lstlisting}
+
+This is consistent with \code{operator==}:
+\medskip\begin{lstlisting}
+bool operator==(T, U);
+
+void f() {
+  bool (*p1)(T, U) = &operator==; // OK
+  bool (*p2)(U, T) = &operator==; // ERROR
+}
+\end{lstlisting}
+
+Note that it is allowed to take the address of a \emph{defaulted} \code{operator?:}.
+This implies that without \code{inline}, a defaulted \code{operator?:} emits a symbol.
+
+\subsection{Defaulted Conditional Operator Templates}
+A defaulted \code{R operator?:(bool, T, U)} template always has an implicit
+\medskip\begin{lstlisting}
+requires is_constructible_v<R, T> && is_constructible_v<R, U>
+\end{lstlisting}
+constraint.
+This constraint makes the template match the invariant enforced by refusing
+impossible non-template defaulted condition operator declarations:
+\begin{itemize}
+  \item A defaulted \code{operator?:} non-template enforces the invariant ("R
+    must be a genuine common type of the two branches") as a hard error at the
+    declaration. Such an \code{operator?:} simply cannot exist.
+  \item A defaulted \code{operator?:} template enforces the same invariant, but
+    at the instantiation, as a substitution failure.
+\end{itemize}
+
+A defaulted \code{operator?:} \emph{must never exist} for impossible
+conversions (template or not).
+This is important for \code{std::common_type}, which is defined via \code{?:},
+so it inherits whatever failure mode \code{?:} has for a non-common pair.
+\begin{itemize}
+  \item With the constraint: non-common pair $\Rightarrow$ SFINAE $\Rightarrow$
+    \code{common_type} correctly reports "no common type."
+  \item Without the constraint: non-common pair $\Rightarrow$ hard error at
+    instantiation $\Rightarrow$ \code{common_type} becomes a diagnostic in the
+    middle of a trait instead of the expected "not a common type."
+\end{itemize}
+
+Adding the implicit constraint is the correct choice because the operator is
+defaulted and thus the body is synthesized.
+The constraint matches the body, implementing a hypothetical
+\code{requires(auto)}.
+For not defaulted conditional operator overloads the implementation makes no
+assumptions about the body of the function and therefore does not add any
+implicit constraints.
+
+% important: implicit constraint that \code{static_cast<R>(t)} and \code{static_cast<R>(u)} are valid
+
+\subsection{Observations}
+\begin{itemize}
+  \item A single
+    \medskip\begin{lstlisting}[style=Vc]
+R operator?:(bool, T, U) = default;
+    \end{lstlisting}
+    declaration is sufficient to produce the same common type \code{R} for both
+    argument orders \code{T, U} and \code{U, T}.
+
+\end{itemize}
