@@ -10,7 +10,7 @@ struct A
 {
   int x;
   A (int v) : x(v) {}
-  A (const B&);
+  explicit A (const B&);
 };
 
 struct B
@@ -23,7 +23,7 @@ struct C
 {
   int x;
   C (int v) : x(v) {}
-  C (const B& b) : x(b.x) {}
+  explicit C (const B& b) : x(b.x) {}
 };
 
 A::A (const B& b) : x(b.x) {}

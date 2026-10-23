@@ -1,29 +1,35 @@
-\section{Test Cases}
+\section{Test Cases}\label{sec:testcases}
 
-The following test cases all pass on my fork of GCC 17.
+The following test cases all pass on my fork of GCC trunk.\medskip
 
-\lstinputlisting[numbers=left,firstline=4,caption={Test 01},label={lst:op01}]{cond01.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 02},label={lst:op02}]{cond02.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 03},label={lst:op03}]{cond03.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 04},label={lst:op04}]{cond04.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 05},label={lst:op05}]{cond05.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 06},label={lst:op06}]{cond06.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 07},label={lst:op07}]{cond07.C} \par\bigskip
-% drop -fno-overloadable-conditional test
-% drop ADL test (testing status-quo)
-\lstinputlisting[numbers=left,firstline=4,caption={Test 10},label={lst:op10}]{cond10.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 11},label={lst:op11}]{cond11.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 12},label={lst:op12}]{cond12.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 13},label={lst:op13}]{cond13.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 14},label={lst:op14}]{cond14.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 15},label={lst:op15}]{cond15.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 16},label={lst:op16}]{cond16.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 17},label={lst:op17}]{cond17.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 18},label={lst:op18}]{cond18.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 19},label={lst:op19}]{cond19.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 20},label={lst:op20}]{cond20.C} \par\bigskip
-% drop __GXX_CONDITIONAL_IS_OVERLOADABLE__ macro test
-\lstinputlisting[numbers=left,firstline=4,caption={Test 22},label={lst:op22}]{cond22.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 23},label={lst:op23}]{cond23.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 24},label={lst:op24}]{cond24.C} \par\bigskip
-\lstinputlisting[numbers=left,firstline=4,caption={Test 25},label={lst:op25}]{cond25.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=9,caption={Test 1},label={lst:op1}]{cond-overload1.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=7,caption={Test 1b},label={lst:op1b}]{cond-overload1b.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=6,caption={Test 2},label={lst:op2}]{cond-overload2.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=6,caption={Test 3},label={lst:op3}]{cond-overload3.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=6,caption={Test 4},label={lst:op4}]{cond-overload4.C} \par\bigskip
+% drop __GXX_CONDITIONAL_IS_OVERLOADABLE__ macro test (cond-overload5)
+\lstinputlisting[numbers=left,firstline=10,caption={Test 6},label={lst:op6}]{cond-overload6.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=6,caption={Test 7},label={lst:op7}]{cond-overload7.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=5,caption={Test 8},label={lst:op8}]{cond-overload8.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=5,caption={Test 8b},label={lst:op8b}]{cond-overload8b.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=8,caption={Test 9},label={lst:op9}]{cond-overload9.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=7,caption={Test 10},label={lst:op10}]{cond-overload10.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=7,caption={Test 11},label={lst:op11}]{cond-overload11.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=8,caption={Test 12},label={lst:op12}]{cond-overload12.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=6,caption={Test 13},label={lst:op13}]{cond-overload13.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=8,caption={Test 14},label={lst:op14}]{cond-overload14.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=6,caption={Test 15},label={lst:op15}]{cond-overload15.C} \par\bigskip
+% drop -fno-overloadable-conditional test (cond-overload16)
+% drop ADL test (testing status-quo) (cond-overload17)
+\lstinputlisting[numbers=left,firstline=7,caption={Test 18},label={lst:op18}]{cond-overload18.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=4,caption={Test 19},label={lst:op19}]{cond-overload19.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=7,caption={Test 20},label={lst:op20}]{cond-overload20.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=7,caption={Test 21},label={lst:op21}]{cond-overload21.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=7,caption={Test 22},label={lst:op22}]{cond-overload22.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=6,caption={Test 23},label={lst:op23}]{cond-overload23.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=6,caption={Test 23b},label={lst:op23b}]{cond-overload23b.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=6,caption={Test 23c},label={lst:op23c}]{cond-overload23c.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=10,caption={Test 24},label={lst:op24}]{cond-overload24.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=12,caption={Test 25},label={lst:op25}]{cond-overload25.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=14,caption={Test 26},label={lst:op26}]{cond-overload26.C} \par\bigskip
+\lstinputlisting[numbers=left,firstline=4,caption={Test 27},label={lst:op27}]{cond-overload27.C} \par\bigskip
