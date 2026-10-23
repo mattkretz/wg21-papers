@@ -1,8 +1,6 @@
 \section{Proposal}
 
 In this part I'll introduce and explain my proposal.
-In the following section, I'll discuss the complete design space exploration
-and why I settled on this proposal.
 
 \subsection{Declaration and Definition of \code{operator?:}}
 \begin{enumerate}
@@ -88,7 +86,7 @@ which rewrites the expression to use the existing built-in conditional
 operator.
 Consequently, a defaulted conditional operator still implements lazy
 evaluation.
-This is analoguous to defaulted default constructors allowing trivial
+This is analogous to defaulted default constructors allowing trivial
 construction.
 
 \subsection{Semantic Requirement on User-Defined \code{operator?:}}
@@ -102,7 +100,7 @@ R operator?:(C c, A a, B b) { return a; }
 breaks the semantic contract of a conditional operator.
 Without this assumption it would be incorrect to implement automatic rewriting
 from \code{c ? a : b} to \code{!c ? b : a}.
-This assumption is analoguous to the assumption that \code{a == b} and \code{b
+This assumption is analogous to the assumption that \code{a == b} and \code{b
 == a} are equivalent.
 
 \subsection{Calling a User-Defined Conditional Operator}
@@ -207,6 +205,5 @@ std::chrono::duration<int, std::ratio<1, 3>> t1 {1};
 std::chrono::duration<int, std::ratio<2, 5>> t2 {1};
 auto t3 = true ? t1 : t2; // valid now, impossible with C++26
     \end{lstlisting}
-
 
 \end{itemize}

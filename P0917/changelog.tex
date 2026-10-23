@@ -22,28 +22,11 @@
 \end{revision}
 
 \begin{revision}
+\item Basically a rewrite.
+\item Implemented and tested the feature while writing down the parts of the proposal.
 \item Add an example from quantity and units.
 \item Add motivation example from P2655R3 "\code{common_reference_t} of \code{reference_wrapper} should be a reference type".
-  \todo Taking the address of \code{operator?:} and using function call syntax works just like for \code{operator==}:
-  \begin{enumerate}
-    \item the reversed call doesn't exist automatically
-    \item it's an actual function call and thus no lazy eval
-  \end{enumerate}
-  A design option would be to make the function call syntax and taking the address ill-formed. (not recommended: inconsistent with \code{operator==})
-
-  \todo Explore: \code{operator?:} for contextual-bool automatically uses \code{common_type} and cannot be overloaded otherwise.
-        It does deferred evaluation.
-        Non-boolean conditions (i.e. the type of the first argument is not contextually convertible to \bool) can be overloaded and are therefore a normal function call without deferred evaluation.
-  \todo \code{auto operator?:(T, U) = default} could mean \code{common_type_t<T, U> operator?:(...)}, i.e. synthesize a builtin operator using \code{common_tpye} for the return type.
-  \todo Explore: Definition of \code{operator?:(Cond, A, B)} automatically synthesizes \code{operator?:(Cond, B, A)} calling the former.
-        (Note, there are no compatibility issues like for defaulted compares.)
-
-  \todo https://github.com/PeterSommerlad/PSsimplesafeint
-
-\todo List follow-up library changes:
-\begin{itemize}
-  \item Add hidden friend, defaulted \code{operator?:} to \code{reference_wrapper}.
-\end{itemize}
 \end{revision}
 
-  %\todo Discuss implications for “contextually convertible to \bool” implementations.
+%\todo https://github.com/PeterSommerlad/PSsimplesafeint
+%\todo Discuss implications for “contextually convertible to \bool” implementations.

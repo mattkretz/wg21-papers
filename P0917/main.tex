@@ -1,6 +1,6 @@
 \newcommand\wgTitle{Making operator?: overloadable}
 \newcommand\wgName{Matthias Kretz <m.kretz@gsi.de>}
-\newcommand\wgDocumentNumber{D0917R4}
+\newcommand\wgDocumentNumber{P0917R4}
 \newcommand\wgGroup{EWG}
 \newcommand\wgTarget{\CC{}29}
 %\newcommand\wgAcknowledgements{ }
@@ -34,7 +34,18 @@
 \input{motivation}
 \input{proposal}
 \input{impl}
-\input{exploration}
+\section{Discussion}
+
+This section collects contentious or open design issues.
+
+\subsection{Member and/or Non-Member?}
+
+For all member operators, the first operand is omitted in the signature and implicitly uses \code{*this}.
+Consequently, a conditional operator as member of a class must be a member of the condition type.
+Since there does not appear to be a good use case and hidden friends can be used for restricting ADL, this paper proposes to \emph{allow only non-member conditional operator overloads}.
+However, for consistency with all other operators, we might want to allow it nevertheless.
+
+%\input{exploration}
 \input{wording}
 
 \appendix

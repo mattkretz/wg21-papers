@@ -174,7 +174,7 @@ template <class T> T abs(T x) {
 This function is \ldots (cf. \ttref{blending})
 \begin{itemize}
   \item less intuitive, since the function introduces an additional spelling to what \code{?:} provides.
-  \item even less intuitive, since the arguments appear to be arbitrarily ordered (comma doesn't convey semantics such as \code ? and \code : do)\footnote{To make things worse x86 intrinsics/instructions for blend operations use all possible argument permutations.}.
+  \item even less intuitive, since the arguments appear to be arbitrarily ordered (comma doesn't convey semantics such as \code{?} and \code{:} do)\footnote{To make things worse x86 intrinsics/instructions for blend operations use all possible argument permutations.}.
   \item harder to use in generic code:
     If \type T is a built-in type, the \code{select} function will not be found via ADL; consequently, user code must spell out \code{return \stdsimd::select(x < 0, -x, x)} and include the \code{<simd>} header.
     This is annoying and the namespace qualification is easily forgotten since ADL works fine for \type{simd} arguments.
