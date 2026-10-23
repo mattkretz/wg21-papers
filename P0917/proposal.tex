@@ -43,7 +43,8 @@ and why I settled on this proposal.
   \item Otherwise, perform the usual name lookup (including ADL).
 
   \item Add reversed candidates if the types of \code{arg2} and \code{arg3}
-    differ and if applying unary \code{!} to \code{arg1} is well-formed.
+    differ (non-\code{bool} \code{arg1}) and if applying unary \code{!} to
+    \code{arg1} is well-formed.
     The reverse candidates use the type of \code{!arg1} rather than \code{arg1}.
 
   \item Perform overload resolution.
@@ -52,7 +53,7 @@ and why I settled on this proposal.
     partial ordering.
     In that case the normal (not-reversed) form wins.
 
-  \item If the winner is reversed the \code{c ? a : b} expression is rewritten
+  \item If the winner is reversed, the \code{c ? a : b} expression is rewritten
     to \code{!c ? b : a}.
 \end{enumerate}
 
@@ -69,7 +70,9 @@ If the built-in conditional operator does not apply, existing code would be
 ill-formed and so there is nothing to break.
 Importantly, avoiding name lookup avoids ADL, which in turn avoids template
 instantiation, which can hit the corner case that could otherwise lead to
-well-formed code becoming ill-formed (see \cite{P2600R0}).
+well-formed code becoming ill-formed (see \cite{P2600R0})\footnote{%
+  The ADL issue was initially thought to be blocking this paper.
+  Not anymore.}.
 
 \subsection{Synthesizing a Defaulted Conditional Operator}
 If the expression \code{c ? <arg2-expression> : <arg3-expression>} is not a
@@ -85,6 +88,8 @@ which rewrites the expression to use the existing built-in conditional
 operator.
 Consequently, a defaulted conditional operator still implements lazy
 evaluation.
+This is analoguous to defaulted default constructors allowing trivial
+construction.
 
 \subsection{Semantic Requirement on User-Defined \code{operator?:}}
 For a not-defaulted \code{operator?:(c, a, b)} function, the implementation can
@@ -95,12 +100,15 @@ A definition like
 R operator?:(C c, A a, B b) { return a; }
 \end{lstlisting}
 breaks the semantic contract of a conditional operator.
-This assumption is important to enable reversed candidates.
+Without this assumption it would be incorrect to implement automatic rewriting
+from \code{c ? a : b} to \code{!c ? b : a}.
+This assumption is analoguous to the assumption that \code{a == b} and \code{b
+== a} are equivalent.
 
 \subsection{Calling a User-Defined Conditional Operator}
 If the selected user-defined conditional operator is not defaulted, then a
 normal function call is emitted.
-(This implies non-lazy evaluation.)
+(This implies not-lazy evaluation.)
 
 \subsection{Taking the address of a conditional operator}
 A user-defined conditional operator is still an entity like all other
@@ -133,9 +141,11 @@ This implies that without \code{inline}, a defaulted \code{operator?:} emits a s
 \subsection{Defaulted Conditional Operator Templates}
 A defaulted \code{R operator?:(bool, T, U)} template always has an implicit
 \medskip\begin{lstlisting}
-requires is_constructible_v<R, T> && is_constructible_v<R, U>
+requires { static_cast<R>(std::declval<T>()); static_cast<R>(std::declval<U>()); }
 \end{lstlisting}
-constraint.
+constraint\footnote{%
+  This is equivalent to \code{\textit{explicitly-convertible-to}<T, R> \&\& \textit{explicitly-convertible-to}<U, R>}, using the concept defined in [simd.expos].
+}.
 This constraint makes the template match the invariant enforced by refusing
 impossible non-template defaulted condition operator declarations:
 \begin{itemize}
@@ -152,10 +162,11 @@ This is important for \code{std::common_type}, which is defined via \code{?:},
 so it inherits whatever failure mode \code{?:} has for a non-common pair.
 \begin{itemize}
   \item With the constraint: non-common pair $\Rightarrow$ SFINAE $\Rightarrow$
-    \code{common_type} correctly reports "no common type."
+    \code{common_type} correctly reports "no common type" by not having a
+    \code{type} member.
   \item Without the constraint: non-common pair $\Rightarrow$ hard error at
     instantiation $\Rightarrow$ \code{common_type} becomes a diagnostic in the
-    middle of a trait instead of the expected "not a common type."
+    middle of a trait.
 \end{itemize}
 
 Adding the implicit constraint is the correct choice because the operator is
@@ -166,7 +177,12 @@ For not defaulted conditional operator overloads the implementation makes no
 assumptions about the body of the function and therefore does not add any
 implicit constraints.
 
-% important: implicit constraint that \code{static_cast<R>(t)} and \code{static_cast<R>(u)} are valid
+\subsection{\code{= delete}}
+A conditional operator overload can be declared as deleted.
+This is not only a consistency choice.
+A deleted conditional operator is useful to subtract from an overload set.
+The user-provided diagnostic string on \code{delete} also allows better
+feedback from library implementers.
 
 \subsection{Observations}
 \begin{itemize}
@@ -176,5 +192,21 @@ R operator?:(bool, T, U) = default;
     \end{lstlisting}
     declaration is sufficient to produce the same common type \code{R} for both
     argument orders \code{T, U} and \code{U, T}.
+
+  \item \code{chrono}'s inconsistent “the conditional operator works
+    \emph{most} of the time” can now be resolved:
+    \medskip\begin{lstlisting}[style=Vc]
+namespace std {
+  template <typename Rep1, typename Period1, typename Rep2, typename Period2>
+    common_type_t<chrono::duration<Rep1, Period1>, chrono::duration<Rep2, Period2>>
+    operator?:(bool, chrono::duration<Rep1, Period1>,
+               chrono::duration<Rep2, Period2>) = default;
+}
+
+std::chrono::duration<int, std::ratio<1, 3>> t1 {1};
+std::chrono::duration<int, std::ratio<2, 5>> t2 {1};
+auto t3 = true ? t1 : t2; // valid now, impossible with C++26
+    \end{lstlisting}
+
 
 \end{itemize}
