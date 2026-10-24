@@ -28,5 +28,13 @@
 \item Add motivation example from P2655R3 "\code{common_reference_t} of \code{reference_wrapper} should be a reference type".
 \end{revision}
 
+\begin{revision}
+\item I messed up submission of R4 (submitted the draft), so here's a new one.
+\item Add \code{std::optional} / \code{std::nullopt} example.
+\item Remove (fix) incorrect restriction to non-\code{bool} \code{arg1} for reversed candidates.
+\item Mention the \code{std::simd} \code{operator?:} overloads in \sect{impl}.
+\item Fix missing \code{std::forward} in \sect{synthesizing} to match the implementation.
+\end{revision}
+
 %\todo https://github.com/PeterSommerlad/PSsimplesafeint
 %\todo Discuss implications for “contextually convertible to \bool” implementations.

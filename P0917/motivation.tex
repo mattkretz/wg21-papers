@@ -246,3 +246,39 @@ static_assert(std::is_same_v<decltype(true ? std::ref(a) : a), int&>);
 static_assert(std::is_same_v<decltype(true ? a : std::ref(a)), int&>);
 \end{lstlisting}
 pass.
+
+\subsection{A conditional operator for \code{std::nullopt}}
+
+Robert Kawulak asked about overloading \code{operator?:} for
+\code{std::nullopt_t} to produce an \code{optional}.
+Supporting lazy evaluation, move construction, and \code{optional<T\&>} works
+out of the box with this proposal.
+
+\medskip\begin{lstlisting}
+  return cond ? 4 : nullopt; // optional<int>
+\end{lstlisting}
+
+It is a simple \code{operator?:} overload and it supports lazy evaluation:
+
+\medskip\begin{lstlisting}[style=Vc]
+namespace std
+{
+  template <typename T>
+    std::optional<remove_cvref_t<T>>
+    operator?:(bool, T&&, nullopt_t) = default;
+
+  template <typename T>
+    std::optional<T&>
+    operator?:(bool, reference_wrapper<T>, nullopt_t) = default;
+}
+
+// Possible with P0917, impossible with C++26:
+auto x = true ? 1 : std::nullopt;
+auto y = true ? std::nullopt : 2;
+
+int a = 1;
+auto z = false ? std::nullopt : std::ref(a); // optional<int&>
+
+auto moved = true ? std::vector{1, 2, 3} : std::nullopt;
+\end{lstlisting}
+

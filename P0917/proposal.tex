@@ -41,8 +41,7 @@ In this part I'll introduce and explain my proposal.
   \item Otherwise, perform the usual name lookup (including ADL).
 
   \item Add reversed candidates if the types of \code{arg2} and \code{arg3}
-    differ (non-\code{bool} \code{arg1}) and if applying unary \code{!} to
-    \code{arg1} is well-formed.
+    differ and if applying unary \code{!} to \code{arg1} is well-formed.
     The reverse candidates use the type of \code{!arg1} rather than \code{arg1}.
 
   \item Perform overload resolution.
@@ -72,15 +71,15 @@ well-formed code becoming ill-formed (see \cite{P2600R0})\footnote{%
   The ADL issue was initially thought to be blocking this paper.
   Not anymore.}.
 
-\subsection{Synthesizing a Defaulted Conditional Operator}
+\subsection{Synthesizing a Defaulted Conditional Operator}\label{sec:synthesizing}
 If the expression \code{c ? <arg2-expression> : <arg3-expression>} is not a
 valid built-in conditional operator expression, and lookup with subsequent
 overload resolution finds a defaulted \code{operator?:} declaration with the
 declared return type \type R and the declared argument types \type{bool}, \type
 A, and \type B, then the expression is equivalent to:
 \medskip\begin{lstlisting}
-c ? [](A a) -> R { return static_cast<R>(a); }(<arg2-expression>)
-  : [](B b) -> R { return static_cast<R>(b); }(<arg3-expression>)
+c ? [](A a) -> R { return static_cast<R>(std::forward<A>(a)); }(<arg2-expression>)
+  : [](B b) -> R { return static_cast<R>(std::forward<B>(b)); }(<arg3-expression>)
 \end{lstlisting}
 which rewrites the expression to use the existing built-in conditional
 operator.

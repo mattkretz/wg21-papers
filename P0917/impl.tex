@@ -1,4 +1,4 @@
-\section{Implementation Experience}
+\section{Implementation Experience}\label{sec:impl}
 
 This proposal is fully implemented in a branch of GCC trunk.
 The testcases I use for verification are in appendix \ref{sec:testcases} of this paper.
@@ -6,4 +6,8 @@ The implementation can be found at\\
 \url{https://github.com/mattkretz/gcc/tree/P0917_overloadable_conditional_operator}\\
 and can be tested on \href{https://compiler-explorer.com/}{Compiler Explorer}
 as soon as the branch build lands.
+In addition to making \code{operator?:} overloadable, the branch also
+implements \code{operator?:} overloads for \code{std::simd}, entirely replacing
+the need for \code{std::simd::select}.
+
 Please try to poke holes into it and let me know.
